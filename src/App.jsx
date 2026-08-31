@@ -1,1493 +1,1224 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
+import "./App.css";
 
 /* =========================================================
-   RAZORPAY
+   JUICE ROBO — CUSTOMER WEBSITE
+   Auth + account + machine + menu + cart + checkout
    ========================================================= */
 
-function loadRazorpayScript() {
-  return new Promise((resolve) => {
-    if (window.Razorpay) {
-      resolve(true);
-      return;
-    }
-
-    const existingScript = document.querySelector(
-      'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
-    );
-
-    if (existingScript) {
-      existingScript.addEventListener(
-        "load",
-        () => resolve(true),
-        { once: true }
-      );
-
-      existingScript.addEventListener(
-        "error",
-        () => resolve(false),
-        { once: true }
-      );
-
-      return;
-    }
-
-    const script = document.createElement("script");
-
-    script.src =
-      "https://checkout.razorpay.com/v1/checkout.js";
-
-    script.async = true;
-
-    script.onload = () => resolve(true);
-
-    script.onerror = () => resolve(false);
-
-    document.body.appendChild(script);
-  });
-}
-
-function paymentOrderValue(
-  paymentOrder,
-  key,
-  fallback = null
-) {
-  if (!paymentOrder) {
-    return fallback;
-  }
-
-  return (
-    paymentOrder[key] ??
-    paymentOrder.data?.[key] ??
-    paymentOrder.payment_order?.[key] ??
-    fallback
-  );
-}
-
-/* =========================================================
-   PRODUCT IMAGE HANDLING
-   ========================================================= */
+const ASSET_BASE = `${import.meta.env.BASE_URL}assets/`;
 
 const PRODUCT_IMAGES = {
-  plain: "/assets/plain-juice.jpg",
-  lemon: "/assets/lemon-juice.jpg",
-  ginger: "/assets/ginger-juice.jpg",
-  "ginger-lemon":
-    "/assets/ginger-lemon-juice.jpg",
+  plain: `${ASSET_BASE}plain-juice.jpg`,
+  lemon: `${ASSET_BASE}lemon-juice.jpg`,
+  ginger: `${ASSET_BASE}ginger-juice.jpg`,
+  "ginger-lemon": `${ASSET_BASE}ginger-lemon-juice.jpg`,
 };
 
-function normalizeProductName(value = "") {
-  return String(value)
-    .toLowerCase()
-    .trim()
-    .replace(/[+&]/g, " ")
-    .replace(/sugarcane/g, "")
-    .replace(/juice/g, "")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+const STORAGE = {
+  token: "juice_robo_token",
+  user: "juice_robo_user",
+  legacyUser: "user",
+  customer: "juice_robo_customer",
+  loggedIn: "juice_robo_logged_in",
+  location: "juice_robo_location",
+  machine: "juice_robo_machine",
+};
+
+function productText(product = {}) {
+  return [
+    product?.name,
+    product?.description,
+    product?.productName,
+    product?.productType,
+    product?.type,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
 }
 
-function productImage(product) {
-  /*
-   * Prefer the image URL supplied by FastAPI.
-   */
-  if (product?.image_url) {
-    return product.image_url;
-  }
+function productImage(product = {}) {
+  const text = productText(product);
 
-  /*
-   * Intelligent fallback based on product name.
-   */
-  const name = normalizeProductName(
-    product?.name
-  );
-
-  if (
-    name.includes("ginger") &&
-    name.includes("lemon")
-  ) {
+  if (text.includes("ginger") && text.includes("lemon")) {
     return PRODUCT_IMAGES["ginger-lemon"];
   }
 
-  if (name.includes("ginger")) {
-    return PRODUCT_IMAGES.ginger;
-  }
-
-  if (name.includes("lemon")) {
-    return PRODUCT_IMAGES.lemon;
-  }
-
+  if (text.includes("ginger")) return PRODUCT_IMAGES.ginger;
+  if (text.includes("lemon")) return PRODUCT_IMAGES.lemon;
   return PRODUCT_IMAGES.plain;
 }
 
-/* =========================================================
-   HELPERS
-   ========================================================= */
+function displayProductName(product = {}) {
+  const text = productText(product);
+
+  if (text.includes("ginger") && text.includes("lemon")) {
+    return "Sugarcane Juice with Ginger + Lemon";
+  }
+
+  if (text.includes("ginger")) {
+    return "Sugarcane Juice with Ginger";
+  }
+
+  if (text.includes("lemon")) {
+    return "Sugarcane Juice with Lemon";
+  }
+
+  return "Plain Sugarcane Juice";
+}
+
+function displayDescription(product = {}) {
+  const text = productText(product);
+
+  if (text.includes("ginger") && text.includes("lemon")) {
+    return "A refreshing blend of ginger, lemon and fresh sugarcane.";
+  }
+
+  if (text.includes("ginger")) {
+    return "Fresh sugarcane juice with a zing of ginger.";
+  }
+
+  if (text.includes("lemon")) {
+    return "Fresh sugarcane juice with a refreshing lemon twist.";
+  }
+
+  return "Freshly prepared plain sugarcane juice.";
+}
 
 function money(value) {
-  return `₹${Number(value || 0).toFixed(0)}`;
+  return `₹${Number(value || 0).toLocaleString("en-IN")}`;
 }
 
-function statusLabel(status) {
+function getLocationId(location) {
+  return String(location?.storeId || location?.id || "");
+}
+
+function readJSON(key, fallback = {}) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function getStoredUser() {
+  return (
+    readJSON(STORAGE.user, null) ||
+    readJSON(STORAGE.legacyUser, null) ||
+    {}
+  );
+}
+
+function getUserKey(user) {
   return String(
-    status || "confirmed"
-  ).replace(/_/g, " ");
+    user?.id ||
+      user?.userId ||
+      user?.user_id ||
+      user?.email ||
+      user?.userEmail ||
+      user?.phone ||
+      user?.userName ||
+      "guest"
+  );
 }
 
-function orderStatusClass(status) {
-  const normalized = String(
-    status || "confirmed"
-  ).toLowerCase();
-
-  if (normalized === "collected") {
-    return "collected";
-  }
-
-  if (
-    normalized === "cancelled" ||
-    normalized === "failed"
-  ) {
-    return "cancelled";
-  }
-
-  return "confirmed";
+function cartStorageKey(user) {
+  return `juice_robo_cart_${getUserKey(user)}`;
 }
 
-/* =========================================================
-   MAIN APP
-   ========================================================= */
+function orderStorageKey(user) {
+  return `juice_robo_orders_${getUserKey(user)}`;
+}
 
-function App() {
-  const [products, setProducts] =
-    useState([]);
+function normalizeCart(raw) {
+  if (!Array.isArray(raw)) return [];
 
-  const [locations, setLocations] =
-    useState([]);
+  return raw
+    .filter((item) => item && typeof item === "object")
+    .map((item) => ({
+      ...item,
+      quantity: Math.max(1, Number(item.quantity || 1)),
+    }));
+}
 
-  const [machines, setMachines] =
-    useState([]);
+function readUserCart(user) {
+  try {
+    return normalizeCart(
+      JSON.parse(
+        localStorage.getItem(cartStorageKey(user)) || "[]"
+      )
+    );
+  } catch {
+    return [];
+  }
+}
 
-  const [profile, setProfile] =
-    useState(null);
+function readUserOrders(user) {
+  try {
+    const orders = JSON.parse(
+      localStorage.getItem(orderStorageKey(user)) || "[]"
+    );
 
-  const [cart, setCart] = useState(() => {
-    try {
-      return JSON.parse(
-        localStorage.getItem(
-          "juice_robo_cart"
-        ) || "{}"
-      );
-    } catch {
-      return {};
-    }
+    return Array.isArray(orders) ? orders : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveUserOrders(user, orders) {
+  localStorage.setItem(
+    orderStorageKey(user),
+    JSON.stringify(orders)
+  );
+}
+
+export default function App() {
+  /*
+   * Juice Robo is a mobile-only customer website.
+   * Desktop browsers are intentionally blocked from the app UI.
+   * Use Chrome DevTools device emulation or a real phone to test it.
+   */
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    () => window.matchMedia("(max-width: 768px)").matches
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+
+    const updateViewport = () => {
+      setIsMobileViewport(mediaQuery.matches);
+    };
+
+    updateViewport();
+    mediaQuery.addEventListener?.("change", updateViewport);
+
+    return () => {
+      mediaQuery.removeEventListener?.("change", updateViewport);
+    };
+  }, []);
+
+  if (!isMobileViewport) {
+    return <MobileOnlyScreen />;
+  }
+
+  const storedUser = getStoredUser();
+  const hasToken = Boolean(
+    localStorage.getItem(STORAGE.token)
+  );
+
+  const [screen, setScreen] = useState(() =>
+    hasToken ? "menu" : "login"
+  );
+
+  const [authMode, setAuthMode] = useState("login");
+
+  const [user, setUser] = useState(storedUser);
+  const [customer, setCustomer] = useState({
+    name:
+      storedUser?.name ||
+      storedUser?.firstname ||
+      storedUser?.firstName ||
+      "",
+    phone:
+      storedUser?.phone ||
+      storedUser?.userName ||
+      "",
+    email:
+      storedUser?.email ||
+      storedUser?.userEmail ||
+      "",
   });
 
-  const [locationId, setLocationId] =
-    useState(
-      () =>
-        localStorage.getItem(
-          "juice_robo_location"
-        ) || ""
-    );
+  const [products, setProducts] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [machines, setMachines] = useState([]);
 
-  const [machineId, setMachineId] =
-    useState(
-      () =>
-        localStorage.getItem(
-          "juice_robo_machine"
-        ) || ""
-    );
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [authError, setAuthError] = useState("");
 
-  const [screen, setScreen] =
-    useState(() =>
-      localStorage.getItem(
-        "juice_robo_token"
-      )
-        ? "home"
-        : "auth"
-    );
+  const [selectedLocationId, setSelectedLocationId] = useState(
+    () => localStorage.getItem(STORAGE.location) || ""
+  );
 
-  const [authMode, setAuthMode] =
-    useState("login");
+  const [selectedMachineId, setSelectedMachineId] = useState(
+    () => localStorage.getItem(STORAGE.machine) || ""
+  );
 
-  const [selectedProduct, setSelectedProduct] =
-    useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
-  const [orders, setOrders] = useState([]);
+  const [cart, setCart] = useState(() =>
+    hasToken ? readUserCart(storedUser) : []
+  );
 
-  const [selectedOrder, setSelectedOrder] =
-    useState(null);
+  const [orders, setOrders] = useState(() =>
+    hasToken ? readUserOrders(storedUser) : []
+  );
 
-  const [loading, setLoading] =
-    useState(true);
+  const [toast, setToast] = useState("");
 
-  const [error, setError] =
-    useState("");
+  /*
+   * Frontend-only payment state.
+   *
+   * The current legacy API adapter exposes order/cart APIs but
+   * intentionally does not expose the Razorpay create/verify APIs.
+   * Therefore the redesigned frontend uses a clearly labelled
+   * demo payment flow for UI testing only. No real payment is taken.
+   */
+  const [paymentMethod, setPaymentMethod] = useState("upi");
+  const [paymentStatus, setPaymentStatus] = useState("idle");
+  const [completedOrder, setCompletedOrder] = useState(null);
 
-  const [search, setSearch] =
-    useState("");
+  const selectedLocation = useMemo(
+    () =>
+      locations.find(
+        (location) =>
+          getLocationId(location) === String(selectedLocationId)
+      ),
+    [locations, selectedLocationId]
+  );
 
-  const [category, setCategory] =
-    useState("All");
+  const selectedMachine = useMemo(
+    () =>
+      machines.find(
+        (machine) =>
+          String(machine?.id) === String(selectedMachineId)
+      ),
+    [machines, selectedMachineId]
+  );
 
-  const [toast, setToast] =
-    useState("");
+  const cartCount = useMemo(
+    () =>
+      cart.reduce(
+        (total, item) => total + Number(item.quantity || 0),
+        0
+      ),
+    [cart]
+  );
 
-  const [paymentBusy, setPaymentBusy] =
-    useState(false);
-
-  /* =======================================================
-     TOAST
-     ======================================================= */
-
-  function showToast(message) {
-    setToast(message);
-
-    window.clearTimeout(
-      window.__jrToast
-    );
-
-    window.__jrToast =
-      window.setTimeout(() => {
-        setToast("");
-      }, 2200);
-  }
-
-  /* =======================================================
-     LOAD INITIAL DATA
-     ======================================================= */
+  const cartTotal = useMemo(
+    () =>
+      cart.reduce(
+        (total, item) =>
+          total +
+          Number(item.price || 0) *
+            Number(item.quantity || 0),
+        0
+      ),
+    [cart]
+  );
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadInitialData() {
+    async function load() {
       try {
         setLoading(true);
         setError("");
 
-        const [
-          productResponse,
-          locationResponse,
-          machineResponse,
-        ] = await Promise.all([
-          api.products(),
-          api.locations(),
-          api.machines(),
-        ]);
+        const [productResponse, locationResponse, machineResponse] =
+          await Promise.all([
+            api.products(),
+            api.locations(),
+            api.machines(),
+          ]);
 
-        if (cancelled) {
-          return;
-        }
-
-        const normalizedProducts = (
-          Array.isArray(productResponse)
-            ? productResponse
-            : []
-        ).map((product) => ({
-          ...product,
-          image: productImage(product),
-        }));
-
-        const normalizedLocations =
-          Array.isArray(
-            locationResponse
-          )
-            ? locationResponse
-            : [];
-
-        const normalizedMachines =
-          Array.isArray(
-            machineResponse
-          )
-            ? machineResponse
-            : [];
+        if (cancelled) return;
 
         setProducts(
-          normalizedProducts
+          (Array.isArray(productResponse)
+            ? productResponse
+            : []
+          ).map((product) => {
+            const image = productImage(product);
+
+            return {
+              ...product,
+              image,
+              image_url: image,
+              displayName: displayProductName(product),
+              displayDescription: displayDescription(product),
+            };
+          })
         );
 
         setLocations(
-          normalizedLocations
+          Array.isArray(locationResponse)
+            ? locationResponse
+            : []
         );
 
         setMachines(
-          normalizedMachines
+          Array.isArray(machineResponse)
+            ? machineResponse
+            : []
         );
-
-        /*
-         * Automatically select the first
-         * location when none exists.
-         */
-        if (
-          !locationId &&
-          normalizedLocations.length
-        ) {
-          setLocationId(
-            String(
-              normalizedLocations[0].id
-            )
-          );
-        }
       } catch (e) {
         if (!cancelled) {
-          console.error(
-            "Juice Robo initial load error:",
-            e
-          );
-
+          console.error("Juice Robo load error:", e);
           setError(
-            e?.message ||
-              "Unable to connect to Juice Robo."
+            e?.message || "Unable to load Juice Robo."
           );
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     }
 
-    loadInitialData();
+    load();
 
     return () => {
       cancelled = true;
     };
   }, []);
 
-  /* =======================================================
-     LOCAL STORAGE
-     ======================================================= */
-
   useEffect(() => {
+    if (!user || !getUserKey(user)) return;
+
     localStorage.setItem(
-      "juice_robo_cart",
-      JSON.stringify(cart)
+      cartStorageKey(user),
+      JSON.stringify(normalizeCart(cart))
     );
-  }, [cart]);
+  }, [cart, user]);
 
   useEffect(() => {
-    if (locationId) {
-      localStorage.setItem(
-        "juice_robo_location",
-        locationId
-      );
-    }
-  }, [locationId]);
+    if (!user) return;
 
-  useEffect(() => {
-    if (machineId) {
-      localStorage.setItem(
-        "juice_robo_machine",
-        machineId
-      );
-    }
-  }, [machineId]);
-
-  /* =======================================================
-     LOAD PROFILE / ORDERS
-     ======================================================= */
-
-  useEffect(() => {
-    const token =
-      localStorage.getItem(
-        "juice_robo_token"
-      );
-
-    if (
-      screen === "profile" &&
-      token
-    ) {
-      api
-        .profile()
-        .then((data) => {
-          setProfile(data);
-        })
-        .catch((e) => {
-          console.error(
-            "Profile loading error:",
-            e
-          );
-
-          logout();
-        });
-    }
-
-    if (
-      screen === "history" &&
-      token
-    ) {
-      api
-        .orders()
-        .then((data) => {
-          setOrders(
-            Array.isArray(data)
-              ? data
-              : []
-          );
-        })
-        .catch((e) => {
-          console.error(
-            "Order history error:",
-            e
-          );
-        });
-    }
-  }, [screen]);
-
-  /* =======================================================
-     DERIVED DATA
-     ======================================================= */
-
-  const selectedLocation =
-    useMemo(() => {
-      return locations.find(
-        (location) =>
-          String(location.id) ===
-          String(locationId)
-      );
-    }, [
-      locations,
-      locationId,
-    ]);
-
-  const availableMachines =
-    useMemo(() => {
-      return machines.filter(
-        (machine) => {
-          const machineLocation =
-            machine.location_id ??
-            machine.locationId;
-
-          return (
-            String(machineLocation) ===
-            String(locationId)
-          );
-        }
-      );
-    }, [
-      machines,
-      locationId,
-    ]);
-
-  const selectedMachine =
-    useMemo(() => {
-      return availableMachines.find(
-        (machine) =>
-          String(machine.id) ===
-          String(machineId)
-      );
-    }, [
-      availableMachines,
-      machineId,
-    ]);
-
-  const cartItems = useMemo(() => {
-    return products
-      .filter(
-        (product) =>
-          Number(cart[product.id]) > 0
-      )
-      .map((product) => ({
-        ...product,
-        quantity:
-          Number(cart[product.id]) || 0,
-      }));
-  }, [
-    products,
-    cart,
-  ]);
-
-  const cartCount = useMemo(() => {
-    return cartItems.reduce(
-      (total, item) =>
-        total +
-        Number(item.quantity || 0),
-      0
+    localStorage.setItem(
+      STORAGE.user,
+      JSON.stringify(user)
     );
-  }, [cartItems]);
 
-  const subtotal = useMemo(() => {
-    return cartItems.reduce(
-      (total, item) =>
-        total +
-        Number(item.price || 0) *
-          Number(item.quantity || 0),
-      0
+    localStorage.setItem(
+      STORAGE.legacyUser,
+      JSON.stringify(user)
     );
-  }, [cartItems]);
 
-  /* =======================================================
-     CATEGORIES
-     ======================================================= */
-
-  const categories =
-    useMemo(() => {
-      const result = ["All"];
-
-      products.forEach(
-        (product) => {
-          const name =
-            String(
-              product.name || ""
-            ).toLowerCase();
-
-          let categoryName =
-            "Plain";
-
-          if (
-            name.includes("ginger") &&
-            name.includes("lemon")
-          ) {
-            categoryName =
-              "Ginger + Lemon";
-          } else if (
-            name.includes("ginger")
-          ) {
-            categoryName =
-              "Ginger";
-          } else if (
-            name.includes("lemon")
-          ) {
-            categoryName =
-              "Lemon";
-          }
-
-          if (
-            !result.includes(
-              categoryName
-            )
-          ) {
-            result.push(
-              categoryName
-            );
-          }
-        }
-      );
-
-      return result;
-    }, [products]);
-
-  /* =======================================================
-     FILTERED PRODUCTS
-     ======================================================= */
-
-  const filteredProducts =
-    useMemo(() => {
-      const query =
-        search
-          .toLowerCase()
-          .trim();
-
-      return products.filter(
-        (product) => {
-          const name =
-            String(
-              product.name || ""
-            ).toLowerCase();
-
-          const description =
-            String(
-              product.description ||
-                ""
-            ).toLowerCase();
-
-          const matchesSearch =
-            !query ||
-            `${name} ${description}`.includes(
-              query
-            );
-
-          if (
-            category === "All"
-          ) {
-            return matchesSearch;
-          }
-
-          let productCategory =
-            "Plain";
-
-          if (
-            name.includes("ginger") &&
-            name.includes("lemon")
-          ) {
-            productCategory =
-              "Ginger + Lemon";
-          } else if (
-            name.includes("ginger")
-          ) {
-            productCategory =
-              "Ginger";
-          } else if (
-            name.includes("lemon")
-          ) {
-            productCategory =
-              "Lemon";
-          }
-
-          return (
-            matchesSearch &&
-            productCategory ===
-              category
-          );
-        }
-      );
-    }, [
-      products,
-      search,
-      category,
-    ]);
-
-  /* =======================================================
-     CART
-     ======================================================= */
-
-  function add(
-    product,
-    quantity = 1
-  ) {
-    setCart(
-      (currentCart) => ({
-        ...currentCart,
-        [product.id]:
-          Math.max(
-            0,
-            Number(
-              currentCart[
-                product.id
-              ] || 0
-            ) + quantity
-          ),
+    localStorage.setItem(
+      STORAGE.customer,
+      JSON.stringify({
+        ...customer,
+        name:
+          user?.name ||
+          customer?.name ||
+          "",
+        phone:
+          user?.phone ||
+          customer?.phone ||
+          "",
+        email:
+          user?.email ||
+          customer?.email ||
+          "",
       })
+    );
+  }, [user, customer]);
+
+  useEffect(() => {
+    if (selectedLocationId) {
+      localStorage.setItem(
+        STORAGE.location,
+        selectedLocationId
+      );
+    }
+  }, [selectedLocationId]);
+
+  useEffect(() => {
+    if (selectedMachineId) {
+      localStorage.setItem(
+        STORAGE.machine,
+        selectedMachineId
+      );
+    }
+  }, [selectedMachineId]);
+
+  function showToast(message) {
+    setToast(message);
+
+    window.clearTimeout(window.__juiceRoboToast);
+
+    window.__juiceRoboToast = window.setTimeout(() => {
+      setToast("");
+    }, 2400);
+  }
+
+  function applyAuthenticatedUser(authResponse) {
+    const nextUser =
+      authResponse?.user ||
+      authResponse?.data?.user ||
+      authResponse?.data ||
+      authResponse;
+
+    const normalized = {
+      ...user,
+      ...(nextUser || {}),
+      name:
+        nextUser?.name ||
+        [
+          nextUser?.firstName,
+          nextUser?.lastName,
+        ]
+          .filter(Boolean)
+          .join(" ") ||
+        customer?.name ||
+        "Juice Lover",
+      email:
+        nextUser?.email ||
+        nextUser?.userEmail ||
+        customer?.email ||
+        "",
+      phone:
+        nextUser?.phone ||
+        nextUser?.userName ||
+        customer?.phone ||
+        "",
+    };
+
+    setUser(normalized);
+    setCustomer((current) => ({
+      ...current,
+      ...normalized,
+    }));
+
+    localStorage.setItem(
+      STORAGE.loggedIn,
+      "true"
+    );
+
+    return normalized;
+  }
+
+  async function handleLogin(event) {
+    event.preventDefault();
+    setAuthError("");
+
+    const identifier = String(
+      customer?.email ||
+        customer?.phone ||
+        ""
+    ).trim();
+
+    const password = String(
+      customer?.password || ""
+    );
+
+    if (!identifier) {
+      setAuthError(
+        "Enter your email address or phone number."
+      );
+      return;
+    }
+
+    if (!password) {
+      setAuthError("Enter your password.");
+      return;
+    }
+
+    try {
+      setBusy(true);
+
+      const response = await api.login({
+        userName: identifier,
+        password,
+      });
+
+      const token =
+        response?.accessToken ||
+        response?.access_token ||
+        localStorage.getItem(STORAGE.token);
+
+      if (!token) {
+        throw new Error(
+          "Login succeeded without an access token. Please check the API response."
+        );
+      }
+
+      const nextUser = applyAuthenticatedUser(response);
+
+      setCustomer((current) => ({
+        ...current,
+        password: "",
+        name:
+          nextUser?.name ||
+          current.name ||
+          "",
+      }));
+
+      setCart(readUserCart(nextUser));
+      setOrders(readUserOrders(nextUser));
+      setScreen("menu");
+
+      showToast(
+        `Welcome, ${nextUser?.name || "Juice Lover"}`
+      );
+    } catch (e) {
+      console.error("Juice Robo login error:", e);
+      setAuthError(
+        e?.message ||
+          "Unable to sign in. Please check your details."
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleSignup(event) {
+    event.preventDefault();
+    setAuthError("");
+
+    const name = String(
+      customer?.name || ""
+    ).trim();
+
+    const phone = String(
+      customer?.phone || ""
+    ).trim();
+
+    const email = String(
+      customer?.email || ""
+    ).trim();
+
+    const password = String(
+      customer?.password || ""
+    );
+
+    const confirmPassword = String(
+      customer?.confirmPassword || ""
+    );
+
+    if (!name) {
+      setAuthError("Enter your full name.");
+      return;
+    }
+
+    if (!phone && !email) {
+      setAuthError(
+        "Enter a phone number or email address."
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      setAuthError(
+        "Password must contain at least 6 characters."
+      );
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setAuthError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setBusy(true);
+
+      const response = await api.register({
+        name,
+        phone,
+        email,
+        userName: phone || email,
+        userEmail: email,
+        password,
+        confirmPassword,
+      });
+
+      const token =
+        response?.accessToken ||
+        response?.access_token ||
+        localStorage.getItem(STORAGE.token);
+
+      let authResponse = response;
+
+      /*
+       * Some register implementations create the user but do not
+       * return a token. In that case, sign in immediately with the
+       * credentials just created.
+       */
+      if (!token) {
+        authResponse = await api.login({
+          userName: phone || email,
+          password,
+        });
+      }
+
+      const nextUser = applyAuthenticatedUser(authResponse);
+
+      setCustomer((current) => ({
+        ...current,
+        password: "",
+        confirmPassword: "",
+      }));
+
+      setCart(readUserCart(nextUser));
+      setOrders(readUserOrders(nextUser));
+      setScreen("menu");
+
+      showToast(
+        `Account created. Welcome, ${nextUser?.name || name}.`
+      );
+    } catch (e) {
+      console.error("Juice Robo signup error:", e);
+      setAuthError(
+        e?.message ||
+          "Unable to create your account."
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem(STORAGE.token);
+    localStorage.removeItem("_token");
+    localStorage.removeItem(STORAGE.loggedIn);
+    localStorage.removeItem(STORAGE.user);
+    localStorage.removeItem(STORAGE.legacyUser);
+    localStorage.removeItem(STORAGE.customer);
+
+    setUser({});
+    setCustomer({
+      name: "",
+      phone: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    });
+
+    setCart([]);
+    setOrders([]);
+    setAuthError("");
+    setAuthMode("login");
+    setScreen("login");
+
+    showToast("You have been signed out.");
+  }
+
+  async function openProfile() {
+    setScreen("profile");
+
+    if (!user?.id) return;
+
+    try {
+      const profile = await api.profile();
+
+      if (profile && typeof profile === "object") {
+        const nextUser = {
+          ...user,
+          ...profile,
+        };
+
+        setUser(nextUser);
+        setCustomer((current) => ({
+          ...current,
+          ...nextUser,
+        }));
+      }
+    } catch (e) {
+      console.warn("Profile refresh unavailable:", e);
+    }
+  }
+
+  async function saveProfile(event) {
+    event.preventDefault();
+    setAuthError("");
+
+    try {
+      setBusy(true);
+
+      const payload = {
+        name: String(
+          customer?.name || ""
+        ).trim(),
+        phone: String(
+          customer?.phone || ""
+        ).trim(),
+        email: String(
+          customer?.email || ""
+        ).trim(),
+      };
+
+      const updated = await api.updateProfile(payload);
+
+      const nextUser = {
+        ...user,
+        ...(updated || {}),
+        ...payload,
+      };
+
+      setUser(nextUser);
+
+      localStorage.setItem(
+        STORAGE.user,
+        JSON.stringify(nextUser)
+      );
+
+      localStorage.setItem(
+        STORAGE.legacyUser,
+        JSON.stringify(nextUser)
+      );
+
+      showToast("Profile updated.");
+    } catch (e) {
+      console.error("Profile update error:", e);
+      setAuthError(
+        e?.message || "Unable to update your profile."
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function selectLocation(location) {
+    const id = getLocationId(location);
+
+    setSelectedLocationId(id);
+    setSelectedMachineId("");
+
+    localStorage.setItem(
+      STORAGE.location,
+      id
+    );
+
+    localStorage.removeItem(
+      STORAGE.machine
     );
 
     showToast(
-      `${product.name} added to cart`
+      location?.name || "Location selected"
     );
   }
 
-  function setQty(
-    id,
-    quantity
-  ) {
-    setCart(
-      (currentCart) => {
-        const next = {
-          ...currentCart,
-        };
+  function selectMachine(machine) {
+    const id = String(machine?.id || "");
 
-        if (
-          Number(quantity) <= 0
-        ) {
-          delete next[id];
-        } else {
-          next[id] =
-            Number(quantity);
-        }
+    setSelectedMachineId(id);
 
-        return next;
-      }
+    localStorage.setItem(
+      STORAGE.machine,
+      id
+    );
+
+    showToast(
+      `${machine?.name || "Machine"} selected`
     );
   }
 
-  /* =======================================================
-     LOGOUT
-     ======================================================= */
+  function openProduct(product) {
+    setSelectedProduct(product);
 
-  function logout() {
-    localStorage.removeItem(
-      "juice_robo_token"
+    const existing = cart.find(
+      (item) =>
+        String(item.id) ===
+        String(product.id)
     );
 
-    localStorage.removeItem(
-      "juice_robo_user"
+    setQuantity(
+      existing
+        ? Number(existing.quantity || 1)
+        : 1
     );
-
-    setProfile(null);
-    setOrders([]);
-    setSelectedOrder(null);
-    setScreen("auth");
   }
 
-  /* =======================================================
-     AUTH
-     ======================================================= */
+  function closeProduct() {
+    setSelectedProduct(null);
+    setQuantity(1);
+  }
 
-  async function submitAuth(
-    payload
-  ) {
-    try {
-      setError("");
+  function addProduct(product, nextQuantity) {
+    const qty = Math.max(
+      1,
+      Number(nextQuantity || 1)
+    );
 
-      const result =
-        authMode === "login"
-          ? await api.login(
-              payload
-            )
-          : await api.register(
-              payload
-            );
+    setCart((current) => {
+      const exists = current.find(
+        (item) =>
+          String(item.id) ===
+          String(product.id)
+      );
 
-      if (
-        !result?.access_token
-      ) {
-        throw new Error(
-          "Authentication failed. No access token received."
+      if (exists) {
+        return current.map((item) =>
+          String(item.id) ===
+          String(product.id)
+            ? {
+                ...item,
+                quantity: qty,
+              }
+            : item
         );
       }
 
-      localStorage.setItem(
-        "juice_robo_token",
-        result.access_token
-      );
-
-      setScreen("home");
-
-      showToast(
-        authMode === "login"
-          ? "Welcome back"
-          : "Account created"
-      );
-    } catch (e) {
-      console.error(
-        "Authentication error:",
-        e
-      );
-
-      setError(
-        e?.message ||
-          "Unable to complete authentication."
-      );
-    }
+      return [
+        ...current,
+        {
+          ...product,
+          quantity: qty,
+        },
+      ];
+    });
   }
 
-  /* =======================================================
-     PLACE ORDER + PAYMENT
-     ======================================================= */
+  function confirmProduct() {
+    if (!selectedProduct) return;
 
-  async function placeOrder(
-    customer
-  ) {
-    if (
-      !selectedLocation ||
-      !selectedMachine
-    ) {
-      showToast(
-        "Choose a location and machine first"
-      );
+    addProduct(
+      selectedProduct,
+      quantity
+    );
 
-      setScreen("location");
+    showToast(
+      `${displayProductName(
+        selectedProduct
+      )} added`
+    );
 
+    closeProduct();
+  }
+
+  function removeProduct(productId) {
+    setCart((current) =>
+      current.filter(
+        (item) =>
+          String(item.id) !==
+          String(productId)
+      )
+    );
+  }
+
+  function updateQuantity(productId, nextQuantity) {
+    const qty = Number(nextQuantity);
+
+    if (qty <= 0) {
+      removeProduct(productId);
       return;
     }
 
-    if (!cartItems.length) {
-      showToast(
-        "Your cart is empty"
-      );
-
-      setScreen("home");
-
-      return;
-    }
-
-    if (paymentBusy) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setPaymentBusy(true);
-      setError("");
-
-      /*
-       * STEP 1:
-       * Create internal Juice Robo order.
-       */
-      const result =
-        await api.createOrder({
-          location_id:
-            Number(locationId),
-
-          machine_id:
-            Number(machineId),
-
-          items:
-            cartItems.map(
-              (item) => ({
-                product_id:
-                  Number(
-                    item.id
-                  ),
-
-                quantity:
-                  Number(
-                    item.quantity
-                  ),
-              })
-            ),
-        });
-
-      if (!result?.id) {
-        throw new Error(
-          "The order was not created correctly."
-        );
-      }
-
-      /*
-       * STEP 2:
-       * Create Razorpay order.
-       */
-      const paymentOrder =
-        await api.createPaymentOrder(
-          result.id
-        );
-
-      const razorpayOrderId =
-        paymentOrderValue(
-          paymentOrder,
-          "razorpay_order_id"
-        );
-
-      const keyId =
-        paymentOrderValue(
-          paymentOrder,
-          "key_id"
-        );
-
-      const amount =
-        paymentOrderValue(
-          paymentOrder,
-          "amount"
-        );
-
-      const currency =
-        paymentOrderValue(
-          paymentOrder,
-          "currency",
-          "INR"
-        );
-
-      if (!razorpayOrderId) {
-        throw new Error(
-          "Razorpay order ID was not returned by the server."
-        );
-      }
-
-      if (!keyId) {
-        throw new Error(
-          "Razorpay key was not returned by the server."
-        );
-      }
-
-      if (!amount) {
-        throw new Error(
-          "Payment amount was not returned by the server."
-        );
-      }
-
-      /*
-       * STEP 3:
-       * Load Razorpay Checkout.
-       */
-      const razorpayLoaded =
-        await loadRazorpayScript();
-
-      if (
-        !razorpayLoaded ||
-        !window.Razorpay
-      ) {
-        throw new Error(
-          "Unable to load Razorpay Checkout. Check your internet connection and try again."
-        );
-      }
-
-      const customerSnapshot = {
-        name:
-          customer?.name || "",
-
-        phone:
-          customer?.phone || "",
-
-        email:
-          customer?.email || "",
-      };
-
-      /*
-       * STEP 4:
-       * Razorpay configuration.
-       */
-      const razorpayOptions = {
-        key: keyId,
-
-        amount:
-          Number(amount),
-
-        currency,
-
-        name: "Juice Robo",
-
-        description:
-          `Juice Robo Order ${
-            result.order_number ||
-            result.order_code ||
-            result.id
-          }`,
-
-        order_id:
-          razorpayOrderId,
-
-        prefill: {
-          name:
-            customerSnapshot.name,
-
-          contact:
-            customerSnapshot.phone,
-
-          email:
-            customerSnapshot.email,
-        },
-
-        notes: {
-          juice_robo_order_id:
-            String(result.id),
-        },
-
-        config: {
-          display: {
-            blocks: {
-              juice_robo_payment_methods:
-                {
-                  name:
-                    "All Payment Options",
-
-                  instruments: [
-                    {
-                      method:
-                        "upi",
-                    },
-                    {
-                      method:
-                        "card",
-                    },
-                    {
-                      method:
-                        "netbanking",
-                    },
-                    {
-                      method:
-                        "wallet",
-                    },
-                    {
-                      method:
-                        "paylater",
-                    },
-                  ],
-                },
-            },
-
-            sequence: [
-              "block.juice_robo_payment_methods",
-            ],
-
-            preferences: {
-              show_default_blocks:
-                false,
-            },
-          },
-        },
-
-        theme: {
-          color: "#f97316",
-        },
-
-        modal: {
-          confirm_close: true,
-
-          ondismiss: () => {
-            setPaymentBusy(
-              false
-            );
-
-            setLoading(false);
-
-            showToast(
-              "Payment cancelled. Your cart is still saved."
-            );
-          },
-        },
-
-        /*
-         * Razorpay successful payment.
-         */
-        handler: async (
-          response
-        ) => {
-          try {
-            const verifiedResponse =
-              await api.verifyPayment(
-                {
-                  orderId:
-                    result.id,
-
-                  razorpayPaymentId:
-                    response.razorpay_payment_id,
-
-                  razorpayOrderId:
-                    response.razorpay_order_id,
-
-                  razorpaySignature:
-                    response.razorpay_signature,
-                }
-              );
-
-            const verifiedOrder =
-              verifiedResponse?.order ||
-              verifiedResponse?.data ||
-              verifiedResponse;
-
-            const paymentStatus =
-              String(
-                verifiedOrder?.payment_status ||
-                  verifiedOrder?.paymentStatus ||
-                  ""
-              ).toUpperCase();
-
-            /*
-             * Backend must confirm PAID.
-             */
-            if (
-              paymentStatus &&
-              paymentStatus !==
-                "PAID"
-            ) {
-              throw new Error(
-                "Payment was received, but the server could not confirm the payment."
-              );
+    setCart((current) =>
+      current.map((item) =>
+        String(item.id) ===
+        String(productId)
+          ? {
+              ...item,
+              quantity: qty,
             }
-
-            /*
-             * Clear cart only after
-             * successful backend verification.
-             */
-            setCart({});
-
-            setSelectedOrder({
-              ...verifiedOrder,
-              customer:
-                customerSnapshot,
-            });
-
-            setPaymentBusy(
-              false
-            );
-
-            setLoading(false);
-
-            setScreen(
-              "confirmation"
-            );
-
-            showToast(
-              "Payment successful"
-            );
-          } catch (
-            verificationError
-          ) {
-            console.error(
-              "Juice Robo payment verification error:",
-              verificationError
-            );
-
-            setPaymentBusy(
-              false
-            );
-
-            setLoading(false);
-
-            showToast(
-              verificationError?.message ||
-                "Payment verification failed. Please contact Juice Robo support."
-            );
-          }
-        },
-      };
-
-      const razorpay =
-        new window.Razorpay(
-          razorpayOptions
-        );
-
-      razorpay.on(
-        "payment.failed",
-        (response) => {
-          console.error(
-            "Razorpay payment failed:",
-            response
-          );
-
-          setPaymentBusy(
-            false
-          );
-
-          setLoading(false);
-
-          showToast(
-            response?.error
-              ?.description ||
-              "Payment failed. Your cart is still saved."
-          );
-        }
-      );
-
-      razorpay.open();
-    } catch (e) {
-      console.error(
-        "Juice Robo payment flow error:",
-        e
-      );
-
-      setPaymentBusy(
-        false
-      );
-
-      setLoading(false);
-
-      showToast(
-        e?.message ||
-          "Unable to start payment."
-      );
-    }
+          : item
+      )
+    );
   }
 
-  /* =======================================================
-     AUTH SCREEN
-     ======================================================= */
+  function startCheckout() {
+    if (!cart.length) {
+      showToast("Your cart is empty.");
+      setScreen("menu");
+      return;
+    }
 
-  if (screen === "auth") {
+    if (!selectedLocationId) {
+      showToast("Select a collection location.");
+      setScreen("machine");
+      return;
+    }
+
+    if (!selectedMachineId) {
+      showToast("Select a Juice Robo machine.");
+      setScreen("machine");
+      return;
+    }
+
+    setPaymentMethod("upi");
+    setPaymentStatus("idle");
+    setCompletedOrder(null);
+    setScreen("payment");
+  }
+
+  /* =========================================================
+     FRONTEND PAYMENT TEST FLOW
+     ========================================================= */
+
+  function completeDemoPayment() {
+    if (!cart.length) {
+      showToast("Your cart is empty.");
+      setScreen("menu");
+      return;
+    }
+
+    if (paymentStatus === "processing") return;
+
+    setPaymentStatus("processing");
+
+    /*
+     * This timeout intentionally simulates the visual payment
+     * lifecycle for the frontend final test. It does NOT charge
+     * money and must be replaced by the real Razorpay flow when
+     * createPaymentOrder()/verifyPayment() are supplied.
+     */
+    window.setTimeout(() => {
+      const collectionCode = String(
+        Math.floor(1000 + Math.random() * 9000)
+      );
+
+      const orderId = `JR-${Date.now()}`;
+
+      const order = {
+        id: orderId,
+        order_number: orderId,
+        status: "READY_FOR_COLLECTION",
+        payment_status: "PAID",
+        total_amount: cartTotal,
+        collection_code: collectionCode,
+        collectionCode,
+        location_id: selectedLocationId,
+        machine_id: selectedMachineId,
+        location_name: selectedLocation?.name || "Juice Robo",
+        machine_name: selectedMachine?.name || "Juice Robo Machine",
+        payment_method: paymentMethod,
+        items: cart.map((item) => ({
+          product_id: item.id,
+          product_name:
+            item.displayName || displayProductName(item),
+          quantity: Number(item.quantity || 1),
+          unit_price: Number(item.price || 0),
+          subtotal:
+            Number(item.price || 0) *
+            Number(item.quantity || 0),
+        })),
+        created_at: new Date().toISOString(),
+      };
+
+      setCompletedOrder(order);
+      setOrders((current) => {
+        const next = [order, ...current].slice(0, 40);
+        saveUserOrders(user, next);
+        return next;
+      });
+
+      setCart([]);
+      setPaymentStatus("success");
+      setScreen("confirmation");
+
+      showToast("Payment successful.");
+    }, 1200);
+  }
+
+  function retryPayment() {
+    setPaymentStatus("idle");
+    setScreen("payment");
+  }
+
+  function paymentPlaceholder() {
     return (
-      <Auth
-        mode={authMode}
-        setMode={setAuthMode}
-        onSubmit={submitAuth}
-        error={error}
+      <PaymentScreen
+        cart={cart}
+        total={cartTotal}
+        location={selectedLocation}
+        machine={selectedMachine}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+        paymentStatus={paymentStatus}
+        onBack={() => {
+          if (paymentStatus !== "processing") {
+            setPaymentStatus("idle");
+            setScreen("cart");
+          }
+        }}
+        onPay={completeDemoPayment}
       />
     );
   }
 
-  /* =======================================================
-     SPLASH
-     ======================================================= */
+  if (loading) return <LoadingScreen />;
 
   if (
-    loading &&
-    products.length === 0
+    error &&
+    !products.length &&
+    !locations.length
   ) {
-    return <Splash />;
+    return (
+      <div className="jr-app">
+        <div className="jr-error-screen">
+          <div className="jr-error-icon">!</div>
+
+          <h1>Something went wrong</h1>
+
+          <p>{error}</p>
+
+          <button
+            className="jr-button jr-button-primary"
+            onClick={() => window.location.reload()}
+            type="button"
+          >
+            TRY AGAIN
+          </button>
+        </div>
+      </div>
+    );
   }
 
-  /* =======================================================
-     MAIN APP
-     ======================================================= */
+  if (screen === "login") {
+    return (
+      <div className="jr-app">
+        <div className="jr-mobile-frame">
+          <AuthScreen
+            mode={authMode}
+            setMode={(mode) => {
+              setAuthMode(mode);
+              setAuthError("");
+            }}
+            customer={customer}
+            setCustomer={setCustomer}
+            onLogin={handleLogin}
+            onSignup={handleSignup}
+            busy={busy}
+            error={authError}
+          />
+
+          {toast && (
+            <Toast message={toast} />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="app-shell">
-      {/* TOP BAR */}
-
-      <header className="topbar">
-        <button
-          className="icon-btn"
-          onClick={() =>
-            setScreen("location")
-          }
-          aria-label="Choose collection location"
-        >
-          ⌖
-        </button>
-
-        <div className="brand">
-          <img
-            src="/assets/juice-robo-logo.jpg"
-            alt="Juice Robo"
-          />
-
-          <div>
-            <strong>
-              JUICE ROBO
-            </strong>
-
-            <span>
-              {selectedLocation?.name ||
-                "Choose location"}
-            </span>
-          </div>
-        </div>
-
-        <button
-          className="cart-button"
-          onClick={() =>
-            setScreen("cart")
-          }
-          aria-label="Shopping cart"
-        >
-          <span>
-            🛒
-          </span>
-
-          {cartCount > 0 && (
-            <b>
-              {cartCount}
-            </b>
-          )}
-        </button>
-      </header>
-
-      {/* HOME */}
-
-      {screen === "home" && (
-        <Home
-          products={
-            filteredProducts
-          }
-          search={search}
-          setSearch={setSearch}
-          category={category}
-          setCategory={
-            setCategory
-          }
-          categories={categories}
-          add={add}
-          open={
-            setSelectedProduct
-          }
+    <div className="jr-app">
+      <div className="jr-mobile-frame">
+        <Header
+          cartCount={cartCount}
+          location={selectedLocation}
+          machine={selectedMachine}
+          user={user}
+          onCart={() => setScreen("cart")}
+          onAccount={openProfile}
+          onLocation={() => setScreen("machine")}
         />
-      )}
 
-      {/* LOCATION */}
-
-      {screen === "location" && (
-        <Location
-          locations={locations}
-          machines={
-            availableMachines
-          }
-          locationId={
-            locationId
-          }
-          machineId={
-            machineId
-          }
-          setLocationId={(
-            id
-          ) => {
-            setLocationId(id);
-            setMachineId("");
-          }}
-          setMachineId={
-            setMachineId
-          }
-          onContinue={() => {
-            if (
-              selectedLocation &&
-              selectedMachine
-            ) {
-              setScreen(
-                "home"
-              );
-            } else {
-              showToast(
-                "Select a location and machine"
-              );
-            }
-          }}
-        />
-      )}
-
-      {/* CART */}
-
-      {screen === "cart" && (
-        <Cart
-          items={cartItems}
-          subtotal={subtotal}
-          setQty={setQty}
-          onCheckout={() =>
-            setScreen(
-              "checkout"
-            )
-          }
-          onBack={() =>
-            setScreen("home")
-          }
-        />
-      )}
-
-      {/* CHECKOUT */}
-
-      {screen === "checkout" && (
-        <Checkout
-          profile={profile}
-          onBack={() =>
-            setScreen("cart")
-          }
-          onPlace={
-            placeOrder
-          }
-          paymentBusy={
-            paymentBusy
-          }
-          showToast={
-            showToast
-          }
-        />
-      )}
-
-      {/* CONFIRMATION */}
-
-      {screen === "confirmation" && (
-        <Confirmation
-          order={
-            selectedOrder
-          }
-          location={
-            selectedLocation
-          }
-          machine={
-            selectedMachine
-          }
-          onHome={() =>
-            setScreen("home")
-          }
-          onHistory={() =>
-            setScreen(
-              "history"
-            )
-          }
-        />
-      )}
-
-      {/* HISTORY */}
-
-      {screen === "history" && (
-        <History
-          orders={orders}
-          onOpen={(order) => {
-            setSelectedOrder(
-              order
-            );
-
-            setScreen(
-              "order"
-            );
-          }}
-        />
-      )}
-
-      {/* ORDER DETAIL */}
-
-      {screen === "order" && (
-        <OrderDetail
-          order={
-            selectedOrder
-          }
-          onBack={() =>
-            setScreen(
-              "history"
-            )
-          }
-        />
-      )}
-
-      {/* PROFILE */}
-
-      {screen === "profile" && (
-        <Profile
-          profile={profile}
-          onLogout={logout}
-        />
-      )}
-
-      {/* BOTTOM NAVIGATION */}
-
-      {screen !==
-        "confirmation" &&
-        screen !== "order" && (
-          <BottomNav
-            screen={screen}
-            setScreen={
-              setScreen
-            }
-            cartCount={
-              cartCount
-            }
+        {screen === "menu" && (
+          <MenuScreen
+            products={products}
+            selectedLocation={selectedLocation}
+            selectedMachine={selectedMachine}
+            user={user}
+            onProduct={openProduct}
           />
         )}
 
-      {/* PRODUCT SHEET */}
-
-      {selectedProduct && (
-        <ProductSheet
-          product={
-            selectedProduct
-          }
-          quantity={
-            cart[
-              selectedProduct.id
-            ] || 0
-          }
-          add={add}
-          setQty={setQty}
-          close={() =>
-            setSelectedProduct(
-              null
-            )
-          }
-        />
-      )}
-
-      {/* TOAST */}
-
-      {toast && (
-        <div className="toast">
-          {toast}
-        </div>
-      )}
-
-      {/* GLOBAL ERROR */}
-
-      {error &&
-        screen !== "auth" && (
-          <div className="app-error">
-            {error}
-          </div>
+        {screen === "machine" && (
+          <MachineScreen
+            locations={locations}
+            machines={machines}
+            selectedLocationId={selectedLocationId}
+            selectedMachineId={selectedMachineId}
+            onLocation={selectLocation}
+            onMachine={selectMachine}
+            onContinue={() => setScreen("menu")}
+          />
         )}
+
+        {screen === "cart" && (
+          <CartScreen
+            cart={cart}
+            total={cartTotal}
+            location={selectedLocation}
+            machine={selectedMachine}
+            onBack={() => setScreen("menu")}
+            onUpdate={updateQuantity}
+            onRemove={removeProduct}
+            onLocation={() => setScreen("machine")}
+            onCheckout={startCheckout}
+          />
+        )}
+
+        {screen === "payment" &&
+          paymentPlaceholder()}
+
+        {screen === "confirmation" && (
+          <ConfirmationScreen
+            order={completedOrder}
+            location={selectedLocation}
+            machine={selectedMachine}
+            onHome={() => {
+              setCompletedOrder(null);
+              setPaymentStatus("idle");
+              setScreen("menu");
+            }}
+          />
+        )}
+
+        {screen === "profile" && (
+          <ProfileScreen
+            user={user}
+            customer={customer}
+            setCustomer={setCustomer}
+            orders={orders}
+            onSave={saveProfile}
+            onLogout={logout}
+            onBack={() => setScreen("menu")}
+            busy={busy}
+            error={authError}
+            onOrders={() => setScreen("history")}
+          />
+        )}
+
+        {screen === "history" && (
+          <HistoryScreen
+            orders={orders}
+            onBack={() => setScreen("profile")}
+          />
+        )}
+
+        <BottomBar
+          screen={screen}
+          cartCount={cartCount}
+          onMenu={() => setScreen("menu")}
+          onMachine={() => setScreen("machine")}
+          onCart={() => setScreen("cart")}
+          onAccount={openProfile}
+        />
+
+        {selectedProduct && (
+          <ProductSheet
+            product={selectedProduct}
+            quantity={quantity}
+            setQuantity={setQuantity}
+            onClose={closeProduct}
+            onConfirm={confirmProduct}
+          />
+        )}
+
+        {toast && (
+          <Toast message={toast} />
+        )}
+      </div>
     </div>
   );
 }
-/* =========================================================
-   SPLASH
-   ========================================================= */
 
-function Splash() {
+function MobileOnlyScreen() {
   return (
-    <main className="splash">
-      <div>
-        <img
-          src="/assets/juice-robo-logo.jpg"
-          alt="Juice Robo"
-        />
+    <div className="jr-mobile-only-screen">
+      <div className="jr-mobile-only-card">
+        <div className="jr-mobile-only-logo">JR</div>
 
-        <h1>
+        <span className="jr-mobile-only-eyebrow">
           JUICE ROBO
-        </h1>
+        </span>
+
+        <h1>Mobile Only</h1>
 
         <p>
-          Fresh juice.
-          <br />
-          Made instantly.
+          This website is optimized for mobile devices.
+          Please access it on your mobile phone.
         </p>
-
-        <div className="loader" />
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -1495,300 +1226,549 @@ function Splash() {
    AUTH
    ========================================================= */
 
-function Auth({
+function AuthScreen({
   mode,
   setMode,
-  onSubmit,
+  customer,
+  setCustomer,
+  onLogin,
+  onSignup,
+  busy,
   error,
 }) {
-  const [name, setName] =
-    useState("");
+  const signup = mode === "signup";
 
-  const [email, setEmail] =
-    useState("");
-
-  const [phone, setPhone] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
-
-  const [busy, setBusy] =
-    useState(false);
-
-  async function submit(
-    event
-  ) {
-    event.preventDefault();
-
-    setBusy(true);
-
-    try {
-      if (mode === "login") {
-        await onSubmit({
-          email,
-          password,
-        });
-      } else {
-        await onSubmit({
-          name,
-          email,
-          phone,
-          password,
-        });
-      }
-    } finally {
-      setBusy(false);
-    }
+  function update(field, value) {
+    setCustomer((current) => ({
+      ...current,
+      [field]: value,
+    }));
   }
 
   return (
-    <main className="auth-page">
-      <div className="auth-card">
-        <img
-          className="auth-logo"
-          src="/assets/juice-robo-logo.jpg"
-          alt="Juice Robo"
-        />
+    <main className="jr-login-screen">
+      <div className="jr-login-brand">
+        <div className="jr-login-logo">JR</div>
+        <span>JUICE ROBO</span>
+      </div>
 
-        <span className="eyebrow">
-          JUICE ROBO
+      <div className="jr-login-copy">
+        <span className="jr-eyebrow">
+          {signup
+            ? "CREATE YOUR JUICE ROBO ACCOUNT"
+            : "FRESH JUICE · READY WHEN YOU ARE"}
         </span>
 
         <h1>
-          {mode === "login"
-            ? "Welcome back."
-            : "Let's get started."}
+          {signup ? (
+            <>
+              Fresh juice,
+              <br />
+              <em>made personal.</em>
+            </>
+          ) : (
+            <>
+              Your favourite
+              <br />
+              <em>juice awaits.</em>
+            </>
+          )}
         </h1>
 
         <p>
-          {mode === "login"
-            ? "Sign in to order fresh juice and manage your collections."
-            : "Create your Juice Robo account and order fresh juice in seconds."}
+          {signup
+            ? "Create an account to keep your orders, profile and Juice Robo activity together."
+            : "Sign in to access your account and order from Juice Robo."}
         </p>
+      </div>
 
-        <form
-          onSubmit={submit}
-        >
-          {mode === "register" && (
-            <>
-              <input
-                type="text"
-                placeholder="Full name"
-                value={name}
-                onChange={(event) =>
-                  setName(
-                    event.target.value
-                  )
-                }
-                required
-              />
+      <form
+        className="jr-login-form"
+        onSubmit={signup ? onSignup : onLogin}
+      >
+        {signup && (
+          <label>
+            FULL NAME
+            <input
+              type="text"
+              value={customer?.name || ""}
+              onChange={(event) =>
+                update("name", event.target.value)
+              }
+              placeholder="Enter your full name"
+              autoComplete="name"
+            />
+          </label>
+        )}
 
-              <input
-                type="tel"
-                placeholder="Phone number"
-                value={phone}
-                onChange={(event) =>
-                  setPhone(
-                    event.target.value
-                  )
-                }
-                required
-              />
-            </>
-          )}
-
+        <label>
+          {signup
+            ? "PHONE NUMBER"
+            : "EMAIL OR PHONE NUMBER"}
           <input
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(event) =>
-              setEmail(
-                event.target.value
-              )
+            type={signup ? "tel" : "text"}
+            value={
+              signup
+                ? customer?.phone || ""
+                : customer?.email ||
+                  customer?.phone ||
+                  ""
             }
-            required
-          />
+            onChange={(event) => {
+              const value = event.target.value;
 
+              if (signup) {
+                update("phone", value);
+              } else {
+                update(
+                  value.includes("@")
+                    ? "email"
+                    : "phone",
+                  value
+                );
+              }
+            }}
+            placeholder={
+              signup
+                ? "Enter phone number"
+                : "Email or phone number"
+            }
+            autoComplete={
+              signup
+                ? "tel"
+                : "username"
+            }
+          />
+        </label>
+
+        {signup && (
+          <label>
+            EMAIL
+            <input
+              type="email"
+              value={customer?.email || ""}
+              onChange={(event) =>
+                update("email", event.target.value)
+              }
+              placeholder="Enter your email"
+              autoComplete="email"
+            />
+          </label>
+        )}
+
+        <label>
+          PASSWORD
           <input
             type="password"
-            placeholder="Password"
-            value={password}
+            value={customer?.password || ""}
             onChange={(event) =>
-              setPassword(
-                event.target.value
-              )
+              update("password", event.target.value)
             }
-            required
+            placeholder={
+              signup
+                ? "Create a password"
+                : "Enter your password"
+            }
+            autoComplete={
+              signup
+                ? "new-password"
+                : "current-password"
+            }
           />
+        </label>
 
-          {error && (
-            <div className="form-error">
-              {error}
-            </div>
-          )}
+        {signup && (
+          <label>
+            CONFIRM PASSWORD
+            <input
+              type="password"
+              value={customer?.confirmPassword || ""}
+              onChange={(event) =>
+                update(
+                  "confirmPassword",
+                  event.target.value
+                )
+              }
+              placeholder="Repeat your password"
+              autoComplete="new-password"
+            />
+          </label>
+        )}
 
-          <button
-            className="primary full"
-            type="submit"
-            disabled={busy}
-          >
-            {busy
-              ? "PLEASE WAIT..."
-              : mode === "login"
-              ? "SIGN IN"
-              : "CREATE ACCOUNT"}
-          </button>
-        </form>
+        {error && (
+          <div className="jr-form-error">
+            {error}
+          </div>
+        )}
 
         <button
-          className="text-btn"
-          type="button"
-          onClick={() => {
-            setMode(
-              mode === "login"
-                ? "register"
-                : "login"
-            );
-          }}
+          className="jr-button jr-button-primary jr-full"
+          type="submit"
+          disabled={busy}
         >
-          {mode === "login"
-            ? "CREATE A NEW ACCOUNT"
-            : "ALREADY HAVE AN ACCOUNT? SIGN IN"}
+          {busy
+            ? "PLEASE WAIT..."
+            : signup
+            ? "CREATE ACCOUNT"
+            : "SIGN IN"}
+          {!busy && <span>→</span>}
         </button>
+      </form>
+
+      <div className="jr-auth-switch">
+        {signup
+          ? "Already have an account?"
+          : "New to Juice Robo?"}
+
+        <button
+          type="button"
+          onClick={() =>
+            setMode(
+              signup
+                ? "login"
+                : "signup"
+            )
+          }
+        >
+          {signup
+            ? "SIGN IN"
+            : "CREATE ACCOUNT"}
+        </button>
+      </div>
+
+      <div className="jr-login-note">
+        Your account keeps your Juice Robo
+        experience personal to you.
       </div>
     </main>
   );
 }
 
 /* =========================================================
-   HOME
+   HEADER
    ========================================================= */
 
-function Home({
-  products,
-  search,
-  setSearch,
-  category,
-  setCategory,
-  categories,
-  add,
-  open,
+function Header({
+  cartCount,
+  location,
+  machine,
+  user,
+  onCart,
+  onAccount,
+  onLocation,
 }) {
+  const initials =
+    String(user?.name || "J")
+      .trim()
+      .split(/\s+/)
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+
   return (
-    <main className="content">
-      <section className="hero">
+    <header className="jr-header">
+      <button
+        className="jr-header-location"
+        onClick={onLocation}
+        type="button"
+      >
+        <span className="jr-location-pin">⌖</span>
+
+        <span>
+          <small>COLLECT FROM</small>
+
+          <strong>
+            {location?.name || "Choose location"}
+          </strong>
+
+          {machine?.name && (
+            <small className="jr-header-machine">
+              {machine.name}
+            </small>
+          )}
+        </span>
+
+        <span className="jr-chevron">˅</span>
+      </button>
+
+      <div className="jr-header-actions">
+        <button
+          className="jr-account-button"
+          onClick={onAccount}
+          type="button"
+          aria-label="Open account"
+        >
+          {initials}
+        </button>
+
+        <button
+          className="jr-cart-button"
+          onClick={onCart}
+          type="button"
+          aria-label="Open cart"
+        >
+          🛒
+
+          {cartCount > 0 && (
+            <b>{cartCount}</b>
+          )}
+        </button>
+      </div>
+    </header>
+  );
+}
+
+/* =========================================================
+   MENU
+   ========================================================= */
+
+function MenuScreen({
+  products,
+  selectedLocation,
+  selectedMachine,
+  user,
+  onProduct,
+}) {
+  const firstName =
+    String(user?.name || "there")
+      .trim()
+      .split(/\s+/)[0];
+
+  return (
+    <main className="jr-content">
+      <section className="jr-welcome">
         <div>
-          <span className="eyebrow">
-            FRESH. FAST. AUTOMATED.
+          <span className="jr-eyebrow">
+            WELCOME BACK, {firstName.toUpperCase()}
           </span>
 
           <h1>
-            Your juice,
+            Your favourite
             <br />
-            <em>your way.</em>
+            <em>juice, your way.</em>
           </h1>
 
           <p>
-            Pick your favourite
-            sugarcane juice, choose
-            your Robo and collect it
-            fresh.
+            Pick your juice, choose your quantity
+            and collect it fresh from your Juice Robo
+            machine.
           </p>
         </div>
 
-        <div className="hero-orb">
-          🥤
+        <div className="jr-welcome-icon">
+          🧃
         </div>
       </section>
 
-      <div className="search">
-        <span>
-          ⌕
-        </span>
+      <button
+        className="jr-selected-machine-banner"
+        type="button"
+      >
+        <span>⌖</span>
 
-        <input
-          value={search}
-          onChange={(event) =>
-            setSearch(
-              event.target.value
-            )
-          }
-          placeholder="Search your juice..."
-          type="search"
-        />
-      </div>
-
-      <div className="chips">
-        {categories.map(
-          (item) => (
-            <button
-              key={item}
-              className={
-                category === item
-                  ? "active"
-                  : ""
-              }
-              onClick={() =>
-                setCategory(
-                  item
-                )
-              }
-            >
-              {item}
-            </button>
-          )
-        )}
-      </div>
-
-      <div className="section-head">
         <div>
-          <span className="eyebrow">
-            OUR MENU
-          </span>
+          <small>COLLECTING FROM</small>
 
-          <h2>
-            Fresh picks
-          </h2>
+          <strong>
+            {selectedLocation?.name ||
+              "Choose a location"}
+          </strong>
+
+          <small>
+            {selectedMachine?.name ||
+              "Choose a machine"}
+          </small>
         </div>
+      </button>
 
-        <span>
-          {products.length}{" "}
-          {products.length === 1
-            ? "juice"
-            : "juices"}
-        </span>
-      </div>
-
-      {!products.length ? (
-        <div className="empty">
+      <section className="jr-menu-section">
+        <div className="jr-section-heading">
           <div>
-            🔎
+            <span className="jr-eyebrow">
+              AVAILABLE JUICES
+            </span>
+
+            <h2>What are you craving?</h2>
           </div>
 
-          <h3>
-            No juice found
-          </h3>
+          <span className="jr-count">
+            {products.length}
+          </span>
+        </div>
 
-          <p>
-            Try another search or
-            category.
-          </p>
+        <p className="jr-section-subtitle">
+          Choose your favourite fresh juice.
+        </p>
+
+        <div className="jr-products">
+          {products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onSelect={onProduct}
+            />
+          ))}
         </div>
-      ) : (
-        <div className="product-grid">
-          {products.map(
-            (product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                add={add}
-                open={open}
-              />
-            )
-          )}
+      </section>
+    </main>
+  );
+}
+
+/* =========================================================
+   MACHINE / LOCATION
+   ========================================================= */
+
+function MachineScreen({
+  locations,
+  machines,
+  selectedLocationId,
+  selectedMachineId,
+  onLocation,
+  onMachine,
+  onContinue,
+}) {
+  return (
+    <main className="jr-content jr-page jr-location-page">
+      <span className="jr-eyebrow">
+        COLLECTION POINT
+      </span>
+
+      <h1 className="jr-page-title">
+        Choose your
+        <br />
+        <em>Juice Robo.</em>
+      </h1>
+
+      <p className="jr-page-description">
+        Select where you want to collect your
+        juice and then choose the available machine.
+      </p>
+
+      <section className="jr-flow-section">
+        <div className="jr-flow-heading">
+          <span>01</span>
+
+          <div>
+            <strong>SELECT LOCATION</strong>
+            <small>
+              Where will you collect your juice?
+            </small>
+          </div>
         </div>
-      )}
+
+        <div className="jr-choice-list">
+          {locations.map((location) => {
+            const id = getLocationId(location);
+            const active =
+              String(id) ===
+              String(selectedLocationId);
+
+            return (
+              <button
+                className={
+                  active
+                    ? "jr-choice active"
+                    : "jr-choice"
+                }
+                key={id}
+                type="button"
+                onClick={() => onLocation(location)}
+              >
+                <span className="jr-choice-icon">
+                  ⌖
+                </span>
+
+                <span className="jr-choice-copy">
+                  <strong>
+                    {location?.name ||
+                      "Juice Robo"}
+                  </strong>
+
+                  <small>
+                    {location?.address ||
+                      "Collection point"}
+                  </small>
+                </span>
+
+                <span className="jr-choice-check">
+                  {active ? "✓" : ""}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="jr-flow-section">
+        <div className="jr-flow-heading">
+          <span>02</span>
+
+          <div>
+            <strong>SELECT MACHINE</strong>
+            <small>
+              Choose your Juice Robo machine.
+            </small>
+          </div>
+        </div>
+
+        <div className="jr-machine-list">
+          {machines.map((machine) => {
+            const id = String(machine?.id || "");
+            const active =
+              id === String(selectedMachineId);
+
+            return (
+              <button
+                className={
+                  active
+                    ? "jr-machine-card active"
+                    : "jr-machine-card"
+                }
+                key={id}
+                type="button"
+                onClick={() => onMachine(machine)}
+              >
+                <span className="jr-machine-icon">
+                  🧃
+                </span>
+
+                <span className="jr-machine-copy">
+                  <strong>
+                    {machine?.name ||
+                      "Juice Robo Machine"}
+                  </strong>
+
+                  <small>
+                    {machine?.status ||
+                      "ONLINE"}
+                  </small>
+                </span>
+
+                <span className="jr-machine-status">
+                  <i />
+                  {active
+                    ? "SELECTED"
+                    : "AVAILABLE"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <button
+        className="jr-button jr-button-primary jr-full jr-location-continue"
+        type="button"
+        onClick={onContinue}
+        disabled={
+          !selectedLocationId ||
+          !selectedMachineId
+        }
+      >
+        CONTINUE TO MENU
+        <span>→</span>
+      </button>
     </main>
   );
 }
@@ -1797,72 +1777,62 @@ function Home({
    PRODUCT CARD
    ========================================================= */
 
-function ProductCard({
-  product,
-  add,
-  open,
-}) {
+function ProductCard({ product, onSelect }) {
+  const name =
+    product.displayName ||
+    displayProductName(product);
+
+  const description =
+    product.displayDescription ||
+    displayDescription(product);
+
   return (
-    <article
-      className="product-card"
-      onClick={() =>
-        open(product)
-      }
+    <button
+      className="jr-product-card"
+      type="button"
+      onClick={() => onSelect(product)}
     >
-      <div className="product-image">
+      <div className="jr-product-image-wrap">
         <img
           src={
             product.image ||
             productImage(product)
           }
-          alt={product.name}
-          onError={(
-            event
-          ) => {
+          alt={name}
+          className="jr-product-image"
+          onError={(event) => {
             event.currentTarget.src =
-              productImage({
-                ...product,
-                image_url: "",
-              });
+              productImage(product);
           }}
         />
 
-        <span className="fresh-dot">
-          ● Fresh
+        <span className="jr-fresh-badge">
+          ● FRESH
         </span>
       </div>
 
-      <div className="product-copy">
+      <div className="jr-product-info">
         <div>
-          <span className="product-kicker">
-            {product.description ||
-              "Fresh & natural"}
+          <span className="jr-product-type">
+            SUGARCANE JUICE
           </span>
 
-          <h3>
-            {product.name}
-          </h3>
+          <h3>{name}</h3>
+
+          <p>{description}</p>
         </div>
 
-        <div className="product-bottom">
+        <div className="jr-product-footer">
           <strong>
             {money(product.price)}
           </strong>
 
-          <button
-            className="add-btn"
-            onClick={(event) => {
-              event.stopPropagation();
-
-              add(product);
-            }}
-            aria-label={`Add ${product.name} to cart`}
-          >
+          <span className="jr-select-circle">
             +
-          </button>
+          </span>
         </div>
       </div>
-    </article>
+    </button>
   );
 }
 
@@ -1873,280 +1843,187 @@ function ProductCard({
 function ProductSheet({
   product,
   quantity,
-  add,
-  setQty,
-  close,
+  setQuantity,
+  onClose,
+  onConfirm,
 }) {
+  const name =
+    product.displayName ||
+    displayProductName(product);
+
+  const description =
+    product.displayDescription ||
+    displayDescription(product);
+
+  const total =
+    Number(product.price || 0) *
+    Number(quantity || 1);
+
   return (
     <div
-      className="modal-backdrop"
-      onClick={close}
+      className="jr-sheet-backdrop"
+      onClick={onClose}
     >
-      <div
-        className="sheet"
+      <section
+        className="jr-product-sheet"
         onClick={(event) =>
           event.stopPropagation()
         }
       >
-        <div className="sheet-image">
+        <div className="jr-sheet-image-wrap">
           <img
             src={
               product.image ||
               productImage(product)
             }
-            alt={product.name}
+            alt={name}
           />
 
           <button
-            className="close"
-            onClick={close}
-            aria-label="Close"
+            className="jr-sheet-close"
+            onClick={onClose}
+            type="button"
           >
             ×
           </button>
         </div>
 
-        <div className="sheet-body">
-          <span className="eyebrow">
-            {product.description ||
-              "FRESH & NATURAL"}
+        <div className="jr-sheet-body">
+          <span className="jr-eyebrow">
+            FRESH SUGARCANE JUICE
           </span>
 
-          <h2>
-            {product.name}
-          </h2>
+          <h2>{name}</h2>
 
-          <p>
-            Freshly prepared
-            sugarcane juice made for
-            quick, easy collection.
-          </p>
+          <p>{description}</p>
 
-          <div className="sheet-row">
+          <div className="jr-sheet-price">
+            <span>Price per juice</span>
             <strong>
               {money(product.price)}
             </strong>
+          </div>
 
-            <div className="qty">
-              <button
-                onClick={() =>
-                  setQty(
-                    product.id,
-                    Math.max(
-                      0,
-                      quantity - 1
-                    )
-                  )
-                }
-                aria-label="Decrease quantity"
-              >
-                −
-              </button>
-
-              <b>
-                {quantity}
-              </b>
-
-              <button
-                onClick={() =>
-                  add(product)
-                }
-                aria-label="Increase quantity"
-              >
-                +
-              </button>
+          <div className="jr-quantity-row">
+            <div>
+              <span>QUANTITY</span>
+              <small>
+                How many would you like?
+              </small>
             </div>
+
+            <QuantityControl
+              value={quantity}
+              onChange={setQuantity}
+            />
+          </div>
+
+          <div className="jr-sheet-total">
+            <span>TOTAL</span>
+            <strong>{money(total)}</strong>
           </div>
 
           <button
-            className="primary full"
-            onClick={() => {
-              if (!quantity) {
-                add(product);
-              }
-
-              close();
-            }}
+            className="jr-button jr-button-primary jr-full"
+            type="button"
+            onClick={onConfirm}
           >
-            {quantity
-              ? "UPDATE CART"
-              : "ADD TO CART"}
+            ADD TO CART
+            <span>→</span>
           </button>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
 
 /* =========================================================
-   LOCATION
+   QUANTITY
    ========================================================= */
 
-function Location({
-  locations,
-  machines,
-  locationId,
-  machineId,
-  setLocationId,
-  setMachineId,
-  onContinue,
-}) {
+function QuantityControl({ value, onChange }) {
   return (
-    <main className="content location-page">
-      <span className="eyebrow">
-        COLLECTION POINT
-      </span>
-
-      <h1>
-        Where should we
-        <br />
-        <em>
-          make your juice?
-        </em>
-      </h1>
-
-      <p className="muted">
-        Choose the Robo you'll
-        collect from.
-      </p>
-
-      <h3>
-        1. Select location
-      </h3>
-
-      <div className="choice-list">
-        {locations.map(
-          (location) => (
-            <button
-              className={
-                String(
-                  location.id
-                ) ===
-                String(
-                  locationId
-                )
-                  ? "choice active"
-                  : "choice"
-              }
-              key={location.id}
-              onClick={() =>
-                setLocationId(
-                  String(
-                    location.id
-                  )
-                )
-              }
-            >
-              <span className="choice-icon">
-                ⌖
-              </span>
-
-              <span>
-                <b>
-                  {location.name}
-                </b>
-
-                <small>
-                  {location.address ||
-                    "Juice Robo collection point"}
-                </small>
-              </span>
-
-              <span>
-                ›
-              </span>
-            </button>
-          )
-        )}
-      </div>
-
-      <h3>
-        2. Select machine
-      </h3>
-
-      {!machines.length ? (
-        <div className="empty">
-          <div>
-            ⚙
-          </div>
-
-          <h3>
-            No Robo available
-          </h3>
-
-          <p>
-            Select another collection
-            location.
-          </p>
-        </div>
-      ) : (
-        <div className="choice-list">
-          {machines.map(
-            (machine) => (
-              <button
-                className={
-                  String(
-                    machine.id
-                  ) ===
-                  String(
-                    machineId
-                  )
-                    ? "choice active"
-                    : "choice"
-                }
-                key={machine.id}
-                onClick={() =>
-                  setMachineId(
-                    String(
-                      machine.id
-                    )
-                  )
-                }
-              >
-                <span className="machine-icon">
-                  JR
-                </span>
-
-                <span>
-                  <b>
-                    {machine.name}
-                  </b>
-
-                  <small>
-                    {machine.machine_code ||
-                      machine.machineCode ||
-                      "Juice Robo"}
-                    {" · "}
-                    {machine.status ||
-                      "OFFLINE"}
-                  </small>
-                </span>
-
-                <span
-                  className={
-                    String(
-                      machine.status
-                    ).toUpperCase() ===
-                    "ONLINE"
-                      ? "online"
-                      : "offline"
-                  }
-                >
-                  ●
-                </span>
-              </button>
+    <div className="jr-quantity-control">
+      <button
+        type="button"
+        onClick={() =>
+          onChange(
+            Math.max(
+              1,
+              Number(value) - 1
             )
-          )}
-        </div>
-      )}
+          )
+        }
+        aria-label="Decrease quantity"
+      >
+        −
+      </button>
+
+      <strong>{value}</strong>
 
       <button
-        className="primary full sticky-action"
-        onClick={onContinue}
+        type="button"
+        onClick={() =>
+          onChange(Number(value) + 1)
+        }
+        aria-label="Increase quantity"
       >
-        CONTINUE
+        +
       </button>
-    </main>
+    </div>
+  );
+}
+
+/* =========================================================
+   CART QUANTITY
+   ========================================================= */
+
+function CartQuantityControl({
+  value,
+  onUpdate,
+  onRemove,
+}) {
+  const quantity = Math.max(
+    1,
+    Number(value) || 1
+  );
+
+  function decrease() {
+    // Quantity 1 + minus = remove the complete item.
+    if (quantity === 1) {
+      onRemove();
+      return;
+    }
+
+    onUpdate(quantity - 1);
+  }
+
+  return (
+    <div className="jr-quantity-control">
+      <button
+        type="button"
+        onClick={decrease}
+        aria-label={
+          quantity === 1
+            ? "Remove item from cart"
+            : "Decrease quantity"
+        }
+      >
+        −
+      </button>
+
+      <strong>{quantity}</strong>
+
+      <button
+        type="button"
+        onClick={() =>
+          onUpdate(quantity + 1)
+        }
+        aria-label="Increase quantity"
+      >
+        +
+      </button>
+    </div>
   );
 }
 
@@ -2154,169 +2031,165 @@ function Location({
    CART
    ========================================================= */
 
-function Cart({
-  items,
-  subtotal,
-  setQty,
-  onCheckout,
+function CartScreen({
+  cart,
+  total,
+  location,
+  machine,
   onBack,
+  onUpdate,
+  onRemove,
+  onLocation,
+  onCheckout,
 }) {
   return (
-    <main className="content cart-page">
-      <button
-        className="back"
-        onClick={onBack}
-      >
-        ← Back
-      </button>
+    <main className="jr-content jr-page">
+      <div className="jr-cart-topline">
+        <button
+          className="jr-back-link"
+          onClick={onBack}
+          type="button"
+        >
+          ← Continue shopping
+        </button>
 
-      <span className="eyebrow">
-        YOUR CART
-      </span>
+        <span className="jr-eyebrow">
+          REVIEW ORDER
+        </span>
+      </div>
 
-      <h1 className="location-page h1">
+      <h1 className="jr-page-title">
         Your
         <br />
-        <em>fresh picks.</em>
+        <em>order.</em>
       </h1>
 
-      {!items.length ? (
-        <div className="empty">
-          <div>
-            🛒
-          </div>
+      {!cart.length ? (
+        <div className="jr-empty">
+          <span>🧃</span>
 
-          <h3>
-            Your cart is empty
-          </h3>
+          <h3>Your cart is empty</h3>
 
           <p>
-            Add some fresh juice to
-            continue.
+            Choose a juice from the menu.
           </p>
 
           <button
-            className="primary"
-            style={{
-              marginTop:
-                "18px",
-            }}
+            className="jr-button jr-button-primary"
             onClick={onBack}
+            type="button"
           >
             BROWSE JUICES
           </button>
         </div>
       ) : (
         <>
-          <div className="cart-list">
-            {items.map(
-              (item) => (
-                <div
-                  className="cart-item"
-                  key={item.id}
-                >
-                  <img
-                    src={
-                      item.image ||
-                      productImage(
-                        item
+          <div className="jr-cart-list">
+            {cart.map((item) => (
+              <div
+                className="jr-cart-item"
+                key={item.id}
+              >
+                <img
+                  src={
+                    item.image ||
+                    productImage(item)
+                  }
+                  alt={
+                    item.displayName ||
+                    displayProductName(item)
+                  }
+                />
+
+                <div className="jr-cart-info">
+                  <span>
+                    {item.displayName ||
+                      displayProductName(item)}
+                  </span>
+
+                  <strong>
+                    {money(item.price)}
+                  </strong>
+
+                  <CartQuantityControl
+                    value={item.quantity}
+                    onUpdate={(value) =>
+                      onUpdate(
+                        item.id,
+                        value
                       )
                     }
-                    alt={item.name}
+                    onRemove={() =>
+                      onRemove(item.id)
+                    }
                   />
-
-                  <div className="cart-info">
-                    <span>
-                      {item.description ||
-                        "Fresh & natural"}
-                    </span>
-
-                    <b>
-                      {item.name}
-                    </b>
-
-                    <strong>
-                      {money(
-                        item.price
-                      )}
-                    </strong>
-                  </div>
-
-                  <div className="qty">
-                    <button
-                      onClick={() =>
-                        setQty(
-                          item.id,
-                          item.quantity -
-                            1
-                        )
-                      }
-                      aria-label="Decrease quantity"
-                    >
-                      −
-                    </button>
-
-                    <b>
-                      {item.quantity}
-                    </b>
-
-                    <button
-                      onClick={() =>
-                        setQty(
-                          item.id,
-                          item.quantity +
-                            1
-                        )
-                      }
-                      aria-label="Increase quantity"
-                    >
-                      +
-                    </button>
-                  </div>
                 </div>
-              )
-            )}
+
+                <button
+                  className="jr-remove"
+                  type="button"
+                  onClick={() =>
+                    onRemove(item.id)
+                  }
+                >
+                  ×
+                </button>
+              </div>
+            ))}
           </div>
 
-          <div className="summary">
-            <div>
-              <span>
-                Subtotal
-              </span>
+          <button
+            className="jr-venue-selected"
+            onClick={onLocation}
+            type="button"
+          >
+            <span className="jr-venue-selected-icon">
+              ⌖
+            </span>
 
-              <b>
-                {money(subtotal)}
-              </b>
+            <span>
+              <small>COLLECTION</small>
+
+              <strong>
+                {location?.name ||
+                  "Choose location"}
+              </strong>
+
+              <small>
+                {machine?.name ||
+                  "Choose machine"}
+              </small>
+            </span>
+
+            <b>→</b>
+          </button>
+
+          <div className="jr-order-summary">
+            <div>
+              <span>Items</span>
+              <strong>
+                {cart.reduce(
+                  (sum, item) =>
+                    sum +
+                    Number(item.quantity || 0),
+                  0
+                )}
+              </strong>
             </div>
 
-            <div>
-              <span>
-                Collection
-              </span>
-
-              <b>
-                Free
-              </b>
-            </div>
-
-            <hr />
-
-            <div className="total">
-              <span>
-                Total
-              </span>
-
-              <b>
-                {money(subtotal)}
-              </b>
+            <div className="jr-summary-total">
+              <span>TOTAL TO PAY</span>
+              <strong>{money(total)}</strong>
             </div>
           </div>
 
           <button
-            className="primary full"
+            className="jr-button jr-button-primary jr-full"
             onClick={onCheckout}
+            type="button"
           >
-            PROCEED TO CHECKOUT
+            PLACE ORDER
+            <span>→</span>
           </button>
         </>
       )}
@@ -2325,149 +2198,439 @@ function Cart({
 }
 
 /* =========================================================
-   CHECKOUT
+   PROFILE
    ========================================================= */
 
-function Checkout({
-  profile,
+function ProfileScreen({
+  user,
+  customer,
+  setCustomer,
+  orders,
+  onSave,
+  onLogout,
   onBack,
-  onPlace,
-  paymentBusy,
+  busy,
+  error,
+  onOrders,
 }) {
-  const [name, setName] =
-    useState(
-      profile?.name || ""
-    );
+  const name =
+    user?.name ||
+    user?.firstname ||
+    "Juice Lover";
 
-  const [phone, setPhone] =
-    useState(
-      profile?.phone || ""
-    );
+  const initial =
+    String(name)
+      .trim()
+      .split(/\s+/)
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
 
-  const [email, setEmail] =
-    useState(
-      profile?.email || ""
-    );
-
-  function submit(event) {
-    event.preventDefault();
-
-    onPlace({
-      name,
-      phone,
-      email,
-    });
+  function update(field, value) {
+    setCustomer((current) => ({
+      ...current,
+      [field]: value,
+    }));
   }
 
   return (
-    <main className="content checkout">
+    <main className="jr-content jr-page jr-profile-page">
       <button
-        className="back"
+        className="jr-back-link"
         onClick={onBack}
-        disabled={paymentBusy}
+        type="button"
       >
-        ← Cart
+        ← Back to menu
       </button>
 
-      <span className="eyebrow">
-        CHECKOUT
+      <span className="jr-eyebrow">
+        YOUR ACCOUNT
       </span>
 
-      <h1>
-        Almost
+      <h1 className="jr-page-title">
+        Hello,
         <br />
-        <em>fresh.</em>
+        <em>{name.split(" ")[0]}.</em>
       </h1>
 
-      <p className="muted">
-        Confirm your details before
-        proceeding to secure payment.
-      </p>
+      <section className="jr-profile-hero">
+        <div className="jr-profile-avatar">
+          {initial}
+        </div>
 
-      <form
-        className="form-card"
-        onSubmit={submit}
+        <div>
+          <strong>{name}</strong>
+
+          <small>
+            {user?.email ||
+              user?.phone ||
+              "Juice Robo member"}
+          </small>
+        </div>
+      </section>
+
+      <section className="jr-account-card">
+        <div className="jr-account-card-heading">
+          <div>
+            <span className="jr-eyebrow">
+              PROFILE
+            </span>
+
+            <strong>Your details</strong>
+          </div>
+        </div>
+
+        <form
+          className="jr-form"
+          onSubmit={onSave}
+        >
+          <label>
+            FULL NAME
+            <input
+              type="text"
+              value={customer?.name || ""}
+              onChange={(event) =>
+                update(
+                  "name",
+                  event.target.value
+                )
+              }
+            />
+          </label>
+
+          <label>
+            PHONE NUMBER
+            <input
+              type="tel"
+              value={customer?.phone || ""}
+              onChange={(event) =>
+                update(
+                  "phone",
+                  event.target.value
+                )
+              }
+            />
+          </label>
+
+          <label>
+            EMAIL
+            <input
+              type="email"
+              value={customer?.email || ""}
+              onChange={(event) =>
+                update(
+                  "email",
+                  event.target.value
+                )
+              }
+            />
+          </label>
+
+          {error && (
+            <div className="jr-form-error">
+              {error}
+            </div>
+          )}
+
+          <button
+            className="jr-button jr-button-primary jr-full"
+            type="submit"
+            disabled={busy}
+          >
+            {busy
+              ? "SAVING..."
+              : "SAVE PROFILE"}
+            {!busy && <span>→</span>}
+          </button>
+        </form>
+      </section>
+
+      <button
+        className="jr-account-action"
+        type="button"
+        onClick={onOrders}
       >
-        <label>
-          NAME
+        <span>▣</span>
 
-          <input
-            type="text"
-            value={name}
-            onChange={(event) =>
-              setName(
-                event.target.value
-              )
-            }
-            placeholder="Your name"
-            required
-            disabled={
-              paymentBusy
-            }
-          />
-        </label>
+        <div>
+          <strong>My orders</strong>
+          <small>
+            {orders.length} saved order
+            {orders.length === 1 ? "" : "s"}
+          </small>
+        </div>
 
-        <label>
-          PHONE
+        <b>→</b>
+      </button>
 
-          <input
-            type="tel"
-            value={phone}
-            onChange={(event) =>
-              setPhone(
-                event.target.value
-              )
-            }
-            placeholder="10-digit mobile number"
-            required
-            disabled={
-              paymentBusy
-            }
-          />
-        </label>
+      <button
+        className="jr-account-action jr-account-action-danger"
+        type="button"
+        onClick={onLogout}
+      >
+        <span>↪</span>
 
-        <label>
-          EMAIL
+        <div>
+          <strong>Sign out</strong>
+          <small>
+            Sign out of this Juice Robo account
+          </small>
+        </div>
 
-          <input
-            type="email"
-            value={email}
-            onChange={(event) =>
-              setEmail(
-                event.target.value
-              )
-            }
-            placeholder="you@example.com"
-            required
-            disabled={
-              paymentBusy
-            }
-          />
-        </label>
+        <b>→</b>
+      </button>
+    </main>
+  );
+}
 
-        <div className="payment-info">
-          <strong>
-            Secure payment
-          </strong>
+/* =========================================================
+   HISTORY
+   ========================================================= */
+
+function HistoryScreen({ orders, onBack }) {
+  return (
+    <main className="jr-content jr-page">
+      <div className="jr-history-header">
+      <button
+        className="jr-back-link"
+        onClick={onBack}
+        type="button"
+      >
+        ← Account
+      </button>
+
+      <span className="jr-eyebrow">
+        ORDER HISTORY
+      </span>
+    </div>
+
+      <h1 className="jr-page-title">
+        My
+        <br />
+        <em>orders.</em>
+      </h1>
+
+      {!orders.length ? (
+        <div className="jr-empty">
+          <span>🧃</span>
+          <h3>No orders yet</h3>
+          <p>
+            Your completed Juice Robo orders
+            will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="jr-history-list">
+          {orders.map((order, index) => (
+            <section
+              className="jr-history-card"
+              key={
+                order?.id ||
+                order?.order_id ||
+                index
+              }
+            >
+              <div>
+                <small>ORDER</small>
+                <strong>
+                  {order?.order_number ||
+                    order?.orderId ||
+                    order?.id ||
+                    "Juice Robo order"}
+                </strong>
+              </div>
+
+              <div>
+                <small>STATUS</small>
+                <strong>
+                  {order?.status ||
+                    "CONFIRMED"}
+                </strong>
+              </div>
+
+              <div>
+                <small>TOTAL</small>
+                <strong>
+                  {money(
+                    order?.total_amount ||
+                      order?.totalAmount
+                  )}
+                </strong>
+              </div>
+
+              {(order?.collection_code ||
+                order?.collectionCode) && (
+                <div className="jr-history-code">
+                  <small>
+                    COLLECTION CODE
+                  </small>
+
+                  <strong>
+                    {String(
+                      order.collection_code ||
+                        order.collectionCode
+                    )}
+                  </strong>
+                </div>
+              )}
+            </section>
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}
+
+/* =========================================================
+   PAYMENT SCREEN
+   ========================================================= */
+
+function PaymentScreen({
+  cart,
+  total,
+  location,
+  machine,
+  paymentMethod,
+  setPaymentMethod,
+  paymentStatus,
+  onBack,
+  onPay,
+}) {
+  const isProcessing = paymentStatus === "processing";
+
+  const methods = [
+    {
+      id: "upi",
+      icon: "↗",
+      title: "UPI",
+      subtitle: "Google Pay · PhonePe · Paytm",
+    },
+    {
+      id: "card",
+      icon: "▣",
+      title: "Cards",
+      subtitle: "Credit or debit card",
+    },
+    {
+      id: "netbanking",
+      icon: "⌂",
+      title: "Netbanking",
+      subtitle: "Pay directly from your bank",
+    },
+    {
+      id: "wallet",
+      icon: "◈",
+      title: "Wallets",
+      subtitle: "Available supported wallets",
+    },
+  ];
+
+  return (
+    <main className="jr-content jr-page jr-payment-page">
+      <button
+        className="jr-back-link"
+        onClick={onBack}
+        type="button"
+        disabled={isProcessing}
+      >
+        ← Review order
+      </button>
+
+      <span className="jr-eyebrow">PAYMENT</span>
+
+      <h1 className="jr-page-title">
+        Almost
+        <br />
+        <em>there.</em>
+      </h1>
+
+      <section className="jr-payment-placeholder">
+        <div className="jr-payment-icon">
+          {isProcessing ? "…" : "₹"}
+        </div>
+
+        <h2>
+          {isProcessing ? "Processing payment" : "Secure payment"}
+        </h2>
+
+        <p>
+          {isProcessing
+            ? "Please wait while we complete your payment."
+            : "Choose a payment method and complete your Juice Robo order."}
+        </p>
+
+        {!isProcessing && (
+          <div className="jr-payment-methods">
+            {methods.map((method) => {
+              const active = paymentMethod === method.id;
+
+              return (
+                <button
+                  key={method.id}
+                  type="button"
+                  className={
+                    active
+                      ? "jr-payment-method active"
+                      : "jr-payment-method"
+                  }
+                  onClick={() => setPaymentMethod(method.id)}
+                >
+                  <span className="jr-payment-method-icon">
+                    {method.icon}
+                  </span>
+
+                  <span className="jr-payment-method-copy">
+                    <strong>{method.title}</strong>
+                    <small>{method.subtitle}</small>
+                  </span>
+
+                  <span className="jr-payment-method-check">
+                    {active ? "✓" : ""}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="jr-payment-collection">
+          <span>
+            <small>COLLECT FROM</small>
+            <strong>{location?.name || "Selected location"}</strong>
+          </span>
 
           <span>
-            UPI · Cards · Netbanking ·
-            Wallets
+            <small>MACHINE</small>
+            <strong>{machine?.name || "Selected machine"}</strong>
           </span>
         </div>
 
+        <div className="jr-payment-total">
+          <span>AMOUNT TO PAY</span>
+          <strong>{money(total)}</strong>
+        </div>
+
         <button
-          className="primary full"
-          type="submit"
-          disabled={
-            paymentBusy
-          }
+          className="jr-button jr-button-primary jr-full"
+          type="button"
+          onClick={onPay}
+          disabled={!cart.length || isProcessing}
         >
-          {paymentBusy
-            ? "OPENING PAYMENT..."
-            : "PROCEED TO PAYMENT"}
+          {isProcessing
+            ? "PROCESSING PAYMENT..."
+            : `PAY ${money(total)}`}
+          {!isProcessing && <span>→</span>}
         </button>
-      </form>
+
+        <div className="jr-payment-demo-note">
+          <strong>FRONTEND TEST MODE</strong>
+          <span>
+            This button simulates a successful payment for UI testing only.
+            No real money is charged.
+          </span>
+        </div>
+      </section>
     </main>
   );
 }
@@ -2476,954 +2639,192 @@ function Checkout({
    CONFIRMATION
    ========================================================= */
 
-function Confirmation({
+function ConfirmationScreen({
   order,
   location,
   machine,
   onHome,
-  onHistory,
 }) {
+  const rawCode =
+    order?.collection_code ||
+    order?.collectionCode ||
+    "";
+
+  const code = String(rawCode)
+    .replace(/\D/g, "")
+    .slice(-4)
+    .padStart(4, "0");
+
   return (
-    <main className="content confirmation">
-      <div className="success-icon">
-        ✓
-      </div>
+    <main className="jr-content jr-page jr-confirmation">
+      <div className="jr-success-icon">✓</div>
 
-      <span className="eyebrow">
-        PAYMENT SUCCESSFUL
-      </span>
+      <span className="jr-eyebrow">PAYMENT SUCCESSFUL</span>
 
-      <h1>
+      <h1 className="jr-page-title">
         Your juice is
         <br />
-        <em>on its way.</em>
+        <em>booked!</em>
       </h1>
 
-      <p className="muted">
-        Your order has been confirmed.
-        Show the collection code at
-        your selected Juice Robo.
+      <p className="jr-page-description">
+        Your payment was completed and your order is ready for collection.
       </p>
 
-      <div className="code-card">
-        <span>
-          COLLECTION CODE
-        </span>
+      <section className="jr-code-card">
+        <span>YOUR COLLECTION CODE</span>
 
-        <strong>
-          {order?.collection_code ||
-            "----"}
-        </strong>
+        <div className="jr-code-digits">
+          {code.split("").map((digit, index) => (
+            <span className="jr-code-digit" key={`${digit}-${index}`}>
+              {digit}
+            </span>
+          ))}
+        </div>
 
         <small>
-          Keep this code safe until
-          collection.
+          Enter this 4-digit code on {machine?.name || "your Juice Robo machine"} to begin preparation.
         </small>
-      </div>
+      </section>
 
-      <div className="order-mini">
+      <section className="jr-confirmation-card">
         <div>
-          <span>
-            ORDER
-          </span>
-
-          <b>
-            {order?.order_number ||
-              `#${order?.id || "—"}`}
-          </b>
+          <small>COLLECT FROM</small>
+          <strong>{location?.name || "Juice Robo"}</strong>
+          <span>{machine?.name || "Selected machine"}</span>
         </div>
+      </section>
 
+      <section className="jr-confirmation-card">
         <div>
-          <span>
-            TOTAL
-          </span>
-
-          <b>
-            {money(
-              order?.total_amount
-            )}
-          </b>
+          <small>PAYMENT</small>
+          <strong>{money(order?.total_amount)}</strong>
+          <span>Paid successfully · {String(order?.payment_method || "UPI").toUpperCase()}</span>
         </div>
-      </div>
-
-      <div className="detail-card">
-        <div>
-          <span className="eyebrow">
-            COLLECTION POINT
-          </span>
-
-          <h3>
-            {location?.name ||
-              "Juice Robo"}
-          </h3>
-
-          <p className="muted">
-            {location?.address ||
-              "Selected collection point"}
-          </p>
-        </div>
-
-        <hr />
-
-        <div>
-          <span className="eyebrow">
-            MACHINE
-          </span>
-
-          <h3>
-            {machine?.name ||
-              "Juice Robo"}
-          </h3>
-
-          <p className="muted">
-            {machine?.machine_code ||
-              "Collection machine"}
-          </p>
-        </div>
-      </div>
+      </section>
 
       <button
-        className="primary full"
-        onClick={onHistory}
-      >
-        VIEW ORDER HISTORY
-      </button>
-
-      <button
-        className="secondary full"
+        className="jr-button jr-button-primary jr-full"
         onClick={onHome}
+        type="button"
       >
-        BACK TO HOME
-      </button>
-    </main>
-  );
-}
-/* =========================================================
-   ORDER HISTORY
-   ========================================================= */
-
-function History({
-  orders,
-  onOpen,
-}) {
-  function formatDate(value) {
-    if (!value) return "Date unavailable";
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return String(value);
-    }
-
-    return date.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  }
-
-  function formatTime(value) {
-    if (!value) return "";
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return "";
-    }
-
-    return date.toLocaleTimeString("en-IN", {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
-
-  function getStatus(order) {
-    const status = String(
-      order?.status ||
-        order?.payment_status ||
-        "confirmed"
-    ).toLowerCase();
-
-    if (
-      status === "pending_payment" ||
-      status === "pending"
-    ) {
-      return {
-        label: "PENDING PAYMENT",
-        className: "pending",
-      };
-    }
-
-    if (
-      status === "collected"
-    ) {
-      return {
-        label: "COLLECTED",
-        className: "collected",
-      };
-    }
-
-    if (
-      status === "cancelled" ||
-      status === "canceled"
-    ) {
-      return {
-        label: "CANCELLED",
-        className: "cancelled",
-      };
-    }
-
-    return {
-      label: "CONFIRMED",
-      className: "confirmed",
-    };
-  }
-
-  function getItems(order) {
-    if (
-      Array.isArray(order?.items) &&
-      order.items.length
-    ) {
-      return order.items;
-    }
-
-    return [];
-  }
-
-  function getItemSummary(order) {
-    const items = getItems(order);
-
-    if (!items.length) {
-      return "Order details unavailable";
-    }
-
-    const first = items[0];
-
-    const firstName =
-      first?.product_name ||
-      first?.name ||
-      "Juice";
-
-    const firstQuantity =
-      Number(
-        first?.quantity || 1
-      );
-
-    if (items.length === 1) {
-      return `${firstName} ×${firstQuantity}`;
-    }
-
-    return `${firstName} ×${firstQuantity} + ${
-      items.length - 1
-    } more`;
-  }
-
-  return (
-    <main className="content history-page">
-
-      {/* ---------------------------------------------------
-          PAGE HEADER
-          --------------------------------------------------- */}
-
-      <div className="history-header">
-        <div>
-          <span className="eyebrow">
-            YOUR ORDERS
-          </span>
-
-          <h1>
-            Order History
-          </h1>
-
-          <p>
-            Track your Juice Robo orders
-            and collection details.
-          </p>
-        </div>
-
-        <div className="history-count">
-          <strong>
-            {orders.length}
-          </strong>
-
-          <span>
-            {orders.length === 1
-              ? "ORDER"
-              : "ORDERS"}
-          </span>
-        </div>
-      </div>
-
-      {/* ---------------------------------------------------
-          EMPTY STATE
-          --------------------------------------------------- */}
-
-      {!orders.length ? (
-        <div className="history-empty">
-
-          <div className="history-empty-icon">
-            🧃
-          </div>
-
-          <span className="eyebrow">
-            NO ORDERS YET
-          </span>
-
-          <h3>
-            Your juice history
-            <br />
-            starts here.
-          </h3>
-
-          <p>
-            Once you place an order,
-            your Juice Robo purchases
-            will appear here.
-          </p>
-
-        </div>
-      ) : (
-
-        /* -------------------------------------------------
-           ORDER LIST
-           ------------------------------------------------- */
-
-        <div className="history-list">
-
-          {orders.map((order) => {
-            const status =
-              getStatus(order);
-
-            const items =
-              getItems(order);
-
-            const firstItem =
-              items[0];
-
-            const image =
-              firstItem?.image_url ||
-              firstItem?.image ||
-              productImage({
-                name:
-                  firstItem?.product_name ||
-                  firstItem?.name ||
-                  "",
-                image_url:
-                  firstItem?.image_url || "",
-              });
-
-            return (
-              <button
-                type="button"
-                className="history-card"
-                key={order.id}
-                onClick={() =>
-                  onOpen(order)
-                }
-              >
-
-                {/* -----------------------------------------
-                    TOP ROW
-                   ----------------------------------------- */}
-
-                <div className="history-card-top">
-
-                  <div className="history-order-info">
-
-                    <span className="history-order-label">
-                      ORDER
-                    </span>
-
-                    <strong>
-                      {order.order_number ||
-                        `#${order.id}`}
-                    </strong>
-
-                  </div>
-
-                  <span
-                    className={`status ${status.className}`}
-                  >
-                    {status.label}
-                  </span>
-
-                </div>
-
-                {/* -----------------------------------------
-                    PRODUCT
-                   ----------------------------------------- */}
-
-                <div className="history-product">
-
-                  <div className="history-product-image">
-                    <img
-                      src={image}
-                      alt={
-                        firstItem?.product_name ||
-                        "Juice"
-                      }
-                      onError={(event) => {
-                        event.currentTarget.src =
-                          productImage({
-                            name:
-                              firstItem?.product_name ||
-                              "",
-                            image_url: "",
-                          });
-                      }}
-                    />
-                  </div>
-
-                  <div className="history-product-info">
-
-                    <strong>
-                      {getItemSummary(order)}
-                    </strong>
-
-                    <span>
-                      {formatDate(
-                        order.created_at
-                      )}
-
-                      {formatTime(
-                        order.created_at
-                      ) && (
-                        <>
-                          {" · "}
-                          {formatTime(
-                            order.created_at
-                          )}
-                        </>
-                      )}
-                    </span>
-
-                  </div>
-
-                  <div className="history-total">
-                    <span>
-                      TOTAL
-                    </span>
-
-                    <strong>
-                      {money(
-                        order.total_amount
-                      )}
-                    </strong>
-                  </div>
-
-                </div>
-
-                {/* -----------------------------------------
-                    COLLECTION CODE
-                   ----------------------------------------- */}
-
-                {order.collection_code && (
-                  <div className="history-collection">
-
-                    <div>
-                      <span>
-                        COLLECTION CODE
-                      </span>
-
-                      <strong>
-                        {order.collection_code}
-                      </strong>
-                    </div>
-
-                    <span className="history-arrow">
-                      →
-                    </span>
-
-                  </div>
-                )}
-
-                {/* -----------------------------------------
-                    PENDING PAYMENT
-                   ----------------------------------------- */}
-
-                {!order.collection_code &&
-                  status.className ===
-                    "pending" && (
-                    <div className="history-pending">
-
-                      <span>
-                        Payment required
-                        to confirm this order.
-                      </span>
-
-                      <span>
-                        →
-                      </span>
-
-                    </div>
-                  )}
-
-              </button>
-            );
-          })}
-
-        </div>
-      )}
-
-    </main>
-  );
-}
-
-
-/* =========================================================
-   ORDER DETAIL
-   ========================================================= */
-
-function OrderDetail({
-  order,
-  onBack,
-}) {
-  if (!order) {
-    return (
-      <main className="content">
-        <button
-          className="back"
-          onClick={onBack}
-        >
-          ← History
-        </button>
-
-        <div className="empty">
-          <div>
-            ⚠
-          </div>
-
-          <h3>
-            Order not found
-          </h3>
-
-          <p>
-            We could not load this
-            order.
-          </p>
-        </div>
-      </main>
-    );
-  }
-
-  const status =
-    String(
-      order.status ||
-        "confirmed"
-    ).toLowerCase();
-
-  const paymentStatus =
-    String(
-      order.payment_status ||
-        order.paymentStatus ||
-        "PAID"
-    ).toUpperCase();
-
-  return (
-    <main className="content order-detail">
-      <button
-        className="back"
-        onClick={onBack}
-      >
-        ← History
-      </button>
-
-      <span className="eyebrow">
-        ORDER DETAILS
-      </span>
-
-      <h1>
-        {order.order_number ||
-          `#${order.id}`}
-      </h1>
-
-      <div className="order-status-row">
-        <span
-          className={`status ${status}`}
-        >
-          {statusLabel(
-            order.status
-          )}
-        </span>
-
-        <span className="payment-paid">
-          ● {paymentStatus}
-        </span>
-      </div>
-
-      {/* COLLECTION CODE */}
-
-      <div className="code-card">
-        <span>
-          COLLECTION CODE
-        </span>
-
-        <strong>
-          {order.collection_code ||
-            "----"}
-        </strong>
-
-        <small>
-          Show this code at the
-          selected Juice Robo.
-        </small>
-      </div>
-
-      {/* ORDER ITEMS */}
-
-      <div className="detail-card">
-        <span className="eyebrow">
-          YOUR JUICE
-        </span>
-
-        <div className="detail-items">
-          {order.items?.map(
-            (item, index) => (
-              <div
-                className="detail-item"
-                key={
-                  item.product_id ||
-                  index
-                }
-              >
-                <div>
-                  <b>
-                    {item.product_name}
-                  </b>
-
-                  <span>
-                    Qty {item.quantity} ×{" "}
-                    {money(
-                      item.unit_price
-                    )}
-                  </span>
-                </div>
-
-                <strong>
-                  {money(
-                    item.subtotal
-                  )}
-                </strong>
-              </div>
-            )
-          )}
-        </div>
-
-        <hr />
-
-        <div className="summary-total">
-          <span>
-            Total paid
-          </span>
-
-          <strong>
-            {money(
-              order.total_amount
-            )}
-          </strong>
-        </div>
-      </div>
-
-      {/* COLLECTION INFORMATION */}
-
-      <div className="detail-card">
-        <span className="eyebrow">
-          COLLECTION
-        </span>
-
-        <div className="collection-detail">
-          <div>
-            <span>
-              Collection point
-            </span>
-
-            <b>
-              {order.location_name ||
-                order.location?.name ||
-                "Selected Juice Robo"}
-            </b>
-          </div>
-
-          <div>
-            <span>
-              Machine
-            </span>
-
-            <b>
-              {order.machine_name ||
-                order.machine?.name ||
-                "Juice Robo"}
-            </b>
-          </div>
-
-          <div>
-            <span>
-              Order date
-            </span>
-
-            <b>
-              {order.created_at
-                ? new Date(
-                    order.created_at
-                  ).toLocaleString(
-                    undefined,
-                    {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                    }
-                  )
-                : "—"}
-            </b>
-          </div>
-        </div>
-      </div>
-
-      {/* PAYMENT INFORMATION */}
-
-      <div className="detail-card">
-        <span className="eyebrow">
-          PAYMENT
-        </span>
-
-        <div className="collection-detail">
-          <div>
-            <span>
-              Status
-            </span>
-
-            <b className="paid-text">
-              Payment successful
-            </b>
-          </div>
-
-          {order.razorpay_payment_id && (
-            <div>
-              <span>
-                Payment ID
-              </span>
-
-              <b className="mono">
-                {
-                  order.razorpay_payment_id
-                }
-              </b>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <button
-        className="secondary full"
-        onClick={onBack}
-      >
-        BACK TO ORDER HISTORY
+        ORDER AGAIN
+        <span>→</span>
       </button>
     </main>
   );
 }
 
-
 /* =========================================================
-   PROFILE
+   BOTTOM NAV
    ========================================================= */
 
-function Profile({
-  profile,
-  onLogout,
-}) {
-  const firstLetter =
-    profile?.name
-      ?.slice(0, 1)
-      ?.toUpperCase() ||
-    "J";
-
-  return (
-    <main className="content profile">
-      <div className="profile-head">
-        <div className="avatar">
-          {firstLetter}
-        </div>
-
-        <div>
-          <span className="eyebrow">
-            YOUR ACCOUNT
-          </span>
-
-          <h2>
-            {profile?.name ||
-              "Juice Lover"}
-          </h2>
-
-          <p>
-            {profile?.email ||
-              "Welcome to Juice Robo"}
-          </p>
-        </div>
-      </div>
-
-      <div className="profile-card">
-        <div>
-          <span>
-            NAME
-          </span>
-
-          <b>
-            {profile?.name ||
-              "—"}
-          </b>
-        </div>
-
-        <div>
-          <span>
-            PHONE
-          </span>
-
-          <b>
-            {profile?.phone ||
-              "—"}
-          </b>
-        </div>
-
-        <div>
-          <span>
-            EMAIL
-          </span>
-
-          <b>
-            {profile?.email ||
-              "—"}
-          </b>
-        </div>
-      </div>
-
-      <div className="detail-card">
-        <span className="eyebrow">
-          JUICE ROBO
-        </span>
-
-        <p className="muted">
-          Order fresh sugarcane
-          juice, pay securely and
-          collect it from your
-          selected Robo.
-        </p>
-      </div>
-
-      <button
-        className="secondary full"
-        onClick={onLogout}
-      >
-        SIGN OUT
-      </button>
-    </main>
-  );
-}
-
-
-/* =========================================================
-   BOTTOM NAVIGATION
-   ========================================================= */
-
-function BottomNav({
+function BottomBar({
   screen,
-  setScreen,
   cartCount,
+  onMenu,
+  onMachine,
+  onCart,
+  onAccount,
 }) {
   return (
-    <nav className="bottom-nav">
+    <nav className="jr-bottom-bar">
       <button
         className={
-          screen === "home"
+          screen === "menu"
             ? "active"
             : ""
         }
-        onClick={() =>
-          setScreen("home")
-        }
+        onClick={onMenu}
+        type="button"
       >
-        <span className="nav-icon">
-          ⌂
-        </span>
-
-        <span>
-          Home
-        </span>
+        <span>⌂</span>
+        <small>Home</small>
       </button>
 
       <button
         className={
-          screen === "history" ||
-          screen === "order"
+          screen === "machine"
             ? "active"
             : ""
         }
-        onClick={() =>
-          setScreen("history")
-        }
+        onClick={onMachine}
+        type="button"
       >
-        <span className="nav-icon">
-          ◷
-        </span>
-
-        <span>
-          Orders
-        </span>
+        <span>⌖</span>
+        <small>Machine</small>
       </button>
 
       <button
         className={
-          screen === "cart" ||
-          screen === "checkout"
+          screen === "cart"
             ? "active"
             : ""
         }
-        onClick={() =>
-          setScreen("cart")
-        }
+        onClick={onCart}
+        type="button"
       >
-        <span className="nav-icon">
+        <span className="jr-nav-cart">
           🛒
+          {cartCount > 0 && (
+            <b>{cartCount}</b>
+          )}
         </span>
-
-        {cartCount > 0 && (
-          <i>
-            {cartCount}
-          </i>
-        )}
-
-        <span>
-          Cart
-        </span>
+        <small>Order</small>
       </button>
 
       <button
         className={
-          screen === "profile"
+          screen === "profile" ||
+          screen === "history"
             ? "active"
             : ""
         }
-        onClick={() =>
-          setScreen("profile")
-        }
+        onClick={onAccount}
+        type="button"
       >
-        <span className="nav-icon">
-          ●
-        </span>
-
-        <span>
-          Profile
-        </span>
+        <span>●</span>
+        <small>Account</small>
       </button>
     </nav>
   );
 }
 
-
 /* =========================================================
-   EXPORT
+   TOAST
    ========================================================= */
 
-export default App;
+function Toast({ message }) {
+  return (
+    <div className="jr-toast">
+      <span className="jr-toast-check">
+        ✓
+      </span>
+      {message}
+    </div>
+  );
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+function LoadingScreen() {
+  return (
+    <div className="jr-app">
+      <div className="jr-loading">
+        <div className="jr-loading-logo">
+          JR
+        </div>
+
+        <strong>JUICE ROBO</strong>
+
+        <span>
+          Loading fresh picks...
+        </span>
+
+        <div className="jr-loader" />
+      </div>
+    </div>
+  );
+}

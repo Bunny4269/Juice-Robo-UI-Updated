@@ -1,0 +1,13 @@
+# JUICE ROBO — CORS UPDATE FOR VITE
+#
+# In server.py, inside CORSMiddleware allow_origins, keep the
+# existing origins and add these two:
+#
+#     "http://localhost:5173",
+#     "http://127.0.0.1:5173",
+#
+# The React/Vite frontend uses:
+#     http://localhost:5173
+#
+# The backend already requires credentials="include" for its
+# HttpOnly session cookie.

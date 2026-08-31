@@ -194,7 +194,7 @@ def seed_products():
                 name="Plain Sugarcane Juice",
                 description="Fresh sugarcane juice.",
                 price=50,
-                image_url="/assets/plain-juice.jpg",
+                image_url="/order_now/assets/plain-juice.jpg",
             ),
 
             Product(
