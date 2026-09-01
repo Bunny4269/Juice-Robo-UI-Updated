@@ -17,6 +17,9 @@ from .routes import (
     products,
     profile,
 )
+from .user_excel_service import (
+    ensure_user_excel_file,
+)
 
 settings = get_settings()
 
@@ -68,10 +71,18 @@ def startup():
         bind=engine
     )
 
+    # --------------------------------------------------------
+    # DEVELOPMENT USER CREDENTIALS
+    # --------------------------------------------------------
+    #
+    # Create users.xlsx once.
+    # If it already exists, reuse it.
+    #
+    ensure_user_excel_file()
+
     seed_locations()
     seed_machines()
     seed_products()
-
 
 # ============================================================
 # HEALTH
@@ -174,6 +185,7 @@ def seed_machines():
     finally:
 
         db.close()
+
 
 # ============================================================
 # SEED PRODUCTS

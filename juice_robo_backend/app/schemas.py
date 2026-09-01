@@ -18,7 +18,7 @@ class RegisterRequest(BaseModel):
         max_length=120,
     )
 
-    email: EmailStr
+    email: EmailStr | None = None
 
     phone: str = Field(
         min_length=10,
@@ -32,12 +32,20 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+    identifier: str = Field(
+        min_length=3,
+        max_length=255,
+    )
+
+    password: str = Field(
+        min_length=1,
+        max_length=128,
+    )
 
 
 class TokenResponse(BaseModel):
     access_token: str
+
     token_type: str = "bearer"
 
 
@@ -51,10 +59,15 @@ class ProfileResponse(BaseModel):
     )
 
     id: int
+
     name: str
-    email: EmailStr
+
+    email: EmailStr | None
+
     phone: str
+
     is_admin: bool
+
     created_at: datetime
 
 
@@ -80,10 +93,15 @@ class ProductResponse(BaseModel):
     )
 
     id: int
+
     name: str
+
     description: str
+
     price: float
+
     image_url: str
+
     is_available: bool
 
 
@@ -97,8 +115,11 @@ class LocationResponse(BaseModel):
     )
 
     id: int
+
     name: str
+
     address: str
+
     is_active: bool
 
 
@@ -126,11 +147,17 @@ class MachineResponse(BaseModel):
     )
 
     id: int
+
     machine_code: str
+
     name: str
+
     location_id: int
+
     firmware_version: str
+
     status: str
+
     last_seen_at: datetime | None
 
 
@@ -183,21 +210,33 @@ class CreateOrderRequest(BaseModel):
 
 class OrderItemResponse(BaseModel):
     product_id: int
+
     product_name: str
+
     quantity: int
+
     unit_price: float
+
     subtotal: float
 
 
 class OrderResponse(BaseModel):
     id: int
+
     order_number: str
+
     collection_code: str
+
     total_amount: float
+
     status: str
+
     created_at: datetime
+
     location_id: int | None = None
+
     machine_id: int | None = None
+
     items: list[OrderItemResponse]
 
 
@@ -213,5 +252,7 @@ class VerifyCodeRequest(BaseModel):
 
 class VerifyCodeResponse(BaseModel):
     success: bool
+
     message: str
+
     order: OrderResponse | None = None

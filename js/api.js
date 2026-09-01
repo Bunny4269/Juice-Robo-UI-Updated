@@ -20,10 +20,16 @@
    - Does NOT invent fake store IDs.
    - Product IDs are legacy variant IDs.
    ========================================================= */
+/* =========================================================
+   LOCAL JUICE ROBO DEVELOPMENT API
+   ========================================================= */
+
+const LOCAL_API_BASE =
+  "http://127.0.0.1:8000";
 
 
 /* =========================================================
-   API BASE URLS
+   LEGACY JUICE ROBO API
    ========================================================= */
 
 const API_BASE =
@@ -43,15 +49,6 @@ const DEFAULT_ORG_ID =
 
 /* =========================================================
    LEGACY JUICE ROBO CREDENTIALS
-   =========================================================
-
-   These are the existing test credentials used by the
-   previous working Juice Robo implementation.
-
-   NOTE:
-   These credentials are exposed to the browser because this
-   is a frontend application. They should be moved behind a
-   server-side proxy before production deployment.
    ========================================================= */
 
 const JR_API_KEY =
@@ -59,7 +56,6 @@ const JR_API_KEY =
 
 const JR_API_KEY_SECRET =
   "e844933d-9f44-4e4b-b0fe-e7bfc771ce99";
-
 
 /* =========================================================
    GENERAL HELPERS
@@ -813,7 +809,136 @@ async function request(
   return data;
 }
 
+/* =========================================================
+   LOCAL FASTAPI REQUEST
+   ========================================================= */
 
+async function localRequest(
+  path,
+  options = {}
+) {
+  const cleanBase =
+    String(
+      LOCAL_API_BASE
+    ).replace(
+      /\/+$/,
+      ""
+    );
+
+  const cleanPath =
+    String(
+      path
+    ).startsWith("/")
+      ? String(path)
+      : `/${String(path)}`;
+
+  const url =
+    `${cleanBase}${cleanPath}`;
+
+  const headers = {
+    Accept:
+      "application/json",
+
+    ...(options.headers || {}),
+  };
+
+  if (
+    options.body !== undefined
+  ) {
+    headers[
+      "Content-Type"
+    ] =
+      "application/json";
+  }
+
+  console.log(
+    `[Juice Robo] LOCAL ${
+      options.method ||
+      "GET"
+    } ${url}`
+  );
+
+  let response;
+
+  try {
+    response =
+      await fetch(
+        url,
+        {
+          ...options,
+          headers,
+        }
+      );
+  } catch (
+    error
+  ) {
+    console.error(
+      "[Juice Robo] Local backend network error:",
+      error
+    );
+
+    throw new Error(
+      "Unable to connect to the Juice Robo development backend."
+    );
+  }
+
+  const contentType =
+    response.headers.get(
+      "content-type"
+    ) || "";
+
+  let data =
+    null;
+
+  try {
+    if (
+      contentType
+        .toLowerCase()
+        .includes(
+          "application/json"
+        )
+    ) {
+      data =
+        await response.json();
+    } else {
+      const text =
+        await response.text();
+
+      data =
+        text || null;
+    }
+  } catch (
+    error
+  ) {
+    console.error(
+      "[Juice Robo] Local response parsing error:",
+      error
+    );
+  }
+
+  console.log(
+    "[Juice Robo] Local response:",
+    {
+      status:
+        response.status,
+      url,
+      data,
+    }
+  );
+
+  if (
+    !response.ok
+  ) {
+    throw new Error(
+      normalizeError(
+        data,
+        response.status
+      )
+    );
+  }
+
+  return data;
+}
 /* =========================================================
    PRODUCT NORMALIZATION
    ========================================================= */
@@ -1612,10 +1737,7 @@ function normalizeOrder(
     items:
       normalizedItems,
   };
-}
-
-
-/* =========================================================
+}/* =========================================================
    AUTH NORMALIZATION
    ========================================================= */
 
@@ -1629,6 +1751,12 @@ function normalizeAuth(
     ) || {};
 
 
+  /*
+   * -------------------------------------------------------
+   * ACCESS TOKEN
+   * -------------------------------------------------------
+   */
+
   const accessToken =
     firstDefined(
       data?.accessToken,
@@ -1640,50 +1768,191 @@ function normalizeAuth(
     );
 
 
-  if (
-    !accessToken
-  ) {
+  /*
+   * No token means this is not a successful
+   * authentication response.
+   */
 
+  if (!accessToken) {
     return response;
   }
 
 
+  /*
+   * -------------------------------------------------------
+   * USER DATA
+   * -------------------------------------------------------
+   *
+   * Some API responses return:
+   *
+   * {
+   *   user: {...},
+   *   accessToken: "..."
+   * }
+   *
+   * Others return the user fields directly.
+   *
+   */
+
+  const userData =
+    data?.user &&
+    typeof data.user === "object"
+      ? data.user
+      : data;
+
+
+  /*
+   * -------------------------------------------------------
+   * USER NAME
+   * -------------------------------------------------------
+   */
+
+  const firstName =
+    firstDefined(
+      userData?.firstName,
+      userData?.firstname,
+      ""
+    );
+
+  const lastName =
+    firstDefined(
+      userData?.lastName,
+      userData?.lastname,
+      ""
+    );
+
+  const combinedName =
+    [
+      firstName,
+      lastName,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+
+  /*
+   * -------------------------------------------------------
+   * EMAIL
+   * -------------------------------------------------------
+   */
+
+  const email =
+    firstDefined(
+      userData?.email,
+      userData?.userEmail,
+      data?.email,
+      data?.userEmail,
+      ""
+    );
+
+
+  /*
+   * -------------------------------------------------------
+   * PHONE
+   * -------------------------------------------------------
+   *
+   * IMPORTANT:
+   *
+   * Do NOT blindly copy userName into phone.
+   *
+   * userName is the legacy login identifier and may be:
+   *
+   *   9876543210
+   *
+   * OR
+   *
+   *   user@example.com
+   *
+   */
+
+  const rawPhone =
+    firstDefined(
+      userData?.phone,
+      data?.phone,
+      ""
+    );
+
+
+  const phone =
+    rawPhone
+      ? String(
+          rawPhone
+        ).trim()
+      : "";
+
+
+  /*
+   * -------------------------------------------------------
+   * LOGIN IDENTIFIER
+   * -------------------------------------------------------
+   */
+
+  const userName =
+    firstDefined(
+      userData?.userName,
+      data?.userName,
+      ""
+    );
+
+
+  /*
+   * -------------------------------------------------------
+   * FINAL USER OBJECT
+   * -------------------------------------------------------
+   */
+
   const user = {
 
-    ...data,
+    ...userData,
 
-    name:
+    id:
       firstDefined(
-        data?.name,
-        [
-          data?.firstName,
-          data?.lastName,
-        ]
-          .filter(Boolean)
-          .join(" ")
-      ) || "",
-
-    firstname:
-      data?.firstName,
-
-    lastname:
-      data?.lastName,
-
-    email:
-      firstDefined(
-        data?.email,
-        data?.userEmail,
+        userData?.id,
+        userData?.userId,
+        userData?.user_id,
+        data?.id,
+        data?.userId,
+        data?.user_id,
         ""
       ),
 
-    phone:
+    name:
       firstDefined(
-        data?.phone,
-        data?.userName,
+        userData?.name,
+        combinedName,
+        data?.name,
+        "Juice Lover"
+      ),
+
+    firstname:
+      firstName,
+
+    lastname:
+      lastName,
+
+    email:
+      email,
+
+    phone:
+      phone,
+
+    userName:
+      userName,
+
+    userEmail:
+      firstDefined(
+        userData?.userEmail,
+        email,
         ""
       ),
   };
 
+
+  /*
+   * -------------------------------------------------------
+   * STORE AUTHENTICATION
+   * -------------------------------------------------------
+   */
 
   localStorage.setItem(
     "juice_robo_token",
@@ -1691,7 +1960,6 @@ function normalizeAuth(
       accessToken
     )
   );
-
 
   localStorage.setItem(
     "_token",
@@ -1701,13 +1969,16 @@ function normalizeAuth(
   );
 
 
+  /*
+   * Store the authenticated user.
+   */
+
   localStorage.setItem(
     "juice_robo_user",
     JSON.stringify(
       user
     )
   );
-
 
   localStorage.setItem(
     "user",
@@ -1716,6 +1987,18 @@ function normalizeAuth(
     )
   );
 
+
+  console.log(
+    "[Juice Robo] Authenticated user stored:",
+    user
+  );
+
+
+  /*
+   * -------------------------------------------------------
+   * RETURN NORMALIZED AUTH RESPONSE
+   * -------------------------------------------------------
+   */
 
   return {
 
@@ -2170,8 +2453,25 @@ export const api = {
     },
 
 
-  /* =======================================================
+    /* =======================================================
      LOGIN
+     =======================================================
+
+     AUTHENTICATION FLOW:
+
+     1. Try LOCAL FastAPI authentication first.
+        - Used by newly created local development users.
+        - Endpoint:
+          http://127.0.0.1:8000/api/auth/login
+
+     2. If the local backend says the credentials do not
+        exist, fall back to the EXISTING Juice Robo API.
+        - Used by existing Juice Robo users.
+        - Endpoint:
+          https://tptest.juicerobo.com/tporder/api/v1/auth/signin
+
+     This allows both user types to work without changing
+     the existing ordering APIs.
      ======================================================= */
 
   login:
@@ -2179,38 +2479,273 @@ export const api = {
       payload = {}
     ) => {
 
-      const response =
+      const identifier =
+        String(
+          payload?.identifier ||
+          payload?.userName ||
+          payload?.username ||
+          payload?.email ||
+          payload?.phone ||
+          ""
+        ).trim();
+
+      const password =
+        String(
+          payload?.password ||
+          ""
+        );
+
+      if (!identifier) {
+        throw new Error(
+          "Enter your email address or phone number."
+        );
+      }
+
+      if (!password) {
+        throw new Error(
+          "Enter your password."
+        );
+      }
+
+      console.log(
+        "[Juice Robo] Attempting login:",
+        {
+          identifier,
+          hasPassword:
+            Boolean(password),
+        }
+      );
+
+
+      /* =====================================================
+         STEP 1
+         LOCAL FASTAPI LOGIN
+         ===================================================== */
+
+      try {
+
+        console.log(
+          "[Juice Robo] Trying local authentication..."
+        );
+
+        const localResponse =
+          await request(
+            "/api/auth/login",
+            {
+              method:
+                "POST",
+
+              body:
+                JSON.stringify({
+                  identifier:
+                    identifier,
+
+                  password:
+                    password,
+                }),
+            },
+
+            "http://127.0.0.1:8000"
+          );
+
+
+        console.log(
+          "[Juice Robo] Local login response:",
+          localResponse
+        );
+
+
+        const localNormalized =
+          normalizeAuth(
+            localResponse
+          );
+
+
+        const localToken =
+          localNormalized?.accessToken ||
+          localNormalized?.access_token ||
+          localNormalized?.token ||
+          "";
+
+
+        if (localToken) {
+
+          console.log(
+            "[Juice Robo] Local authentication successful."
+          );
+
+          return localNormalized;
+        }
+
+
+        throw new Error(
+          "Local authentication succeeded without an access token."
+        );
+
+      } catch (localError) {
+
+        const localMessage =
+          String(
+            localError?.message ||
+            ""
+          ).trim();
+
+
+        const localLower =
+          localMessage.toLowerCase();
+
+
+        console.warn(
+          "[Juice Robo] Local authentication did not succeed:",
+          localMessage
+        );
+
+
+        /* ===================================================
+           IMPORTANT
+
+           Only fall back to the legacy API for an actual
+           "user not found / bad credentials" type response.
+
+           If the local backend is completely unreachable,
+           don't silently hide that problem.
+           =================================================== */
+
+        const shouldFallbackToLegacy =
+          localLower.includes(
+            "bad credentials"
+          ) ||
+          localLower.includes(
+            "invalid credentials"
+          ) ||
+          localLower.includes(
+            "invalid credential"
+          ) ||
+          localLower.includes(
+            "not found"
+          ) ||
+          localLower.includes(
+            "401"
+          ) ||
+          localLower.includes(
+            "404"
+          );
+
+
+        if (
+          !shouldFallbackToLegacy
+        ) {
+
+          /*
+           * The local backend may be down.
+           *
+           * However, because existing users must still
+           * work independently of the local development
+           * backend, allow the legacy API to be tried
+           * as a final compatibility path.
+           */
+
+          console.warn(
+            "[Juice Robo] Local backend unavailable or returned an unexpected error. Trying legacy authentication..."
+          );
+        }
+      }
+
+
+      /* =====================================================
+         STEP 2
+         EXISTING JUICE ROBO LOGIN
+         ===================================================== */
+
+      console.log(
+        "[Juice Robo] Trying existing Juice Robo authentication..."
+      );
+
+
+      const legacyResponse =
         await request(
           "/v1/auth/signin",
           {
             method:
               "POST",
 
+            skipAuth:
+              true,
+
             body:
               JSON.stringify({
                 userName:
-                  payload?.userName ||
-                  payload?.username ||
-                  payload?.email ||
-                  "",
+                  identifier,
 
                 password:
-                  payload?.password ||
-                  "",
+                  password,
               }),
           }
         );
 
 
-      return normalizeAuth(
-        response
+      console.log(
+        "[Juice Robo] Legacy login response:",
+        legacyResponse
       );
+
+
+      const normalizedLegacy =
+        normalizeAuth(
+          legacyResponse
+        );
+
+
+      const legacyToken =
+        normalizedLegacy?.accessToken ||
+        normalizedLegacy?.access_token ||
+        normalizedLegacy?.token ||
+        "";
+
+
+      if (!legacyToken) {
+
+        throw new Error(
+          "Login succeeded but no authentication token was returned."
+        );
+      }
+
+
+      console.log(
+        "[Juice Robo] Existing Juice Robo authentication successful."
+      );
+
+
+      return normalizedLegacy;
     },
 
 
   /* =======================================================
-     REGISTER
-     ======================================================= */
+    REGISTER
+    =======================================================
+
+    NEW USER FLOW:
+
+    React
+        ↓
+    Local FastAPI
+        ↓
+    SQLite
+        ↓
+    users.xlsx
+
+    Endpoint:
+
+    http://127.0.0.1:8000/api/auth/register
+
+    IMPORTANT:
+
+    New users MUST NOT be registered through the
+    legacy Juice Robo API.
+
+    The legacy API remains available for EXISTING
+    Juice Robo users during LOGIN only.
+    ======================================================= */
 
   register:
     async (
@@ -2223,86 +2758,156 @@ export const api = {
           ""
         ).trim();
 
+      const phone =
+        String(
+          payload?.phone ||
+          ""
+        )
+          .replace(
+            /\D/g,
+            ""
+          );
 
-      const nameParts =
-        name
-          .split(/\s+/)
-          .filter(Boolean);
+      const email =
+        String(
+          payload?.email ||
+          ""
+        ).trim()
+          .toLowerCase();
+
+      const password =
+        String(
+          payload?.password ||
+          ""
+        );
+
+      const confirmPassword =
+        String(
+          payload?.confirmPassword ||
+          ""
+        );
 
 
-      const firstName =
-        payload?.firstName ||
-        nameParts[0] ||
-        "";
+      /* =====================================================
+        VALIDATION
+        ===================================================== */
+
+      if (!name) {
+        throw new Error(
+          "Enter your full name."
+        );
+      }
 
 
-      const lastName =
-        payload?.lastName ||
-        nameParts
-          .slice(1)
-          .join(" ") ||
-        firstName;
+      if (!phone) {
+        throw new Error(
+          "Enter your phone number."
+        );
+      }
 
+
+      if (
+        phone.length !==
+        10
+      ) {
+        throw new Error(
+          "Enter a valid 10-digit phone number."
+        );
+      }
+
+
+      if (!email) {
+        throw new Error(
+          "Enter your email address."
+        );
+      }
+
+
+      if (!password) {
+        throw new Error(
+          "Enter your password."
+        );
+      }
+
+
+      if (
+        password.length <
+        6
+      ) {
+        throw new Error(
+          "Password must contain at least 6 characters."
+        );
+      }
+
+
+      if (
+        password !==
+        confirmPassword
+      ) {
+        throw new Error(
+          "Passwords do not match."
+        );
+      }
+
+
+      /* =====================================================
+        DEBUG
+        ===================================================== */
+
+      console.log(
+        "[Juice Robo] Creating LOCAL development account:",
+        {
+          name,
+          phone,
+          email,
+        }
+      );
+
+
+      /* =====================================================
+        LOCAL FASTAPI REGISTRATION
+        ===================================================== */
 
       const response =
         await request(
-          "/v1/auth/registerUser",
+          "/api/auth/register",
           {
             method:
               "POST",
 
             body:
               JSON.stringify({
+                name:
+                  name,
 
-                firstName:
+                email:
+                  email,
 
-                  firstName,
-
-                lastName:
-
-                  lastName,
-
-                userName:
-
-                  payload?.userName ||
-                  payload?.phone ||
-                  "",
-
-                userEmail:
-
-                  payload?.userEmail ||
-                  payload?.email ||
-                  "",
+                phone:
+                  phone,
 
                 password:
-
-                  payload?.password ||
-                  "",
-
-                confirmPassword:
-
-                  payload?.confirmPassword ||
-                  payload?.password ||
-                  "",
-
-                city:
-
-                  payload?.city ||
-                  "",
-
-                state:
-
-                  payload?.state ||
-                  "",
-
-                country:
-
-                  payload?.country ||
-                  "",
+                  password,
               }),
-          }
+          },
+
+          LOCAL_API_BASE
         );
 
+
+      /* =====================================================
+        DEBUG RESPONSE
+        ===================================================== */
+
+      console.log(
+        "[Juice Robo] Local registration response:",
+        response
+      );
+
+
+      /* =====================================================
+        NORMALIZE
+        ===================================================== */
 
       return normalizeAuth(
         response
@@ -2311,129 +2916,130 @@ export const api = {
 
 
   /* =======================================================
-     PROFILE
-     ======================================================= */
+   PROFILE
+   =======================================================
 
-  profile:
-    async () => {
+   IMPORTANT:
 
-      const user =
-        getUserSnapshot();
+   The existing Juice Robo test API currently returns
+   HTTP 500 for:
 
+     GET /user/{id}
 
-      if (
-        user?.id
-      ) {
+   Authentication itself works correctly.
 
-        try {
+   Therefore, do NOT call the broken profile endpoint.
 
-          const response =
-            await request(
-              `/user/${encodeURIComponent(
-                user.id
-              )}`
-            );
+   The authenticated user returned by signin is already
+   stored locally by normalizeAuth().
 
+   The profile screen uses that authenticated snapshot.
 
-          const data =
-            unwrap(
-              response
-            );
+   ======================================================= */
+
+profile:
+  async () => {
+
+    const user =
+      getUserSnapshot();
 
 
-          if (
-            data &&
-            typeof data ===
-              "object"
-          ) {
+    /*
+     * -------------------------------------------------------
+     * NORMALIZE STORED USER
+     * -------------------------------------------------------
+     */
 
-            const normalized = {
+    const normalized = {
 
-              ...user,
+      ...user,
 
-              ...data,
+      id:
+        firstDefined(
+          user?.id,
+          user?.userId,
+          user?.user_id,
+          ""
+        ),
 
-              name:
-                data.name ||
-                [
-                  data.firstName,
-                  data.lastName,
-                ]
-                  .filter(Boolean)
-                  .join(" ") ||
-                user.name ||
-                "Juice Lover",
-
-              email:
-                data.email ||
-                data.userEmail ||
-                user.email ||
-                "",
-
-              phone:
-                data.phone ||
-                data.userName ||
-                user.phone ||
-                "",
-            };
-
-
-            localStorage.setItem(
-              "juice_robo_user",
-              JSON.stringify(
-                normalized
-              )
-            );
-
-
-            localStorage.setItem(
-              "user",
-              JSON.stringify(
-                normalized
-              )
-            );
-
-
-            return normalized;
-          }
-
-        } catch (
-          error
-        ) {
-
-          console.warn(
-            "[Juice Robo] Profile endpoint unavailable:",
-            error
-          );
-        }
-      }
-
-
-      return {
-
-        ...user,
-
-        name:
-          user?.name ||
+      name:
+        firstDefined(
+          user?.name,
           [
+            user?.firstName,
             user?.firstname,
+            user?.lastName,
             user?.lastname,
           ]
             .filter(Boolean)
-            .join(" ") ||
-          "Juice Lover",
+            .join(" "),
+          "Juice Lover"
+        ),
 
-        email:
-          user?.email ||
-          "",
+      email:
+        firstDefined(
+          user?.email,
+          user?.userEmail,
+          ""
+        ),
 
-        phone:
-          user?.phone ||
-          "",
-      };
-    },
+      /*
+       * Do NOT use userName as phone automatically.
+       *
+       * The legacy API uses userName as the login identifier.
+       * That identifier may be an email OR a phone number.
+       */
+
+      phone:
+        firstDefined(
+          user?.phone,
+          ""
+        ),
+
+      userName:
+        firstDefined(
+          user?.userName,
+          ""
+        ),
+
+      userEmail:
+        firstDefined(
+          user?.userEmail,
+          user?.email,
+          ""
+        ),
+    };
 
 
+    /*
+     * -------------------------------------------------------
+     * SAVE CLEAN PROFILE SNAPSHOT
+     * -------------------------------------------------------
+     */
+
+    localStorage.setItem(
+      "juice_robo_user",
+      JSON.stringify(
+        normalized
+      )
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(
+        normalized
+      )
+    );
+
+
+    console.log(
+      "[Juice Robo] Using authenticated user profile:",
+      normalized
+    );
+
+
+    return normalized;
+  },
   /* =======================================================
      UPDATE PROFILE
      ======================================================= */

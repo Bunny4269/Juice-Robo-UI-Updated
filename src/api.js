@@ -2,15 +2,7 @@
    JUICE ROBO — FRONTEND API ADAPTER
    LEGACY TEST BACKEND
    =========================================================
-
-   IMPORTANT:
-   - This file is for the React/Vite frontend only.
-   - DO NOT start the local FastAPI .py backend.
-   - DO NOT call localhost:8000.
-   - DO NOT use 192.168.x.x:8000.
-   - The frontend talks directly to the existing Juice
-     Robo test APIs.
-
+   
    GENERAL API:
    https://tptest.juicerobo.com/tporder/api
 
@@ -24,7 +16,15 @@
 
 
 /* =========================================================
-   API BASE URLS
+   LOCAL JUICE ROBO DEVELOPMENT AUTH API
+   =========================================================
+
+const LOCAL_API_BASE =
+  "http://127.0.0.1:8000";
+
+
+/* =========================================================
+   LEGACY JUICE ROBO API
    ========================================================= */
 
 const API_BASE =
@@ -431,7 +431,6 @@ function normalizeError(
   );
 }
 
-
 /* =========================================================
    REQUEST HEADERS
    ========================================================= */
@@ -452,6 +451,11 @@ function buildHeaders(
     ...(options.headers || {}),
   };
 
+
+  /* =======================================================
+     CONTENT TYPE
+     ======================================================= */
+
   if (
     options.body !== undefined
   ) {
@@ -461,15 +465,51 @@ function buildHeaders(
       "application/json";
   }
 
-  /*
-   * Intentionally DO NOT add:
-   *
-   * Authorization: Bearer ...
-   */
+
+  /* =======================================================
+     BEARER AUTHENTICATION
+     =======================================================
+
+     Existing Juice Robo login returns:
+
+       accessToken
+
+     normalizeAuth() stores it in:
+
+       juice_robo_token
+
+     The token must then be sent with authenticated
+     Juice Robo API requests.
+
+     IMPORTANT:
+
+     Login itself must NOT send an old Bearer token.
+
+     Therefore requests can explicitly disable it with:
+
+       skipAuth: true
+     ======================================================= */
+
+  if (
+    !options.skipAuth
+  ) {
+
+    const token =
+      getStoredToken();
+
+
+    if (token) {
+
+      headers[
+        "Authorization"
+      ] =
+        `Bearer ${token}`;
+    }
+  }
+
+
   return headers;
 }
-
-
 /* =========================================================
    GENERIC REQUEST
    ========================================================= */
@@ -481,105 +521,160 @@ async function request(
 ) {
   const cleanBase =
     String(baseUrl)
-      .replace(/\/+$/, "");
+      .replace(
+        /\/+$/,
+        ""
+      );
+
 
   const cleanPath =
     String(path).startsWith("/")
       ? String(path)
       : `/${String(path)}`;
 
+
   const url =
     `${cleanBase}${cleanPath}`;
 
+
   const headers =
-    buildHeaders(options);
+    buildHeaders(
+      options
+    );
+
 
   console.log(
     `[Juice Robo] ${
-      options.method || "GET"
+      options.method ||
+      "GET"
     } ${url}`
   );
+
 
   console.log(
     "[Juice Robo] Authentication configured:",
     {
       hasApiKey:
-        Boolean(JR_API_KEY),
+        Boolean(
+          JR_API_KEY
+        ),
 
       hasApiSecret:
-        Boolean(JR_API_KEY_SECRET),
+        Boolean(
+          JR_API_KEY_SECRET
+        ),
 
       hasAuthorization:
         Boolean(
-          headers.Authorization ||
-          headers.authorization
+          headers.Authorization
         ),
     }
   );
 
+
   let response;
 
+
   try {
+
+    /*
+     * Do not pass our internal skipAuth option
+     * into the browser fetch() API.
+     */
+
+    const {
+      skipAuth,
+      ...fetchOptions
+    } = options;
+
+
     response =
       await fetch(
         url,
         {
-          ...options,
+          ...fetchOptions,
+
           headers,
         }
       );
-  } catch (error) {
+
+  } catch (
+    error
+  ) {
+
     console.error(
       "[Juice Robo] Network error:",
       error
     );
+
 
     throw new Error(
       "Unable to connect to the Juice Robo test API. Check the internet connection."
     );
   }
 
+
   const contentType =
     response.headers.get(
       "content-type"
     ) || "";
 
+
   let data =
     null;
 
+
   try {
+
     if (
       contentType
         .toLowerCase()
-        .includes("application/json")
+        .includes(
+          "application/json"
+        )
     ) {
+
       data =
         await response.json();
+
     } else {
+
       const text =
         await response.text();
 
       data =
-        text || null;
+        text ||
+        null;
     }
-  } catch (error) {
+
+  } catch (
+    error
+  ) {
+
     console.error(
       "[Juice Robo] Response parsing error:",
       error
     );
   }
 
+
   console.log(
     "[Juice Robo] Response:",
     {
       status:
         response.status,
+
       url,
+
       data,
     }
   );
 
-  if (!response.ok) {
+
+  if (
+    !response.ok
+  ) {
+
     throw new Error(
       normalizeError(
         data,
@@ -587,6 +682,7 @@ async function request(
       )
     );
   }
+
 
   return data;
 }
@@ -1740,87 +1836,197 @@ export const api = {
 
 
   /* =======================================================
-     REGISTER
-     ======================================================= */
+   REGISTER
+   =======================================================
 
-  register:
-    async (
-      payload = {}
-    ) => {
-      const name =
-        String(
-          payload?.name ||
+   NEW USER REGISTRATION:
+
+   React
+      ↓
+   Local FastAPI
+      ↓
+   SQLite
+      ↓
+   users.xlsx
+
+   IMPORTANT:
+
+   New users MUST NOT be sent to:
+
+   /v1/auth/registerUser
+
+   That endpoint belongs to the existing Juice Robo
+   backend and caused the "Web Username is already taken"
+   problem for newly created development users.
+
+   Existing users continue to use the legacy API during
+   LOGIN.
+   ======================================================= */
+
+register:
+  async (
+    payload = {}
+  ) => {
+
+    /* =====================================================
+       READ USER DETAILS
+       ===================================================== */
+
+    const name =
+      String(
+        payload?.name ||
+        ""
+      ).trim();
+
+
+    const phone =
+      String(
+        payload?.phone ||
+        ""
+      )
+        .replace(
+          /\D/g,
           ""
-        ).trim();
-
-      const parts =
-        name
-          .split(/\s+/)
-          .filter(Boolean);
-
-      const firstName =
-        payload?.firstName ||
-        parts[0] ||
-        "";
-
-      const lastName =
-        payload?.lastName ||
-        parts.slice(1).join(" ") ||
-        firstName;
-
-      const response =
-        await request(
-          "/v1/auth/registerUser",
-          {
-            method:
-              "POST",
-
-            body:
-              JSON.stringify({
-                firstName:
-                  firstName,
-
-                lastName:
-                  lastName,
-
-                userName:
-                  payload?.userName ||
-                  payload?.phone ||
-                  "",
-
-                userEmail:
-                  payload?.userEmail ||
-                  payload?.email ||
-                  "",
-
-                password:
-                  payload?.password ||
-                  "",
-
-                confirmPassword:
-                  payload?.confirmPassword ||
-                  payload?.password ||
-                  "",
-
-                city:
-                  payload?.city ||
-                  "",
-
-                state:
-                  payload?.state ||
-                  "",
-
-                country:
-                  payload?.country ||
-                  "",
-              }),
-          }
         );
 
-      return normalizeAuth(
-        response
+
+    const email =
+      String(
+        payload?.email ||
+        payload?.userEmail ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    const password =
+      String(
+        payload?.password ||
+        ""
       );
-    },
+
+
+    /* =====================================================
+       VALIDATION
+       ===================================================== */
+
+    if (!name) {
+      throw new Error(
+        "Enter your full name."
+      );
+    }
+
+
+    if (!phone) {
+      throw new Error(
+        "Enter your phone number."
+      );
+    }
+
+
+    if (
+      phone.length !==
+      10
+    ) {
+      throw new Error(
+        "Enter a valid 10-digit phone number."
+      );
+    }
+
+
+    if (!email) {
+      throw new Error(
+        "Enter your email address."
+      );
+    }
+
+
+    if (!password) {
+      throw new Error(
+        "Enter your password."
+      );
+    }
+
+
+    if (
+      password.length <
+      6
+    ) {
+      throw new Error(
+        "Password must contain at least 6 characters."
+      );
+    }
+
+
+    /* =====================================================
+       DEBUG
+       ===================================================== */
+
+    console.log(
+      "[Juice Robo] LOCAL registration:",
+      {
+        name,
+        phone,
+        email,
+      }
+    );
+
+
+    console.log(
+      "[Juice Robo] LOCAL registration URL:",
+      `${LOCAL_API_BASE}/api/auth/register`
+    );
+
+
+    /* =====================================================
+       LOCAL FASTAPI REGISTRATION
+       ===================================================== */
+
+    const response =
+      await request(
+        "/api/auth/register",
+        {
+          method:
+            "POST",
+
+          body:
+            JSON.stringify({
+              name:
+                name,
+
+              email:
+                email,
+
+              phone:
+                phone,
+
+              password:
+                password,
+            }),
+        },
+        LOCAL_API_BASE
+      );
+
+
+    /* =====================================================
+       DEBUG RESPONSE
+       ===================================================== */
+
+    console.log(
+      "[Juice Robo] LOCAL registration response:",
+      response
+    );
+
+
+    /* =====================================================
+       NORMALIZE RESPONSE
+       ===================================================== */
+
+    return normalizeAuth(
+      response
+    );
+  },
 
 
   /* =======================================================
@@ -2061,72 +2267,705 @@ export const api = {
         response
       );
     },
+    /* =======================================================
+   CREATE ORDER
+   =======================================================
+
+   JUICE ROBO ORDER MASTER FLOW
+
+   1. POST /v1/addcart
+   2. Read the REAL cartId returned by the backend
+   3. POST /v1/order/submit using that REAL cartId
+
+   IMPORTANT:
+   The cartId generated by the frontend is only a request
+   identifier.
+
+   The cartId returned by /addcart is the authoritative
+   backend cart ID and MUST be used for order submission.
+   ======================================================= */
+
+createOrder:
+  async (
+    payload = {}
+  ) => {
+
+    console.log(
+      "[Juice Robo] createOrder payload:",
+      payload
+    );
 
 
-  /* =======================================================
+    /*
+     * -------------------------------------------------------
+     * BUILD LEGACY PAYLOAD
+     * -------------------------------------------------------
+     */
+
+    const legacyPayload =
+      buildLegacyOrderPayload(
+        payload
+      );
+
+
+    /*
+     * -------------------------------------------------------
+     * FRONTEND REQUEST CART ID
+     * -------------------------------------------------------
+     *
+     * This is only sent to /addcart.
+     *
+     * The backend may return a different cart ID.
+     */
+
+    const requestedCartId =
+      String(
+        legacyPayload.cartId
+      );
+
+
+    /*
+     * -------------------------------------------------------
+     * ADD CART
+     * -------------------------------------------------------
+     */
+
+    const addCartPayload = {
+
+      cartId:
+        requestedCartId,
+
+      locId:
+        String(
+          legacyPayload.storeId
+        ),
+
+      cartItems:
+        legacyPayload.cartItems.map(
+          (
+            item
+          ) => ({
+
+            variantId:
+              Number(
+                item.variantId
+              ),
+
+            quantity:
+              Number(
+                item.quantity
+              ),
+
+          })
+        ),
+
+    };
+
+
+    console.log(
+      "[Juice Robo] ADD CART payload:",
+      addCartPayload
+    );
+
+
+    const cartResponse =
+      await request(
+        "/v1/addcart",
+        {
+          method:
+            "POST",
+
+          body:
+            JSON.stringify(
+              addCartPayload
+            ),
+        },
+        ORDER_API_BASE
+      );
+
+
+    console.log(
+      "[Juice Robo] ADD CART response:",
+      cartResponse
+    );
+
+
+    /*
+     * -------------------------------------------------------
+     * EXTRACT REAL BACKEND CART ID
+     * -------------------------------------------------------
+     */
+
+    const addCartData =
+      unwrap(
+        cartResponse
+      );
+
+
+    let realCartId = "";
+
+
+    if (
+      typeof addCartData ===
+      "string"
+    ) {
+
+      realCartId =
+        addCartData.trim();
+
+    } else if (
+      addCartData &&
+      typeof addCartData ===
+      "object"
+    ) {
+
+      realCartId =
+        String(
+          firstDefined(
+
+            addCartData?.cartId,
+
+            addCartData?.cart_id,
+
+            addCartData?.id,
+
+            addCartData?.data,
+
+            ""
+
+          ) || ""
+        ).trim();
+
+    }
+
+
+    /*
+     * Some Juice Robo responses place the value directly
+     * under response.data rather than after unwrap().
+     */
+
+    if (
+      !realCartId
+    ) {
+
+      realCartId =
+        String(
+          firstDefined(
+
+            cartResponse?.cartId,
+
+            cartResponse?.cart_id,
+
+            cartResponse?.id,
+
+            cartResponse?.data,
+
+            ""
+
+          ) || ""
+        ).trim();
+
+    }
+
+
+    /*
+     * -------------------------------------------------------
+     * VALIDATE REAL CART ID
+     * -------------------------------------------------------
+     */
+
+    if (
+      !realCartId
+    ) {
+
+      console.error(
+        "[Juice Robo] ADD CART succeeded but no real cart ID was returned.",
+        cartResponse
+      );
+
+
+      throw new Error(
+        "Juice Robo created the cart but did not return a cart ID."
+      );
+
+    }
+
+
+    console.log(
+      "[Juice Robo] REAL BACKEND CART ID:",
+      realCartId
+    );
+
+
+    /*
+     * -------------------------------------------------------
+     * IMPORTANT DEBUG
+     * -------------------------------------------------------
+     *
+     * This lets us confirm whether the backend replaced the
+     * frontend-generated cart ID.
+     */
+
+    console.log(
+      "[Juice Robo] Cart ID comparison:",
+      {
+        requestedCartId:
+          requestedCartId,
+
+        backendCartId:
+          realCartId,
+
+        changed:
+          requestedCartId !==
+          realCartId,
+      }
+    );
+
+
+    /*
+     * -------------------------------------------------------
+     * SUBMIT ORDER
+     * -------------------------------------------------------
+     *
+     * USE THE BACKEND CART ID.
+     *
+     * NOT requestedCartId.
+     */
+
+    const submitPayload = {
+
+      cartId:
+        realCartId,
+
+    };
+
+
+    console.log(
+      "[Juice Robo] ORDER SUBMIT payload:",
+      submitPayload
+    );
+
+
+    const orderResponse =
+      await request(
+        "/v1/order/submit",
+        {
+          method:
+            "POST",
+
+          body:
+            JSON.stringify(
+              submitPayload
+            ),
+        },
+        ORDER_API_BASE
+      );
+
+
+    console.log(
+      "[Juice Robo] ORDER SUBMIT response:",
+      orderResponse
+    );
+
+
+    /*
+     * -------------------------------------------------------
+     * CHECK BACKEND ORDER RESPONSE
+     * -------------------------------------------------------
+     */
+
+    const submitStatus =
+      Number(
+        orderResponse?.status ??
+        200
+      );
+
+
+    const submitMessage =
+      String(
+        orderResponse?.message ||
+        ""
+      ).trim();
+
+
+    /*
+     * The API currently appears to return:
+     *
+     * status: -1
+     * message: "Invalid Cart Details"
+     *
+     * even though HTTP itself is 200.
+     *
+     * Therefore we MUST inspect the API-level status too.
+     */
+
+    if (
+      submitStatus < 0
+    ) {
+
+      console.error(
+        "[Juice Robo] ORDER SUBMIT rejected by backend:",
+        orderResponse
+      );
+
+
+      throw new Error(
+        submitMessage ||
+        "Juice Robo rejected the cart while submitting the order."
+      );
+
+    }
+
+
+    /*
+     * -------------------------------------------------------
+     * NORMALIZE REAL ORDER
+     * -------------------------------------------------------
+     */
+
+    const normalized =
+      normalizeOrder(
+        orderResponse
+      );
+
+
+    /*
+     * -------------------------------------------------------
+     * RETURN COMPLETE RESULT
+     * -------------------------------------------------------
+     */
+
+    return {
+
+      ...normalized,
+
+
+      /*
+       * REAL backend cart ID
+       */
+
+      cartId:
+        realCartId,
+
+
+      /*
+       * Keep the original request ID for debugging.
+       */
+
+      requestedCartId:
+        requestedCartId,
+
+
+      /*
+       * Raw responses are useful while we are integrating
+       * the legacy backend.
+       */
+
+      rawCartResponse:
+        cartResponse,
+
+      rawOrderResponse:
+        orderResponse,
+
+
+      /*
+       * ORDER ID
+       */
+
+      orderId:
+        firstDefined(
+
+          orderResponse?.orderId,
+
+          orderResponse?.order_id,
+
+          orderResponse?.id,
+
+          normalized?.order_id,
+
+          normalized?.id,
+
+          ""
+
+        ),
+
+
+      /*
+       * TRANSACTION ID
+       */
+
+      transactionId:
+        firstDefined(
+
+          orderResponse?.transactionId,
+
+          orderResponse?.transaction_id,
+
+          normalized?.transactionId,
+
+          ""
+
+        ),
+
+
+      /*
+       * COLLECTION / PICKUP CODE
+       */
+
+      orderPin:
+        firstDefined(
+
+          orderResponse?.orderPin,
+
+          orderResponse?.order_pin,
+
+          normalized?.orderPin,
+
+          ""
+
+        ),
+
+
+      collection_code:
+        firstDefined(
+
+          orderResponse?.collection_code,
+
+          orderResponse?.collectionCode,
+
+          orderResponse?.pickupCode,
+
+          orderResponse?.orderPin,
+
+          orderResponse?.order_pin,
+
+          normalized?.collection_code,
+
+          ""
+
+        ),
+
+
+      /*
+       * PAYMENT STATUS
+       */
+
+      payment_status:
+        firstDefined(
+
+          orderResponse?.payment_status,
+
+          orderResponse?.paymentStatus,
+
+          normalized?.payment_status,
+
+          "PENDING"
+
+        ),
+
+
+      /*
+       * ORDER STATUS
+       */
+
+      status:
+        firstDefined(
+
+          orderResponse?.orderStatus,
+
+          orderResponse?.order_status,
+
+          orderResponse?.status,
+
+          normalized?.status,
+
+          "PENDING_PAYMENT"
+
+        ),
+
+
+      /*
+       * TOTAL
+       */
+
+      total_amount:
+        Number(
+          firstDefined(
+
+            orderResponse?.netBill,
+
+            orderResponse?.total_amount,
+
+            orderResponse?.totalAmount,
+
+            orderResponse?.grandTotal,
+
+            normalized?.total_amount,
+
+            0
+
+          )
+        ),
+
+    };
+
+  },
+    /* =======================================================
      CREATE ORDER
      =======================================================
 
-     CURRENT TEST BACKEND FLOW:
+     JUICE ROBO ORDER FLOW
 
-       1. POST /tpordermaster/api/v1/addcart
-       2. POST /tpordermaster/api/v1/order/submit
+     STEP 1:
+       POST /v1/addcart
 
+     STEP 2:
+       Read the REAL cart ID returned by the backend.
+
+     STEP 3:
+       POST /v1/order/submit using that REAL cart ID.
+
+     IMPORTANT:
+       The cartId generated by the frontend is only the
+       initial/request cart ID.
+
+       The cartId returned by /v1/addcart is authoritative.
      ======================================================= */
 
   createOrder:
     async (
       payload = {}
     ) => {
+
       console.log(
-        "[Juice Robo] createOrder payload:",
+        "[Juice Robo] Starting REAL order creation..."
+      );
+
+      console.log(
+        "[Juice Robo] Incoming order payload:",
         payload
       );
+
+
+      /* =====================================================
+         BUILD LEGACY CART PAYLOAD
+         ===================================================== */
 
       const legacyPayload =
         buildLegacyOrderPayload(
           payload
         );
 
-      const cartId =
+
+      /*
+       * This is the cart ID initially generated by the
+       * frontend / buildLegacyOrderPayload().
+       *
+       * DO NOT use this ID for order submission unless the
+       * backend returns the same ID.
+       */
+
+      const requestedCartId =
         String(
-          legacyPayload.cartId
+          legacyPayload?.cartId ||
+          ""
+        ).trim();
+
+
+      if (!requestedCartId) {
+
+        throw new Error(
+          "Unable to create the Juice Robo cart."
         );
+      }
+
+
+      /* =====================================================
+         VALIDATE STORE
+         ===================================================== */
+
+      const storeId =
+        String(
+          legacyPayload?.storeId ||
+          ""
+        ).trim();
+
+
+      if (!storeId) {
+
+        throw new Error(
+          "No Juice Robo collection location is selected."
+        );
+      }
+
+
+      /* =====================================================
+         VALIDATE CART ITEMS
+         ===================================================== */
+
+      const legacyItems =
+        Array.isArray(
+          legacyPayload?.cartItems
+        )
+          ? legacyPayload.cartItems
+          : [];
+
+
+      if (!legacyItems.length) {
+
+        throw new Error(
+          "Your Juice Robo cart is empty."
+        );
+      }
+
+
+      /* =====================================================
+         STEP 1 — ADD CART
+         ===================================================== */
 
       const addCartPayload = {
+
         cartId:
-          cartId,
+          requestedCartId,
 
         locId:
-          String(
-            legacyPayload.storeId
-          ),
+          storeId,
 
         cartItems:
-          legacyPayload.cartItems.map(
-            (item) => ({
+          legacyItems.map(
+            (
+              item
+            ) => ({
+
               variantId:
                 Number(
-                  item.variantId
+                  item?.variantId ||
+                  0
                 ),
 
               quantity:
                 Number(
-                  item.quantity
+                  item?.quantity ||
+                  1
                 ),
+
             })
           ),
+
       };
+
 
       console.log(
         "[Juice Robo] ADD CART URL:",
         `${ORDER_API_BASE}/v1/addcart`
       );
 
+
       console.log(
         "[Juice Robo] ADD CART payload:",
         addCartPayload
       );
+
 
       const cartResponse =
         await request(
@@ -2143,20 +2982,204 @@ export const api = {
           ORDER_API_BASE
         );
 
+
       console.log(
         "[Juice Robo] ADD CART response:",
         cartResponse
       );
 
+
+      /* =====================================================
+         STEP 2 — EXTRACT REAL BACKEND CART ID
+         ===================================================== */
+
+      let backendCartId = "";
+
+
+      /*
+       * Current Juice Robo test API response observed:
+       *
+       * {
+       *   status: 200,
+       *   message: "Loaded successfully",
+       *   data: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+       * }
+       *
+       * Therefore response.data can itself be the cart ID.
+       */
+
+      if (
+        typeof cartResponse?.data ===
+        "string"
+      ) {
+
+        backendCartId =
+          cartResponse.data.trim();
+
+      }
+
+
+      /*
+       * Support object responses as well.
+       */
+
+      if (
+        !backendCartId &&
+        cartResponse?.data &&
+        typeof cartResponse.data ===
+          "object"
+      ) {
+
+        backendCartId =
+          String(
+            firstDefined(
+
+              cartResponse.data?.cartId,
+
+              cartResponse.data?.cart_id,
+
+              cartResponse.data?.id,
+
+              ""
+
+            ) || ""
+          ).trim();
+
+      }
+
+
+      /*
+       * Additional compatibility fields.
+       */
+
+      if (
+        !backendCartId
+      ) {
+
+        backendCartId =
+          String(
+            firstDefined(
+
+              cartResponse?.cartId,
+
+              cartResponse?.cart_id,
+
+              cartResponse?.id,
+
+              ""
+
+            ) || ""
+          ).trim();
+
+      }
+
+
+      /*
+       * Some response wrappers may expose the actual
+       * response through `result`.
+       */
+
+      if (
+        !backendCartId &&
+        cartResponse?.result
+      ) {
+
+        backendCartId =
+          String(
+            firstDefined(
+
+              cartResponse.result?.cartId,
+
+              cartResponse.result?.cart_id,
+
+              cartResponse.result?.id,
+
+              cartResponse.result?.data,
+
+              ""
+
+            ) || ""
+          ).trim();
+
+      }
+
+
+      /* =====================================================
+         VALIDATE BACKEND CART ID
+         ===================================================== */
+
+      if (
+        !backendCartId
+      ) {
+
+        console.error(
+          "[Juice Robo] ADD CART succeeded but no backend cart ID was returned.",
+          cartResponse
+        );
+
+
+        throw new Error(
+          "Juice Robo created the cart but did not return a cart ID."
+        );
+      }
+
+
+      console.log(
+        "[Juice Robo] REAL BACKEND CART ID:",
+        backendCartId
+      );
+
+
+      /* =====================================================
+         CART ID COMPARISON
+         ===================================================== */
+
+      console.log(
+        "[Juice Robo] Cart ID comparison:",
+        {
+          requestedCartId:
+            requestedCartId,
+
+          backendCartId:
+            backendCartId,
+
+          changed:
+            requestedCartId !==
+            backendCartId,
+        }
+      );
+
+
+      /* =====================================================
+         STEP 3 — SUBMIT ORDER
+         =====================================================
+
+         IMPORTANT:
+
+         Use backendCartId.
+
+         NEVER use requestedCartId here.
+         ===================================================== */
+
       const submitPayload = {
+
         cartId:
-          cartId,
+          backendCartId,
+
       };
+
 
       console.log(
         "[Juice Robo] ORDER SUBMIT URL:",
         `${ORDER_API_BASE}/v1/order/submit`
       );
+
+
+      console.log(
+        "[Juice Robo] ORDER SUBMIT payload:",
+        submitPayload
+      );
+
 
       const orderResponse =
         await request(
@@ -2173,21 +3196,115 @@ export const api = {
           ORDER_API_BASE
         );
 
+
       console.log(
         "[Juice Robo] ORDER SUBMIT response:",
         orderResponse
       );
+
+
+      /* =====================================================
+         CHECK API-LEVEL STATUS
+         =====================================================
+
+         The Juice Robo API can return HTTP 200 while the
+         actual application status is -1.
+
+         Example:
+
+         {
+           status: -1,
+           message: "Invalid Cart Details"
+         }
+
+         Therefore HTTP success alone is not enough.
+         ===================================================== */
+
+      const apiStatus =
+        Number(
+          orderResponse?.status
+        );
+
+
+      const apiMessage =
+        String(
+          orderResponse?.message ||
+          ""
+        ).trim();
+
+
+      if (
+        Number.isFinite(
+          apiStatus
+        ) &&
+        apiStatus < 0
+      ) {
+
+        console.error(
+          "[Juice Robo] ORDER SUBMIT rejected:",
+          {
+            status:
+              apiStatus,
+
+            message:
+              apiMessage,
+
+            cartId:
+              backendCartId,
+
+            response:
+              orderResponse,
+          }
+        );
+
+
+        throw new Error(
+          apiMessage ||
+          "Juice Robo rejected the cart while creating the order."
+        );
+      }
+
+
+      /* =====================================================
+         NORMALIZE ORDER
+         ===================================================== */
 
       const normalized =
         normalizeOrder(
           orderResponse
         );
 
-      return {
+
+      /* =====================================================
+         BUILD FINAL ORDER RESULT
+         ===================================================== */
+
+      const result = {
+
         ...normalized,
 
+
+        /*
+         * REAL backend cart ID.
+         */
+
         cartId:
-          cartId,
+          backendCartId,
+
+
+        /*
+         * Original frontend/request cart ID.
+         *
+         * Kept only for debugging.
+         */
+
+        requestedCartId:
+          requestedCartId,
+
+
+        /*
+         * Raw API responses.
+         */
 
         rawCartResponse:
           cartResponse,
@@ -2195,71 +3312,236 @@ export const api = {
         rawOrderResponse:
           orderResponse,
 
+
+        /* ---------------------------------------------------
+           ORDER ID
+           --------------------------------------------------- */
+
         orderId:
           firstDefined(
+
             orderResponse?.orderId,
+
             orderResponse?.order_id,
+
             orderResponse?.id,
+
+            orderResponse?.data?.orderId,
+
+            orderResponse?.data?.order_id,
+
+            orderResponse?.data?.id,
+
+            normalized?.orderId,
+
+            normalized?.order_id,
+
             normalized?.id,
+
             ""
+
           ),
+
+
+        /* ---------------------------------------------------
+           TRANSACTION ID
+           --------------------------------------------------- */
 
         transactionId:
           firstDefined(
+
             orderResponse?.transactionId,
+
             orderResponse?.transaction_id,
+
+            orderResponse?.data?.transactionId,
+
+            orderResponse?.data?.transaction_id,
+
             normalized?.transactionId,
+
             ""
+
           ),
+
+
+        /* ---------------------------------------------------
+           ORDER NUMBER
+           --------------------------------------------------- */
+
+        order_number:
+          firstDefined(
+
+            orderResponse?.order_number,
+
+            orderResponse?.orderNumber,
+
+            orderResponse?.data?.order_number,
+
+            orderResponse?.data?.orderNumber,
+
+            normalized?.order_number,
+
+            normalized?.orderNumber,
+
+            ""
+
+          ),
+
+
+        /* ---------------------------------------------------
+           COLLECTION / PICKUP CODE
+           --------------------------------------------------- */
 
         orderPin:
           firstDefined(
+
             orderResponse?.orderPin,
+
             orderResponse?.order_pin,
+
+            orderResponse?.pickupCode,
+
+            orderResponse?.pickup_code,
+
+            orderResponse?.data?.orderPin,
+
+            orderResponse?.data?.order_pin,
+
+            orderResponse?.data?.pickupCode,
+
             normalized?.orderPin,
+
             ""
+
           ),
+
 
         collection_code:
           firstDefined(
+
             orderResponse?.collection_code,
+
             orderResponse?.collectionCode,
+
             orderResponse?.pickupCode,
+
+            orderResponse?.pickup_code,
+
             orderResponse?.orderPin,
+
             orderResponse?.order_pin,
+
+            orderResponse?.data?.collection_code,
+
+            orderResponse?.data?.collectionCode,
+
+            orderResponse?.data?.pickupCode,
+
+            orderResponse?.data?.orderPin,
+
+            orderResponse?.data?.order_pin,
+
             normalized?.collection_code,
+
+            normalized?.collectionCode,
+
             ""
+
           ),
+
+
+        /* ---------------------------------------------------
+           PAYMENT STATUS
+           --------------------------------------------------- */
 
         payment_status:
           firstDefined(
+
             orderResponse?.payment_status,
+
             orderResponse?.paymentStatus,
+
+            orderResponse?.data?.payment_status,
+
+            orderResponse?.data?.paymentStatus,
+
             normalized?.payment_status,
+
+            normalized?.paymentStatus,
+
             "PENDING"
+
           ),
+
+
+        /* ---------------------------------------------------
+           ORDER STATUS
+           --------------------------------------------------- */
 
         status:
           firstDefined(
+
             orderResponse?.orderStatus,
+
             orderResponse?.order_status,
+
+            orderResponse?.data?.orderStatus,
+
+            orderResponse?.data?.order_status,
+
             orderResponse?.status,
+
             normalized?.status,
+
             "PENDING_PAYMENT"
+
           ),
+
+
+        /* ---------------------------------------------------
+           TOTAL
+           --------------------------------------------------- */
 
         total_amount:
           Number(
             firstDefined(
+
               orderResponse?.netBill,
+
               orderResponse?.total_amount,
+
               orderResponse?.totalAmount,
+
               orderResponse?.grandTotal,
+
+              orderResponse?.data?.netBill,
+
+              orderResponse?.data?.total_amount,
+
+              orderResponse?.data?.totalAmount,
+
+              orderResponse?.data?.grandTotal,
+
               normalized?.total_amount,
+
+              normalized?.totalAmount,
+
               0
+
             )
           ),
+
       };
+
+
+      console.log(
+        "[Juice Robo] REAL ORDER CREATED:",
+        result
+      );
+
+
+      return result;
     },
 
 
@@ -2268,15 +3550,17 @@ export const api = {
      =======================================================
 
      The frontend redesign currently has a payment UI
-     placeholder. The old test backend does not expose the
-     FastAPI Razorpay endpoints.
+     placeholder.
 
-     These methods remain only so App.jsx cannot accidentally
-     call localhost:8000.
+     The old Juice Robo test backend does not expose the
+     new Razorpay create/verify APIs.
+
+     These methods intentionally remain unavailable.
      ======================================================= */
 
   createPaymentOrder:
     async () => {
+
       throw new Error(
         "The legacy Juice Robo test API does not expose the new Razorpay order API."
       );
@@ -2285,6 +3569,7 @@ export const api = {
 
   verifyPayment:
     async () => {
+
       throw new Error(
         "The legacy Juice Robo test API does not expose the new Razorpay verification API."
       );
@@ -2296,6 +3581,7 @@ export const api = {
      ======================================================= */
 
   config: {
+
     baseUrl:
       API_BASE,
 
@@ -2309,14 +3595,20 @@ export const api = {
       getStoreId,
 
     hasApiKey:
-      Boolean(JR_API_KEY),
+      Boolean(
+        JR_API_KEY
+      ),
 
     hasApiSecret:
-      Boolean(JR_API_KEY_SECRET),
+      Boolean(
+        JR_API_KEY_SECRET
+      ),
 
     hasAuthorization:
       false,
+
   },
+
 };
 
 
