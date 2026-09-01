@@ -4,7 +4,24 @@ import "./App.css";
 
 /* =========================================================
    JUICE ROBO — CUSTOMER WEBSITE
-   Auth + account + machine + menu + cart + checkout
+   =========================================================
+   Flow:
+
+   LOGIN / SIGNUP
+        ↓
+   MACHINE / LOCATION
+        ↓
+   MENU
+        ↓
+   PRODUCT
+        ↓
+   CART
+        ↓
+   PAYMENT
+        ↓
+   CONFIRMATION
+        ↓
+   ORDER HISTORY
    ========================================================= */
 
 const ASSET_BASE = `${import.meta.env.BASE_URL}assets/`;
@@ -25,10 +42,6 @@ const STORAGE = {
   location: "juice_robo_location",
   machine: "juice_robo_machine",
 };
-
-/* =========================================================
-   AUTH INITIAL STATE
-   ========================================================= */
 
 const EMPTY_CUSTOMER = {
   name: "",
@@ -59,7 +72,10 @@ function productText(product = {}) {
 function productImage(product = {}) {
   const text = productText(product);
 
-  if (text.includes("ginger") && text.includes("lemon")) {
+  if (
+    text.includes("ginger") &&
+    text.includes("lemon")
+  ) {
     return PRODUCT_IMAGES["ginger-lemon"];
   }
 
@@ -77,7 +93,10 @@ function productImage(product = {}) {
 function displayProductName(product = {}) {
   const text = productText(product);
 
-  if (text.includes("ginger") && text.includes("lemon")) {
+  if (
+    text.includes("ginger") &&
+    text.includes("lemon")
+  ) {
     return "Sugarcane Juice with Ginger + Lemon";
   }
 
@@ -95,7 +114,10 @@ function displayProductName(product = {}) {
 function displayDescription(product = {}) {
   const text = productText(product);
 
-  if (text.includes("ginger") && text.includes("lemon")) {
+  if (
+    text.includes("ginger") &&
+    text.includes("lemon")
+  ) {
     return "A refreshing blend of ginger, lemon and fresh sugarcane.";
   }
 
@@ -115,20 +137,47 @@ function money(value) {
 }
 
 /* =========================================================
+   TAX
+   ========================================================= */
+
+const GST_RATE = 0.12;
+
+function calculateGST(subtotal) {
+  return Number(subtotal || 0) * GST_RATE;
+}
+
+function calculateFinalTotal(subtotal) {
+  const amount = Number(subtotal || 0);
+
+  return (
+    amount +
+    calculateGST(amount)
+  );
+}
+
+/* =========================================================
    LOCATION HELPERS
    ========================================================= */
 
 function getLocationId(location) {
-  return String(location?.storeId || location?.id || "");
+  return String(
+    location?.storeId ||
+      location?.id ||
+      ""
+  );
 }
 
 /* =========================================================
    STORAGE HELPERS
    ========================================================= */
 
-function readJSON(key, fallback = {}) {
+function readJSON(
+  key,
+  fallback = {}
+) {
   try {
-    const value = localStorage.getItem(key);
+    const value =
+      localStorage.getItem(key);
 
     if (!value) {
       return fallback;
@@ -142,10 +191,17 @@ function readJSON(key, fallback = {}) {
 
 function getStoredUser() {
   const user =
-    readJSON(STORAGE.user, null) ||
-    readJSON(STORAGE.legacyUser, null);
+    readJSON(
+      STORAGE.user,
+      null
+    ) ||
+    readJSON(
+      STORAGE.legacyUser,
+      null
+    );
 
-  return user && typeof user === "object"
+  return user &&
+    typeof user === "object"
     ? user
     : {};
 }
@@ -207,11 +263,12 @@ function readUserCart(user) {
 
 function readUserOrders(user) {
   try {
-    const orders = JSON.parse(
-      localStorage.getItem(
-        orderStorageKey(user)
-      ) || "[]"
-    );
+    const orders =
+      JSON.parse(
+        localStorage.getItem(
+          orderStorageKey(user)
+        ) || "[]"
+      );
 
     return Array.isArray(orders)
       ? orders
@@ -221,7 +278,10 @@ function readUserOrders(user) {
   }
 }
 
-function saveUserOrders(user, orders) {
+function saveUserOrders(
+  user,
+  orders
+) {
   localStorage.setItem(
     orderStorageKey(user),
     JSON.stringify(orders)
@@ -229,7 +289,7 @@ function saveUserOrders(user, orders) {
 }
 
 /* =========================================================
-   AUTH ERROR NORMALIZATION
+   AUTH ERROR HELPERS
    ========================================================= */
 
 function getErrorMessage(error) {
@@ -241,95 +301,109 @@ function getErrorMessage(error) {
     return error.trim();
   }
 
-  if (typeof error?.message === "string") {
+  if (
+    typeof error?.message ===
+    "string"
+  ) {
     return error.message.trim();
   }
 
-  if (typeof error?.detail === "string") {
+  if (
+    typeof error?.detail ===
+    "string"
+  ) {
     return error.detail.trim();
   }
 
-  if (typeof error?.error === "string") {
+  if (
+    typeof error?.error ===
+    "string"
+  ) {
     return error.error.trim();
   }
 
   return "";
 }
 
-function getFriendlyLoginError(error) {
+function getFriendlyLoginError(
+  error
+) {
   const message =
     getErrorMessage(error);
 
   const lower =
     message.toLowerCase();
 
-  /*
-   * ACCOUNT DISABLED / INACTIVE
-   */
-
   if (
     lower.includes("disabled") ||
-    lower.includes("user is disabled") ||
-    lower.includes("not active") ||
+    lower.includes(
+      "user is disabled"
+    ) ||
+    lower.includes(
+      "not active"
+    ) ||
     lower.includes("inactive") ||
-    lower.includes("deactivated")
+    lower.includes(
+      "deactivated"
+    )
   ) {
-    return (
-      "Your account is not active yet. Please contact the Juice Robo administrator."
-    );
+    return "Your account is not active yet. Please contact the Juice Robo administrator.";
   }
-
-  /*
-   * INVALID CREDENTIALS
-   */
 
   if (
-    lower.includes("bad credentials") ||
-    lower.includes("invalid credentials") ||
-    lower.includes("invalid credential") ||
-    lower.includes("wrong password") ||
-    lower.includes("incorrect password") ||
-    lower.includes("invalid username") ||
-    lower.includes("invalid user") ||
+    lower.includes(
+      "bad credentials"
+    ) ||
+    lower.includes(
+      "invalid credentials"
+    ) ||
+    lower.includes(
+      "invalid credential"
+    ) ||
+    lower.includes(
+      "wrong password"
+    ) ||
+    lower.includes(
+      "incorrect password"
+    ) ||
+    lower.includes(
+      "invalid username"
+    ) ||
+    lower.includes(
+      "invalid user"
+    ) ||
     lower.includes("unauthorized")
   ) {
-    return (
-      "Incorrect email/phone number or password."
-    );
+    return "Incorrect email/phone number or password.";
   }
-
-  /*
-   * NETWORK
-   */
 
   if (
     lower.includes("network") ||
-    lower.includes("failed to fetch") ||
+    lower.includes(
+      "failed to fetch"
+    ) ||
     lower.includes("timeout") ||
-    lower.includes("connection") ||
-    lower.includes("unable to connect")
+    lower.includes(
+      "connection"
+    ) ||
+    lower.includes(
+      "unable to connect"
+    )
   ) {
-    return (
-      "Unable to connect to Juice Robo. Please check your connection and try again."
-    );
+    return "Unable to connect to Juice Robo. Please check your connection and try again.";
   }
-
-  /*
-   * SERVER ERROR
-   *
-   * Important because the current API is returning HTTP 500
-   * during sign-in in your screenshots.
-   */
 
   if (
     lower.includes("(500)") ||
     lower.includes("500") ||
-    lower.includes("internal server error") ||
-    lower.includes("server error")
+    lower.includes(
+      "internal server error"
+    ) ||
+    lower.includes(
+      "server error"
+    )
   ) {
-    return (
-      "Juice Robo sign-in service returned a server error. Please try again or contact the administrator."
-    );
+    return "Juice Robo sign-in service returned a server error. Please try again or contact the administrator.";
   }
 
   return (
@@ -343,16 +417,18 @@ function getFriendlyLoginError(error) {
    ========================================================= */
 
 export default function App() {
-  /*
-   * Juice Robo is a mobile-first customer website.
-   */
+  /* =======================================================
+     MOBILE VIEWPORT
+     ======================================================= */
 
-  const [isMobileViewport, setIsMobileViewport] =
-    useState(() =>
-      window.matchMedia(
-        "(max-width: 768px)"
-      ).matches
-    );
+  const [
+    isMobileViewport,
+    setIsMobileViewport,
+  ] = useState(() =>
+    window.matchMedia(
+      "(max-width: 768px)"
+    ).matches
+  );
 
   useEffect(() => {
     const mediaQuery =
@@ -381,87 +457,129 @@ export default function App() {
     };
   }, []);
 
-  const storedUser = getStoredUser();
+  /* =======================================================
+     STORED SESSION
+     ======================================================= */
 
-  const hasToken = Boolean(
-    localStorage.getItem(
-      STORAGE.token
-    )
-  );
+  const storedUser =
+    getStoredUser();
 
-  /*
-   * IMPORTANT:
-   *
-   * We only restore the menu when an actual token exists.
-   * Otherwise always start at login.
-   */
-
-  const [screen, setScreen] =
-    useState(() =>
-      hasToken
-        ? "menu"
-        : "login"
+  const hasToken =
+    Boolean(
+      localStorage.getItem(
+        STORAGE.token
+      )
     );
 
-  const [authMode, setAuthMode] =
-    useState("login");
+  /* =======================================================
+     SCREEN
+     ======================================================= */
 
-  const [user, setUser] =
-    useState(storedUser);
+  const [
+    screen,
+    setScreen,
+  ] = useState(() =>
+    hasToken
+      ? "menu"
+      : "login"
+  );
 
-  /*
-   * Login identifier is intentionally separate
-   * from customer.email and customer.phone.
-   */
+  const [
+    authMode,
+    setAuthMode,
+  ] = useState("login");
 
-  const [customer, setCustomer] =
-    useState(() => ({
-      ...EMPTY_CUSTOMER,
+  /* =======================================================
+     USER
+     ======================================================= */
 
-      name:
-        storedUser?.name ||
-        storedUser?.firstname ||
-        storedUser?.firstName ||
-        "",
+  const [
+    user,
+    setUser,
+  ] = useState(
+    storedUser
+  );
 
-      phone:
-        storedUser?.phone ||
-        storedUser?.userName ||
-        "",
+  /* =======================================================
+     CUSTOMER
+     ======================================================= */
 
-      email:
-        storedUser?.email ||
-        storedUser?.userEmail ||
-        "",
+  const [
+    customer,
+    setCustomer,
+  ] = useState(() => ({
+    ...EMPTY_CUSTOMER,
 
-      loginIdentifier:
-        storedUser?.email ||
-        storedUser?.userEmail ||
-        storedUser?.phone ||
-        storedUser?.userName ||
-        "",
-    }));
+    name:
+      storedUser?.name ||
+      storedUser?.firstname ||
+      storedUser?.firstName ||
+      "",
 
-  const [products, setProducts] =
-    useState([]);
+    phone:
+      storedUser?.phone ||
+      storedUser?.userName ||
+      "",
 
-  const [locations, setLocations] =
-    useState([]);
+    email:
+      storedUser?.email ||
+      storedUser?.userEmail ||
+      "",
 
-  const [machines, setMachines] =
-    useState([]);
+    loginIdentifier:
+      storedUser?.email ||
+      storedUser?.userEmail ||
+      storedUser?.phone ||
+      storedUser?.userName ||
+      "",
+  }));
 
-  const [loading, setLoading] =
-    useState(true);
+  /* =======================================================
+     API DATA
+     ======================================================= */
 
-  const [busy, setBusy] =
-    useState(false);
+  const [
+    products,
+    setProducts,
+  ] = useState([]);
 
-  const [error, setError] =
-    useState("");
+  const [
+    locations,
+    setLocations,
+  ] = useState([]);
 
-  const [authError, setAuthError] =
-    useState("");
+  const [
+    machines,
+    setMachines,
+  ] = useState([]);
+
+  /* =======================================================
+     UI STATE
+     ======================================================= */
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    busy,
+    setBusy,
+  ] = useState(false);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const [
+    authError,
+    setAuthError,
+  ] = useState("");
+
+  /* =======================================================
+     LOCATION
+     ======================================================= */
 
   const [
     selectedLocationId,
@@ -483,37 +601,58 @@ export default function App() {
       ) || ""
   );
 
+  /* =======================================================
+     PRODUCT SHEET
+     ======================================================= */
+
   const [
     selectedProduct,
     setSelectedProduct,
   ] = useState(null);
 
-  const [quantity, setQuantity] =
-    useState(1);
+  const [
+    quantity,
+    setQuantity,
+  ] = useState(1);
 
-  const [cart, setCart] =
-    useState(() =>
-      hasToken
-        ? readUserCart(storedUser)
-        : []
-    );
+  /* =======================================================
+     CART + ORDERS
+     ======================================================= */
 
-  const [orders, setOrders] =
-    useState(() =>
-      hasToken
-        ? readUserOrders(storedUser)
-        : []
-    );
+  const [
+    cart,
+    setCart,
+  ] = useState(() =>
+    hasToken
+      ? readUserCart(
+          storedUser
+        )
+      : []
+  );
 
-  const [toast, setToast] =
-    useState("");
+  const [
+    orders,
+    setOrders,
+  ] = useState(() =>
+    hasToken
+      ? readUserOrders(
+          storedUser
+        )
+      : []
+  );
 
-  /*
-   * Frontend-only payment state.
-   *
-   * This remains a UI test flow until the real
-   * Razorpay create/verify API is supplied.
-   */
+  /* =======================================================
+     TOAST
+     ======================================================= */
+
+  const [
+    toast,
+    setToast,
+  ] = useState("");
+
+  /* =======================================================
+     PAYMENT
+     ======================================================= */
 
   const [
     paymentMethod,
@@ -530,16 +669,18 @@ export default function App() {
     setCompletedOrder,
   ] = useState(null);
 
-  /* =========================================================
-     DERIVED DATA
-     ========================================================= */
+  /* =======================================================
+     DERIVED LOCATION
+     ======================================================= */
 
   const selectedLocation =
     useMemo(
       () =>
         locations.find(
           (location) =>
-            getLocationId(location) ===
+            getLocationId(
+              location
+            ) ===
             String(
               selectedLocationId
             )
@@ -568,11 +709,18 @@ export default function App() {
       ]
     );
 
+  /* =======================================================
+     CART COUNT
+     ======================================================= */
+
   const cartCount =
     useMemo(
       () =>
         cart.reduce(
-          (total, item) =>
+          (
+            total,
+            item
+          ) =>
             total +
             Number(
               item.quantity || 0
@@ -582,11 +730,18 @@ export default function App() {
       [cart]
     );
 
+  /* =======================================================
+     CART SUBTOTAL
+     ======================================================= */
+
   const cartTotal =
     useMemo(
       () =>
         cart.reduce(
-          (total, item) =>
+          (
+            total,
+            item
+          ) =>
             total +
             Number(
               item.price || 0
@@ -599,199 +754,35 @@ export default function App() {
       [cart]
     );
 
-  /* =========================================================
-     INITIAL API LOAD
-     ========================================================= */
+  /* =======================================================
+     GST
+     ======================================================= */
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setError("");
-
-        const [
-          productResponse,
-          locationResponse,
-          machineResponse,
-        ] = await Promise.all([
-          api.products(),
-          api.locations(),
-          api.machines(),
-        ]);
-
-        if (cancelled) {
-          return;
-        }
-
-        const normalizedProducts =
-          (
-            Array.isArray(
-              productResponse
-            )
-              ? productResponse
-              : []
-          ).map((product) => {
-            const image =
-              productImage(
-                product
-              );
-
-            return {
-              ...product,
-              image,
-              image_url: image,
-              displayName:
-                displayProductName(
-                  product
-                ),
-              displayDescription:
-                displayDescription(
-                  product
-                ),
-            };
-          });
-
-        setProducts(
-          normalizedProducts
-        );
-
-        setLocations(
-          Array.isArray(
-            locationResponse
-          )
-            ? locationResponse
-            : []
-        );
-
-        setMachines(
-          Array.isArray(
-            machineResponse
-          )
-            ? machineResponse
-            : []
-        );
-      } catch (e) {
-        if (!cancelled) {
-          console.error(
-            "[Juice Robo] Load error:",
-            e
-          );
-
-          setError(
-            getErrorMessage(e) ||
-              "Unable to load Juice Robo."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  /* =========================================================
-     SAVE CART
-     ========================================================= */
-
-  useEffect(() => {
-    if (
-      !user ||
-      !getUserKey(user)
-    ) {
-      return;
-    }
-
-    localStorage.setItem(
-      cartStorageKey(user),
-      JSON.stringify(
-        normalizeCart(cart)
-      )
-    );
-  }, [cart, user]);
-
-  /* =========================================================
-     SAVE USER
-     ========================================================= */
-
-  useEffect(() => {
-    if (
-      !user ||
-      !Object.keys(user).length
-    ) {
-      return;
-    }
-
-    localStorage.setItem(
-      STORAGE.user,
-      JSON.stringify(user)
+  const gstAmount =
+    useMemo(
+      () =>
+        calculateGST(
+          cartTotal
+        ),
+      [cartTotal]
     );
 
-    localStorage.setItem(
-      STORAGE.legacyUser,
-      JSON.stringify(user)
+  /* =======================================================
+     FINAL TOTAL
+     ======================================================= */
+
+  const finalTotal =
+    useMemo(
+      () =>
+        calculateFinalTotal(
+          cartTotal
+        ),
+      [cartTotal]
     );
 
-    localStorage.setItem(
-      STORAGE.customer,
-      JSON.stringify({
-        ...customer,
-
-        name:
-          user?.name ||
-          customer?.name ||
-          "",
-
-        phone:
-          user?.phone ||
-          customer?.phone ||
-          "",
-
-        email:
-          user?.email ||
-          customer?.email ||
-          "",
-      })
-    );
-  }, [user, customer]);
-
-  /* =========================================================
-     SAVE LOCATION
-     ========================================================= */
-
-  useEffect(() => {
-    if (selectedLocationId) {
-      localStorage.setItem(
-        STORAGE.location,
-        selectedLocationId
-      );
-    }
-  }, [selectedLocationId]);
-
-  /* =========================================================
-     SAVE MACHINE
-     ========================================================= */
-
-  useEffect(() => {
-    if (selectedMachineId) {
-      localStorage.setItem(
-        STORAGE.machine,
-        selectedMachineId
-      );
-    }
-  }, [selectedMachineId]);
-
-  /* =========================================================
+  /* =======================================================
      MOBILE GUARD
-     ========================================================= */
+     ======================================================= */
 
   if (!isMobileViewport) {
     return (
@@ -799,9 +790,9 @@ export default function App() {
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      TOAST
-     ========================================================= */
+     ======================================================= */
 
   function showToast(message) {
     setToast(message);
@@ -816,9 +807,9 @@ export default function App() {
       }, 2400);
   }
 
-  /* =========================================================
+  /* =======================================================
      NORMALIZE AUTHENTICATED USER
-     ========================================================= */
+     ======================================================= */
 
   function applyAuthenticatedUser(
     authResponse
@@ -971,9 +962,9 @@ export default function App() {
     return normalized;
   }
 
-  /* =========================================================
+  /* =======================================================
      CLEAR AUTH SESSION
-     ========================================================= */
+     ======================================================= */
 
   function clearAuthSession() {
     localStorage.removeItem(
@@ -988,13 +979,6 @@ export default function App() {
       STORAGE.loggedIn
     );
 
-    /*
-     * Do NOT remove the typed login identifier here.
-     *
-     * The user should be able to correct the password
-     * or retry the login without retyping everything.
-     */
-
     setUser({});
 
     setCart([]);
@@ -1002,9 +986,9 @@ export default function App() {
     setOrders([]);
   }
 
-  /* =========================================================
+  /* =======================================================
      LOGIN
-     ========================================================= */
+     ======================================================= */
 
   async function handleLogin(event) {
     event.preventDefault();
@@ -1014,20 +998,6 @@ export default function App() {
     }
 
     setAuthError("");
-
-    /*
-     * =======================================================
-     * READ IDENTIFIER
-     * =======================================================
-     *
-     * ONE FIELD ONLY.
-     *
-     * It can contain:
-     *
-     * - phone number
-     * - email
-     * - username
-     */
 
     const identifier =
       String(
@@ -1040,12 +1010,6 @@ export default function App() {
         customer?.password ||
           ""
       );
-
-    /*
-     * =======================================================
-     * VALIDATION
-     * =======================================================
-     */
 
     if (!identifier) {
       setAuthError(
@@ -1073,21 +1037,6 @@ export default function App() {
         }
       );
 
-      /*
-       * =====================================================
-       * REAL BACKEND LOGIN
-       * =====================================================
-       *
-       * api.js sends:
-       *
-       * POST /v1/auth/signin
-       *
-       * {
-       *   userName: identifier,
-       *   password: password
-       * }
-       */
-
       const response =
         await api.login({
           userName:
@@ -1100,12 +1049,6 @@ export default function App() {
         "[Juice Robo] Login response:",
         response
       );
-
-      /*
-       * =====================================================
-       * TOKEN CHECK
-       * =====================================================
-       */
 
       const token =
         response?.accessToken ||
@@ -1121,22 +1064,20 @@ export default function App() {
         );
       }
 
-      /*
-       * =====================================================
-       * NORMALIZE USER
-       * =====================================================
-       */
+      localStorage.setItem(
+        STORAGE.token,
+        token
+      );
+
+      localStorage.setItem(
+        STORAGE.loggedIn,
+        "true"
+      );
 
       const nextUser =
         applyAuthenticatedUser(
           response
         );
-
-      /*
-       * =====================================================
-       * LOAD USER-SPECIFIC LOCAL DATA
-       * =====================================================
-       */
 
       setCart(
         readUserCart(
@@ -1150,36 +1091,19 @@ export default function App() {
         )
       );
 
-      /*
-       * =====================================================
-       * CLEAR PASSWORD
-       * =====================================================
-       */
-
       setCustomer(
         (current) => ({
           ...current,
-
-          loginIdentifier:
-            "",
-
-          password:
-            "",
-
-          confirmPassword:
-            "",
+          password: "",
+          confirmPassword: "",
         })
       );
 
-      /*
-       * =====================================================
-       * COMPLETE LOGIN
-       * =====================================================
-       */
-
       setAuthError("");
 
-      setScreen("menu");
+      setScreen(
+        "menu"
+      );
 
       showToast(
         `Welcome, ${
@@ -1193,29 +1117,19 @@ export default function App() {
         e
       );
 
-      /*
-       * Never leave an old token looking like
-       * a successful authentication.
-       */
-
       clearAuthSession();
 
-      const friendlyError =
-        getFriendlyLoginError(
-          e
-        );
-
       setAuthError(
-        friendlyError
+        getFriendlyLoginError(e)
       );
     } finally {
       setBusy(false);
     }
   }
 
-  /* =========================================================
+  /* =======================================================
      SIGNUP
-     ========================================================= */
+     ======================================================= */
 
   async function handleSignup(
     event
@@ -1236,7 +1150,10 @@ export default function App() {
     const phone =
       String(
         customer?.phone || ""
-      ).replace(/\D/g, "");
+      ).replace(
+        /\D/g,
+        ""
+      );
 
     const email =
       String(
@@ -1253,10 +1170,6 @@ export default function App() {
         customer?.confirmPassword ||
           ""
       );
-
-    /* =====================================================
-       VALIDATION
-       ===================================================== */
 
     if (!name) {
       setAuthError(
@@ -1320,35 +1233,16 @@ export default function App() {
         }
       );
 
-      /*
-       * =====================================================
-       * REGISTER
-       * =====================================================
-       *
-       * The legacy API expects:
-       *
-       * firstName
-       * lastName
-       * userName
-       * userEmail
-       * password
-       * confirmPassword
-       */
-
       const response =
         await api.register({
           name,
           phone,
           email,
-
           userName:
             phone,
-
           userEmail:
             email,
-
           password,
-
           confirmPassword,
         });
 
@@ -1356,15 +1250,6 @@ export default function App() {
         "[Juice Robo] Registration response:",
         response
       );
-
-      /*
-       * =====================================================
-       * DO NOT ASSUME REGISTRATION = LOGIN
-       * =====================================================
-       *
-       * Registration can succeed without returning
-       * an authentication token.
-       */
 
       const registrationToken =
         response?.accessToken ||
@@ -1374,14 +1259,17 @@ export default function App() {
           STORAGE.token
         );
 
-      /*
-       * If the backend actually returns a token,
-       * we can use it.
-       *
-       * Otherwise send the user to the login screen.
-       */
-
       if (registrationToken) {
+        localStorage.setItem(
+          STORAGE.token,
+          registrationToken
+        );
+
+        localStorage.setItem(
+          STORAGE.loggedIn,
+          "true"
+        );
+
         const nextUser =
           applyAuthenticatedUser(
             response
@@ -1402,19 +1290,15 @@ export default function App() {
         setCustomer(
           (current) => ({
             ...current,
-
-            password:
-              "",
-
-            confirmPassword:
-              "",
-
-            loginIdentifier:
-              "",
+            password: "",
+            confirmPassword: "",
+            loginIdentifier: "",
           })
         );
 
-        setScreen("menu");
+        setScreen(
+          "menu"
+        );
 
         showToast(
           `Welcome, ${
@@ -1426,21 +1310,13 @@ export default function App() {
         return;
       }
 
-      /*
-       * =====================================================
-       * NORMAL REGISTRATION SUCCESS
-       * =====================================================
-       */
-
       clearAuthSession();
 
       setCustomer({
         ...EMPTY_CUSTOMER,
 
         name,
-
         phone,
-
         email,
 
         loginIdentifier:
@@ -1528,9 +1404,9 @@ export default function App() {
     }
   }
 
-  /* =========================================================
+  /* =======================================================
      LOGOUT
-     ========================================================= */
+     ======================================================= */
 
   function logout() {
     localStorage.removeItem(
@@ -1569,153 +1445,78 @@ export default function App() {
 
     setAuthError("");
 
-    setAuthMode("login");
+    setAuthMode(
+      "login"
+    );
 
-    setScreen("login");
+    setScreen(
+      "login"
+    );
 
     showToast(
       "You have been signed out."
     );
   }
 
-  /* =========================================================
-   PROFILE
-   ========================================================= */
+  /* =======================================================
+     PROFILE
+     ======================================================= */
 
-async function openProfile() {
+  async function openProfile() {
+    setScreen(
+      "profile"
+    );
 
-  setScreen("profile");
+    try {
+      const profile =
+        await api.profile();
 
+      if (
+        profile &&
+        typeof profile ===
+          "object"
+      ) {
+        const nextUser = {
+          ...user,
+          ...profile,
+        };
 
-  try {
-
-    const profile =
-      await api.profile();
-
-
-    if (
-      profile &&
-      typeof profile === "object"
-    ) {
-
-      const nextUser = {
-
-        ...user,
-
-        ...profile,
-
-      };
-
-
-      setUser(
-        nextUser
-      );
-
-
-      setCustomer(
-        (current) => ({
-
-          ...current,
-
-          ...nextUser,
-
-        })
-      );
-
-
-      /*
-       * Keep the authenticated user snapshot synchronized.
-       */
-
-      localStorage.setItem(
-        STORAGE.user,
-        JSON.stringify(
+        setUser(
           nextUser
-        )
-      );
+        );
 
-      localStorage.setItem(
-        STORAGE.legacyUser,
-        JSON.stringify(
-          nextUser
-        )
+        setCustomer(
+          (current) => ({
+            ...current,
+            ...nextUser,
+          })
+        );
+
+        localStorage.setItem(
+          STORAGE.user,
+          JSON.stringify(
+            nextUser
+          )
+        );
+
+        localStorage.setItem(
+          STORAGE.legacyUser,
+          JSON.stringify(
+            nextUser
+          )
+        );
+      }
+    } catch (e) {
+      console.warn(
+        "[Juice Robo] Unable to load profile:",
+        e
       );
     }
-
-  } catch (e) {
-
-    /*
-     * Profile should never prevent the user from
-     * accessing their account screen.
-     */
-
-    console.warn(
-      "[Juice Robo] Unable to load profile:",
-      e
-    );
-  }
-}
-
-/* =========================================================
-   CLEAR LOCAL ORDER HISTORY
-   ========================================================= */
-
-function clearOrders() {
-
-  /*
-   * Remove only the currently logged-in user's locally
-   * saved order history.
-   *
-   * This does NOT delete orders from the Juice Robo
-   * backend.
-   */
-
-  try {
-
-    localStorage.removeItem(
-      orderStorageKey(
-        user
-      )
-    );
-
-  } catch (
-    error
-  ) {
-
-    console.error(
-      "[Juice Robo] Unable to clear local order history:",
-      error
-    );
-
   }
 
-
-  /*
-   * Immediately update the UI.
-   */
-
-  setOrders(
-    []
-  );
-
-
-  /*
-   * Clear any currently displayed completed order.
-   */
-
-  setCompletedOrder(
-    null
-  );
-
-
-  showToast(
-    "Order history cleared."
-  );
-}
-
-  /* =========================================================
+  /* =======================================================
      SAVE PROFILE
-     ========================================================= */
+     ======================================================= */
 
   async function saveProfile(
     event
@@ -1730,17 +1531,20 @@ function clearOrders() {
       const payload = {
         name:
           String(
-            customer?.name || ""
+            customer?.name ||
+              ""
           ).trim(),
 
         phone:
           String(
-            customer?.phone || ""
+            customer?.phone ||
+              ""
           ).trim(),
 
         email:
           String(
-            customer?.email || ""
+            customer?.email ||
+              ""
           ).trim(),
       };
 
@@ -1757,6 +1561,13 @@ function clearOrders() {
 
       setUser(
         nextUser
+      );
+
+      setCustomer(
+        (current) => ({
+          ...current,
+          ...payload,
+        })
       );
 
       localStorage.setItem(
@@ -1791,9 +1602,57 @@ function clearOrders() {
     }
   }
 
-  /* =========================================================
+  /* =======================================================
+     CLEAR ORDER HISTORY
+     ======================================================= */
+
+  function clearOrderHistory() {
+    if (!orders.length) {
+      showToast(
+        "There are no orders to clear."
+      );
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        "Clear all saved orders from your history?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      saveUserOrders(
+        user,
+        []
+      );
+
+      setOrders([]);
+
+      setCompletedOrder(
+        null
+      );
+
+      showToast(
+        "Order history cleared."
+      );
+    } catch (e) {
+      console.error(
+        "[Juice Robo] Unable to clear order history:",
+        e
+      );
+
+      showToast(
+        "Unable to clear order history."
+      );
+    }
+  }
+
+  /* =======================================================
      LOCATION
-     ========================================================= */
+     ======================================================= */
 
   function selectLocation(
     location
@@ -1826,16 +1685,17 @@ function clearOrders() {
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      MACHINE
-     ========================================================= */
+     ======================================================= */
 
   function selectMachine(
     machine
   ) {
     const id =
       String(
-        machine?.id || ""
+        machine?.id ||
+          ""
       );
 
     setSelectedMachineId(
@@ -1855,9 +1715,9 @@ function clearOrders() {
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      PRODUCT
-     ========================================================= */
+     ======================================================= */
 
   function openProduct(
     product
@@ -1895,9 +1755,9 @@ function clearOrders() {
     setQuantity(1);
   }
 
-  /* =========================================================
+  /* =======================================================
      ADD PRODUCT
-     ========================================================= */
+     ======================================================= */
 
   function addProduct(
     product,
@@ -1955,6 +1815,10 @@ function clearOrders() {
     );
   }
 
+  /* =======================================================
+     CONFIRM PRODUCT
+     ======================================================= */
+
   function confirmProduct() {
     if (
       !selectedProduct
@@ -1968,19 +1832,17 @@ function clearOrders() {
     );
 
     showToast(
-      `${
-        displayProductName(
-          selectedProduct
-        )
-      } added`
+      `${displayProductName(
+        selectedProduct
+      )} added`
     );
 
     closeProduct();
   }
 
-  /* =========================================================
+  /* =======================================================
      REMOVE PRODUCT
-     ========================================================= */
+     ======================================================= */
 
   function removeProduct(
     productId
@@ -1999,9 +1861,9 @@ function clearOrders() {
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      UPDATE QUANTITY
-     ========================================================= */
+     ======================================================= */
 
   function updateQuantity(
     productId,
@@ -2039,9 +1901,9 @@ function clearOrders() {
     );
   }
 
-  /* =========================================================
-     CHECKOUT
-     ========================================================= */
+  /* =======================================================
+     START CHECKOUT
+     ======================================================= */
 
   function startCheckout() {
     if (!cart.length) {
@@ -2049,7 +1911,10 @@ function clearOrders() {
         "Your cart is empty."
       );
 
-      setScreen("menu");
+      setScreen(
+        "menu"
+      );
+
       return;
     }
 
@@ -2094,111 +1959,112 @@ function clearOrders() {
     );
   }
 
-  /* =========================================================
-      PAYMENT SUCCESS
-      ========================================================= */
+  /* =======================================================
+     DEMO PAYMENT
+     ======================================================= */
 
-    function completeDemoPayment() {
-      if (!cart.length) {
-        showToast(
-          "Your cart is empty."
-        );
-
-        setScreen(
-          "menu"
-        );
-
-        return;
-      }
-
-      if (
-        paymentStatus ===
-        "processing"
-      ) {
-        return;
-      }
-
-      setPaymentStatus(
-        "processing"
+  function completeDemoPayment() {
+    if (!cart.length) {
+      showToast(
+        "Your cart is empty."
       );
 
-      /*
-      * FRONTEND TEST PAYMENT
-      *
-      * This currently simulates a successful payment.
-      * No real money is charged.
-      *
-      * IMPORTANT FLOW:
-      *
-      * PAYMENT
-      *    ↓
-      * SUCCESSFUL PAYMENT
-      *    ↓
-      * SAVE ORDER
-      *    ↓
-      * CLEAR CART
-      *    ↓
-      * BOOKING SUCCESS
-      */
+      setScreen(
+        "menu"
+      );
 
-      window.setTimeout(
-        () => {
-          const collectionCode =
-            String(
-              Math.floor(
-                1000 +
-                  Math.random() *
-                    9000
-              )
-            );
+      return;
+    }
 
-          const orderId =
-            `JR-${Date.now()}`;
+    if (
+      paymentStatus ===
+      "processing"
+    ) {
+      return;
+    }
 
-          const order = {
-            id:
-              orderId,
+    setPaymentStatus(
+      "processing"
+    );
 
-            order_number:
-              orderId,
+    window.setTimeout(
+      () => {
+        const collectionCode =
+          String(
+            Math.floor(
+              1000 +
+                Math.random() *
+                  9000
+            )
+          );
 
-            status:
-              "READY_FOR_COLLECTION",
+        const orderId =
+          `JR-${Date.now()}`;
 
-            payment_status:
-              "PAID",
+        const order = {
+          id:
+            orderId,
 
-            total_amount:
-              cartTotal,
+          order_number:
+            orderId,
 
-            collection_code:
-              collectionCode,
+          status:
+            "READY_FOR_COLLECTION",
 
-            collectionCode:
-              collectionCode,
+          payment_status:
+            "PAID",
 
-            location_id:
-              selectedLocationId,
+          subtotal:
+            cartTotal,
 
-            machine_id:
-              selectedMachineId,
+          gst_rate:
+            12,
 
-            location_name:
-              selectedLocation?.name ||
-              "Juice Robo",
+          gst_amount:
+            gstAmount,
 
-            machine_name:
-              selectedMachine?.name ||
-              "Juice Robo Machine",
+          total_amount:
+            finalTotal,
 
-            payment_method:
-              paymentMethod,
+          collection_code:
+            collectionCode,
 
-            items:
-              cart.map(
-                (
-                  item
-                ) => ({
+          collectionCode:
+            collectionCode,
+
+          location_id:
+            selectedLocationId,
+
+          machine_id:
+            selectedMachineId,
+
+          location_name:
+            selectedLocation?.name ||
+            "Juice Robo",
+
+          machine_name:
+            selectedMachine?.name ||
+            "Juice Robo Machine",
+
+          payment_method:
+            paymentMethod,
+
+          items:
+            cart.map(
+              (item) => {
+                const unitPrice =
+                  Number(
+                    item.price ||
+                      0
+                  );
+
+                const itemQuantity =
+                  Number(
+                    item.quantity ||
+                      1
+                  );
+
+                return {
                   product_id:
                     item.id,
 
@@ -2209,115 +2075,278 @@ function clearOrders() {
                     ),
 
                   quantity:
-                    Number(
-                      item.quantity ||
-                        1
-                    ),
+                    itemQuantity,
 
                   unit_price:
-                    Number(
-                      item.price ||
-                        0
-                    ),
+                    unitPrice,
 
                   subtotal:
-                    Number(
-                      item.price ||
-                        0
-                    ) *
-                    Number(
-                      item.quantity ||
-                        0
-                    ),
-                })
-              ),
+                    unitPrice *
+                    itemQuantity,
+                };
+              }
+            ),
 
-            created_at:
-              new Date().toISOString(),
-          };
+          created_at:
+            new Date().toISOString(),
+        };
 
-          /*
-          * SAVE COMPLETED ORDER
-          */
+        setCompletedOrder(
+          order
+        );
 
-          setCompletedOrder(
-            order
-          );
-
-          /*
-          * SAVE ORDER HISTORY
-          */
-
-          setOrders(
-            (
-              current
-            ) => {
-              const next =
-                [
-                  order,
-                  ...current,
-                ].slice(
-                  0,
-                  40
-                );
-
-              saveUserOrders(
-                user,
-                next
+        setOrders(
+          (current) => {
+            const next =
+              [
+                order,
+                ...current,
+              ].slice(
+                0,
+                40
               );
 
-              return next;
+            saveUserOrders(
+              user,
+              next
+            );
+
+            return next;
+          }
+        );
+
+        setCart([]);
+
+        setPaymentStatus(
+          "success"
+        );
+
+        setScreen(
+          "confirmation"
+        );
+
+        showToast(
+          "Payment successful."
+        );
+      },
+      1200
+    );
+  }
+
+  /* =======================================================
+     INITIAL DATA LOAD
+     ======================================================= */
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const [
+          productResponse,
+          locationResponse,
+          machineResponse,
+        ] = await Promise.all([
+          api.products(),
+          api.locations(),
+          api.machines(),
+        ]);
+
+        if (cancelled) {
+          return;
+        }
+
+        const normalizedProducts =
+          (
+            Array.isArray(
+              productResponse
+            )
+              ? productResponse
+              : []
+          ).map(
+            (product) => {
+              const image =
+                productImage(
+                  product
+                );
+
+              return {
+                ...product,
+
+                image,
+
+                image_url:
+                  image,
+
+                displayName:
+                  displayProductName(
+                    product
+                  ),
+
+                displayDescription:
+                  displayDescription(
+                    product
+                  ),
+              };
             }
           );
 
-          /*
-          * CLEAR CART
-          *
-          * The order has already been completed.
-          * The user must not be returned to an old cart.
-          */
+        setProducts(
+          normalizedProducts
+        );
 
-          setCart(
-            []
+        setLocations(
+          Array.isArray(
+            locationResponse
+          )
+            ? locationResponse
+            : []
+        );
+
+        setMachines(
+          Array.isArray(
+            machineResponse
+          )
+            ? machineResponse
+            : []
+        );
+      } catch (e) {
+        if (!cancelled) {
+          console.error(
+            "[Juice Robo] Load error:",
+            e
           );
 
-          /*
-          * MARK PAYMENT AS SUCCESS
-          */
-
-          setPaymentStatus(
-            "success"
+          setError(
+            getErrorMessage(e) ||
+              "Unable to load Juice Robo."
           );
-
-          /*
-          * =====================================================
-          * CRITICAL NAVIGATION
-          * =====================================================
-          *
-          * NEVER send a successful payment to:
-          *
-          *     setScreen("cart")
-          *
-          * Successful payment always goes to:
-          *
-          *     setScreen("confirmation")
-          */
-
-          setScreen(
-            "confirmation"
-          );
-
-          showToast(
-            "Payment successful."
-          );
-        },
-        1200
-      );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     }
 
-  /* =========================================================
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /* =======================================================
+     SAVE CART
+     ======================================================= */
+
+  useEffect(() => {
+    if (
+      !user ||
+      !getUserKey(user)
+    ) {
+      return;
+    }
+
+    localStorage.setItem(
+      cartStorageKey(user),
+      JSON.stringify(
+        normalizeCart(cart)
+      )
+    );
+  }, [
+    cart,
+    user,
+  ]);
+
+  /* =======================================================
+     SAVE USER
+     ======================================================= */
+
+  useEffect(() => {
+    if (
+      !user ||
+      !Object.keys(user).length
+    ) {
+      return;
+    }
+
+    localStorage.setItem(
+      STORAGE.user,
+      JSON.stringify(
+        user
+      )
+    );
+
+    localStorage.setItem(
+      STORAGE.legacyUser,
+      JSON.stringify(
+        user
+      )
+    );
+
+    localStorage.setItem(
+      STORAGE.customer,
+      JSON.stringify({
+        ...customer,
+
+        name:
+          user?.name ||
+          customer?.name ||
+          "",
+
+        phone:
+          user?.phone ||
+          customer?.phone ||
+          "",
+
+        email:
+          user?.email ||
+          customer?.email ||
+          "",
+      })
+    );
+  }, [
+    user,
+    customer,
+  ]);
+
+  /* =======================================================
+     SAVE LOCATION
+     ======================================================= */
+
+  useEffect(() => {
+    if (selectedLocationId) {
+      localStorage.setItem(
+        STORAGE.location,
+        selectedLocationId
+      );
+    }
+  }, [
+    selectedLocationId,
+  ]);
+
+  /* =======================================================
+     SAVE MACHINE
+     ======================================================= */
+
+  useEffect(() => {
+    if (selectedMachineId) {
+      localStorage.setItem(
+        STORAGE.machine,
+        selectedMachineId
+      );
+    }
+  }, [
+    selectedMachineId,
+  ]);
+
+  /* =======================================================
      LOADING
-     ========================================================= */
+     ======================================================= */
 
   if (loading) {
     return (
@@ -2325,9 +2354,9 @@ function clearOrders() {
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      LOAD ERROR
-     ========================================================= */
+     ======================================================= */
 
   if (
     error &&
@@ -2336,7 +2365,9 @@ function clearOrders() {
   ) {
     return (
       <div className="jr-app">
+
         <div className="jr-error-screen">
+
           <div className="jr-error-icon">
             !
           </div>
@@ -2358,36 +2389,41 @@ function clearOrders() {
           >
             TRY AGAIN
           </button>
+
         </div>
+
       </div>
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      LOGIN / SIGNUP
-     ========================================================= */
+     ======================================================= */
 
   if (
     screen === "login"
   ) {
     return (
       <div className="jr-app">
+
         <div className="jr-mobile-frame">
+
           <AuthScreen
-            mode={authMode}
-            setMode={(mode) => {
+            mode={
+              authMode
+            }
+            setMode={(
+              mode
+            ) => {
               setAuthMode(
                 mode
               );
 
               setAuthError("");
-
-              /*
-               * When switching from signup to login,
-               * preserve phone/email if already entered.
-               */
             }}
-            customer={customer}
+            customer={
+              customer
+            }
             setCustomer={
               setCustomer
             }
@@ -2397,26 +2433,35 @@ function clearOrders() {
             onSignup={
               handleSignup
             }
-            busy={busy}
-            error={authError}
+            busy={
+              busy
+            }
+            error={
+              authError
+            }
           />
 
           {toast && (
             <Toast
-              message={toast}
+              message={
+                toast
+              }
             />
           )}
+
         </div>
+
       </div>
     );
   }
 
-  /* =========================================================
+  /* =======================================================
      MAIN APPLICATION
-     ========================================================= */
+     ======================================================= */
 
   return (
     <div className="jr-app">
+
       <div className="jr-mobile-frame">
 
         <Header
@@ -2429,9 +2474,13 @@ function clearOrders() {
           machine={
             selectedMachine
           }
-          user={user}
+          user={
+            user
+          }
           onCart={() =>
-            setScreen("cart")
+            setScreen(
+              "cart"
+            )
           }
           onAccount={
             openProfile
@@ -2443,9 +2492,9 @@ function clearOrders() {
           }
         />
 
-        {/* =================================================
+        {/* ===================================================
             MENU
-            ================================================= */}
+            =================================================== */}
 
         {screen ===
           "menu" && (
@@ -2459,16 +2508,18 @@ function clearOrders() {
             selectedMachine={
               selectedMachine
             }
-            user={user}
+            user={
+              user
+            }
             onProduct={
               openProduct
             }
           />
         )}
 
-        {/* =================================================
+        {/* ===================================================
             MACHINE
-            ================================================= */}
+            =================================================== */}
 
         {screen ===
           "machine" && (
@@ -2499,14 +2550,16 @@ function clearOrders() {
           />
         )}
 
-        {/* =================================================
+        {/* ===================================================
             CART
-            ================================================= */}
+            =================================================== */}
 
         {screen ===
           "cart" && (
           <CartScreen
-            cart={cart}
+            cart={
+              cart
+            }
             total={
               cartTotal
             }
@@ -2538,16 +2591,24 @@ function clearOrders() {
           />
         )}
 
-        {/* =================================================
+        {/* ===================================================
             PAYMENT
-            ================================================= */}
+            =================================================== */}
 
         {screen ===
           "payment" && (
           <PaymentScreen
-            cart={cart}
+            cart={
+              cart
+            }
             total={
               cartTotal
+            }
+            gst={
+              gstAmount
+            }
+            finalTotal={
+              finalTotal
             }
             location={
               selectedLocation
@@ -2584,9 +2645,9 @@ function clearOrders() {
           />
         )}
 
-        {/* =================================================
+        {/* ===================================================
             CONFIRMATION
-            ================================================= */}
+            =================================================== */}
 
         {screen ===
           "confirmation" && (
@@ -2616,14 +2677,16 @@ function clearOrders() {
           />
         )}
 
-        {/* =================================================
+        {/* ===================================================
             PROFILE
-            ================================================= */}
+            =================================================== */}
 
         {screen ===
           "profile" && (
           <ProfileScreen
-            user={user}
+            user={
+              user
+            }
             customer={
               customer
             }
@@ -2644,8 +2707,12 @@ function clearOrders() {
                 "menu"
               )
             }
-            busy={busy}
-            error={authError}
+            busy={
+              busy
+            }
+            error={
+              authError
+            }
             onOrders={() =>
               setScreen(
                 "history"
@@ -2654,20 +2721,30 @@ function clearOrders() {
           />
         )}
 
-        {/* =================================================
+        {/* ===================================================
             HISTORY
-            ================================================= */}
+            =================================================== */}
 
-        {screen === "history" && (
+        {screen ===
+          "history" && (
           <HistoryScreen
-            orders={orders}
-            onBack={() => setScreen("profile")}
-            onClear={clearOrderHistory}
+            orders={
+              orders
+            }
+            onBack={() =>
+              setScreen(
+                "profile"
+              )
+            }
+            onClear={
+              clearOrderHistory
+            }
           />
         )}
-        {/* =================================================
+
+        {/* ===================================================
             BOTTOM NAV
-            ================================================= */}
+            =================================================== */}
 
         {screen !==
           "confirmation" && (
@@ -2699,10 +2776,9 @@ function clearOrders() {
           />
         )}
 
-
-        {/* =================================================
+        {/* ===================================================
             PRODUCT SHEET
-            ================================================= */}
+            =================================================== */}
 
         {selectedProduct && (
           <ProductSheet
@@ -2724,36 +2800,22 @@ function clearOrders() {
           />
         )}
 
+        {/* ===================================================
+            TOAST
+            =================================================== */}
+
         {toast && (
           <Toast
-            message={toast}
+            message={
+              toast
+            }
           />
         )}
+
       </div>
+
     </div>
   );
-function clearOrderHistory() {
-  if (!orders.length) {
-    showToast("There are no orders to clear.");
-    return;
-  }
-
-  const confirmed = window.confirm(
-    "Clear all saved orders from your history?"
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  saveUserOrders(user, []);
-
-  setOrders([]);
-
-  setSelectedOrder(null);
-
-  showToast("Order history cleared.");
-}
 }
 
 /* =========================================================
@@ -2763,7 +2825,9 @@ function clearOrderHistory() {
 function MobileOnlyScreen() {
   return (
     <div className="jr-mobile-only-screen">
+
       <div className="jr-mobile-only-card">
+
         <div className="jr-mobile-only-logo">
           JR
         </div>
@@ -2781,7 +2845,9 @@ function MobileOnlyScreen() {
           for mobile devices. Please
           access it on your mobile phone.
         </p>
+
       </div>
+
     </div>
   );
 }
@@ -2802,11 +2868,16 @@ function AuthScreen({
 }) {
   const signup =
     mode === "signup";
-  const [showPassword, setShowPassword] =
-    useState(false);
 
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
+
+  const [
+    showConfirmPassword,
+    setShowConfirmPassword,
+  ] = useState(false);
 
   function update(
     field,
@@ -2815,17 +2886,8 @@ function AuthScreen({
     setCustomer(
       (current) => ({
         ...current,
-        [field]:
-          value,
+        [field]: value,
       })
-    );
-  }
-
-  function switchMode(
-    nextMode
-  ) {
-    setMode(
-      nextMode
     );
   }
 
@@ -2833,6 +2895,7 @@ function AuthScreen({
     <main className="jr-login-screen">
 
       <div className="jr-login-brand">
+
         <div className="jr-login-logo">
           JR
         </div>
@@ -2840,14 +2903,15 @@ function AuthScreen({
         <span>
           JUICE ROBO
         </span>
+
       </div>
 
       <div className="jr-login-copy">
 
         <span className="jr-eyebrow">
           {signup
-            ? "CREATE YOUR JUICE ROBO ACCOUNT"
-            : "FRESH JUICE · READY WHEN YOU ARE"}
+            ? "CREATE YOUR ACCOUNT"
+            : "WELCOME BACK"}
         </span>
 
         <h1>
@@ -2856,15 +2920,15 @@ function AuthScreen({
               Fresh juice,
               <br />
               <em>
-                made personal.
+                starts here.
               </em>
             </>
           ) : (
             <>
-              Your favourite
+              Welcome
               <br />
               <em>
-                juice awaits.
+                back.
               </em>
             </>
           )}
@@ -2872,24 +2936,20 @@ function AuthScreen({
 
         <p>
           {signup
-            ? "Create an account to keep your orders, profile and Juice Robo activity together."
-            : "Sign in to access your account and order from Juice Robo."}
+            ? "Create your Juice Robo account and order fresh juice whenever you want."
+            : "Sign in to continue your Juice Robo experience."}
         </p>
 
       </div>
 
       <form
-        className="jr-login-form"
+        className="jr-auth-form"
         onSubmit={
           signup
             ? onSignup
             : onLogin
         }
       >
-
-        {/* =================================================
-            SIGNUP NAME
-            ================================================= */}
 
         {signup && (
           <label>
@@ -2898,133 +2958,43 @@ function AuthScreen({
             <input
               type="text"
               value={
-                customer?.name ||
-                ""
+                customer?.name || ""
               }
-              onChange={(
-                event
-              ) =>
+              onChange={(event) =>
                 update(
                   "name",
                   event.target.value
                 )
               }
-              placeholder="Enter your full name"
+              placeholder="Enter your name"
               autoComplete="name"
-              disabled={
-                busy
-              }
+              disabled={busy}
             />
           </label>
         )}
 
-        {/* =================================================
-            LOGIN IDENTIFIER / SIGNUP PHONE
-            ================================================= */}
+        {signup && (
+          <label>
+            PHONE NUMBER
 
-        <label>
-
-          {signup
-            ? "PHONE NUMBER"
-            : "EMAIL OR PHONE NUMBER"}
-
-          <input
-            type={
-              signup
-                ? "tel"
-                : "text"
-            }
-            inputMode={
-              signup
-                ? "numeric"
-                : "email"
-            }
-            value={
-              signup
-                ? customer?.phone ||
-                  ""
-                : customer?.loginIdentifier ||
-                  ""
-            }
-            onChange={(
-              event
-            ) => {
-              const value =
-                event.target
-                  .value;
-
-              if (signup) {
-                /*
-                 * Registration uses the phone number
-                 * as the Juice Robo username.
-                 *
-                 * Only digits.
-                 */
-
-                const digits =
-                  value
-                    .replace(
-                      /\D/g,
-                      ""
-                    )
-                    .slice(
-                      0,
-                      10
-                    );
-
+            <input
+              type="tel"
+              value={
+                customer?.phone || ""
+              }
+              onChange={(event) =>
                 update(
                   "phone",
-                  digits
-                );
-              } else {
-                /*
-                 * LOGIN:
-                 *
-                 * This is the ONLY state field used
-                 * for the login identifier.
-                 *
-                 * Do not copy this value into phone/email.
-                 */
-
-                update(
-                  "loginIdentifier",
-                  value
-                );
+                  event.target.value
+                )
               }
-
-              /*
-               * Clear old validation error as soon as
-               * the user starts correcting the field.
-               */
-
-              if (error) {
-                setCustomer(
-                  (current) => ({
-                    ...current,
-                  })
-                );
-              }
-            }}
-            placeholder={
-              signup
-                ? "Enter 10-digit phone number"
-                : "Email or phone number"
-            }
-            autoComplete={
-              signup
-                ? "tel"
-                : "username"
-            }
-            disabled={
-              busy
-            }
-          />
-
-        </label>
-
-        {/* =================================================
-            SIGNUP EMAIL
-            ================================================= */}
+              placeholder="10-digit phone number"
+              autoComplete="tel"
+              inputMode="numeric"
+              disabled={busy}
+            />
+          </label>
+        )}
 
         {signup && (
           <label>
@@ -3033,12 +3003,9 @@ function AuthScreen({
             <input
               type="email"
               value={
-                customer?.email ||
-                ""
+                customer?.email || ""
               }
-              onChange={(
-                event
-              ) =>
+              onChange={(event) =>
                 update(
                   "email",
                   event.target.value
@@ -3046,142 +3013,138 @@ function AuthScreen({
               }
               placeholder="Enter your email"
               autoComplete="email"
-              disabled={
-                busy
-              }
+              disabled={busy}
             />
           </label>
         )}
 
-        {/* =================================================
-            PASSWORD
-            ================================================= */}
+        {!signup && (
+          <label>
+            EMAIL OR PHONE NUMBER
 
-            <label>
-              PASSWORD
+            <input
+              type="text"
+              value={
+                customer?.loginIdentifier || ""
+              }
+              onChange={(event) =>
+                update(
+                  "loginIdentifier",
+                  event.target.value
+                )
+              }
+              placeholder="Email or phone number"
+              autoComplete="username"
+              disabled={busy}
+            />
+          </label>
+        )}
 
-              <div className="jr-password-field">
-                <input
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
-                  value={
-                    customer?.password ||
-                    ""
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    update(
-                      "password",
-                      event.target.value
-                    )
-                  }
-                  placeholder={
-                    signup
-                      ? "Create a password"
-                      : "Enter your password"
-                  }
-                  autoComplete={
-                    signup
-                      ? "new-password"
-                      : "current-password"
-                  }
-                  disabled={
-                    busy
-                  }
-                />
+        <label>
+          PASSWORD
 
-                <button
-                  className="jr-password-toggle"
-                  type="button"
-                  onClick={() =>
-                    setShowPassword(
-                      (current) => !current
-                    )
-                  }
-                  disabled={busy}
-                  aria-label={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
-                  title={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
-                >
-                  {showPassword ? "◉" : "◌"}
-                </button>
-              </div>
-            </label>
+          <div className="jr-password-field">
 
-        {/* =================================================
+            <input
+              type={
+                showPassword
+                  ? "text"
+                  : "password"
+              }
+              value={
+                customer?.password || ""
+              }
+              onChange={(event) =>
+                update(
+                  "password",
+                  event.target.value
+                )
+              }
+              placeholder={
+                signup
+                  ? "Create a password"
+                  : "Enter your password"
+              }
+              autoComplete={
+                signup
+                  ? "new-password"
+                  : "current-password"
+              }
+              disabled={busy}
+            />
+
+            <button
+              className="jr-password-toggle"
+              type="button"
+              onClick={() =>
+                setShowPassword(
+                  (current) => !current
+                )
+              }
+              disabled={busy}
+              aria-label={
+                showPassword
+                  ? "Hide password"
+                  : "Show password"
+              }
+            >
+              {showPassword
+                ? "◉"
+                : "◌"}
+            </button>
+
+          </div>
+        </label>
+
+        {signup && (
+          <label>
             CONFIRM PASSWORD
-            ================================================= */}
 
-          {signup && (
-            <label>
-              CONFIRM PASSWORD
+            <div className="jr-password-field">
 
-              <div className="jr-password-field">
-                <input
-                  type={
-                    showConfirmPassword
-                      ? "text"
-                      : "password"
-                  }
-                  value={
-                    customer?.confirmPassword ||
-                    ""
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    update(
-                      "confirmPassword",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Repeat your password"
-                  autoComplete="new-password"
-                  disabled={
-                    busy
-                  }
-                />
+              <input
+                type={
+                  showConfirmPassword
+                    ? "text"
+                    : "password"
+                }
+                value={
+                  customer?.confirmPassword || ""
+                }
+                onChange={(event) =>
+                  update(
+                    "confirmPassword",
+                    event.target.value
+                  )
+                }
+                placeholder="Repeat your password"
+                autoComplete="new-password"
+                disabled={busy}
+              />
 
-                <button
-                  className="jr-password-toggle"
-                  type="button"
-                  onClick={() =>
-                    setShowConfirmPassword(
-                      (current) => !current
-                    )
-                  }
-                  disabled={busy}
-                  aria-label={
-                    showConfirmPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
-                  title={
-                    showConfirmPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
-                >
-                  {showConfirmPassword ? "◉" : "◌"}
-                </button>
-              </div>
-            </label>
-          )}
+              <button
+                className="jr-password-toggle"
+                type="button"
+                onClick={() =>
+                  setShowConfirmPassword(
+                    (current) => !current
+                  )
+                }
+                disabled={busy}
+                aria-label={
+                  showConfirmPassword
+                    ? "Hide password"
+                    : "Show password"
+                }
+              >
+                {showConfirmPassword
+                  ? "◉"
+                  : "◌"}
+              </button>
 
-        {/* =================================================
-            ERROR
-            ================================================= */}
+            </div>
+          </label>
+        )}
 
         {error && (
           <div className="jr-form-error">
@@ -3189,16 +3152,10 @@ function AuthScreen({
           </div>
         )}
 
-        {/* =================================================
-            SUBMIT
-            ================================================= */}
-
         <button
           className="jr-button jr-button-primary jr-full"
           type="submit"
-          disabled={
-            busy
-          }
+          disabled={busy}
         >
           {busy
             ? "PLEASE WAIT..."
@@ -3215,10 +3172,6 @@ function AuthScreen({
 
       </form>
 
-      {/* =================================================
-          AUTH SWITCH
-          ================================================= */}
-
       <div className="jr-auth-switch">
 
         {signup
@@ -3228,15 +3181,13 @@ function AuthScreen({
         <button
           type="button"
           onClick={() =>
-            switchMode(
+            setMode(
               signup
                 ? "login"
                 : "signup"
             )
           }
-          disabled={
-            busy
-          }
+          disabled={busy}
         >
           {signup
             ? "SIGN IN"
@@ -3268,37 +3219,28 @@ function Header({
   onAccount,
   onLocation,
 }) {
-  const initials =
+  const firstName =
     String(
       user?.name ||
-        "J"
+        "there"
     )
       .trim()
-      .split(/\s+/)
-      .map(
-        (part) =>
-          part[0]
-      )
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
+      .split(/\s+/)[0];
 
   return (
     <header className="jr-header">
 
       <button
         className="jr-header-location"
-        onClick={
-          onLocation
-        }
         type="button"
+        onClick={onLocation}
       >
 
-        <span className="jr-location-pin">
+        <span className="jr-header-location-icon">
           ⌖
         </span>
 
-        <span>
+        <span className="jr-header-location-copy">
 
           <small>
             COLLECT FROM
@@ -3309,15 +3251,14 @@ function Header({
               "Choose location"}
           </strong>
 
-          {machine?.name && (
-            <small className="jr-header-machine">
-              {machine.name}
-            </small>
-          )}
+          <em>
+            {machine?.name ||
+              "Select machine"}
+          </em>
 
         </span>
 
-        <span className="jr-chevron">
+        <span className="jr-header-chevron">
           ˅
         </span>
 
@@ -3326,32 +3267,33 @@ function Header({
       <div className="jr-header-actions">
 
         <button
-          className="jr-account-button"
-          onClick={
-            onAccount
-          }
+          className="jr-header-profile"
           type="button"
-          aria-label="Open account"
+          onClick={onAccount}
+          aria-label="Account"
         >
-          {initials}
+          {String(
+            firstName ||
+              "P"
+          )
+            .charAt(0)
+            .toUpperCase()}
         </button>
 
         <button
-          className="jr-cart-button"
-          onClick={
-            onCart
-          }
+          className="jr-header-cart"
           type="button"
-          aria-label="Open cart"
+          onClick={onCart}
+          aria-label="Cart"
         >
           🛒
 
-          {cartCount >
-            0 && (
+          {cartCount > 0 && (
             <b>
               {cartCount}
             </b>
           )}
+
         </button>
 
       </div>
@@ -3361,7 +3303,7 @@ function Header({
 }
 
 /* =========================================================
-   MENU
+   MENU SCREEN
    ========================================================= */
 
 function MenuScreen({
@@ -3473,20 +3415,38 @@ function MenuScreen({
 
         <div className="jr-products">
 
-          {products.map(
-            (product) => (
-              <ProductCard
-                key={
-                  product.id
-                }
-                product={
-                  product
-                }
-                onSelect={
-                  onProduct
-                }
-              />
+          {products.length ? (
+            products.map(
+              (product) => (
+                <ProductCard
+                  key={
+                    product.id
+                  }
+                  product={
+                    product
+                  }
+                  onSelect={
+                    onProduct
+                  }
+                />
+              )
             )
+          ) : (
+            <div className="jr-empty">
+
+              <span>
+                🧃
+              </span>
+
+              <h3>
+                No juices available
+              </h3>
+
+              <p>
+                Please try again later.
+              </p>
+
+            </div>
           )}
 
         </div>
@@ -3497,6 +3457,105 @@ function MenuScreen({
   );
 }
 
+/* =========================================================
+   PRODUCT CARD
+   ========================================================= */
+
+function ProductCard({
+  product,
+  onSelect,
+}) {
+  const name =
+    product.displayName ||
+    displayProductName(product);
+
+  const description =
+    product.displayDescription ||
+    displayDescription(product);
+
+  const image =
+    product.image ||
+    product.image_url ||
+    productImage(product);
+
+  return (
+    <button
+      className="jr-product-card"
+      type="button"
+      onClick={() =>
+        onSelect(product)
+      }
+      aria-label={`Select ${name}`}
+    >
+
+      {/* ===================================================
+          PRODUCT IMAGE
+          =================================================== */}
+
+      <div className="jr-product-image-wrap">
+
+        <img
+          src={image}
+          alt={name}
+          className="jr-product-image"
+          loading="lazy"
+          onError={(event) => {
+            event.currentTarget.src =
+              productImage(product);
+          }}
+        />
+
+        <span className="jr-fresh-badge">
+          ● FRESH
+        </span>
+
+      </div>
+
+
+      {/* ===================================================
+          PRODUCT INFORMATION
+          =================================================== */}
+
+      <div className="jr-product-info">
+
+        <div>
+
+          <span className="jr-product-type">
+            SUGARCANE JUICE
+          </span>
+
+          <h3>
+            {name}
+          </h3>
+
+          <p>
+            {description}
+          </p>
+
+        </div>
+
+
+        {/* =================================================
+            PRICE + ADD
+            ================================================= */}
+
+        <div className="jr-product-footer">
+
+          <strong>
+            {money(product.price)}
+          </strong>
+
+          <span className="jr-select-circle">
+            +
+          </span>
+
+        </div>
+
+      </div>
+
+    </button>
+  );
+} 
 /* =========================================================
    MACHINE SCREEN
    ========================================================= */
@@ -3559,6 +3618,7 @@ function MachineScreen({
 
           {locations.map(
             (location) => {
+
               const id =
                 getLocationId(
                   location
@@ -3646,6 +3706,7 @@ function MachineScreen({
 
           {machines.map(
             (machine) => {
+
               const id =
                 String(
                   machine?.id ||
@@ -3694,11 +3755,17 @@ function MachineScreen({
 
                   <span className="jr-machine-status">
 
-                    <i />
+                    {active ? (
+                      <>
+                        <span>
+                          ●
+                        </span>
 
-                    {active
-                      ? "SELECTED"
-                      : "AVAILABLE"}
+                        SELECTED
+                      </>
+                    ) : (
+                      "SELECT"
+                    )}
 
                   </span>
 
@@ -3712,14 +3779,14 @@ function MachineScreen({
       </section>
 
       <button
-        className="jr-button jr-button-primary jr-full jr-location-continue"
+        className="jr-button jr-button-primary jr-full"
         type="button"
-        onClick={
-          onContinue
-        }
         disabled={
           !selectedLocationId ||
           !selectedMachineId
+        }
+        onClick={
+          onContinue
         }
       >
         CONTINUE TO MENU
@@ -3727,106 +3794,9 @@ function MachineScreen({
         <span>
           →
         </span>
-
       </button>
 
     </main>
-  );
-}
-
-/* =========================================================
-   PRODUCT CARD
-   ========================================================= */
-
-function ProductCard({
-  product,
-  onSelect,
-}) {
-  const name =
-    product.displayName ||
-    displayProductName(
-      product
-    );
-
-  const description =
-    product.displayDescription ||
-    displayDescription(
-      product
-    );
-
-  return (
-    <button
-      className="jr-product-card"
-      type="button"
-      onClick={() =>
-        onSelect(
-          product
-        )
-      }
-    >
-
-      <div className="jr-product-image-wrap">
-
-        <img
-          src={
-            product.image ||
-            productImage(
-              product
-            )
-          }
-          alt={name}
-          className="jr-product-image"
-          onError={(
-            event
-          ) => {
-            event.currentTarget.src =
-              productImage(
-                product
-              );
-          }}
-        />
-
-        <span className="jr-fresh-badge">
-          ● FRESH
-        </span>
-
-      </div>
-
-      <div className="jr-product-info">
-
-        <div>
-
-          <span className="jr-product-type">
-            SUGARCANE JUICE
-          </span>
-
-          <h3>
-            {name}
-          </h3>
-
-          <p>
-            {description}
-          </p>
-
-        </div>
-
-        <div className="jr-product-footer">
-
-          <strong>
-            {money(
-              product.price
-            )}
-          </strong>
-
-          <span className="jr-select-circle">
-            +
-          </span>
-
-        </div>
-
-      </div>
-
-    </button>
   );
 }
 
@@ -3853,10 +3823,14 @@ function ProductSheet({
       product
     );
 
-  const total =
+  const unitPrice =
     Number(
-      product.price || 0
-    ) *
+      product?.price ||
+        0
+    );
+
+  const total =
+    unitPrice *
     Number(
       quantity || 1
     );
@@ -3883,6 +3857,7 @@ function ProductSheet({
           <img
             src={
               product.image ||
+              product.image_url ||
               productImage(
                 product
               )
@@ -3896,6 +3871,7 @@ function ProductSheet({
               onClose
             }
             type="button"
+            aria-label="Close"
           >
             ×
           </button>
@@ -3924,7 +3900,7 @@ function ProductSheet({
 
             <strong>
               {money(
-                product.price
+                unitPrice
               )}
             </strong>
 
@@ -3994,13 +3970,21 @@ function ProductSheet({
 }
 
 /* =========================================================
-   QUANTITY
+   QUANTITY CONTROL
    ========================================================= */
 
 function QuantityControl({
   value,
   onChange,
 }) {
+  const quantity =
+    Math.max(
+      1,
+      Number(
+        value || 1
+      )
+    );
+
   return (
     <div className="jr-quantity-control">
 
@@ -4010,9 +3994,7 @@ function QuantityControl({
           onChange(
             Math.max(
               1,
-              Number(
-                value
-              ) - 1
+              quantity - 1
             )
           )
         }
@@ -4022,16 +4004,14 @@ function QuantityControl({
       </button>
 
       <strong>
-        {value}
+        {quantity}
       </strong>
 
       <button
         type="button"
         onClick={() =>
           onChange(
-            Number(
-              value
-            ) + 1
+            quantity + 1
           )
         }
         aria-label="Increase quantity"
@@ -4044,7 +4024,7 @@ function QuantityControl({
 }
 
 /* =========================================================
-   CART QUANTITY
+   CART QUANTITY CONTROL
    ========================================================= */
 
 function CartQuantityControl({
@@ -4055,7 +4035,9 @@ function CartQuantityControl({
   const quantity =
     Math.max(
       1,
-      Number(value) || 1
+      Number(
+        value
+      ) || 1
     );
 
   function decrease() {
@@ -4107,7 +4089,6 @@ function CartQuantityControl({
     </div>
   );
 }
-
 /* =========================================================
    CART SCREEN
    ========================================================= */
@@ -4123,8 +4104,31 @@ function CartScreen({
   onLocation,
   onCheckout,
 }) {
+  const subtotal =
+    Number(total || 0);
+
+  const gstAmount =
+    subtotal * 0.12;
+
+  const finalTotal =
+    subtotal + gstAmount;
+
+  const itemCount =
+    cart.reduce(
+      (sum, item) =>
+        sum +
+        Number(
+          item?.quantity || 0
+        ),
+      0
+    );
+
   return (
-    <main className="jr-content jr-page">
+    <main className="jr-content jr-page jr-cart-page">
+
+      {/* ===================================================
+          TOP LINE
+          =================================================== */}
 
       <div className="jr-cart-topline">
 
@@ -4144,15 +4148,30 @@ function CartScreen({
 
       </div>
 
+
+      {/* ===================================================
+          PAGE TITLE
+          =================================================== */}
+
       <h1 className="jr-page-title">
+
         Your
+
         <br />
+
         <em>
           order.
         </em>
+
       </h1>
 
+
+      {/* ===================================================
+          EMPTY CART
+          =================================================== */}
+
       {!cart.length ? (
+
         <div className="jr-empty">
 
           <span>
@@ -4164,116 +4183,193 @@ function CartScreen({
           </h3>
 
           <p>
-            Choose a juice
-            from the menu.
+            Choose a juice from
+            the menu.
           </p>
 
           <button
             className="jr-button jr-button-primary"
+            type="button"
             onClick={
               onBack
             }
-            type="button"
           >
             BROWSE JUICES
+
+            <span>
+              →
+            </span>
+
           </button>
 
         </div>
+
       ) : (
+
         <>
+
+          {/* =================================================
+              CART ITEMS
+              ================================================= */}
+
           <div className="jr-cart-list">
 
             {cart.map(
-              (item) => (
-                <div
-                  className="jr-cart-item"
-                  key={
-                    item.id
-                  }
-                >
+              (item) => {
 
-                  <img
-                    src={
-                      item.image ||
-                      productImage(
-                        item
-                      )
-                    }
-                    alt={
-                      item.displayName ||
-                      displayProductName(
-                        item
-                      )
-                    }
-                  />
+                const itemName =
+                  item?.displayName ||
+                  displayProductName(
+                    item
+                  );
 
-                  <div className="jr-cart-info">
+                const itemImage =
+                  item?.image ||
+                  item?.image_url ||
+                  productImage(
+                    item
+                  );
 
-                    <span>
-                      {item.displayName ||
-                        displayProductName(
-                          item
-                        )}
-                    </span>
+                const itemPrice =
+                  Number(
+                    item?.price || 0
+                  );
 
-                    <strong>
-                      {money(
-                        item.price
-                      )}
-                    </strong>
+                const itemQuantity =
+                  Math.max(
+                    1,
+                    Number(
+                      item?.quantity || 1
+                    )
+                  );
 
-                    <CartQuantityControl
-                      value={
-                        item.quantity
-                      }
-                      onUpdate={(
-                        value
-                      ) =>
-                        onUpdate(
-                          item.id,
-                          value
-                        )
-                      }
-                      onRemove={() =>
-                        onRemove(
-                          item.id
-                        )
-                      }
-                    />
+                const itemTotal =
+                  itemPrice *
+                  itemQuantity;
 
-                  </div>
+                return (
 
-                  <button
-                    className="jr-remove"
-                    type="button"
-                    onClick={() =>
-                      onRemove(
-                        item.id
-                      )
+                  <section
+                    className="jr-cart-item"
+                    key={
+                      item?.id
                     }
                   >
-                    ×
-                  </button>
 
-                </div>
-              )
+                    {/* =====================================
+                        PRODUCT IMAGE
+                        ===================================== */}
+
+                    <div className="jr-cart-item-image">
+
+                      <img
+                        src={
+                          itemImage
+                        }
+                        alt={
+                          itemName
+                        }
+                      />
+
+                    </div>
+
+
+                    {/* =====================================
+                        PRODUCT INFORMATION
+                        ===================================== */}
+
+                    <div className="jr-cart-item-copy">
+
+                      <strong className="jr-cart-item-name">
+                        {itemName}
+                      </strong>
+
+                      <span className="jr-cart-item-price">
+                        {money(
+                          itemPrice
+                        )}
+                      </span>
+
+
+                      <CartQuantityControl
+                        value={
+                          itemQuantity
+                        }
+                        onUpdate={(
+                          nextQuantity
+                        ) =>
+                          onUpdate(
+                            item.id,
+                            nextQuantity
+                          )
+                        }
+                        onRemove={() =>
+                          onRemove(
+                            item.id
+                          )
+                        }
+                      />
+
+                    </div>
+
+
+                    {/* =====================================
+                        ITEM TOTAL + REMOVE
+                        ===================================== */}
+
+                    <div className="jr-cart-item-total">
+
+                      <strong>
+                        {money(
+                          itemTotal
+                        )}
+                      </strong>
+
+                      <button
+                        className="jr-cart-remove"
+                        type="button"
+                        onClick={() =>
+                          onRemove(
+                            item.id
+                          )
+                        }
+                        aria-label={
+                          `Remove ${itemName}`
+                        }
+                      >
+                        ×
+                      </button>
+
+                    </div>
+
+                  </section>
+
+                );
+
+              }
             )}
 
           </div>
 
+
+          {/* =================================================
+              COLLECTION
+              ================================================= */}
+
           <button
-            className="jr-venue-selected"
+            className="jr-collection-card"
+            type="button"
             onClick={
               onLocation
             }
-            type="button"
           >
 
-            <span className="jr-venue-selected-icon">
+            <span className="jr-collection-icon">
               ⌖
             </span>
 
-            <span>
+
+            <span className="jr-collection-copy">
 
               <small>
                 COLLECTION
@@ -4291,36 +4387,70 @@ function CartScreen({
 
             </span>
 
-            <b>
+
+            <b className="jr-collection-arrow">
               →
             </b>
 
           </button>
 
+
+          {/* =================================================
+              ORDER SUMMARY
+              ================================================= */}
+
           <div className="jr-order-summary">
 
-            <div>
+            {/* ITEMS */}
+
+            <div className="jr-summary-row">
 
               <span>
-                Items
+                ITEMS
               </span>
 
               <strong>
-                {cart.reduce(
-                  (
-                    sum,
-                    item
-                  ) =>
-                    sum +
-                    Number(
-                      item.quantity ||
-                        0
-                    ),
-                  0
+                {itemCount}
+              </strong>
+
+            </div>
+
+
+            {/* SUBTOTAL */}
+
+            <div className="jr-summary-row">
+
+              <span>
+                SUBTOTAL
+              </span>
+
+              <strong>
+                {money(
+                  subtotal
                 )}
               </strong>
 
             </div>
+
+
+            {/* GST */}
+
+            <div className="jr-summary-row">
+
+              <span>
+                GST (12%)
+              </span>
+
+              <strong>
+                {money(
+                  gstAmount
+                )}
+              </strong>
+
+            </div>
+
+
+            {/* FINAL TOTAL */}
 
             <div className="jr-summary-total">
 
@@ -4330,13 +4460,18 @@ function CartScreen({
 
               <strong>
                 {money(
-                  total
+                  finalTotal
                 )}
               </strong>
 
             </div>
 
           </div>
+
+
+          {/* =================================================
+              PLACE ORDER
+              ================================================= */}
 
           <button
             className="jr-button jr-button-primary jr-full"
@@ -4345,6 +4480,7 @@ function CartScreen({
             }
             type="button"
           >
+
             PLACE ORDER
 
             <span>
@@ -4354,14 +4490,14 @@ function CartScreen({
           </button>
 
         </>
+
       )}
 
     </main>
   );
 }
-
 /* =========================================================
-   PROFILE
+   PROFILE SCREEN
    ========================================================= */
 
 function ProfileScreen({
@@ -4381,13 +4517,22 @@ function ProfileScreen({
     user?.firstname ||
     "Juice Lover";
 
+  const firstName =
+    String(
+      name
+    )
+      .trim()
+      .split(/\s+/)[0];
+
   const initial =
-    String(name)
+    String(
+      name
+    )
       .trim()
       .split(/\s+/)
       .map(
         (part) =>
-          part[0]
+          part?.[0] || ""
       )
       .join("")
       .slice(
@@ -4427,18 +4572,15 @@ function ProfileScreen({
       </span>
 
       <h1 className="jr-page-title">
+
         Hello,
+
         <br />
+
         <em>
-          {
-            String(
-              name
-            )
-              .split(
-                " "
-              )[0]
-          }.
+          {firstName}.
         </em>
+
       </h1>
 
       <section className="jr-profile-hero">
@@ -4489,6 +4631,7 @@ function ProfileScreen({
         >
 
           <label>
+
             FULL NAME
 
             <input
@@ -4497,18 +4640,18 @@ function ProfileScreen({
                 customer?.name ||
                 ""
               }
-              onChange={(
-                event
-              ) =>
+              onChange={(event) =>
                 update(
                   "name",
                   event.target.value
                 )
               }
             />
+
           </label>
 
           <label>
+
             PHONE NUMBER
 
             <input
@@ -4517,18 +4660,18 @@ function ProfileScreen({
                 customer?.phone ||
                 ""
               }
-              onChange={(
-                event
-              ) =>
+              onChange={(event) =>
                 update(
                   "phone",
                   event.target.value
                 )
               }
             />
+
           </label>
 
           <label>
+
             EMAIL
 
             <input
@@ -4537,15 +4680,14 @@ function ProfileScreen({
                 customer?.email ||
                 ""
               }
-              onChange={(
-                event
-              ) =>
+              onChange={(event) =>
                 update(
                   "email",
                   event.target.value
                 )
               }
             />
+
           </label>
 
           {error && (
@@ -4561,6 +4703,7 @@ function ProfileScreen({
               busy
             }
           >
+
             {busy
               ? "SAVING..."
               : "SAVE PROFILE"}
@@ -4570,6 +4713,7 @@ function ProfileScreen({
                 →
               </span>
             )}
+
           </button>
 
         </form>
@@ -4645,7 +4789,7 @@ function ProfileScreen({
 }
 
 /* =========================================================
-   HISTORY
+   HISTORY SCREEN
    ========================================================= */
 
 function HistoryScreen({
@@ -4660,7 +4804,9 @@ function HistoryScreen({
 
         <button
           className="jr-back-link"
-          onClick={onBack}
+          onClick={
+            onBack
+          }
           type="button"
         >
           ← Account
@@ -4676,7 +4822,9 @@ function HistoryScreen({
             <button
               className="jr-clear-orders"
               type="button"
-              onClick={onClear}
+              onClick={
+                onClear
+              }
               aria-label="Clear order history"
               title="Clear order history"
             >
@@ -4689,9 +4837,15 @@ function HistoryScreen({
       </div>
 
       <h1 className="jr-page-title">
+
         My
+
         <br />
-        <em>orders.</em>
+
+        <em>
+          orders.
+        </em>
+
       </h1>
 
       {!orders.length ? (
@@ -4716,79 +4870,104 @@ function HistoryScreen({
         <div className="jr-history-list">
 
           {orders.map(
-            (order, index) => (
-              <section
-                className="jr-history-card"
-                key={
-                  order?.id ||
-                  order?.order_id ||
-                  index
-                }
-              >
+            (
+              order,
+              index
+            ) => {
 
-                <div>
+              const orderId =
+                order?.order_number ||
+                order?.orderId ||
+                order?.id ||
+                "Juice Robo order";
 
-                  <small>
-                    ORDER
-                  </small>
+              const status =
+                order?.status ||
+                "CONFIRMED";
 
-                  <strong>
-                    {order?.order_number ||
-                      order?.orderId ||
-                      order?.id ||
-                      "Juice Robo order"}
-                  </strong>
+              const orderTotal =
+                order?.total_amount ??
+                order?.totalAmount ??
+                0;
 
-                </div>
+              const collectionCode =
+                order?.collection_code ||
+                order?.collectionCode ||
+                "";
 
-                <div>
+              return (
+                <section
+                  className="jr-history-card"
+                  key={
+                    order?.id ||
+                    order?.order_id ||
+                    orderId ||
+                    index
+                  }
+                >
 
-                  <small>
-                    STATUS
-                  </small>
-
-                  <strong>
-                    {order?.status ||
-                      "CONFIRMED"}
-                  </strong>
-
-                </div>
-
-                <div>
-
-                  <small>
-                    TOTAL
-                  </small>
-
-                  <strong>
-                    {money(
-                      order?.total_amount ||
-                        order?.totalAmount
-                    )}
-                  </strong>
-
-                </div>
-
-                {(order?.collection_code ||
-                  order?.collectionCode) && (
-                  <div className="jr-history-code">
+                  <div>
 
                     <small>
-                      COLLECTION CODE
+                      ORDER
+                    </small>
+
+                    <strong>
+                      {orderId}
+                    </strong>
+
+                  </div>
+
+                  <div>
+
+                    <small>
+                      STATUS
                     </small>
 
                     <strong>
                       {String(
-                        order.collection_code ||
-                          order.collectionCode
+                        status
+                      ).replace(
+                        /_/g,
+                        " "
                       )}
                     </strong>
 
                   </div>
-                )}
 
-              </section>
-            )
+                  <div>
+
+                    <small>
+                      TOTAL
+                    </small>
+
+                    <strong>
+                      {money(
+                        orderTotal
+                      )}
+                    </strong>
+
+                  </div>
+
+                  {collectionCode && (
+                    <div className="jr-history-code">
+
+                      <small>
+                        COLLECTION CODE
+                      </small>
+
+                      <strong>
+                        {String(
+                          collectionCode
+                        )}
+                      </strong>
+
+                    </div>
+                  )}
+
+                </section>
+              );
+            }
           )}
 
         </div>
@@ -4799,12 +4978,14 @@ function HistoryScreen({
 }
 
 /* =========================================================
-   PAYMENT
+   PAYMENT SCREEN
    ========================================================= */
 
 function PaymentScreen({
   cart,
   total,
+  gst,
+  finalTotal,
   location,
   machine,
   paymentMethod,
@@ -4814,7 +4995,26 @@ function PaymentScreen({
   onPay,
 }) {
   const isProcessing =
-    paymentStatus === "processing";
+    paymentStatus ===
+    "processing";
+
+  const subtotal =
+    Number(
+      total || 0
+    );
+
+  const calculatedGST =
+    Number(
+      gst ??
+        subtotal * 0.12
+    );
+
+  const calculatedFinalTotal =
+    Number(
+      finalTotal ??
+        subtotal +
+          calculatedGST
+    );
 
   const methods = [
     {
@@ -4824,6 +5024,7 @@ function PaymentScreen({
       subtitle:
         "Google Pay · PhonePe · Paytm",
     },
+
     {
       id: "card",
       icon: "▣",
@@ -4831,6 +5032,7 @@ function PaymentScreen({
       subtitle:
         "Credit or debit card",
     },
+
     {
       id: "netbanking",
       icon: "⌂",
@@ -4838,6 +5040,7 @@ function PaymentScreen({
       subtitle:
         "Pay directly from your bank",
     },
+
     {
       id: "wallet",
       icon: "◈",
@@ -4850,17 +5053,17 @@ function PaymentScreen({
   return (
     <main className="jr-content jr-page jr-payment-page">
 
-      {/* =================================================
-          PAYMENT TOPLINE
-          ================================================= */}
-
       <div className="jr-payment-topline">
 
         <button
           className="jr-back-link"
-          onClick={onBack}
+          onClick={
+            onBack
+          }
           type="button"
-          disabled={isProcessing}
+          disabled={
+            isProcessing
+          }
         >
           ← Review order
         </button>
@@ -4871,21 +5074,17 @@ function PaymentScreen({
 
       </div>
 
-      {/* =================================================
-          PAGE TITLE
-          ================================================= */}
-
       <h1 className="jr-page-title">
+
         Almost
+
         <br />
+
         <em>
           there.
         </em>
-      </h1>
 
-      {/* =================================================
-          PAYMENT CARD
-          ================================================= */}
+      </h1>
 
       <section className="jr-payment-placeholder">
 
@@ -4902,76 +5101,71 @@ function PaymentScreen({
         </h2>
 
         <p>
-          {isProcessing
-            ? "Please wait while we complete your payment."
-            : "Choose a payment method and complete your Juice Robo order."}
+          Choose a payment
+          method and complete
+          your Juice Robo order.
         </p>
 
-        {!isProcessing && (
-          <div className="jr-payment-methods">
+        <div className="jr-payment-methods">
 
-            {methods.map(
-              (method) => {
+          {methods.map(
+            (method) => {
 
-                const active =
-                  paymentMethod ===
-                  method.id;
+              const active =
+                paymentMethod ===
+                method.id;
 
-                return (
-                  <button
-                    key={
+              return (
+                <button
+                  className={
+                    active
+                      ? "jr-payment-method active"
+                      : "jr-payment-method"
+                  }
+                  key={
+                    method.id
+                  }
+                  type="button"
+                  onClick={() =>
+                    setPaymentMethod(
                       method.id
-                    }
-                    type="button"
-                    className={
-                      active
-                        ? "jr-payment-method active"
-                        : "jr-payment-method"
-                    }
-                    onClick={() =>
-                      setPaymentMethod(
-                        method.id
-                      )
-                    }
-                  >
+                    )
+                  }
+                  disabled={
+                    isProcessing
+                  }
+                >
 
-                    <span className="jr-payment-method-icon">
-                      {
-                        method.icon
-                      }
+                  <span className="jr-payment-method-icon">
+                    {method.icon}
+                  </span>
+
+                  <span className="jr-payment-method-copy">
+
+                    <strong>
+                      {method.title}
+                    </strong>
+
+                    <small>
+                      {method.subtitle}
+                    </small>
+
+                  </span>
+
+                  {active && (
+                    <span className="jr-payment-check">
+                      ✓
                     </span>
+                  )}
 
-                    <span className="jr-payment-method-copy">
+                </button>
+              );
+            }
+          )}
 
-                      <strong>
-                        {
-                          method.title
-                        }
-                      </strong>
+        </div>
 
-                      <small>
-                        {
-                          method.subtitle
-                        }
-                      </small>
-
-                    </span>
-
-                    <span className="jr-payment-method-check">
-                      {active
-                        ? "✓"
-                        : ""}
-                    </span>
-
-                  </button>
-                );
-              }
-            )}
-
-          </div>
-        )}
-
-        <div className="jr-payment-collection">
+        <div className="jr-payment-details">
 
           <span>
 
@@ -5001,22 +5195,58 @@ function PaymentScreen({
 
         </div>
 
-        <div className="jr-payment-total">
+        <div className="jr-payment-breakdown">
 
-          <span>
-            AMOUNT TO PAY
-          </span>
+          <div className="jr-payment-row">
 
-          <strong>
-            {money(total)}
-          </strong>
+            <span>
+              SUBTOTAL
+            </span>
+
+            <strong>
+              {money(
+                subtotal
+              )}
+            </strong>
+
+          </div>
+
+          <div className="jr-payment-row">
+
+            <span>
+              GST (12%)
+            </span>
+
+            <strong>
+              {money(
+                calculatedGST
+              )}
+            </strong>
+
+          </div>
+
+          <div className="jr-payment-total">
+
+            <span>
+              TOTAL TO PAY
+            </span>
+
+            <strong>
+              {money(
+                calculatedFinalTotal
+              )}
+            </strong>
+
+          </div>
 
         </div>
 
         <button
           className="jr-button jr-button-primary jr-full"
           type="button"
-          onClick={onPay}
+          onClick={
+            onPay
+          }
           disabled={
             !cart.length ||
             isProcessing
@@ -5025,7 +5255,9 @@ function PaymentScreen({
 
           {isProcessing
             ? "PROCESSING PAYMENT..."
-            : `PAY ${money(total)}`}
+            : `PAY ${money(
+                calculatedFinalTotal
+              )}`}
 
           {!isProcessing && (
             <span>
@@ -5042,10 +5274,10 @@ function PaymentScreen({
           </strong>
 
           <span>
-            This button simulates a
-            successful payment for UI
-            testing only. No real money
-            is charged.
+            This button simulates
+            a successful payment
+            for UI testing only.
+            No real money is charged.
           </span>
 
         </div>
@@ -5057,7 +5289,7 @@ function PaymentScreen({
 }
 
 /* =========================================================
-   CONFIRMATION
+   CONFIRMATION SCREEN
    ========================================================= */
 
 function ConfirmationScreen({
@@ -5069,19 +5301,38 @@ function ConfirmationScreen({
   const rawCode =
     order?.collection_code ||
     order?.collectionCode ||
+    order?.orderPin ||
     "";
 
   const code =
-    String(rawCode)
+    String(
+      rawCode
+    )
       .replace(
         /\D/g,
         ""
       )
-      .slice(-4)
+      .slice(
+        -4
+      )
       .padStart(
         4,
         "0"
       );
+
+  const total =
+    Number(
+      order?.total_amount ||
+        order?.totalAmount ||
+        0
+    );
+
+  const paymentMethod =
+    String(
+      order?.payment_method ||
+        order?.paymentMethod ||
+        "UPI"
+    ).toUpperCase();
 
   return (
     <main className="jr-content jr-page jr-confirmation">
@@ -5095,17 +5346,23 @@ function ConfirmationScreen({
       </span>
 
       <h1 className="jr-page-title">
+
         Your juice is
+
         <br />
+
         <em>
           booked!
         </em>
+
       </h1>
 
       <p className="jr-page-description">
+
         Your payment was completed
         and your order is ready for
         collection.
+
       </p>
 
       <section className="jr-code-card">
@@ -5116,28 +5373,35 @@ function ConfirmationScreen({
 
         <div className="jr-code-digits">
 
-          {code.split("").map(
-            (
-              digit,
-              index
-            ) => (
-              <span
-                className="jr-code-digit"
-                key={`${digit}-${index}`}
-              >
-                {digit}
-              </span>
-            )
-          )}
+          {code
+            .split("")
+            .map(
+              (
+                digit,
+                index
+              ) => (
+                <span
+                  className="jr-code-digit"
+                  key={`${digit}-${index}`}
+                >
+                  {digit}
+                </span>
+              )
+            )}
 
         </div>
 
         <small>
+
           Enter this 4-digit code
           on{" "}
+
           {machine?.name ||
-            "your Juice Robo machine"}{" "}
+            "your Juice Robo machine"}
+
+          {" "}
           to begin preparation.
+
         </small>
 
       </section>
@@ -5174,16 +5438,13 @@ function ConfirmationScreen({
 
           <strong>
             {money(
-              order?.total_amount
+              total
             )}
           </strong>
 
           <span>
             Paid successfully ·{" "}
-            {String(
-              order?.payment_method ||
-                "UPI"
-            ).toUpperCase()}
+            {paymentMethod}
           </span>
 
         </div>
@@ -5197,6 +5458,7 @@ function ConfirmationScreen({
         }
         type="button"
       >
+
         ORDER AGAIN
 
         <span>
@@ -5210,7 +5472,7 @@ function ConfirmationScreen({
 }
 
 /* =========================================================
-   BOTTOM BAR
+   BOTTOM NAVIGATION
    ========================================================= */
 
 function BottomBar({
@@ -5226,8 +5488,7 @@ function BottomBar({
 
       <button
         className={
-          screen ===
-          "menu"
+          screen === "menu"
             ? "active"
             : ""
         }
@@ -5235,6 +5496,7 @@ function BottomBar({
           onMenu
         }
         type="button"
+        aria-label="Home"
       >
 
         <span>
@@ -5249,8 +5511,7 @@ function BottomBar({
 
       <button
         className={
-          screen ===
-          "machine"
+          screen === "machine"
             ? "active"
             : ""
         }
@@ -5258,6 +5519,7 @@ function BottomBar({
           onMachine
         }
         type="button"
+        aria-label="Machine"
       >
 
         <span>
@@ -5272,8 +5534,7 @@ function BottomBar({
 
       <button
         className={
-          screen ===
-          "cart"
+          screen === "cart"
             ? "active"
             : ""
         }
@@ -5281,14 +5542,14 @@ function BottomBar({
           onCart
         }
         type="button"
+        aria-label="Order"
       >
 
         <span className="jr-nav-cart">
 
           🛒
 
-          {cartCount >
-            0 && (
+          {cartCount > 0 && (
             <b>
               {cartCount}
             </b>
@@ -5304,10 +5565,8 @@ function BottomBar({
 
       <button
         className={
-          screen ===
-            "profile" ||
-          screen ===
-            "history"
+          screen === "profile" ||
+          screen === "history"
             ? "active"
             : ""
         }
@@ -5315,6 +5574,7 @@ function BottomBar({
           onAccount
         }
         type="button"
+        aria-label="Account"
       >
 
         <span>
@@ -5338,6 +5598,10 @@ function BottomBar({
 function Toast({
   message,
 }) {
+  if (!message) {
+    return null;
+  }
+
   return (
     <div className="jr-toast">
 
