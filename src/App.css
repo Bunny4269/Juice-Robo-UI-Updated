@@ -1199,73 +1199,8 @@ img {
   font-size: 9px;
 }
 
-/* =========================================================
-   PAYMENT
-   ========================================================= */
 
-.jr-payment-placeholder {
-  padding: 22px 16px;
-  border-radius: 21px;
-  background: var(--jr-white);
-  text-align: center;
-  box-shadow: 0 8px 25px rgba(20, 45, 26, 0.05);
-}
 
-.jr-payment-icon {
-  width: 58px;
-  height: 58px;
-  margin: 0 auto 15px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--jr-soft-green);
-  color: var(--jr-green);
-  font-size: 22px;
-  font-weight: 900;
-}
-
-.jr-payment-placeholder h2 {
-  margin: 0 0 6px;
-  font-size: 19px;
-}
-
-.jr-payment-placeholder p {
-  max-width: 280px;
-  margin: 0 auto 17px;
-  color: var(--jr-muted);
-  font-size: 10px;
-  line-height: 1.5;
-}
-
-.jr-payment-total {
-  margin-bottom: 15px;
-  padding: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-radius: 14px;
-  background: var(--jr-soft-green);
-}
-
-.jr-payment-total span {
-  color: var(--jr-muted);
-  font-size: 7px;
-  font-weight: 900;
-  letter-spacing: 0.8px;
-}
-
-.jr-payment-total strong {
-  color: var(--jr-dark-green);
-  font-size: 19px;
-}
-
-.jr-payment-placeholder > small {
-  display: block;
-  margin-top: 12px;
-  color: #969f97;
-  font-size: 7px;
-  line-height: 1.45;
-}
 
 /* =========================================================
    PROFILE / ACCOUNT
@@ -3122,4 +3057,96 @@ img {
     font-size: 18px;
   }
 
+}
+
+/* =========================================================
+   PAYMENT LOCATION / MACHINE DETAILS — FINAL
+   ========================================================= */
+
+.jr-payment-details {
+  width: 100%;
+  margin: 0 0 15px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  border-radius: 14px;
+  background: var(--jr-soft-green);
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.jr-payment-details > span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.jr-payment-details > span small {
+  display: block;
+  margin: 0;
+  color: var(--jr-muted);
+  font-size: 6px;
+  line-height: 1.2;
+  letter-spacing: 0.8px;
+  font-weight: 900;
+}
+
+.jr-payment-details > span strong {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: var(--jr-dark-green);
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Also supports the .jr-payment-detail markup if used later. */
+.jr-payment-details > .jr-payment-detail {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.jr-payment-details > .jr-payment-detail small {
+  display: block;
+  margin: 0;
+  color: var(--jr-muted);
+  font-size: 6px;
+  line-height: 1.2;
+  letter-spacing: 0.8px;
+  font-weight: 900;
+}
+
+.jr-payment-details > .jr-payment-detail strong {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: var(--jr-dark-green);
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Keep the payment details readable on very narrow phones. */
+@media (max-width: 360px) {
+  .jr-payment-details {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .jr-payment-details > span strong,
+  .jr-payment-details > .jr-payment-detail strong {
+    font-size: 9px;
+  }
 }

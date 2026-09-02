@@ -1,83 +1,173 @@
-/* =========================================================
-   JUICE ROBO API
-   LEGACY TEST BACKEND ADAPTER
-   =========================================================
-
-   This adapter talks directly to the existing Juice Robo
-   test backend.
-
-   GENERAL API:
-   https://tptest.juicerobo.com/tporder/api
-
-   ORDER MASTER API:
-   https://tptest.juicerobo.com/tpordermaster/api
-
-   IMPORTANT:
-   - Uses the existing Juice Robo API credentials.
-   - Does NOT use localhost:8000.
-   - Does NOT use the FastAPI backend.
-   - Does NOT use Authorization: Bearer.
-   - Does NOT invent fake store IDs.
-   - Product IDs are legacy variant IDs.
-   ========================================================= */
-/* =========================================================
-   LOCAL JUICE ROBO DEVELOPMENT API
-   ========================================================= */
-
-const LOCAL_API_BASE =
-  "http://127.0.0.1:8000";
-
-
-/* =========================================================
-   LEGACY JUICE ROBO API
-   ========================================================= */
+/*
+ * JUICE ROBO — UPDATED UI / LEGACY API ADAPTER
+ *
+ * This file makes the redesigned React UI use the existing
+ * Juice Robo backend:
+ *
+ *   https://tptest.juicerobo.com/tporder/api
+ *
+ * IMPORTANT:
+ * - Do NOT use localhost:8000 in this build.
+ * - The legacy backend uses /v1/... endpoints.
+ * - Payment is handled by the existing Juice Robo UPI flow.
+ * - Do not add the newer FastAPI /payments endpoints here.
+ *
+ * Environment variables required for Vite:
+ *
+ *   VITE_JR_API_KEY=your-existing-api-key
+ *   VITE_JR_API_KEY_SECRET=your-existing-api-secret
+ *
+ * Keep the real values in .env / deployment environment.
+ */
 
 const API_BASE =
   "https://tptest.juicerobo.com/tporder/api";
 
-const ORDER_API_BASE =
-  "https://tptest.juicerobo.com/tpordermaster/api";
-
-
-/* =========================================================
-   DEFAULT ORGANIZATION
-   ========================================================= */
-
 const DEFAULT_ORG_ID =
   "d2006bfc-95df-4925-a617-6d10d06b99bc";
 
-
-/* =========================================================
-   LEGACY JUICE ROBO CREDENTIALS
-   ========================================================= */
-
 const JR_API_KEY =
-  "fd272156-8768-47ec-80e5-6779309e6cac";
+  import.meta.env.VITE_JR_API_KEY || "";
 
 const JR_API_KEY_SECRET =
-  "e844933d-9f44-4e4b-b0fe-e7bfc771ce99";
+  import.meta.env.VITE_JR_API_KEY_SECRET || "";
 
-/* =========================================================
-   GENERAL HELPERS
-   ========================================================= */
+/* ============================================================
+   STORAGE
+   ============================================================ */
 
-function cleanStoredValue(value) {
+function readJson(key, fallback = {}) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
 
-  if (
-    value === null ||
-    value === undefined
-  ) {
-    return "";
+    const parsed = JSON.parse(raw);
+
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
   }
-
-  return String(value)
-    .trim()
-    .replace(/^"|"$/g, "");
 }
 
+function writeJson(key, value) {
+  try {
+    localStorage.setItem(
+      key,
+      JSON.stringify(value)
+    );
+  } catch {
+    // Ignore local-storage failures.
+  }
+}
+
+function getUserSnapshot() {
+  return (
+    readJson("juice_robo_user", null) ||
+    readJson("user", null) ||
+    {}
+  );
+}
+
+function getOrgId() {
+  const stored =
+    localStorage.getItem("ORG_ID") ||
+    localStorage.getItem("juice_robo_org_id");
+
+  if (stored) {
+    return String(stored).replace(
+      /^"|"$/g,
+      ""
+    );
+  }
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  const queryOrg =
+    params.get("o_id") ||
+    params.get("org_id");
+
+  if (queryOrg) {
+    localStorage.setItem(
+      "ORG_ID",
+      queryOrg
+    );
+
+    return queryOrg;
+  }
+
+  localStorage.setItem(
+    "ORG_ID",
+    DEFAULT_ORG_ID
+  );
+
+  return DEFAULT_ORG_ID;
+}
+
+function getStoreId() {
+  return String(
+    localStorage.getItem("store_Id") ||
+      localStorage.getItem("juice_robo_store_id") ||
+      ""
+  ).replace(/^"|"$/g, "");
+}
+
+/* ============================================================
+   GENERIC HELPERS
+   ============================================================ */
+
+function unwrap(value) {
+  let result = value;
+
+  for (let i = 0; i < 5; i += 1) {
+    if (
+      result &&
+      typeof result === "object" &&
+      !Array.isArray(result) &&
+      result.data !== undefined
+    ) {
+      result = result.data;
+      continue;
+    }
+
+    break;
+  }
+
+  return result;
+}
+
+function asArray(value) {
+  const result = unwrap(value);
+
+  if (Array.isArray(result)) {
+    return result;
+  }
+
+  if (
+    result &&
+    typeof result === "object"
+  ) {
+    for (const key of [
+      "items",
+      "products",
+      "locations",
+      "outlets",
+      "machines",
+      "orders",
+      "results",
+    ]) {
+      if (Array.isArray(result[key])) {
+        return result[key];
+      }
+    }
+  }
+
+  return [];
+}
 
 function firstDefined(...values) {
-
   return values.find(
     (value) =>
       value !== undefined &&
@@ -86,523 +176,61 @@ function firstDefined(...values) {
   );
 }
 
-
-/* =========================================================
-   STORED TOKEN
-   ========================================================= */
-
-function getStoredToken() {
-
-  return (
-    cleanStoredValue(
-      localStorage.getItem(
-        "juice_robo_token"
-      )
-    ) ||
-    cleanStoredValue(
-      localStorage.getItem(
-        "_token"
-      )
-    )
-  );
-}
-
-
-/* =========================================================
-   ORGANIZATION ID
-   ========================================================= */
-
-function getOrgId() {
-
-  const storedOrgId =
-    cleanStoredValue(
-      localStorage.getItem(
-        "ORG_ID"
-      )
-    ) ||
-    cleanStoredValue(
-      localStorage.getItem(
-        "juice_robo_org_id"
-      )
-    );
-
-  if (storedOrgId) {
-    return storedOrgId;
-  }
-
-
-  const params =
-    new URLSearchParams(
-      window.location.search
-    );
-
-
-  const queryOrgId =
-    cleanStoredValue(
-      params.get("o_id")
-    ) ||
-    cleanStoredValue(
-      params.get("org_id")
-    );
-
-
-  if (queryOrgId) {
-
-    localStorage.setItem(
-      "ORG_ID",
-      queryOrgId
-    );
-
-    localStorage.setItem(
-      "juice_robo_org_id",
-      queryOrgId
-    );
-
-    return queryOrgId;
-  }
-
-
-  const pathParts =
-    window.location.pathname
-      .split("/")
-      .filter(Boolean);
-
-
-  const possibleOrgId =
-    pathParts.find(
-      (part) =>
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-          part
-        )
-    );
-
-
-  if (possibleOrgId) {
-
-    localStorage.setItem(
-      "ORG_ID",
-      possibleOrgId
-    );
-
-    localStorage.setItem(
-      "juice_robo_org_id",
-      possibleOrgId
-    );
-
-    return possibleOrgId;
-  }
-
-
-  localStorage.setItem(
-    "ORG_ID",
-    DEFAULT_ORG_ID
-  );
-
-  localStorage.setItem(
-    "juice_robo_org_id",
-    DEFAULT_ORG_ID
-  );
-
-
-  return DEFAULT_ORG_ID;
-}
-
-
-/* =========================================================
-   STORE ID
-   ========================================================= */
-
-function getStoreId() {
-
-  return cleanStoredValue(
-    localStorage.getItem(
-      "store_Id"
-    ) ||
-    localStorage.getItem(
-      "juice_robo_store_id"
-    )
-  );
-}
-
-
-function saveStoreId(storeId) {
-
-  const value =
-    cleanStoredValue(
-      storeId
-    );
-
-
-  if (!value) {
-    return "";
-  }
-
-
-  /*
-   * Never save generated fake IDs.
-   */
+function normalizeError(data, status) {
+  const value = unwrap(data);
 
   if (
-    value
-      .toLowerCase()
-      .startsWith("store-")
+    value &&
+    typeof value === "object"
   ) {
-
-    console.warn(
-      "[Juice Robo] Refusing to save fake store ID:",
-      value
-    );
-
-    return "";
-  }
-
-
-  localStorage.setItem(
-    "store_Id",
-    value
-  );
-
-  localStorage.setItem(
-    "juice_robo_store_id",
-    value
-  );
-
-
-  return value;
-}
-
-
-/* =========================================================
-   STORED USER
-   ========================================================= */
-
-function getUserSnapshot() {
-
-  const candidates = [
-    "juice_robo_user",
-    "user",
-  ];
-
-
-  for (
-    const key of candidates
-  ) {
-
-    const raw =
-      localStorage.getItem(
-        key
-      );
-
-
-    if (!raw) {
-      continue;
+    if (typeof value.message === "string") {
+      return value.message;
     }
 
-
-    try {
-
-      const parsed =
-        JSON.parse(raw);
-
-
-      if (
-        parsed &&
-        typeof parsed ===
-          "object"
-      ) {
-
-        return parsed;
-      }
-
-    } catch {
-
-      return {
-        firstname:
-          cleanStoredValue(
-            raw
-          ),
-      };
-    }
-  }
-
-
-  return {};
-}
-
-
-/* =========================================================
-   RESPONSE UNWRAPPER
-   ========================================================= */
-
-function unwrap(data) {
-
-  let current =
-    data;
-
-
-  /*
-   * Some Juice Robo responses contain one or more
-   * { data: ... } wrappers.
-   */
-
-  for (
-    let i = 0;
-    i < 5;
-    i += 1
-  ) {
-
-    if (
-      current &&
-      typeof current ===
-        "object" &&
-      !Array.isArray(
-        current
-      ) &&
-      current.data !==
-        undefined
-    ) {
-
-      current =
-        current.data;
-
-      continue;
+    if (typeof value.error === "string") {
+      return value.error;
     }
 
-
-    break;
-  }
-
-
-  return current;
-}
-
-
-/* =========================================================
-   ARRAY EXTRACTION
-   ========================================================= */
-
-function extractArray(
-  response,
-  possibleKeys = []
-) {
-
-  const direct =
-    unwrap(
-      response
-    );
-
-
-  if (
-    Array.isArray(
-      direct
-    )
-  ) {
-
-    return direct;
-  }
-
-
-  const candidates = [
-    response,
-    direct,
-  ];
-
-
-  for (
-    const candidate of
-      candidates
-  ) {
-
-    if (
-      !candidate ||
-      typeof candidate !==
-        "object" ||
-      Array.isArray(
-        candidate
-      )
-    ) {
-
-      continue;
+    if (typeof value.description === "string") {
+      return value.description;
     }
 
-
-    for (
-      const key of
-        possibleKeys
-    ) {
-
-      const value =
-        candidate[key];
-
-
-      if (
-        Array.isArray(
-          value
-        )
-      ) {
-
-        return value;
-      }
-
-
-      if (
-        value &&
-        typeof value ===
-          "object"
-      ) {
-
-        const nested =
-          unwrap(
-            value
-          );
-
-
-        if (
-          Array.isArray(
-            nested
-          )
-        ) {
-
-          return nested;
-        }
-      }
-    }
-  }
-
-
-  return [];
-}
-
-
-/* =========================================================
-   ERROR NORMALIZATION
-   ========================================================= */
-
-function normalizeError(
-  data,
-  status
-) {
-
-  if (
-    data &&
-    typeof data ===
-      "object"
-  ) {
-
-    if (
-      typeof data.message ===
-        "string"
-    ) {
-
-      return data.message;
-    }
-
-
-    if (
-      typeof data.error ===
-        "string"
-    ) {
-
-      return data.error;
-    }
-
-
-    if (
-      typeof data.detail ===
-        "string"
-    ) {
-
-      return data.detail;
-    }
-
-
-    if (
-      Array.isArray(
-        data.errors
-      )
-    ) {
-
-      return data.errors
-        .map(
-          (error) => {
-
-            if (
-              typeof error ===
-                "string"
-            ) {
-
-              return error;
-            }
-
-
-            return (
-              error?.message ||
-              error?.msg ||
-              JSON.stringify(
-                error
-              )
-            );
-          }
+    if (Array.isArray(value.errors)) {
+      return value.errors
+        .map((item) =>
+          typeof item === "string"
+            ? item
+            : item?.message ||
+              item?.msg ||
+              JSON.stringify(item)
         )
         .join(" ");
     }
   }
 
-
   if (
-    typeof data ===
-      "string" &&
-    data.trim()
+    typeof value === "string" &&
+    value.trim()
   ) {
-
-    return data;
+    return value;
   }
 
-
-  if (
-    status === 401
-  ) {
-
-    return (
-      "Juice Robo API authentication failed (401). " +
-      "The configured legacy API credentials were rejected."
-    );
-  }
-
-
-  if (
-    status === 403
-  ) {
-
-    return (
-      "Juice Robo API access was forbidden (403)."
-    );
-  }
-
-
-  return (
-    `Juice Robo request failed (${status})`
-  );
+  return `Juice Robo request failed (${status})`;
 }
 
+/* ============================================================
+   REQUEST
+   ============================================================ */
 
-/* =========================================================
-   REQUEST HEADERS
-   ========================================================= */
-
-function buildHeaders(
+async function request(
+  path,
   options = {}
 ) {
+  const url =
+    `${API_BASE}${path}`;
 
   const headers = {
-
-    Accept:
-      "application/json",
-
-    /*
-     * These are the original Juice Robo authentication
-     * headers.
-     */
+    Accept: "application/json",
 
     "JR-API-KEY":
       JR_API_KEY,
@@ -610,108 +238,23 @@ function buildHeaders(
     "JR-API-KEY-SECRET":
       JR_API_KEY_SECRET,
 
+    ...(options.body !== undefined
+      ? {
+          "Content-Type":
+            "application/json",
+        }
+      : {}),
+
     ...(options.headers || {}),
   };
 
-
-  if (
-    options.body !==
-      undefined
-  ) {
-
-    headers[
-      "Content-Type"
-    ] =
-      "application/json";
-  }
-
-
-  /*
-   * IMPORTANT:
-   *
-   * Do NOT automatically add:
-   *
-   * Authorization: Bearer ...
-   *
-   * The legacy Juice Robo API uses the JR headers above.
-   */
-
-  return headers;
-}
-
-
-/* =========================================================
-   GENERIC REQUEST
-   ========================================================= */
-
-async function request(
-  path,
-  options = {},
-  baseUrl = API_BASE
-) {
-
-  const headers =
-    buildHeaders(
-      options
-    );
-
-
-  const cleanBase =
-    String(
-      baseUrl
-    ).replace(
-      /\/+$/,
-      ""
-    );
-
-
-  const cleanPath =
-    String(
-      path
-    ).startsWith("/")
-      ? String(path)
-      : `/${String(path)}`;
-
-
-  const url =
-    `${cleanBase}${cleanPath}`;
-
-
   console.log(
-    `[Juice Robo] ${
-      options.method ||
-      "GET"
-    } ${url}`
+    `[Juice Robo] ${options.method || "GET"} ${url}`
   );
-
-
-  console.log(
-    "[Juice Robo] Authentication configured:",
-    {
-      hasApiKey:
-        Boolean(
-          JR_API_KEY
-        ),
-
-      hasApiSecret:
-        Boolean(
-          JR_API_KEY_SECRET
-        ),
-
-      hasAuthorization:
-        Boolean(
-          headers.Authorization ||
-          headers.authorization
-        ),
-    }
-  );
-
 
   let response;
 
-
   try {
-
     response =
       await fetch(
         url,
@@ -720,215 +263,53 @@ async function request(
           headers,
         }
       );
-
-  } catch (
-    error
-  ) {
-
+  } catch (error) {
     console.error(
       "[Juice Robo] Network error:",
       error
     );
 
-
     throw new Error(
-      "Unable to connect to the Juice Robo backend. Check your internet connection."
+      "Unable to connect to the Juice Robo API. Check the internet connection."
     );
   }
-
 
   const contentType =
     response.headers.get(
       "content-type"
     ) || "";
 
-
-  let data =
-    null;
-
+  let data = null;
 
   try {
-
     if (
-      contentType
-        .toLowerCase()
-        .includes(
-          "application/json"
-        )
+      contentType.includes(
+        "application/json"
+      )
     ) {
-
       data =
         await response.json();
-
     } else {
-
       const text =
         await response.text();
 
       data =
         text || null;
     }
-
-  } catch (
-    parseError
-  ) {
-
-    console.error(
-      "[Juice Robo] Response parsing error:",
-      parseError
-    );
+  } catch {
+    data = null;
   }
-
 
   console.log(
     "[Juice Robo] Response:",
     {
-      status:
-        response.status,
-
-      url,
-
-      data,
-    }
-  );
-
-
-  if (
-    !response.ok
-  ) {
-
-    throw new Error(
-      normalizeError(
-        data,
-        response.status
-      )
-    );
-  }
-
-
-  return data;
-}
-
-/* =========================================================
-   LOCAL FASTAPI REQUEST
-   ========================================================= */
-
-async function localRequest(
-  path,
-  options = {}
-) {
-  const cleanBase =
-    String(
-      LOCAL_API_BASE
-    ).replace(
-      /\/+$/,
-      ""
-    );
-
-  const cleanPath =
-    String(
-      path
-    ).startsWith("/")
-      ? String(path)
-      : `/${String(path)}`;
-
-  const url =
-    `${cleanBase}${cleanPath}`;
-
-  const headers = {
-    Accept:
-      "application/json",
-
-    ...(options.headers || {}),
-  };
-
-  if (
-    options.body !== undefined
-  ) {
-    headers[
-      "Content-Type"
-    ] =
-      "application/json";
-  }
-
-  console.log(
-    `[Juice Robo] LOCAL ${
-      options.method ||
-      "GET"
-    } ${url}`
-  );
-
-  let response;
-
-  try {
-    response =
-      await fetch(
-        url,
-        {
-          ...options,
-          headers,
-        }
-      );
-  } catch (
-    error
-  ) {
-    console.error(
-      "[Juice Robo] Local backend network error:",
-      error
-    );
-
-    throw new Error(
-      "Unable to connect to the Juice Robo development backend."
-    );
-  }
-
-  const contentType =
-    response.headers.get(
-      "content-type"
-    ) || "";
-
-  let data =
-    null;
-
-  try {
-    if (
-      contentType
-        .toLowerCase()
-        .includes(
-          "application/json"
-        )
-    ) {
-      data =
-        await response.json();
-    } else {
-      const text =
-        await response.text();
-
-      data =
-        text || null;
-    }
-  } catch (
-    error
-  ) {
-    console.error(
-      "[Juice Robo] Local response parsing error:",
-      error
-    );
-  }
-
-  console.log(
-    "[Juice Robo] Local response:",
-    {
-      status:
-        response.status,
+      status: response.status,
       url,
       data,
     }
   );
 
-  if (
-    !response.ok
-  ) {
+  if (!response.ok) {
     throw new Error(
       normalizeError(
         data,
@@ -939,769 +320,469 @@ async function localRequest(
 
   return data;
 }
-/* =========================================================
-   PRODUCT NORMALIZATION
-   ========================================================= */
+
+/* ============================================================
+   NORMALIZATION
+   ============================================================ */
 
 function normalizeProduct(
   item
 ) {
-
-  if (
-    !item ||
-    typeof item !==
-      "object"
-  ) {
-
+  if (!item || typeof item !== "object") {
     return null;
   }
-
 
   const variants =
-    Array.isArray(
-      item.lstVariants
-    )
+    Array.isArray(item.lstVariants)
       ? item.lstVariants
-      : Array.isArray(
-          item.variants
-        )
-      ? item.variants
       : [];
 
-
-  const availableVariant =
+  const variant =
     variants.find(
-      (variant) =>
+      (entry) =>
         String(
-          variant?.variantName ||
-            ""
-        )
-          .trim()
-          .toLowerCase() ===
-        "full"
+          entry?.variantName || ""
+        ).toLowerCase() === "full"
     ) ||
-    variants.find(
-      (variant) =>
-        variant &&
-        Number(
-          firstDefined(
-            variant?.unitPrice,
-            variant?.price,
-            0
-          )
-        ) >= 0
-    ) ||
-    variants[0];
+    variants[0] ||
+    item;
 
-
-  if (
-    !availableVariant
-  ) {
-
-    console.warn(
-      "[Juice Robo] Product has no usable variant:",
-      item
-    );
-
-    return null;
-  }
-
-
-  const rawName =
+  const name =
     String(
       firstDefined(
-        item?.name,
-        availableVariant?.itemName,
-        "Juice"
+        item.name,
+        item.itemName,
+        item.productName,
+        "Sugarcane Juice"
       )
     );
 
-
-  const description =
+  const variantName =
     String(
       firstDefined(
-        item?.desc,
-        item?.description,
-        availableVariant?.variantDesc,
-        "Fresh sugarcane juice."
+        variant?.variantName,
+        "Full"
       )
     );
 
-
-  /*
-   * IMPORTANT:
-   *
-   * Some legacy responses return "Juice" for every product.
-   * Therefore use ALL product text when selecting the name
-   * and image.
-   */
-
-  const searchText =
-    [
-      item?.name,
-      item?.desc,
-      item?.description,
-      availableVariant?.itemName,
-      availableVariant?.variantName,
-      availableVariant?.variantDesc,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-
-
-  let displayName =
-    rawName;
-
-
-  if (
-    searchText.includes(
-      "ginger"
-    ) &&
-    searchText.includes(
-      "lemon"
-    )
-  ) {
-
-    displayName =
-      "Ginger + Lemon Sugarcane Juice";
-
-  } else if (
-    searchText.includes(
-      "mixed"
-    )
-  ) {
-
-    displayName =
-      "Ginger + Lemon Sugarcane Juice";
-
-  } else if (
-    searchText.includes(
-      "ginger"
-    )
-  ) {
-
-    displayName =
-      "Ginger Sugarcane Juice";
-
-  } else if (
-    searchText.includes(
-      "lemon"
-    )
-  ) {
-
-    displayName =
-      "Lemon Sugarcane Juice";
-
-  } else if (
-    rawName
-      .toLowerCase()
-      .includes(
-        "plain"
-      )
-  ) {
-
-    displayName =
-      "Plain Sugarcane Juice";
-  }
-
-
-  /*
-   * Vite BASE_URL keeps these working with:
-   *
-   * /order_now/
-   */
-
-  const assetBase =
-    `${import.meta.env.BASE_URL}assets/`;
-
-
-  let imageUrl =
-    `${assetBase}plain-juice.jpg`;
-
-
-  if (
-    searchText.includes(
-      "ginger"
-    ) &&
-    searchText.includes(
-      "lemon"
-    )
-  ) {
-
-    imageUrl =
-      `${assetBase}ginger-lemon-juice.jpg`;
-
-  } else if (
-    searchText.includes(
-      "mixed"
-    )
-  ) {
-
-    imageUrl =
-      `${assetBase}ginger-lemon-juice.jpg`;
-
-  } else if (
-    searchText.includes(
-      "ginger"
-    )
-  ) {
-
-    imageUrl =
-      `${assetBase}ginger-juice.jpg`;
-
-  } else if (
-    searchText.includes(
-      "lemon"
-    )
-  ) {
-
-    imageUrl =
-      `${assetBase}lemon-juice.jpg`;
-  }
-
-
-  const variantId =
+  const price =
     Number(
       firstDefined(
-        availableVariant?.variantId,
-        availableVariant?.id,
-        item?.variantId,
-        item?.id,
+        variant?.unitPrice,
+        variant?.unit_price,
+        variant?.price,
+        item?.price,
         0
       )
     );
 
+  const variantId =
+    firstDefined(
+      variant?.variantId,
+      variant?.variant_id,
+      variant?.id,
+      item?.id
+    );
 
-  const storeId =
-    cleanStoredValue(
+  const image =
+    firstDefined(
+      variant?.variantPhoto,
+      variant?.variant_photo,
+      variant?.photo,
+      item?.image,
+      item?.image_url,
+      ""
+    );
+
+  const productType =
+    String(
       firstDefined(
-        item?.storeId,
-        item?.locId,
-        getStoreId()
+        item.productType,
+        item.product_type,
+        variant?.productType,
+        ""
       )
     );
 
-
   return {
+    ...item,
 
-    /*
-     * CRITICAL:
-     *
-     * The cart uses the legacy variant ID.
-     */
-
-    id:
-      variantId,
+    id: String(
+      variantId ?? ""
+    ),
 
     itemId:
-      item?.id,
-
-    name:
-      displayName,
-
-    description:
-      description,
-
-    price:
-      Number(
+      String(
         firstDefined(
-          availableVariant?.unitPrice,
-          availableVariant?.price,
-          item?.price,
-          item?.unitPrice,
-          0
+          item.id,
+          variantId,
+          ""
         )
       ),
 
-    image_url:
-      imageUrl,
+    name,
+
+    productType,
+
+    variantName,
+
+    displayName:
+      productType
+        ? `${name} ${productType}`
+        : name,
+
+    description:
+      String(
+        firstDefined(
+          variant?.variantDesc,
+          item.description,
+          item.desc,
+          "Fresh sugarcane juice"
+        )
+      ),
+
+    price,
+
+    image_url: image,
+
+    image: image,
 
     is_available:
-      availableVariant?.isAvailable !==
-        false &&
-      item?.isAvailable !==
-        false,
+      item.is_available !== false &&
+      item.isAvailable !== false,
 
     isAvailable:
-      availableVariant?.isAvailable !==
-        false &&
-      item?.isAvailable !==
-        false,
+      item.is_available !== false &&
+      item.isAvailable !== false,
 
     storeId:
-      storeId,
-
-    productType:
-      rawName,
+      firstDefined(
+        item.storeId,
+        variant?.storeId,
+        getStoreId()
+      ),
 
     _legacyItem:
       item,
 
     _variant:
-      availableVariant,
-
-    variants:
-      variants,
+      variant,
   };
 }
 
-
-/* =========================================================
-   PRODUCT LIST
-   ========================================================= */
-
-function normalizeProducts(
-  response
+function normalizeLocation(
+  item
 ) {
-
-  const data =
-    extractArray(
-      response,
-      [
-        "items",
-        "products",
-        "result",
-      ]
-    );
-
-
-  return data
-    .map(
-      normalizeProduct
-    )
-    .filter(Boolean);
-}
-
-
-/* =========================================================
-   OUTLET NORMALIZATION
-   ========================================================= */
-
-function normalizeOutlets(
-  response
-) {
-
-  const unwrapped =
-    unwrap(
-      response
-    );
-
-
-  /*
-   * Historical Juice Robo response can be:
-
-   {
-     outletName,
-     outletDesc,
-     storeSpot: [
-       ...
-     ]
-   }
-
-   or:
-
-   {
-     storesData: [...]
-   }
-
-   or:
-
-   data: {
-     storesData: [...]
-   }
-   */
-
-
-  let stores =
-    extractArray(
-      response,
-      [
-        "storesData",
-        "stores",
-        "outlets",
-        "locations",
-        "result",
-        "storeSpot",
-      ]
-    );
-
-
-  /*
-   * Explicit support for the observed legacy response:
-   *
-   * {
-   *   outletName: "...",
-   *   outletDesc: "...",
-   *   storeSpot: [...]
-   * }
-   */
-
-  if (
-    !stores.length &&
-    unwrapped &&
-    typeof unwrapped ===
-      "object"
-  ) {
-
-    if (
-      Array.isArray(
-        unwrapped.storeSpot
-      )
-    ) {
-
-      stores =
-        unwrapped.storeSpot;
-    }
+  if (!item || typeof item !== "object") {
+    return null;
   }
 
+  const storeId =
+    firstDefined(
+      item.storeId,
+      item.store_id,
+      item.id
+    );
 
-  /*
-   * Some older responses put the actual store object
-   * directly inside storeSpot.
-   */
+  const name =
+    String(
+      firstDefined(
+        item.name,
+        item.outletName,
+        item.storeName,
+        "Juice Robo"
+      )
+    );
 
-  return stores
-    .map(
-      (
-        outlet,
-        index
-      ) => {
+  const address =
+    String(
+      firstDefined(
+        item.address,
+        item.outletDesc,
+        item.storeAddress,
+        ""
+      )
+    );
 
-        const storeId =
-          cleanStoredValue(
-            firstDefined(
-              outlet?.locId,
-              outlet?.storeId,
-              outlet?.storeID,
-              outlet?.store_id,
-              outlet?.id
-            )
-          );
+  return {
+    ...item,
 
+    id:
+      String(
+        storeId ?? ""
+      ),
 
-        /*
-         * Never invent a store ID.
-         */
+    storeId:
+      String(
+        storeId ?? ""
+      ),
 
-        if (
-          !storeId
-        ) {
+    name,
 
-          console.warn(
-            "[Juice Robo] Outlet has no real store ID:",
-            outlet
-          );
+    address,
 
-          return null;
-        }
+    isActive:
+      item.isActive !== false &&
+      item.is_active !== false,
 
+    is_active:
+      item.isActive !== false &&
+      item.is_active !== false,
 
-        const parent =
-          unwrapped &&
-          typeof unwrapped ===
-            "object"
-            ? unwrapped
-            : {};
-
-
-        return {
-
-          id:
-            storeId,
-
-          storeId:
-            storeId,
-
-          name:
-            firstDefined(
-              outlet?.storeName,
-              outlet?.outletName,
-              outlet?.name,
-              parent?.outletName,
-              `Juice Robo ${index + 1}`
-            ),
-
-          address:
-            firstDefined(
-              outlet?.locAddress,
-              outlet?.outletDesc,
-              outlet?.address,
-              outlet?.description,
-              parent?.outletDesc,
-              "Juice Robo collection point"
-            ),
-
-          image:
-            firstDefined(
-              outlet?.outletPhoto,
-              outlet?.image,
-              parent?.outletPhoto,
-              null
-            ),
-
-          is_active:
-            outlet?.isActive !==
-              false &&
-            outlet?.active !==
-              false,
-
-          isActive:
-            outlet?.isActive !==
-              false &&
-            outlet?.active !==
-              false,
-
-          _legacyStore:
-            outlet,
-
-          _legacyOutlet:
-            outlet,
-        };
-      }
-    )
-    .filter(Boolean);
+    icon:
+      item.icon || "▦",
+  };
 }
 
-
-/* =========================================================
-   MACHINES
-   ========================================================= */
-
-function normalizeMachines(
-  locations
+function normalizeMachine(
+  item,
+  fallbackLocation = null
 ) {
+  if (!item || typeof item !== "object") {
+    return null;
+  }
 
-  return locations.map(
-    (location) => ({
+  const id =
+    firstDefined(
+      item.id,
+      item.machineId,
+      item.machine_id,
+      item.storeId,
+      item.store_id,
+      item.locationId
+    );
 
-      /*
-       * Legacy system uses the real store ID as the
-       * collection machine identifier.
-       */
+  const machineCode =
+    String(
+      firstDefined(
+        item.machineCode,
+        item.machine_code,
+        item.code,
+        item.storeCode,
+        `JR-${String(id || "001")}`
+      )
+    );
 
-      id:
-        String(
-          location.storeId
-        ),
+  return {
+    ...item,
 
-      machine_code:
-        String(
-          location.storeId
-        ),
+    id:
+      String(
+        id ?? ""
+      ),
 
-      machineCode:
-        String(
-          location.storeId
-        ),
+    machineCode,
 
-      name:
-        location.name,
+    machine_code:
+      machineCode,
 
-      location_id:
-        String(
-          location.id
-        ),
+    name:
+      String(
+        firstDefined(
+          item.name,
+          machineCode,
+          "Juice Robo Machine"
+        )
+      ),
 
-      locationId:
-        String(
-          location.id
-        ),
+    locationId:
+      String(
+        firstDefined(
+          item.locationId,
+          item.location_id,
+          fallbackLocation?.id,
+          ""
+        )
+      ),
 
-      firmware_version:
-        "LEGACY",
+    location_id:
+      String(
+        firstDefined(
+          item.location_id,
+          item.locationId,
+          fallbackLocation?.id,
+          ""
+        )
+      ),
 
-      firmwareVersion:
-        "LEGACY",
+    firmwareVersion:
+      String(
+        firstDefined(
+          item.firmwareVersion,
+          item.firmware_version,
+          ""
+        )
+      ),
 
-      status:
-        "ONLINE",
-
-      last_seen_at:
-        null,
-
-      lastSeenAt:
-        null,
-    })
-  );
+    status:
+      String(
+        firstDefined(
+          item.status,
+          "ONLINE"
+        )
+      ).toUpperCase(),
+  };
 }
-
-
-/* =========================================================
-   ORDER NORMALIZATION
-   ========================================================= */
 
 function normalizeOrder(
-  rawOrder
+  item
 ) {
+  if (!item || typeof item !== "object") {
+    return null;
+  }
 
-  const order =
-    unwrap(
-      rawOrder
-    ) || {};
-
-
-  const nestedOrder =
-    order?.order &&
-    typeof order.order ===
-      "object"
-      ? order.order
-      : order;
-
+  const nested =
+    unwrap(item) || {};
 
   const orderNumber =
     firstDefined(
-      nestedOrder?.order_number,
-      nestedOrder?.orderNumber,
-      nestedOrder?.orderId,
-      nestedOrder?.id,
-      nestedOrder?.orderCode,
-      rawOrder?.message,
+      nested.order_code,
+      nested.order_number,
+      nested.orderNumber,
+      nested.id,
       ""
     );
 
-
   const collectionCode =
     firstDefined(
-      nestedOrder?.collection_code,
-      nestedOrder?.collectionCode,
-      nestedOrder?.pickupCode,
-      nestedOrder?.collectionId,
-      nestedOrder?.token,
-      nestedOrder?.orderPin,
-      nestedOrder?.order_pin,
-      "----"
+      nested.collection_code,
+      nested.collectionCode,
+      nested.pickup_code,
+      nested.pickupCode,
+      ""
     );
 
+  const rawItems =
+    Array.isArray(nested.items)
+      ? nested.items
+      : Array.isArray(nested.cartItems)
+        ? nested.cartItems
+        : [];
 
   const items =
-    Array.isArray(
-      nestedOrder?.items
-    )
-      ? nestedOrder.items
-      : Array.isArray(
-          nestedOrder?.cartItems
-        )
-      ? nestedOrder.cartItems
-      : [];
+    rawItems.map(
+      (entry) => ({
+        ...entry,
 
-
-  const normalizedItems =
-    items.map(
-      (item) => ({
+        id:
+          firstDefined(
+            entry.id,
+            entry.product_id,
+            entry.productId,
+            entry.variantId
+          ),
 
         product_id:
-          Number(
+          firstDefined(
+            entry.product_id,
+            entry.productId,
+            entry.variantId
+          ),
+
+        name:
+          String(
             firstDefined(
-              item?.product_id,
-              item?.productId,
-              item?.variantId,
-              item?.id,
-              0
+              entry.product_name,
+              entry.itemName,
+              entry.name,
+              entry.variantName,
+              "Juice"
             )
           ),
 
-        product_name:
+        product_type:
           String(
             firstDefined(
-              item?.product_name,
-              item?.productName,
-              item?.itemName,
-              item?.variantName,
-              "Juice"
+              entry.product_type,
+              entry.productType,
+              entry.variantName,
+              ""
+            )
+          ),
+
+        price:
+          Number(
+            firstDefined(
+              entry.unit_price,
+              entry.unitPrice,
+              entry.price,
+              0
             )
           ),
 
         quantity:
           Number(
-            firstDefined(
-              item?.quantity,
-              1
-            )
-          ),
-
-        unit_price:
-          Number(
-            firstDefined(
-              item?.unit_price,
-              item?.unitPrice,
-              item?.price,
-              0
-            )
+            entry.quantity || 1
           ),
 
         subtotal:
           Number(
             firstDefined(
-              item?.subtotal,
-
+              entry.subtotal,
               Number(
-                firstDefined(
-                  item?.unitPrice,
-                  item?.price,
+                entry.unitPrice ||
+                  entry.price ||
                   0
-                )
               ) *
-              Number(
-                firstDefined(
-                  item?.quantity,
-                  1
-                )
-              ),
-
+                Number(
+                  entry.quantity ||
+                    1
+                ),
               0
             )
           ),
       })
     );
 
-
   const total =
     Number(
       firstDefined(
-        nestedOrder?.total_amount,
-        nestedOrder?.totalAmount,
-        nestedOrder?.grandTotal,
-        nestedOrder?.netBill,
-        nestedOrder?.amount,
+        nested.total_amount,
+        nested.totalAmount,
+        nested.grandTotal,
+        nested.amount,
+        nested.total,
         0
       )
     );
 
-
   return {
-
-    ...nestedOrder,
+    ...nested,
 
     id:
       firstDefined(
-        nestedOrder?.id,
-        nestedOrder?.orderId,
+        nested.id,
+        nested.order_id,
+        nested.orderId,
         orderNumber
       ),
 
     order_id:
       firstDefined(
-        nestedOrder?.order_id,
-        nestedOrder?.orderId,
-        nestedOrder?.id,
-        ""
-      ),
-
-    order_number:
-      String(
+        nested.order_id,
+        nested.orderId,
+        nested.id,
         orderNumber
       ),
 
-    collection_code:
+    order_number:
+      String(orderNumber),
+
+    order_code:
       String(
-        collectionCode
+        firstDefined(
+          nested.order_code,
+          nested.order_number,
+          nested.orderNumber,
+          ""
+        )
       ),
 
+    collection_code:
+      String(collectionCode),
+
     collectionCode:
-      String(
-        collectionCode
-      ),
+      String(collectionCode),
 
     total_amount:
       total,
@@ -1709,55 +790,59 @@ function normalizeOrder(
     totalAmount:
       total,
 
+    total,
+
     status:
       String(
         firstDefined(
-          nestedOrder?.status,
-          nestedOrder?.orderStatus,
-          "confirmed"
+          nested.status,
+          "CONFIRMED"
         )
       ),
 
     payment_status:
       String(
         firstDefined(
-          nestedOrder?.payment_status,
-          nestedOrder?.paymentStatus,
+          nested.payment_status,
+          nested.paymentStatus,
+          "PAID"
+        )
+      ),
+
+    paymentStatus:
+      String(
+        firstDefined(
+          nested.paymentStatus,
+          nested.payment_status,
           "PAID"
         )
       ),
 
     created_at:
       firstDefined(
-        nestedOrder?.created_at,
-        nestedOrder?.createdAt,
+        nested.created_at,
+        nested.createdAt,
         new Date().toISOString()
       ),
 
-    items:
-      normalizedItems,
+    createdAt:
+      firstDefined(
+        nested.createdAt,
+        nested.created_at,
+        new Date().toISOString()
+      ),
+
+    items,
   };
-}/* =========================================================
-   AUTH NORMALIZATION
-   ========================================================= */
+}
 
 function normalizeAuth(
   response
 ) {
-
   const data =
-    unwrap(
-      response
-    ) || {};
+    unwrap(response) || {};
 
-
-  /*
-   * -------------------------------------------------------
-   * ACCESS TOKEN
-   * -------------------------------------------------------
-   */
-
-  const accessToken =
+  const token =
     firstDefined(
       data?.accessToken,
       data?.access_token,
@@ -1767,352 +852,154 @@ function normalizeAuth(
       response?.token
     );
 
-
-  /*
-   * No token means this is not a successful
-   * authentication response.
-   */
-
-  if (!accessToken) {
-    return response;
-  }
-
-
-  /*
-   * -------------------------------------------------------
-   * USER DATA
-   * -------------------------------------------------------
-   *
-   * Some API responses return:
-   *
-   * {
-   *   user: {...},
-   *   accessToken: "..."
-   * }
-   *
-   * Others return the user fields directly.
-   *
-   */
-
-  const userData =
-    data?.user &&
-    typeof data.user === "object"
-      ? data.user
-      : data;
-
-
-  /*
-   * -------------------------------------------------------
-   * USER NAME
-   * -------------------------------------------------------
-   */
-
-  const firstName =
-    firstDefined(
-      userData?.firstName,
-      userData?.firstname,
-      ""
-    );
-
-  const lastName =
-    firstDefined(
-      userData?.lastName,
-      userData?.lastname,
-      ""
-    );
-
-  const combinedName =
-    [
-      firstName,
-      lastName,
-    ]
-      .filter(Boolean)
-      .join(" ");
-
-
-  /*
-   * -------------------------------------------------------
-   * EMAIL
-   * -------------------------------------------------------
-   */
-
-  const email =
-    firstDefined(
-      userData?.email,
-      userData?.userEmail,
-      data?.email,
-      data?.userEmail,
-      ""
-    );
-
-
-  /*
-   * -------------------------------------------------------
-   * PHONE
-   * -------------------------------------------------------
-   *
-   * IMPORTANT:
-   *
-   * Do NOT blindly copy userName into phone.
-   *
-   * userName is the legacy login identifier and may be:
-   *
-   *   9876543210
-   *
-   * OR
-   *
-   *   user@example.com
-   *
-   */
-
-  const rawPhone =
-    firstDefined(
-      userData?.phone,
-      data?.phone,
-      ""
-    );
-
-
-  const phone =
-    rawPhone
-      ? String(
-          rawPhone
-        ).trim()
-      : "";
-
-
-  /*
-   * -------------------------------------------------------
-   * LOGIN IDENTIFIER
-   * -------------------------------------------------------
-   */
-
-  const userName =
-    firstDefined(
-      userData?.userName,
-      data?.userName,
-      ""
-    );
-
-
-  /*
-   * -------------------------------------------------------
-   * FINAL USER OBJECT
-   * -------------------------------------------------------
-   */
+  const rawUser =
+    data?.user ||
+    data?.customer ||
+    data;
 
   const user = {
-
-    ...userData,
+    ...(
+      rawUser &&
+      typeof rawUser === "object"
+        ? rawUser
+        : {}
+    ),
 
     id:
       firstDefined(
-        userData?.id,
-        userData?.userId,
-        userData?.user_id,
-        data?.id,
-        data?.userId,
-        data?.user_id,
-        ""
+        rawUser?.id,
+        rawUser?.userId,
+        rawUser?.user_id
       ),
 
     name:
       firstDefined(
-        userData?.name,
-        combinedName,
-        data?.name,
-        "Juice Lover"
+        rawUser?.name,
+        [
+          rawUser?.firstName,
+          rawUser?.lastName,
+        ]
+          .filter(Boolean)
+          .join(" ")
       ),
 
     firstname:
-      firstName,
+      firstDefined(
+        rawUser?.firstname,
+        rawUser?.firstName
+      ),
 
     lastname:
-      lastName,
+      firstDefined(
+        rawUser?.lastname,
+        rawUser?.lastName
+      ),
 
     email:
-      email,
+      firstDefined(
+        rawUser?.email,
+        rawUser?.userEmail
+      ),
 
     phone:
-      phone,
-
-    userName:
-      userName,
-
-    userEmail:
       firstDefined(
-        userData?.userEmail,
-        email,
-        ""
+        rawUser?.phone,
+        rawUser?.userName
       ),
   };
 
+  if (token) {
+    localStorage.setItem(
+      "juice_robo_token",
+      String(token)
+    );
 
-  /*
-   * -------------------------------------------------------
-   * STORE AUTHENTICATION
-   * -------------------------------------------------------
-   */
+    localStorage.setItem(
+      "_token",
+      JSON.stringify(token)
+    );
+  }
 
-  localStorage.setItem(
-    "juice_robo_token",
-    String(
-      accessToken
-    )
-  );
-
-  localStorage.setItem(
-    "_token",
-    JSON.stringify(
-      accessToken
-    )
-  );
-
-
-  /*
-   * Store the authenticated user.
-   */
-
-  localStorage.setItem(
-    "juice_robo_user",
-    JSON.stringify(
+  if (
+    Object.keys(user).length > 0
+  ) {
+    writeJson(
+      "juice_robo_user",
       user
-    )
-  );
+    );
 
-  localStorage.setItem(
-    "user",
-    JSON.stringify(
+    writeJson(
+      "user",
       user
-    )
-  );
-
-
-  console.log(
-    "[Juice Robo] Authenticated user stored:",
-    user
-  );
-
-
-  /*
-   * -------------------------------------------------------
-   * RETURN NORMALIZED AUTH RESPONSE
-   * -------------------------------------------------------
-   */
+    );
+  }
 
   return {
-
     ...response,
-
     ...data,
 
     access_token:
-      accessToken,
+      token || "",
 
     accessToken:
-      accessToken,
+      token || "",
 
-    user:
-      user,
+    user,
   };
 }
 
-
-/* =========================================================
-   ORDER PAYLOAD
-   ========================================================= */
+/* ============================================================
+   LEGACY ORDER PAYLOAD
+   ============================================================ */
 
 function buildLegacyOrderPayload(
   payload = {}
 ) {
-
   const storeId =
-    cleanStoredValue(
-      firstDefined(
-        payload?.storeId,
-        payload?.store_id,
-        payload?.location_id,
-        payload?.machine_id,
-        getStoreId()
-      )
-    );
-
+    payload?.storeId ||
+    payload?.store_id ||
+    payload?.location_id ||
+    getStoreId();
 
   const customer =
     payload?.customer ||
     payload?.user ||
     getUserSnapshot();
 
-
-  const cartItems =
-    Array.isArray(
-      payload?.cartItems
-    )
+  const sourceItems =
+    Array.isArray(payload?.cartItems)
       ? payload.cartItems
-      : Array.isArray(
-          payload?.items
-        )
-      ? payload.items
-      : [];
+      : Array.isArray(payload?.items)
+        ? payload.items
+        : [];
 
-
-  if (
-    !storeId
-  ) {
-
+  if (!storeId) {
     throw new Error(
       "No Juice Robo store is selected."
     );
   }
 
-
-  if (
-    storeId
-      .toLowerCase()
-      .startsWith(
-        "store-"
-      )
-  ) {
-
-    throw new Error(
-      `Invalid Juice Robo store ID: ${storeId}`
-    );
-  }
-
-
-  if (
-    !cartItems.length
-  ) {
-
+  if (!sourceItems.length) {
     throw new Error(
       "Your Juice Robo cart is empty."
     );
   }
 
-
   const cartId =
     payload?.cartId ||
     (
-      typeof crypto !==
-        "undefined" &&
-      typeof crypto.randomUUID ===
-        "function"
+      typeof crypto !== "undefined" &&
+      typeof crypto.randomUUID === "function"
         ? crypto.randomUUID()
         : `JR-${Date.now()}`
     );
 
-
   return {
-
     cartId:
-      String(
-        cartId
-      ),
+      String(cartId),
 
     storeId:
-      String(
-        storeId
-      ),
+      String(storeId),
 
     updatedBy:
       String(
@@ -2126,55 +1013,25 @@ function buildLegacyOrderPayload(
       ),
 
     cartItems:
-      cartItems.map(
+      sourceItems.map(
         (item) => {
-
           const variant =
             item?._variant ||
             item?.variant ||
             item;
 
-
-          const variantId =
-            Number(
-              firstDefined(
-                variant?.variantId,
-                variant?.id,
-                item?.variantId,
-                item?.id,
-                item?.product_id,
-                0
-              )
-            );
-
-
-          const quantity =
-            Math.max(
-              1,
+          return {
+            variantId:
               Number(
                 firstDefined(
-                  item?.quantity,
-                  variant?.quantity,
-                  1
+                  variant?.variantId,
+                  variant?.variant_id,
+                  item?.variantId,
+                  item?.id,
+                  item?.product_id,
+                  0
                 )
-              )
-            );
-
-
-          if (
-            !variantId
-          ) {
-
-            throw new Error(
-              "A Juice Robo cart item is missing its variant ID."
-            );
-          }
-
-
-          return {
-
-            variantId:
-              variantId,
+              ),
 
             itemName:
               String(
@@ -2191,6 +1048,7 @@ function buildLegacyOrderPayload(
                 firstDefined(
                   variant?.variantName,
                   item?.variantName,
+                  item?.product_type,
                   "Full"
                 )
               ),
@@ -2200,6 +1058,7 @@ function buildLegacyOrderPayload(
                 firstDefined(
                   variant?.variantDesc,
                   item?.description,
+                  item?.desc,
                   ""
                 )
               ),
@@ -2208,9 +1067,10 @@ function buildLegacyOrderPayload(
               Number(
                 firstDefined(
                   variant?.unitPrice,
+                  variant?.unit_price,
                   variant?.price,
-                  item?.price,
                   item?.unitPrice,
+                  item?.price,
                   0
                 )
               ),
@@ -2218,8 +1078,8 @@ function buildLegacyOrderPayload(
             taxInclusive:
               Boolean(
                 variant?.taxInclusive ??
-                item?.taxInclusive ??
-                false
+                  item?.taxInclusive ??
+                  true
               ),
 
             taxRate:
@@ -2227,16 +1087,25 @@ function buildLegacyOrderPayload(
                 firstDefined(
                   variant?.taxRate,
                   item?.taxRate,
-                  0
+                  12
                 )
               ),
 
             quantity:
-              quantity,
+              Math.max(
+                1,
+                Number(
+                  item?.quantity ||
+                    variant?.quantity ||
+                    1
+                )
+              ),
 
             variantPhoto:
               variant?.variantPhoto ||
               item?.variantPhoto ||
+              item?.image_url ||
+              item?.image ||
               null,
           };
         }
@@ -2244,857 +1113,334 @@ function buildLegacyOrderPayload(
   };
 }
 
-
-/* =========================================================
-   EXPORTED API
-   ========================================================= */
+/* ============================================================
+   API
+   ============================================================ */
 
 export const api = {
+  baseUrl: API_BASE,
 
+  config: {
+    baseUrl: API_BASE,
 
-  /* =======================================================
-     PRODUCTS
-     ======================================================= */
+    orgId:
+      getOrgId,
+  },
 
-  products:
-    async () => {
-
-      let storeId =
-        getStoreId();
-
-
-      /*
-       * If no store is saved, load the outlets first.
-       */
-
-      if (
-        !storeId
-      ) {
-
-        const locations =
-          await api.locations();
-
-
-        if (
-          !locations.length
-        ) {
-
-          throw new Error(
-            "No Juice Robo outlet is available for this organization."
-          );
-        }
-
-
-        storeId =
-          saveStoreId(
-            locations[0].storeId
-          );
-
-
-        if (
-          !storeId
-        ) {
-
-          throw new Error(
-            "Juice Robo returned an invalid store ID."
-          );
-        }
-      }
-
-
-      /*
-       * Never use fake generated store IDs.
-       */
-
-      if (
-        storeId
-          .toLowerCase()
-          .startsWith(
-            "store-"
-          )
-      ) {
-
-        localStorage.removeItem(
-          "store_Id"
-        );
-
-        localStorage.removeItem(
-          "juice_robo_store_id"
-        );
-
-
-        const locations =
-          await api.locations();
-
-
-        if (
-          !locations.length
-        ) {
-
-          throw new Error(
-            "No valid Juice Robo outlet is available."
-          );
-        }
-
-
-        storeId =
-          saveStoreId(
-            locations[0].storeId
-          );
-      }
-
-
-      console.log(
-        "[Juice Robo] Loading products for store:",
-        storeId
-      );
-
-
-      const response =
-        await request(
-          `/v1/itemmaster/items/${encodeURIComponent(
-            storeId
-          )}`
-        );
-
-
-      return normalizeProducts(
-        response
-      );
-    },
-
-
-  /* =======================================================
-     LOCATIONS
-     ======================================================= */
-
-  locations:
-    async () => {
-
-      const orgId =
-        getOrgId();
-
-
-      console.log(
-        "[Juice Robo] Loading outlets for ORG_ID:",
-        orgId
-      );
-
-
-      const response =
-        await request(
-          `/v1/getoutlets/${encodeURIComponent(
-            orgId
-          )}`
-        );
-
-
-      const locations =
-        normalizeOutlets(
-          response
-        );
-
-
-      if (
-        locations.length
-      ) {
-
-        const currentStore =
-          getStoreId();
-
-
-        const currentExists =
-          locations.some(
-            (location) =>
-              String(
-                location.storeId
-              ) ===
-              String(
-                currentStore
-              )
-          );
-
-
-        if (
-          !currentExists
-        ) {
-
-          saveStoreId(
-            locations[0].storeId
-          );
-        }
-      }
-
-
-      console.log(
-        "[Juice Robo] Parsed locations:",
-        locations
-      );
-
-
-      return locations;
-    },
-
-
-  /* =======================================================
-     MACHINES
-     ======================================================= */
-
-  machines:
-    async () => {
-
-      const locations =
-        await api.locations();
-
-
-      return normalizeMachines(
-        locations
-      );
-    },
-
-
-    /* =======================================================
-     LOGIN
-     =======================================================
-
-     AUTHENTICATION FLOW:
-
-     1. Try LOCAL FastAPI authentication first.
-        - Used by newly created local development users.
-        - Endpoint:
-          http://127.0.0.1:8000/api/auth/login
-
-     2. If the local backend says the credentials do not
-        exist, fall back to the EXISTING Juice Robo API.
-        - Used by existing Juice Robo users.
-        - Endpoint:
-          https://tptest.juicerobo.com/tporder/api/v1/auth/signin
-
-     This allows both user types to work without changing
-     the existing ordering APIs.
-     ======================================================= */
+  /* ----------------------------------------------------------
+     AUTH
+     ---------------------------------------------------------- */
 
   login:
-    async (
-      payload = {}
-    ) => {
-
-      const identifier =
-        String(
-          payload?.identifier ||
-          payload?.userName ||
-          payload?.username ||
-          payload?.email ||
-          payload?.phone ||
-          ""
-        ).trim();
-
-      const password =
-        String(
-          payload?.password ||
-          ""
-        );
-
-      if (!identifier) {
-        throw new Error(
-          "Enter your email address or phone number."
-        );
-      }
-
-      if (!password) {
-        throw new Error(
-          "Enter your password."
-        );
-      }
-
-      console.log(
-        "[Juice Robo] Attempting login:",
-        {
-          identifier,
-          hasPassword:
-            Boolean(password),
-        }
-      );
-
-
-      /* =====================================================
-         STEP 1
-         LOCAL FASTAPI LOGIN
-         ===================================================== */
-
-      try {
-
-        console.log(
-          "[Juice Robo] Trying local authentication..."
-        );
-
-        const localResponse =
-          await request(
-            "/api/auth/login",
-            {
-              method:
-                "POST",
-
-              body:
-                JSON.stringify({
-                  identifier:
-                    identifier,
-
-                  password:
-                    password,
-                }),
-            },
-
-            "http://127.0.0.1:8000"
-          );
-
-
-        console.log(
-          "[Juice Robo] Local login response:",
-          localResponse
-        );
-
-
-        const localNormalized =
-          normalizeAuth(
-            localResponse
-          );
-
-
-        const localToken =
-          localNormalized?.accessToken ||
-          localNormalized?.access_token ||
-          localNormalized?.token ||
-          "";
-
-
-        if (localToken) {
-
-          console.log(
-            "[Juice Robo] Local authentication successful."
-          );
-
-          return localNormalized;
-        }
-
-
-        throw new Error(
-          "Local authentication succeeded without an access token."
-        );
-
-      } catch (localError) {
-
-        const localMessage =
-          String(
-            localError?.message ||
-            ""
-          ).trim();
-
-
-        const localLower =
-          localMessage.toLowerCase();
-
-
-        console.warn(
-          "[Juice Robo] Local authentication did not succeed:",
-          localMessage
-        );
-
-
-        /* ===================================================
-           IMPORTANT
-
-           Only fall back to the legacy API for an actual
-           "user not found / bad credentials" type response.
-
-           If the local backend is completely unreachable,
-           don't silently hide that problem.
-           =================================================== */
-
-        const shouldFallbackToLegacy =
-          localLower.includes(
-            "bad credentials"
-          ) ||
-          localLower.includes(
-            "invalid credentials"
-          ) ||
-          localLower.includes(
-            "invalid credential"
-          ) ||
-          localLower.includes(
-            "not found"
-          ) ||
-          localLower.includes(
-            "401"
-          ) ||
-          localLower.includes(
-            "404"
-          );
-
-
-        if (
-          !shouldFallbackToLegacy
-        ) {
-
-          /*
-           * The local backend may be down.
-           *
-           * However, because existing users must still
-           * work independently of the local development
-           * backend, allow the legacy API to be tried
-           * as a final compatibility path.
-           */
-
-          console.warn(
-            "[Juice Robo] Local backend unavailable or returned an unexpected error. Trying legacy authentication..."
-          );
-        }
-      }
-
-
-      /* =====================================================
-         STEP 2
-         EXISTING JUICE ROBO LOGIN
-         ===================================================== */
-
-      console.log(
-        "[Juice Robo] Trying existing Juice Robo authentication..."
-      );
-
-
-      const legacyResponse =
+    async (payload = {}) => {
+      const response =
         await request(
           "/v1/auth/signin",
           {
-            method:
-              "POST",
-
-            skipAuth:
-              true,
+            method: "POST",
 
             body:
               JSON.stringify({
                 userName:
-                  identifier,
+                  String(
+                    payload?.userName ||
+                      payload?.username ||
+                      payload?.email ||
+                      payload?.phone ||
+                      payload?.identifier ||
+                      ""
+                  ).trim(),
 
                 password:
-                  password,
+                  String(
+                    payload?.password ||
+                      ""
+                  ),
               }),
           }
         );
-
-
-      console.log(
-        "[Juice Robo] Legacy login response:",
-        legacyResponse
-      );
-
-
-      const normalizedLegacy =
-        normalizeAuth(
-          legacyResponse
-        );
-
-
-      const legacyToken =
-        normalizedLegacy?.accessToken ||
-        normalizedLegacy?.access_token ||
-        normalizedLegacy?.token ||
-        "";
-
-
-      if (!legacyToken) {
-
-        throw new Error(
-          "Login succeeded but no authentication token was returned."
-        );
-      }
-
-
-      console.log(
-        "[Juice Robo] Existing Juice Robo authentication successful."
-      );
-
-
-      return normalizedLegacy;
-    },
-
-
-  /* =======================================================
-    REGISTER
-    =======================================================
-
-    NEW USER FLOW:
-
-    React
-        ↓
-    Local FastAPI
-        ↓
-    SQLite
-        ↓
-    users.xlsx
-
-    Endpoint:
-
-    http://127.0.0.1:8000/api/auth/register
-
-    IMPORTANT:
-
-    New users MUST NOT be registered through the
-    legacy Juice Robo API.
-
-    The legacy API remains available for EXISTING
-    Juice Robo users during LOGIN only.
-    ======================================================= */
-
-  register:
-    async (
-      payload = {}
-    ) => {
-
-      const name =
-        String(
-          payload?.name ||
-          ""
-        ).trim();
-
-      const phone =
-        String(
-          payload?.phone ||
-          ""
-        )
-          .replace(
-            /\D/g,
-            ""
-          );
-
-      const email =
-        String(
-          payload?.email ||
-          ""
-        ).trim()
-          .toLowerCase();
-
-      const password =
-        String(
-          payload?.password ||
-          ""
-        );
-
-      const confirmPassword =
-        String(
-          payload?.confirmPassword ||
-          ""
-        );
-
-
-      /* =====================================================
-        VALIDATION
-        ===================================================== */
-
-      if (!name) {
-        throw new Error(
-          "Enter your full name."
-        );
-      }
-
-
-      if (!phone) {
-        throw new Error(
-          "Enter your phone number."
-        );
-      }
-
-
-      if (
-        phone.length !==
-        10
-      ) {
-        throw new Error(
-          "Enter a valid 10-digit phone number."
-        );
-      }
-
-
-      if (!email) {
-        throw new Error(
-          "Enter your email address."
-        );
-      }
-
-
-      if (!password) {
-        throw new Error(
-          "Enter your password."
-        );
-      }
-
-
-      if (
-        password.length <
-        6
-      ) {
-        throw new Error(
-          "Password must contain at least 6 characters."
-        );
-      }
-
-
-      if (
-        password !==
-        confirmPassword
-      ) {
-        throw new Error(
-          "Passwords do not match."
-        );
-      }
-
-
-      /* =====================================================
-        DEBUG
-        ===================================================== */
-
-      console.log(
-        "[Juice Robo] Creating LOCAL development account:",
-        {
-          name,
-          phone,
-          email,
-        }
-      );
-
-
-      /* =====================================================
-        LOCAL FASTAPI REGISTRATION
-        ===================================================== */
-
-      const response =
-        await request(
-          "/api/auth/register",
-          {
-            method:
-              "POST",
-
-            body:
-              JSON.stringify({
-                name:
-                  name,
-
-                email:
-                  email,
-
-                phone:
-                  phone,
-
-                password:
-                  password,
-              }),
-          },
-
-          LOCAL_API_BASE
-        );
-
-
-      /* =====================================================
-        DEBUG RESPONSE
-        ===================================================== */
-
-      console.log(
-        "[Juice Robo] Local registration response:",
-        response
-      );
-
-
-      /* =====================================================
-        NORMALIZE
-        ===================================================== */
 
       return normalizeAuth(
         response
       );
     },
 
+  register:
+    async (payload = {}) => {
+      const fullName =
+        String(
+          payload?.name ||
+            ""
+        ).trim();
 
-  /* =======================================================
-   PROFILE
-   =======================================================
+      const parts =
+        fullName
+          .split(/\s+/)
+          .filter(Boolean);
 
-   IMPORTANT:
+      const firstName =
+        payload?.firstName ||
+        parts[0] ||
+        "";
 
-   The existing Juice Robo test API currently returns
-   HTTP 500 for:
+      const lastName =
+        payload?.lastName ||
+        parts.slice(1).join(" ") ||
+        firstName;
 
-     GET /user/{id}
+      const response =
+        await request(
+          "/v1/auth/registerUser",
+          {
+            method: "POST",
 
-   Authentication itself works correctly.
+            body:
+              JSON.stringify({
+                firstName,
 
-   Therefore, do NOT call the broken profile endpoint.
+                lastName,
 
-   The authenticated user returned by signin is already
-   stored locally by normalizeAuth().
+                userName:
+                  payload?.userName ||
+                  payload?.phone ||
+                  "",
 
-   The profile screen uses that authenticated snapshot.
+                userEmail:
+                  payload?.userEmail ||
+                  payload?.email ||
+                  "",
 
-   ======================================================= */
+                password:
+                  payload?.password ||
+                  "",
 
-profile:
-  async () => {
+                confirmPassword:
+                  payload?.confirmPassword ||
+                  payload?.password ||
+                  "",
 
-    const user =
-      getUserSnapshot();
+                city:
+                  payload?.city ||
+                  "",
 
+                state:
+                  payload?.state ||
+                  "",
 
-    /*
-     * -------------------------------------------------------
-     * NORMALIZE STORED USER
-     * -------------------------------------------------------
-     */
+                country:
+                  payload?.country ||
+                  "",
+              }),
+          }
+        );
 
-    const normalized = {
+      return normalizeAuth(
+        response
+      );
+    },
 
-      ...user,
+  /* ----------------------------------------------------------
+     CUSTOMER / PROFILE
+     ---------------------------------------------------------- */
 
-      id:
-        firstDefined(
-          user?.id,
-          user?.userId,
-          user?.user_id,
-          ""
-        ),
-
-      name:
-        firstDefined(
-          user?.name,
-          [
-            user?.firstName,
-            user?.firstname,
-            user?.lastName,
-            user?.lastname,
-          ]
-            .filter(Boolean)
-            .join(" "),
-          "Juice Lover"
-        ),
-
-      email:
-        firstDefined(
-          user?.email,
-          user?.userEmail,
-          ""
-        ),
-
-      /*
-       * Do NOT use userName as phone automatically.
-       *
-       * The legacy API uses userName as the login identifier.
-       * That identifier may be an email OR a phone number.
-       */
-
-      phone:
-        firstDefined(
-          user?.phone,
-          ""
-        ),
-
-      userName:
-        firstDefined(
-          user?.userName,
-          ""
-        ),
-
-      userEmail:
-        firstDefined(
-          user?.userEmail,
-          user?.email,
-          ""
-        ),
-    };
-
-
-    /*
-     * -------------------------------------------------------
-     * SAVE CLEAN PROFILE SNAPSHOT
-     * -------------------------------------------------------
-     */
-
-    localStorage.setItem(
-      "juice_robo_user",
-      JSON.stringify(
-        normalized
-      )
-    );
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(
-        normalized
-      )
-    );
-
-
-    console.log(
-      "[Juice Robo] Using authenticated user profile:",
-      normalized
-    );
-
-
-    return normalized;
-  },
-  /* =======================================================
-     UPDATE PROFILE
-     ======================================================= */
-
-  updateProfile:
-    async (
-      payload = {}
-    ) => {
-
+  profile:
+    async () => {
       const user =
         getUserSnapshot();
 
+      if (!user?.id) {
+        return user;
+      }
 
-      if (
-        !user?.id
-      ) {
+      try {
+        const response =
+          await request(
+            `/user/${encodeURIComponent(
+              user.id
+            )}`
+          );
 
-        const next = {
+        const data =
+          unwrap(response) || {};
 
+        const merged = {
           ...user,
+          ...data,
 
+          id:
+            firstDefined(
+              data?.id,
+              user?.id
+            ),
+
+          name:
+            firstDefined(
+              data?.name,
+              [
+                data?.firstName,
+                data?.lastName,
+              ]
+                .filter(Boolean)
+                .join(" "),
+              user?.name,
+              "Juice Lover"
+            ),
+
+          email:
+            firstDefined(
+              data?.email,
+              data?.userEmail,
+              user?.email,
+              ""
+            ),
+
+          phone:
+            firstDefined(
+              data?.phone,
+              data?.userName,
+              user?.phone,
+              ""
+            ),
+        };
+
+        writeJson(
+          "juice_robo_user",
+          merged
+        );
+
+        return merged;
+      } catch {
+        return user;
+      }
+    },
+
+  currentUser:
+    async () => api.profile(),
+
+  users:
+    async () => {
+      try {
+        return asArray(
+          await request(
+            "/v1/users"
+          )
+        );
+      } catch {
+        return [];
+      }
+    },
+
+  createUser:
+    async (payload = {}) => {
+      /*
+       * Legacy customer creation is not the same as the newer
+       * FastAPI /users endpoint. Reuse the legacy registration
+       * endpoint when a password is supplied; otherwise keep
+       * the checkout customer locally.
+       */
+      if (payload?.password) {
+        return api.register(
+          payload
+        );
+      }
+
+      const existing =
+        getUserSnapshot();
+
+      const customer = {
+        ...existing,
+
+        name:
+          payload?.name ||
+          existing?.name ||
+          "",
+
+        phone:
+          payload?.phone ||
+          existing?.phone ||
+          "",
+
+        email:
+          payload?.email ||
+          existing?.email ||
+          "",
+      };
+
+      writeJson(
+        "juice_robo_user",
+        customer
+      );
+
+      return customer;
+    },
+
+  createCustomer:
+    async (payload = {}) => {
+      const customer = {
+        ...getUserSnapshot(),
+
+        name:
+          String(
+            payload?.name ||
+              ""
+          ).trim(),
+
+        phone:
+          String(
+            payload?.phone ||
+              ""
+          ).replace(
+            /\D/g,
+            ""
+          ),
+
+        email:
+          String(
+            payload?.email ||
+              ""
+          ).trim(),
+      };
+
+      /*
+       * The legacy submitOrder endpoint identifies the customer
+       * from the order payload. It does not require the newer
+       * FastAPI customer endpoint.
+       */
+      writeJson(
+        "juice_robo_user",
+        customer
+      );
+
+      return customer;
+    },
+
+  updateProfile:
+    async (payload = {}) => {
+      const user =
+        getUserSnapshot();
+
+      if (!user?.id) {
+        const next = {
+          ...user,
           ...payload,
         };
 
-
-        localStorage.setItem(
+        writeJson(
           "juice_robo_user",
-          JSON.stringify(
-            next
-          )
+          next
         );
-
-
-        localStorage.setItem(
-          "user",
-          JSON.stringify(
-            next
-          )
-        );
-
 
         return next;
       }
-
 
       const response =
         await request(
           "/user/edit",
           {
-            method:
-              "POST",
+            method: "POST",
 
             body:
               JSON.stringify({
-
                 _method:
                   "patch",
 
@@ -3106,369 +1452,313 @@ profile:
           }
         );
 
+      const normalized =
+        unwrap(response) || {};
 
-      return unwrap(
-        response
+      const next = {
+        ...user,
+        ...normalized,
+        ...payload,
+      };
+
+      writeJson(
+        "juice_robo_user",
+        next
       );
+
+      return next;
     },
 
+  /* ----------------------------------------------------------
+     PRODUCTS
+     ---------------------------------------------------------- */
 
-  /* =======================================================
-     ORDERS
-     ======================================================= */
-
-  orders:
+  products:
     async () => {
+      let storeId =
+        getStoreId();
 
-      const response =
-        await request(
-          "/v1/orders"
-        );
+      if (!storeId) {
+        const locations =
+          await api.locations();
 
+        storeId =
+          locations?.[0]?.storeId ||
+          locations?.[0]?.id ||
+          "";
 
-      const data =
-        extractArray(
-          response,
-          [
-            "orders",
-            "result",
-          ]
-        );
+        if (storeId) {
+          localStorage.setItem(
+            "store_Id",
+            String(storeId)
+          );
+        }
+      }
 
-
-      return data.map(
-        normalizeOrder
-      );
-    },
-
-
-  /* =======================================================
-     SINGLE ORDER
-     ======================================================= */
-
-  order:
-    async (
-      id
-    ) => {
-
-      if (
-        id ===
-          undefined ||
-        id ===
-          null ||
-        id ===
-          ""
-      ) {
-
+      if (!storeId) {
         throw new Error(
-          "Order ID is required."
+          "No Juice Robo store is available."
         );
       }
 
-
       const response =
         await request(
-          `/order/${encodeURIComponent(
-            id
+          `/v1/itemmaster/items/${encodeURIComponent(
+            storeId
           )}`
         );
 
+      return asArray(response)
+        .map(
+          normalizeProduct
+        )
+        .filter(Boolean);
+    },
+
+  getProducts:
+    async () =>
+      api.products(),
+
+  /* ----------------------------------------------------------
+     LOCATIONS / OUTLETS
+     ---------------------------------------------------------- */
+
+  locations:
+    async () => {
+      const response =
+        await request(
+          `/v1/getoutlets/${encodeURIComponent(
+            getOrgId()
+          )}`
+        );
+
+      const locations =
+        asArray(response)
+          .map(
+            normalizeLocation
+          )
+          .filter(Boolean);
+
+      if (locations.length) {
+        const current =
+          getStoreId();
+
+        const stillExists =
+          locations.some(
+            (location) =>
+              String(
+                location.storeId
+              ) ===
+              String(current)
+          );
+
+        if (!stillExists) {
+          localStorage.setItem(
+            "store_Id",
+            String(
+              locations[0].storeId
+            )
+          );
+        }
+      }
+
+      console.log(
+        "[Juice Robo] Parsed locations:",
+        locations
+      );
+
+      return locations;
+    },
+
+  getLocations:
+    async () =>
+      api.locations(),
+
+  /* ----------------------------------------------------------
+     MACHINES
+     ---------------------------------------------------------- */
+
+  machines:
+    async () => {
+      /*
+       * The legacy API exposes the physical outlet/store
+       * through the outlet response rather than the newer
+       * /machines endpoint.
+       */
+      const locations =
+        await api.locations();
+
+      return locations
+        .map(
+          (location) =>
+            normalizeMachine(
+              {
+                id:
+                  location.storeId,
+
+                storeId:
+                  location.storeId,
+
+                name:
+                  location.name,
+
+                status:
+                  "ONLINE",
+              },
+              location
+            )
+        )
+        .filter(Boolean);
+    },
+
+  getMachines:
+    async () =>
+      api.machines(),
+
+  /* ----------------------------------------------------------
+     ORDERS
+     ---------------------------------------------------------- */
+
+  createOrder:
+    async (payload = {}) => {
+      const legacyPayload =
+        buildLegacyOrderPayload(
+          payload
+        );
+
+      console.log(
+        "[Juice Robo] Legacy order payload:",
+        legacyPayload
+      );
+
+      const response =
+        await request(
+          "/v1/submitOrder",
+          {
+            method: "POST",
+
+            body:
+              JSON.stringify(
+                legacyPayload
+              ),
+          }
+        );
 
       return normalizeOrder(
         response
       );
     },
 
+  orders:
+    async (params = {}) => {
+      const query =
+        new URLSearchParams();
 
-  /* =======================================================
-     CREATE ORDER
-     =======================================================
-
-     CURRENT TEST ORDER MASTER FLOW:
-
-       1. POST /tpordermaster/api/v1/addcart
-       2. POST /tpordermaster/api/v1/order/submit
-
-     ======================================================= */
-
-  createOrder:
-    async (
-      payload = {}
-    ) => {
-
-      console.log(
-        "[Juice Robo] createOrder payload:",
-        payload
+      Object.entries(
+        params
+      ).forEach(
+        ([key, value]) => {
+          if (
+            value !== undefined &&
+            value !== null &&
+            value !== ""
+          ) {
+            query.set(
+              key,
+              String(value)
+            );
+          }
+        }
       );
 
+      const suffix =
+        query.toString()
+          ? `?${query.toString()}`
+          : "";
 
-      const legacyPayload =
-        buildLegacyOrderPayload(
-          payload
-        );
-
-
-      const cartId =
-        String(
-          legacyPayload.cartId
-        );
-
-
-      /*
-       * ADD CART
-       */
-
-      const addCartPayload = {
-
-        cartId:
-
-          cartId,
-
-        locId:
-
-          String(
-            legacyPayload.storeId
-          ),
-
-        cartItems:
-
-          legacyPayload.cartItems.map(
-            (item) => ({
-
-              variantId:
-                Number(
-                  item.variantId
-                ),
-
-              quantity:
-                Number(
-                  item.quantity
-                ),
-            })
-          ),
-      };
-
-
-      console.log(
-        "[Juice Robo] ADD CART:",
-        addCartPayload
-      );
-
-
-      const cartResponse =
+      const response =
         await request(
-          "/v1/addcart",
-          {
-            method:
-              "POST",
-
-            body:
-              JSON.stringify(
-                addCartPayload
-              ),
-          },
-          ORDER_API_BASE
+          `/v1/orders${suffix}`
         );
 
-
-      console.log(
-        "[Juice Robo] ADD CART response:",
-        cartResponse
-      );
-
-
-      /*
-       * SUBMIT ORDER
-       */
-
-      const submitPayload = {
-
-        cartId:
-          cartId,
-      };
-
-
-      console.log(
-        "[Juice Robo] ORDER SUBMIT:",
-        submitPayload
-      );
-
-
-      const orderResponse =
-        await request(
-          "/v1/order/submit",
-          {
-            method:
-              "POST",
-
-            body:
-              JSON.stringify(
-                submitPayload
-              ),
-          },
-          ORDER_API_BASE
-        );
-
-
-      console.log(
-        "[Juice Robo] ORDER SUBMIT response:",
-        orderResponse
-      );
-
-
-      const normalized =
-        normalizeOrder(
-          orderResponse
-        );
-
-
-      return {
-
-        ...normalized,
-
-        cartId:
-          cartId,
-
-        rawCartResponse:
-          cartResponse,
-
-        rawOrderResponse:
-          orderResponse,
-
-        orderId:
-          firstDefined(
-            orderResponse?.orderId,
-            orderResponse?.order_id,
-            orderResponse?.id,
-            normalized?.id,
-            ""
-          ),
-
-        transactionId:
-          firstDefined(
-            orderResponse?.transactionId,
-            orderResponse?.transaction_id,
-            normalized?.transactionId,
-            ""
-          ),
-
-        orderPin:
-          firstDefined(
-            orderResponse?.orderPin,
-            orderResponse?.order_pin,
-            normalized?.orderPin,
-            ""
-          ),
-
-        collection_code:
-          firstDefined(
-            orderResponse?.collection_code,
-            orderResponse?.collectionCode,
-            orderResponse?.pickupCode,
-            orderResponse?.orderPin,
-            orderResponse?.order_pin,
-            normalized?.collection_code,
-            ""
-          ),
-
-        payment_status:
-          firstDefined(
-            orderResponse?.payment_status,
-            orderResponse?.paymentStatus,
-            normalized?.payment_status,
-            "PENDING"
-          ),
-
-        status:
-          firstDefined(
-            orderResponse?.orderStatus,
-            orderResponse?.order_status,
-            orderResponse?.status,
-            normalized?.status,
-            "PENDING_PAYMENT"
-          ),
-
-        total_amount:
-          Number(
-            firstDefined(
-              orderResponse?.netBill,
-              orderResponse?.total_amount,
-              orderResponse?.totalAmount,
-              orderResponse?.grandTotal,
-              normalized?.total_amount,
-              0
-            )
-          ),
-      };
+      return asArray(response)
+        .map(
+          normalizeOrder
+        )
+        .filter(Boolean);
     },
 
+  getOrders:
+    async () =>
+      api.orders(),
 
-  /* =======================================================
-     LEGACY PAYMENT COMPATIBILITY
-     ======================================================= */
+  order:
+    async (orderId) => {
+      if (
+        orderId === undefined ||
+        orderId === null ||
+        orderId === ""
+      ) {
+        throw new Error(
+          "Order ID is required."
+        );
+      }
+
+      const response =
+        await request(
+          `/order/${encodeURIComponent(
+            orderId
+          )}`
+        );
+
+      return normalizeOrder(
+        response
+      );
+    },
+
+  getOrder:
+    async (orderId) =>
+      api.order(orderId),
+
+  /* ----------------------------------------------------------
+     PAYMENT COMPATIBILITY
+     ----------------------------------------------------------
+
+     IMPORTANT:
+     The legacy backend does NOT expose the newer:
+       /payments/create-order
+       /payments/verify
+
+     The redesigned UI must therefore use the existing UPI
+     handoff after /v1/submitOrder.
+
+     These functions intentionally fail instead of silently
+     calling the wrong backend.
+     ---------------------------------------------------------- */
 
   createPaymentOrder:
     async () => {
-
       throw new Error(
-        "The legacy Juice Robo API does not expose the new Razorpay order API."
+        "The existing Juice Robo API uses the legacy UPI payment flow. Do not call the newer /payments/create-order endpoint."
       );
     },
-
 
   verifyPayment:
     async () => {
-
       throw new Error(
-        "The legacy Juice Robo API does not expose the new Razorpay verification API."
+        "The existing Juice Robo API does not expose /payments/verify. Use the legacy UPI payment flow."
       );
     },
-
-
-  /* =======================================================
-     DEBUG CONFIG
-     ======================================================= */
-
-  config: {
-
-    baseUrl:
-      API_BASE,
-
-    orderBaseUrl:
-      ORDER_API_BASE,
-
-    orgId:
-      getOrgId,
-
-    storeId:
-      getStoreId,
-
-    hasApiKey:
-      Boolean(
-        JR_API_KEY
-      ),
-
-    hasApiSecret:
-      Boolean(
-        JR_API_KEY_SECRET
-      ),
-  },
 };
-
-
-/* =========================================================
-   NAMED EXPORTS
-   ========================================================= */
 
 export {
   API_BASE,
-  ORDER_API_BASE,
   DEFAULT_ORG_ID,
 };
 
-
-/* =========================================================
-   DEFAULT EXPORT
-   ========================================================= */
-
 export default api;
+
+console.log(
+  "[Juice Robo] Legacy API adapter loaded:",
+  API_BASE
+);

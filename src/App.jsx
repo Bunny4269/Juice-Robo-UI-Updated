@@ -26,12 +26,20 @@ import "./App.css";
 
 const ASSET_BASE = `${import.meta.env.BASE_URL}assets/`;
 
+/* =========================================================
+   PRODUCT IMAGES
+   ========================================================= */
+
 const PRODUCT_IMAGES = {
   plain: `${ASSET_BASE}plain-juice.jpg`,
   lemon: `${ASSET_BASE}lemon-juice.jpg`,
   ginger: `${ASSET_BASE}ginger-juice.jpg`,
   "ginger-lemon": `${ASSET_BASE}ginger-lemon-juice.jpg`,
 };
+
+/* =========================================================
+   STORAGE KEYS
+   ========================================================= */
 
 const STORAGE = {
   token: "juice_robo_token",
@@ -43,6 +51,10 @@ const STORAGE = {
   machine: "juice_robo_machine",
 };
 
+/* =========================================================
+   EMPTY CUSTOMER
+   ========================================================= */
+
 const EMPTY_CUSTOMER = {
   name: "",
   phone: "",
@@ -51,6 +63,43 @@ const EMPTY_CUSTOMER = {
   password: "",
   confirmPassword: "",
 };
+
+/* =========================================================
+   LEGACY JUICE ROBO ORDER CONFIG
+   ========================================================= */
+
+// This is the storeId used by the original working e-robo checkout.
+const LEGACY_ORDER_STORE_ID = "TS0005";
+
+function generateUuidV4() {
+  const bytes = new Uint8Array(16);
+
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.getRandomValues === "function"
+  ) {
+    crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < bytes.length; i += 1) {
+      bytes[i] = Math.floor(Math.random() * 256);
+    }
+  }
+
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+  const hex = Array.from(bytes, (byte) =>
+    byte.toString(16).padStart(2, "0")
+  ).join("");
+
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20, 32),
+  ].join("-");
+}
 
 /* =========================================================
    PRODUCT HELPERS
@@ -142,19 +191,46 @@ function money(value) {
 
 const GST_RATE = 0.12;
 
-function calculateGST(subtotal) {
-  return Number(subtotal || 0) * GST_RATE;
+/*
+ * Juice Robo API prices are GST-inclusive.
+ *
+ * Example:
+ * API price = ₹1.00
+ * GST-exclusive amount ≈ ₹0.89
+ * GST ≈ ₹0.11
+ * Final payable = ₹1.00
+ */
+
+function calculateGST(grossTotal) {
+  const amount = Number(grossTotal || 0);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 0;
+  }
+
+  return amount - amount / (1 + GST_RATE);
 }
 
-function calculateFinalTotal(subtotal) {
-  const amount = Number(subtotal || 0);
+function calculateSubtotal(grossTotal) {
+  const amount = Number(grossTotal || 0);
 
-  return (
-    amount +
-    calculateGST(amount)
-  );
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 0;
+  }
+
+  return amount / (1 + GST_RATE);
 }
 
+function calculateFinalTotal(grossTotal) {
+  const amount = Number(grossTotal || 0);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 0;
+  }
+
+  // API price is already the final payable amount.
+  return amount;
+}
 /* =========================================================
    LOCATION HELPERS
    ========================================================= */
@@ -1960,22 +2036,234 @@ export default function App() {
   }
 
   /* =======================================================
-     DEMO PAYMENT
-     ======================================================= */
+      UPI PAYMENT
+      ======================================================= */
 
-  function completeDemoPayment() {
-    if (!cart.length) {
-      showToast(
-        "Your cart is empty."
-      );
+    async function startPayment() {
+      if (!cart.length) {
+        showToast(
+          "Your cart is empty."
+        );
 
-      setScreen(
-        "menu"
-      );
+        setScreen("menu");
 
-      return;
+        return;
+      }
+
+      if (
+        paymentStatus ===
+        "processing"
+      ) {
+        return;
+      }
+
+      try {
+        setPaymentStatus(
+          "processing"
+        );
+
+        /*
+        * LEGACY JUICE ROBO ORDER CONTRACT
+        *
+        * POST /v1/submitOrder
+        *
+        * The original working checkout uses:
+        * - UUID cartId
+        * - TS0005 storeId
+        * - updatedBy
+        * - original cartItems
+        */
+
+        const orderPayload = {
+          cartId:
+            generateUuidV4(),
+
+          storeId:
+            LEGACY_ORDER_STORE_ID,
+
+          updatedBy:
+            String(
+              user?.firstname ||
+                user?.firstName ||
+                customer?.name ||
+                ""
+            ),
+
+          cartItems:
+            cart.map((item) => {
+              const variant =
+                item?._variant ||
+                item?.variant ||
+                item;
+
+              return {
+                ...variant,
+
+                quantity:
+                  Math.max(
+                    1,
+                    Number(
+                      item?.quantity ||
+                        variant?.quantity ||
+                        1
+                    )
+                  ),
+              };
+            }),
+        };
+
+        console.log(
+          "[Juice Robo] Creating legacy order:",
+          orderPayload
+        );
+
+        /*
+        * CREATE REAL ORDER
+        *
+        * Do not open UPI until this succeeds.
+        */
+        const result =
+          await api.createOrder(
+            orderPayload
+          );
+
+        console.log(
+          "[Juice Robo] Legacy order response:",
+          result
+        );
+
+        if (!result) {
+          throw new Error(
+            "The Juice Robo order was not created."
+          );
+        }
+
+        /*
+        * Final amount is already GST-inclusive.
+        */
+        const amount =
+          Number(
+            finalTotal
+          ).toFixed(2);
+
+        /*
+        * Use the real backend reference when available.
+        * Fall back to the UUID only if the backend does not
+        * return an order reference.
+        */
+        const transactionReference =
+          result?.order_number ||
+          result?.orderNumber ||
+          result?.orderId ||
+          result?.order_id ||
+          result?.id ||
+          orderPayload.cartId;
+
+        const pendingOrderReference =
+          result?.id ||
+          result?.orderId ||
+          result?.order_id ||
+          result?.order_number ||
+          result?.orderNumber ||
+          orderPayload.cartId;
+
+        /*
+        * Save the pending order before leaving the browser.
+        */
+        sessionStorage.setItem(
+          "juice_robo_pending_order_id",
+          String(
+            pendingOrderReference
+          )
+        );
+
+        sessionStorage.setItem(
+          "juice_robo_pending_order_snapshot",
+          JSON.stringify({
+            ...result,
+
+            cartId:
+              orderPayload.cartId,
+
+            storeId:
+              orderPayload.storeId,
+          })
+        );
+
+        /*
+        * LEGACY JUICE ROBO UPI DEEP LINK
+        */
+        const upiUrl =
+          "upi://pay" +
+          `?pa=9494724066@upi` +
+          `&pn=${encodeURIComponent(
+            "Juice Robo"
+          )}` +
+          `&mc=0000` +
+          `&tr=${encodeURIComponent(
+            String(
+              transactionReference
+            )
+          )}` +
+          `&tn=${encodeURIComponent(
+            "Juice Robo Order"
+          )}` +
+          `&am=${encodeURIComponent(
+            amount
+          )}` +
+          `&cu=INR`;
+
+        console.log(
+          "[Juice Robo] Opening UPI:",
+          upiUrl
+        );
+
+        /*
+        * IMPORTANT FOR iOS
+        *
+        * Do NOT use window.open().
+        * Navigate directly to the UPI scheme.
+        */
+        setPaymentStatus(
+          "pending"
+        );
+
+        window.location.href =
+          upiUrl;
+
+        /*
+        * IMPORTANT:
+        * Do not:
+        * - clear the cart
+        * - show confirmation
+        * - mark payment PAID
+        *
+        * Those actions happen only after the backend confirms
+        * payment_status === "PAID".
+        */
+
+      } catch (error) {
+        console.error(
+          "[Juice Robo] Payment initiation failed:",
+          error
+        );
+
+        setPaymentStatus(
+          "idle"
+        );
+
+        showToast(
+          getErrorMessage(error) ||
+            "Unable to start payment."
+        );
+      }
     }
 
+  /* =======================================================
+     CHECK REAL PAYMENT STATUS
+     ======================================================= */
+
+  async function checkPaymentStatus() {
     if (
       paymentStatus ===
       "processing"
@@ -1983,155 +2271,273 @@ export default function App() {
       return;
     }
 
-    setPaymentStatus(
-      "processing"
-    );
+    if (!cart.length) {
+      showToast(
+        "Your cart is empty."
+      );
 
-    window.setTimeout(
-      () => {
-        const collectionCode =
-          String(
-            Math.floor(
-              1000 +
-                Math.random() *
-                  9000
-            )
-          );
+      return;
+    }
 
-        const orderId =
-          `JR-${Date.now()}`;
+    /*
+     * The legacy backend does not expose the newer
+     * /payments/verify endpoint.
+     *
+     * Therefore we only accept a PAID status returned by the
+     * real Juice Robo order endpoint. We never mark the order
+     * paid in the browser.
+     */
+    try {
+      setPaymentStatus(
+        "processing"
+      );
 
-        const order = {
-          id:
-            orderId,
-
-          order_number:
-            orderId,
-
-          status:
-            "READY_FOR_COLLECTION",
-
-          payment_status:
-            "PAID",
-
-          subtotal:
-            cartTotal,
-
-          gst_rate:
-            12,
-
-          gst_amount:
-            gstAmount,
-
-          total_amount:
-            finalTotal,
-
-          collection_code:
-            collectionCode,
-
-          collectionCode:
-            collectionCode,
-
-          location_id:
-            selectedLocationId,
-
-          machine_id:
-            selectedMachineId,
-
-          location_name:
-            selectedLocation?.name ||
-            "Juice Robo",
-
-          machine_name:
-            selectedMachine?.name ||
-            "Juice Robo Machine",
-
-          payment_method:
-            paymentMethod,
-
-          items:
-            cart.map(
-              (item) => {
-                const unitPrice =
-                  Number(
-                    item.price ||
-                      0
-                  );
-
-                const itemQuantity =
-                  Number(
-                    item.quantity ||
-                      1
-                  );
-
-                return {
-                  product_id:
-                    item.id,
-
-                  product_name:
-                    item.displayName ||
-                    displayProductName(
-                      item
-                    ),
-
-                  quantity:
-                    itemQuantity,
-
-                  unit_price:
-                    unitPrice,
-
-                  subtotal:
-                    unitPrice *
-                    itemQuantity,
-                };
-              }
-            ),
-
-          created_at:
-            new Date().toISOString(),
-        };
-
-        setCompletedOrder(
-          order
+      /*
+       * The order reference is stored in session storage after
+       * the real submitOrder call.
+       */
+      const pendingOrderId =
+        sessionStorage.getItem(
+          "juice_robo_pending_order_id"
         );
 
-        setOrders(
-          (current) => {
-            const next =
-              [
-                order,
-                ...current,
-              ].slice(
-                0,
-                40
-              );
+      if (!pendingOrderId) {
+        throw new Error(
+          "No pending Juice Robo order was found. Please start the payment again."
+        );
+      }
 
-            saveUserOrders(
-              user,
-              next
-            );
-
-            return next;
-          }
+      const verifiedOrder =
+        await api.order(
+          pendingOrderId
         );
 
-        setCart([]);
+      const serverPaymentStatus =
+        String(
+          verifiedOrder?.payment_status ||
+            verifiedOrder?.paymentStatus ||
+            ""
+        ).toUpperCase();
 
+      if (
+        serverPaymentStatus !==
+        "PAID"
+      ) {
         setPaymentStatus(
-          "success"
-        );
-
-        setScreen(
-          "confirmation"
+          "pending"
         );
 
         showToast(
-          "Payment successful."
+          "Payment is not confirmed yet. Please complete the payment and try again."
         );
-      },
-      1200
-    );
+
+        return;
+      }
+
+      /*
+       * Only a server-confirmed PAID order can reach
+       * the confirmation screen.
+       */
+      const confirmedOrder = {
+        ...verifiedOrder,
+
+        id:
+          verifiedOrder?.id ||
+          pendingOrderId,
+
+        order_number:
+          verifiedOrder?.order_number ||
+          verifiedOrder?.orderNumber ||
+          verifiedOrder?.id ||
+          pendingOrderId,
+
+        status:
+          verifiedOrder?.status ||
+          "READY_FOR_COLLECTION",
+
+        payment_status:
+          "PAID",
+
+        subtotal:
+          calculateSubtotal(
+            Number(
+              verifiedOrder?.total_amount ||
+                finalTotal
+            )
+          ),
+
+        gst_rate:
+          12,
+
+        gst_amount:
+          calculateGST(
+            Number(
+              verifiedOrder?.total_amount ||
+                finalTotal
+            )
+          ),
+
+        total_amount:
+          Number(
+            verifiedOrder?.total_amount ||
+              finalTotal
+          ),
+
+        collection_code:
+          verifiedOrder?.collection_code ||
+          verifiedOrder?.collectionCode ||
+          "",
+
+        collectionCode:
+          verifiedOrder?.collection_code ||
+          verifiedOrder?.collectionCode ||
+          "",
+
+        location_id:
+          selectedLocationId,
+
+        machine_id:
+          selectedMachineId,
+
+        location_name:
+          selectedLocation?.name ||
+          "Juice Robo",
+
+        machine_name:
+          selectedMachine?.name ||
+          "Juice Robo Machine",
+
+        payment_method:
+          paymentMethod,
+
+        created_at:
+          verifiedOrder?.created_at ||
+          new Date().toISOString(),
+      };
+
+      if (
+        !confirmedOrder.collection_code
+      ) {
+        throw new Error(
+          "Payment is marked PAID, but no collection code was returned by the server."
+        );
+      }
+
+      setCompletedOrder(
+        confirmedOrder
+      );
+
+      setOrders(
+        (current) => {
+          const next =
+            [
+              confirmedOrder,
+              ...current.filter(
+                (order) =>
+                  String(
+                    order?.id ||
+                      order?.order_number ||
+                      ""
+                  ) !==
+                  String(
+                    confirmedOrder.id ||
+                      confirmedOrder.order_number
+                  )
+              ),
+            ].slice(
+              0,
+              40
+            );
+
+          saveUserOrders(
+            user,
+            next
+          );
+
+          return next;
+        }
+      );
+
+      setCart([]);
+
+      sessionStorage.removeItem(
+        "juice_robo_pending_order_id"
+      );
+
+      sessionStorage.removeItem(
+        "juice_robo_pending_order_snapshot"
+      );
+
+      setPaymentStatus(
+        "success"
+      );
+
+      setScreen(
+        "confirmation"
+      );
+
+      showToast(
+        "Payment verified successfully."
+      );
+
+    } catch (e) {
+      console.error(
+        "[Juice Robo] Payment status check failed:",
+        e
+      );
+
+      setPaymentStatus(
+        "pending"
+      );
+
+      showToast(
+        getErrorMessage(e) ||
+          "Payment is not confirmed yet."
+      );
+    }
   }
+
+
+  /* =======================================================
+     RESTORE PENDING PAYMENT AFTER RETURNING FROM UPI
+     ======================================================= */
+
+  useEffect(() => {
+    const pendingOrderId =
+      sessionStorage.getItem(
+        "juice_robo_pending_order_id"
+      );
+
+    const pendingSnapshot =
+      sessionStorage.getItem(
+        "juice_robo_pending_order_snapshot"
+      );
+
+    if (
+      pendingOrderId &&
+      hasToken &&
+      cart.length
+    ) {
+      setPaymentStatus("pending");
+      setScreen("payment");
+
+      if (pendingSnapshot) {
+        try {
+          const snapshot =
+            JSON.parse(pendingSnapshot);
+
+          if (
+            snapshot &&
+            typeof snapshot === "object"
+          ) {
+            setCompletedOrder(snapshot);
+          }
+        } catch {
+          // Ignore invalid pending snapshot.
+        }
+      }
+    }
+  }, []);
 
   /* =======================================================
      INITIAL DATA LOAD
@@ -2640,7 +3046,10 @@ export default function App() {
               }
             }}
             onPay={
-              completeDemoPayment
+                    startPayment
+                  }
+            onCheckPayment={
+              checkPaymentStatus
             }
           />
         )}
@@ -3207,8 +3616,54 @@ function AuthScreen({
 }
 
 /* =========================================================
+   DISPLAY HELPERS
+   ========================================================= */
+
+function displayMachineName(machine, location) {
+  const machineName = String(
+    machine?.name ||
+      machine?.machine_name ||
+      machine?.machineName ||
+      ""
+  ).trim();
+
+  const machineCode = String(
+    machine?.machineCode ||
+      machine?.machine_code ||
+      machine?.code ||
+      ""
+  ).trim();
+
+  const locationName = String(
+    location?.name || ""
+  ).trim();
+
+  // Legacy API can return the location name as the machine name.
+  // Never repeat the location name as the machine name.
+  if (
+    machineName &&
+    locationName &&
+    machineName.toLowerCase() === locationName.toLowerCase()
+  ) {
+    return machineCode || "Machine selected";
+  }
+
+  return machineName || machineCode || "Machine selected";
+}
+
+function displayLocationSecondary(location) {
+  return (
+    location?.address ||
+    location?.location ||
+    location?.description ||
+    ""
+  );
+}
+
+/* =========================================================
    HEADER
    ========================================================= */
+
 
 function Header({
   cartCount,
@@ -3252,8 +3707,8 @@ function Header({
           </strong>
 
           <em>
-            {machine?.name ||
-              "Select machine"}
+            {displayLocationSecondary(location) ||
+              "Selected location"}
           </em>
 
         </span>
@@ -3356,35 +3811,6 @@ function MenuScreen({
         </div>
 
       </section>
-
-      <button
-        className="jr-selected-machine-banner"
-        type="button"
-      >
-
-        <span>
-          ⌖
-        </span>
-
-        <div>
-
-          <small>
-            COLLECTING FROM
-          </small>
-
-          <strong>
-            {selectedLocation?.name ||
-              "Choose a location"}
-          </strong>
-
-          <small>
-            {selectedMachine?.name ||
-              "Choose a machine"}
-          </small>
-
-        </div>
-
-      </button>
 
       <section className="jr-menu-section">
 
@@ -3742,8 +4168,10 @@ function MachineScreen({
                   <span className="jr-machine-copy">
 
                     <strong>
-                      {machine?.name ||
-                        "Juice Robo Machine"}
+                      {displayMachineName(
+                        machine,
+                        location
+                      )}
                     </strong>
 
                     <small>
@@ -4104,14 +4532,28 @@ function CartScreen({
   onLocation,
   onCheckout,
 }) {
-  const subtotal =
+
+  const grossTotal =
     Number(total || 0);
 
-  const gstAmount =
-    subtotal * 0.12;
+/*
+ * Juice Robo API prices are GST-inclusive.
+ *
+ * Example:
+ * ₹1.00 gross total
+ * ₹0.89 GST-exclusive
+ * ₹0.11 GST
+ * ₹1.00 final payable
+ */
 
-  const finalTotal =
-    subtotal + gstAmount;
+const subtotal =
+    calculateSubtotal(grossTotal);
+
+const gstAmount =
+    calculateGST(grossTotal);
+
+const finalTotal =
+    calculateFinalTotal(grossTotal);
 
   const itemCount =
     cart.reduce(
@@ -4993,28 +5435,36 @@ function PaymentScreen({
   paymentStatus,
   onBack,
   onPay,
+  onCheckPayment,
 }) {
   const isProcessing =
     paymentStatus ===
     "processing";
 
-  const subtotal =
-    Number(
-      total || 0
-    );
+  const isPending =
+    paymentStatus ===
+    "pending";
+
+  const grossTotal =
+    Number(total || 0);
 
   const calculatedGST =
     Number(
       gst ??
-        subtotal * 0.12
+        calculateGST(grossTotal)
     );
+
+  const calculatedSubtotal =
+    calculateSubtotal(grossTotal);
 
   const calculatedFinalTotal =
     Number(
       finalTotal ??
-        subtotal +
-          calculatedGST
+        calculateFinalTotal(grossTotal)
     );
+
+  const subtotal =
+    calculatedSubtotal;
 
   const methods = [
     {
@@ -5096,7 +5546,9 @@ function PaymentScreen({
 
         <h2>
           {isProcessing
-            ? "Processing payment"
+            ? "Checking payment"
+            : isPending
+            ? "Payment pending"
             : "Secure payment"}
         </h2>
 
@@ -5167,33 +5619,32 @@ function PaymentScreen({
 
         <div className="jr-payment-details">
 
-          <span>
+        <div className="jr-payment-detail">
 
-            <small>
-              COLLECT FROM
-            </small>
+          <small>
+            COLLECT FROM
+          </small>
 
-            <strong>
-              {location?.name ||
-                "Selected location"}
-            </strong>
-
-          </span>
-
-          <span>
-
-            <small>
-              MACHINE
-            </small>
-
-            <strong>
-              {machine?.name ||
-                "Selected machine"}
-            </strong>
-
-          </span>
+          <strong>
+            {location?.name ||
+              "Selected location"}
+          </strong>
 
         </div>
+
+        <div className="jr-payment-detail">
+
+          <small>
+            MACHINE
+          </small>
+
+          <strong>
+            Juice Robo Machine
+          </strong>
+
+        </div>
+
+      </div>
 
         <div className="jr-payment-breakdown">
 
@@ -5245,7 +5696,9 @@ function PaymentScreen({
           className="jr-button jr-button-primary jr-full"
           type="button"
           onClick={
-            onPay
+            isPending
+              ? onCheckPayment
+              : onPay
           }
           disabled={
             !cart.length ||
@@ -5254,10 +5707,16 @@ function PaymentScreen({
         >
 
           {isProcessing
-            ? "PROCESSING PAYMENT..."
-            : `PAY ${money(
-                calculatedFinalTotal
-              )}`}
+            ? "CHECKING PAYMENT..."
+            : isPending
+            ? "I HAVE COMPLETED PAYMENT"
+            : (
+                <>
+                  PAY&nbsp;&nbsp;&nbsp;{money(
+                    calculatedFinalTotal
+                  )}
+                </>
+              )}
 
           {!isProcessing && (
             <span>
@@ -5270,14 +5729,15 @@ function PaymentScreen({
         <div className="jr-payment-demo-note">
 
           <strong>
-            FRONTEND TEST MODE
+            SECURE PAYMENT
           </strong>
 
           <span>
-            This button simulates
-            a successful payment
-            for UI testing only.
-            No real money is charged.
+            Your order is confirmed only
+            after Juice Robo receives a
+            server-confirmed PAID status.
+            Completing or opening UPI alone
+            does not confirm the order.
           </span>
 
         </div>
@@ -5396,8 +5856,10 @@ function ConfirmationScreen({
           Enter this 4-digit code
           on{" "}
 
-          {machine?.name ||
-            "your Juice Robo machine"}
+          {displayMachineName(
+            machine,
+            location
+          )}
 
           {" "}
           to begin preparation.
@@ -5420,8 +5882,10 @@ function ConfirmationScreen({
           </strong>
 
           <span>
-            {machine?.name ||
-              "Selected machine"}
+            {displayMachineName(
+              machine,
+              location
+            )}
           </span>
 
         </div>
