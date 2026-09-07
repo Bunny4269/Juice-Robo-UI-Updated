@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import "./App.css";
 
-import LoginScreen from "./components/login screen/LoginScreen";
+import LoginScreen from "./screens/LoginScreen/LoginScreen";
 
 import HomeScreen from "./screens/HomeScreen/HomeScreen";
 import MenuScreen from "./screens/MenuScreen/MenuScreen";

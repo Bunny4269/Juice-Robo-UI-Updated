@@ -16,12 +16,12 @@
 
   overflow-y: auto;
 
-  padding: 44px 20px 34px;
+  padding: 34px 20px 30px;
 }
 
 
 /* =========================================================
-   MAIN CONTAINER
+   CONTAINER
    ========================================================= */
 
 .jr-login-container {
@@ -45,7 +45,7 @@
   justify-content: center;
   align-items: center;
 
-  margin-bottom: 25px;
+  margin-bottom: 28px;
 }
 
 .jr-login-logo-image {
@@ -53,6 +53,7 @@
 
   width: 100%;
   max-width: 218px;
+
   height: auto;
 
   object-fit: contain;
@@ -60,7 +61,7 @@
 
 
 /* =========================================================
-   INTRO / COPY
+   INTRO
    ========================================================= */
 
 .jr-login-copy {
@@ -72,12 +73,13 @@
 .jr-login-eyebrow {
   display: block;
 
-  margin-bottom: 8px;
+  margin-bottom: 9px;
 
-  color: #317b50;
+  color: #287b4d;
 
   font-size: 9px;
   line-height: 1.2;
+
   font-weight: 800;
 
   letter-spacing: 0.095em;
@@ -93,10 +95,10 @@
 .jr-login-copy h1 {
   margin: 0;
 
-  color: #102b1d;
+  color: #0d2c20;
 
   font-size: 39px;
-  line-height: 0.94;
+  line-height: 0.93;
 
   font-weight: 900;
 
@@ -107,6 +109,7 @@
   color: #2d804b;
 
   font-style: italic;
+
   font-weight: 900;
 }
 
@@ -137,7 +140,7 @@
   display: flex;
   flex-direction: column;
 
-  gap: 17px;
+  gap: 16px;
 }
 
 
@@ -157,7 +160,7 @@
 .jr-login-field label {
   display: block;
 
-  color: #606862;
+  color: #5e6660;
 
   font-size: 8px;
   line-height: 1.2;
@@ -182,7 +185,8 @@
 
   padding: 0 14px;
 
-  border: 1px solid #e2e4dc;
+  border: 1px solid #e0e3dc;
+
   border-radius: 12px;
 
   outline: none;
@@ -209,22 +213,28 @@
 }
 
 .jr-login-field input::placeholder {
-  color: #a3a8a4;
+  color: #a1a7a3;
 
   font-weight: 400;
 }
 
 .jr-login-field input:focus {
-  border-color: #5b9b70;
+  border-color: #70a77f;
 
   box-shadow:
     0 0 0 3px rgba(45, 128, 75, 0.08),
     0 7px 18px rgba(35, 55, 40, 0.04);
 }
 
+.jr-login-field input:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.7;
+}
+
 
 /* =========================================================
-   PASSWORD WRAPPER
+   PASSWORD
    ========================================================= */
 
 .jr-login-password-wrap {
@@ -233,17 +243,12 @@
   width: 100%;
 }
 
-
-/* =========================================================
-   PASSWORD INPUT
-   ========================================================= */
-
 .jr-login-password-input {
   padding-right: 48px !important;
 
   background: #eaf2ff !important;
 
-  border-color: #dce5f3 !important;
+  border-color: #d7e2f2 !important;
 }
 
 .jr-login-password-input:focus {
@@ -265,10 +270,10 @@
   position: absolute;
 
   top: 50%;
-  right: 12px;
+  right: 11px;
 
-  width: 27px;
-  height: 27px;
+  width: 28px;
+  height: 28px;
 
   padding: 0;
 
@@ -280,28 +285,31 @@
 
   border: 0;
 
-  background: transparent;
-
-  color: #88939a;
-
-  cursor: pointer;
-
   border-radius: 50%;
 
-  transition:
-    color 0.18s ease,
-    background 0.18s ease;
+  background: transparent;
+
+  color: #7f8b91;
+
+  cursor: pointer;
 }
 
 .jr-login-password-toggle:hover {
-  color: #52616a;
+  color: #56636a;
 
   background: rgba(80, 100, 115, 0.06);
 }
 
 .jr-login-password-toggle:focus-visible {
   outline: 2px solid #4f9468;
+
   outline-offset: 2px;
+}
+
+.jr-login-password-toggle:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.5;
 }
 
 .jr-login-password-toggle svg {
@@ -324,12 +332,12 @@
   align-items: center;
   justify-content: space-between;
 
-  margin-top: -1px;
+  margin-top: 0;
 }
 
 
 /* =========================================================
-   REMEMBER ME
+   REMEMBER
    ========================================================= */
 
 .jr-login-remember {
@@ -341,7 +349,7 @@
 
   margin: 0;
 
-  color: #606762;
+  color: #626963;
 
   font-size: 10px;
 
@@ -362,7 +370,8 @@
 
   margin: 0;
 
-  border: 1px solid #cdd5ce;
+  border: 1px solid #cbd4cd;
+
   border-radius: 4px;
 
   background: #ffffff;
@@ -370,10 +379,6 @@
   cursor: pointer;
 
   position: relative;
-
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease;
 }
 
 .jr-login-remember input:checked {
@@ -394,9 +399,16 @@
   height: 9px;
 
   border-right: 2px solid #ffffff;
+
   border-bottom: 2px solid #ffffff;
 
   transform: rotate(45deg);
+}
+
+.jr-login-remember input:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.6;
 }
 
 
@@ -411,111 +423,96 @@
 
   background: transparent;
 
-  color: #397c52;
+  color: #287c4b;
 
   font-family: inherit;
 
   font-size: 10px;
+
   line-height: 1.2;
 
   font-weight: 750;
 
   cursor: pointer;
-
-  transition: color 0.15s ease;
 }
 
 .jr-login-forgot:hover {
-  color: #225f3a;
+  color: #205f39;
 
   text-decoration: underline;
 }
 
 .jr-login-forgot:focus-visible {
   outline: 2px solid #4f9468;
+
   outline-offset: 3px;
 
   border-radius: 3px;
 }
 
+.jr-login-forgot:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.5;
+}
+
 
 /* =========================================================
-   AUTHORIZATION
+   ERROR
    ========================================================= */
 
-.jr-login-authorization {
+.jr-login-error {
   width: 100%;
+
+  box-sizing: border-box;
 
   display: flex;
 
   align-items: flex-start;
 
-  gap: 9px;
+  gap: 8px;
 
-  margin-top: -1px;
+  padding: 10px 12px;
 
-  cursor: pointer;
+  border: 1px solid #f0caca;
+
+  border-radius: 10px;
+
+  background: #fff5f5;
+
+  color: #a53d3d;
 }
 
-.jr-login-authorization input {
-  appearance: none;
-
+.jr-login-error-icon {
   width: 17px;
   height: 17px;
 
   flex: 0 0 17px;
 
-  margin: 0;
+  display: flex;
 
-  border: 1px solid #cfd6d0;
-  border-radius: 4px;
+  align-items: center;
+  justify-content: center;
 
-  background: #ffffff;
+  border-radius: 50%;
 
-  cursor: pointer;
+  background: #c94b4b;
 
-  position: relative;
+  color: #ffffff;
 
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease;
+  font-size: 10px;
+
+  font-weight: 900;
 }
 
-.jr-login-authorization input:checked {
-  background: #2f8750;
+.jr-login-error p {
+  margin: 1px 0 0;
 
-  border-color: #2f8750;
-}
+  font-size: 9px;
 
-.jr-login-authorization input:checked::after {
-  content: "";
+  line-height: 1.4;
 
-  position: absolute;
-
-  left: 4px;
-  top: 1px;
-
-  width: 5px;
-  height: 9px;
-
-  border-right: 2px solid #ffffff;
-  border-bottom: 2px solid #ffffff;
-
-  transform: rotate(45deg);
-}
-
-.jr-login-authorization span {
-  display: block;
-
-  padding-top: 0;
-
-  color: #858b87;
-
-  font-size: 8px;
-
-  line-height: 1.35;
-
-  font-weight: 550;
+  font-weight: 600;
 }
 
 
@@ -527,17 +524,19 @@
   width: 100%;
   height: 51px;
 
-  margin-top: 5px;
+  margin-top: 2px;
 
   padding: 0 18px;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
   gap: 11px;
 
   border: 0;
+
   border-radius: 12px;
 
   background: #2d8750;
@@ -547,6 +546,7 @@
   font-family: inherit;
 
   font-size: 10px;
+
   line-height: 1;
 
   font-weight: 900;
@@ -561,7 +561,8 @@
   transition:
     transform 0.16s ease,
     background 0.16s ease,
-    box-shadow 0.16s ease;
+    box-shadow 0.16s ease,
+    opacity 0.16s ease;
 }
 
 .jr-login-button:hover {
@@ -573,14 +574,18 @@
 
 .jr-login-button:active {
   transform: translateY(1px);
-
-  box-shadow:
-    0 5px 12px rgba(45, 135, 80, 0.18);
 }
 
 .jr-login-button:focus-visible {
   outline: 3px solid rgba(45, 135, 80, 0.25);
+
   outline-offset: 3px;
+}
+
+.jr-login-button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.65;
 }
 
 
@@ -601,6 +606,142 @@
   font-weight: 400;
 
   margin-top: -1px;
+}
+
+
+/* =========================================================
+   OR DIVIDER
+   ========================================================= */
+
+.jr-login-divider {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+
+  margin: 20px 0 13px;
+}
+
+.jr-login-divider-line {
+  flex: 1;
+
+  height: 1px;
+
+  background: #d4d8d2;
+}
+
+.jr-login-divider-text {
+  flex: 0 0 auto;
+
+  color: #8a908b;
+
+  font-size: 10px;
+
+  line-height: 1;
+
+  font-weight: 750;
+
+  letter-spacing: 0.05em;
+}
+
+
+/* =========================================================
+   CONTINUE WITHOUT SIGN IN
+   ========================================================= */
+
+.jr-continue-without-login {
+  width: 100%;
+
+  min-height: 46px;
+
+  box-sizing: border-box;
+
+  margin: 0;
+
+  padding: 0 16px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  border: 1.5px solid #2d8750;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  color: #287f46;
+
+  font-family: inherit;
+
+  font-size: 10px;
+
+  line-height: 1;
+
+  font-weight: 850;
+
+  letter-spacing: 0.04em;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 3px 10px rgba(25, 55, 33, 0.04);
+
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.jr-continue-without-login:hover {
+  background: #f1f8f2;
+
+  color: #216b3d;
+
+  box-shadow:
+    0 6px 15px rgba(25, 75, 42, 0.08);
+}
+
+.jr-continue-without-login:active {
+  transform: translateY(1px);
+}
+
+.jr-continue-without-login:focus-visible {
+  outline: 3px solid rgba(45, 135, 80, 0.18);
+
+  outline-offset: 3px;
+}
+
+.jr-continue-without-login:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.55;
+}
+
+
+/* =========================================================
+   GUEST NOTE
+   ========================================================= */
+
+.jr-login-guest-note {
+  margin: 8px 0 0;
+
+  color: #929b93;
+
+  font-size: 8px;
+
+  line-height: 1.45;
+
+  font-weight: 500;
+
+  text-align: center;
 }
 
 
@@ -641,8 +782,10 @@
    ========================================================= */
 
 @media (min-width: 600px) {
+
   .jr-login-screen {
-    padding-top: 55px;
+    padding-top: 48px;
+
     padding-bottom: 45px;
   }
 
@@ -664,26 +807,32 @@
 
   .jr-login-field input {
     height: 51px;
+
     font-size: 13px;
   }
 
   .jr-login-button {
     height: 52px;
   }
+
+  .jr-continue-without-login {
+    min-height: 48px;
+  }
 }
 
 
 /* =========================================================
-   SMALL MOBILE SCREENS
+   SMALL MOBILE
    ========================================================= */
 
 @media (max-width: 360px) {
+
   .jr-login-screen {
-    padding: 30px 17px 25px;
+    padding: 27px 17px 25px;
   }
 
   .jr-login-logo-container {
-    margin-bottom: 20px;
+    margin-bottom: 21px;
   }
 
   .jr-login-logo-image {
@@ -705,7 +854,7 @@
   }
 
   .jr-login-form {
-    gap: 15px;
+    gap: 14px;
   }
 
   .jr-login-field input {
@@ -715,6 +864,18 @@
   .jr-login-button {
     height: 48px;
   }
+
+  .jr-login-divider {
+    margin-top: 17px;
+
+    margin-bottom: 12px;
+  }
+
+  .jr-continue-without-login {
+    min-height: 45px;
+
+    font-size: 9px;
+  }
 }
 
 
@@ -723,13 +884,15 @@
    ========================================================= */
 
 @media (max-height: 700px) {
+
   .jr-login-screen {
-    padding-top: 25px;
+    padding-top: 22px;
+
     padding-bottom: 25px;
   }
 
   .jr-login-logo-container {
-    margin-bottom: 18px;
+    margin-bottom: 17px;
   }
 
   .jr-login-logo-image {
@@ -737,7 +900,7 @@
   }
 
   .jr-login-copy {
-    margin-bottom: 18px;
+    margin-bottom: 17px;
   }
 
   .jr-login-copy h1 {
@@ -745,10 +908,20 @@
   }
 
   .jr-login-copy p {
-    margin-top: 12px;
+    margin-top: 11px;
   }
 
   .jr-login-form {
-    gap: 13px;
+    gap: 12px;
+  }
+
+  .jr-login-divider {
+    margin-top: 15px;
+
+    margin-bottom: 11px;
+  }
+
+  .jr-login-note {
+    margin-top: 14px;
   }
 }

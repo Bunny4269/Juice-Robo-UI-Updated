@@ -27,9 +27,6 @@ export default function LoginScreen({
       ) === "true"
     );
 
-  const [authorized, setAuthorized] =
-    useState(false);
-
   const [formError, setFormError] =
     useState("");
 
@@ -172,19 +169,6 @@ export default function LoginScreen({
   }
 
   /* =====================================================
-     AUTHORIZATION
-     ===================================================== */
-
-  function handleAuthorizationChange(
-    event
-  ) {
-    setAuthorized(
-      event.target.checked
-    );
-    setFormError("");
-  }
-
-  /* =====================================================
      FORGOT PASSWORD
      ===================================================== */
 
@@ -216,13 +200,6 @@ export default function LoginScreen({
     if (!password) {
       setFormError(
         "Enter your password."
-      );
-      return;
-    }
-
-    if (!authorized) {
-      setFormError(
-        "Please authorize the use of your details to continue."
       );
       return;
     }
@@ -288,7 +265,7 @@ export default function LoginScreen({
         <div className="jr-login-logo-container">
           <img
             className="jr-login-logo-image"
-            src={`${ASSET_BASE}juice-robo-logo.png`}
+            src={`${ASSET_BASE}juice-robo-logo.jpg`}
             alt="Juice Robo"
           />
         </div>
@@ -479,24 +456,6 @@ export default function LoginScreen({
               Forgot password?
             </button>
           </div>
-
-          {/* AUTHORIZATION */}
-
-          <label className="jr-login-authorization">
-            <input
-              type="checkbox"
-              checked={authorized}
-              onChange={
-                handleAuthorizationChange
-              }
-              disabled={busy}
-            />
-
-            <span>
-              I authorize Juice Robo to use my
-              information for processing my orders.
-            </span>
-          </label>
 
           {/* ERROR */}
 
