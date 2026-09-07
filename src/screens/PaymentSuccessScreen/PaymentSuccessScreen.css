@@ -1,0 +1,748 @@
+/* =========================================================
+   JUICE ROBO — PAYMENT SUCCESS SCREEN
+   ========================================================= */
+
+.jr-payment-success-page {
+  width: 100%;
+  min-height: 100%;
+
+  box-sizing: border-box;
+
+  padding:
+    17px
+    10px
+    88px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  background: #fbfaf3;
+
+  color: #171717;
+
+  font-family:
+    Inter,
+    Poppins,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  scrollbar-width: none;
+}
+
+.jr-payment-success-page::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* =========================================================
+   SUCCESS HEADING
+   ========================================================= */
+
+.jr-payment-success-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  width: 100%;
+
+  margin:
+    0
+    0
+    14px;
+
+  text-align: center;
+}
+
+.jr-payment-success-icon {
+  width: 59px;
+  height: 59px;
+
+  display: grid;
+  place-items: center;
+
+  margin:
+    2px
+    0
+    11px;
+
+  border-radius: 50%;
+
+  background: #e7f3e4;
+
+  color: #2d8750;
+
+  box-shadow:
+    0 6px 14px
+    rgba(45, 135, 80, .08);
+}
+
+.jr-payment-success-icon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.jr-payment-success-eyebrow {
+  margin:
+    0
+    0
+    5px;
+
+  color: #ed7800;
+
+  font-size: 6.5px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: .12em;
+
+  text-transform: uppercase;
+}
+
+.jr-payment-success-heading h1 {
+  margin: 0;
+
+  color: #111111;
+
+  font-size: 26px;
+  line-height: .93;
+
+  font-weight: 950;
+
+  letter-spacing: -.055em;
+}
+
+.jr-payment-success-heading h1 em {
+  color: #2f8750;
+
+  font-style: normal;
+}
+
+.jr-payment-success-heading p {
+  max-width: 285px;
+
+  margin:
+    7px
+    auto
+    0;
+
+  color: #858581;
+
+  font-size: 7px;
+  line-height: 1.4;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   COLLECTION CODE
+   ========================================================= */
+
+.jr-payment-success-code-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  margin:
+    0
+    0
+    9px;
+
+  padding:
+    11px
+    10px
+    10px;
+
+  border:
+    1px solid
+    #d9ead8;
+
+  border-radius: 11px;
+
+  background: #f3f9f0;
+
+  text-align: center;
+}
+
+.jr-payment-success-code-card-empty {
+  border-color: #eadfca;
+
+  background: #fff9ec;
+}
+
+.jr-payment-success-code-header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  text-align: left;
+}
+
+.jr-payment-success-code-header > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.jr-payment-success-code-header span {
+  color: #2e8150;
+
+  font-size: 6px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: .08em;
+}
+
+.jr-payment-success-code-card-empty
+.jr-payment-success-code-header span {
+  color: #c27a0b;
+}
+
+.jr-payment-success-code-header strong {
+  color: #626862;
+
+  font-size: 6px;
+  line-height: 1.25;
+
+  font-weight: 500;
+}
+
+.jr-payment-success-code-header small {
+  flex: 0 0 auto;
+
+  padding:
+    4px
+    6px;
+
+  border-radius: 999px;
+
+  background: #e1efdf;
+
+  color: #388053;
+
+  font-size: 4.5px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: .05em;
+}
+
+.jr-payment-success-code-card-empty
+.jr-payment-success-code-header small {
+  background: #f5e8ca;
+
+  color: #b87712;
+}
+
+
+/* =========================================================
+   CODE DIGITS
+   ========================================================= */
+
+.jr-payment-success-code-digits {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  margin:
+    10px
+    0
+    7px;
+}
+
+.jr-payment-success-digit {
+  width: 43px;
+  height: 43px;
+
+  box-sizing: border-box;
+
+  display: grid;
+  place-items: center;
+
+  border:
+    1px solid
+    #cfe2ce;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #2d7e4d;
+
+  font-size: 20px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  box-shadow:
+    0 2px 6px
+    rgba(45, 128, 77, .05);
+}
+
+.jr-payment-success-digit-empty {
+  border-color: #e6dac0;
+
+  color: #b2a78e;
+
+  background: #fffdf8;
+}
+
+.jr-payment-success-code-card p {
+  max-width: 285px;
+
+  margin: 0 auto;
+
+  color: #777d77;
+
+  font-size: 5.5px;
+  line-height: 1.35;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   COLLECTION DETAILS
+   ========================================================= */
+
+.jr-payment-success-details {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  margin:
+    0
+    0
+    9px;
+
+  padding:
+    9px
+    10px;
+
+  border:
+    1px solid
+    #e5e5df;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+}
+
+.jr-payment-success-detail {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+}
+
+.jr-payment-success-detail-icon {
+  width: 31px;
+  height: 31px;
+
+  min-width: 31px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 8px;
+
+  background: #f0f7ed;
+
+  font-size: 12px;
+  line-height: 1;
+}
+
+.jr-payment-success-detail-copy {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.jr-payment-success-detail-copy span {
+  color: #999995;
+
+  font-size: 5px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: .08em;
+}
+
+.jr-payment-success-detail-copy strong {
+  overflow: hidden;
+
+  color: #1b1b1b;
+
+  font-size: 9px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.jr-payment-success-detail-copy p {
+  overflow: hidden;
+
+  margin: 0;
+
+  color: #888884;
+
+  font-size: 5.5px;
+  line-height: 1;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.jr-payment-success-divider {
+  height: 1px;
+
+  margin:
+    8px
+    0;
+
+  background: #ecece7;
+}
+
+
+/* =========================================================
+   PAYMENT DETAILS
+   ========================================================= */
+
+.jr-payment-success-payment-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    1fr
+    1fr;
+
+  margin:
+    0
+    0
+    10px;
+
+  padding:
+    10px 8px;
+
+  border:
+    1px solid
+    #e5e5df;
+
+  border-radius: 10px;
+
+  background: #fffefa;
+}
+
+.jr-payment-success-payment-card > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  padding:
+    0
+    7px;
+}
+
+.jr-payment-success-payment-card > div + div {
+  border-left:
+    1px solid
+    #e8e8e3;
+}
+
+.jr-payment-success-payment-card span {
+  color: #999995;
+
+  font-size: 5px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: .06em;
+}
+
+.jr-payment-success-payment-card strong {
+  overflow: hidden;
+
+  color: #303030;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.jr-payment-success-payment-card
+.jr-payment-success-paid {
+  color: #2e8550;
+}
+
+.jr-payment-success-payment-card small {
+  color: #999995;
+
+  font-size: 5px;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
+
+.jr-payment-success-primary {
+  width: 100%;
+
+  height: 40px;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  padding:
+    0
+    11px;
+
+  border: 0;
+
+  border-radius: 8px;
+
+  background: #2e8650;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 14px
+    rgba(46, 134, 80, .15);
+}
+
+.jr-payment-success-primary strong {
+  font-size: 14px;
+
+  font-weight: 400;
+}
+
+
+/* =========================================================
+   SECONDARY BUTTON
+   ========================================================= */
+
+.jr-payment-success-secondary {
+  width: 100%;
+
+  height: 34px;
+
+  box-sizing: border-box;
+
+  margin-top: 7px;
+
+  padding: 0;
+
+  border:
+    1px solid
+    #deded9;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #2e8050;
+
+  font-family: inherit;
+
+  font-size: 6.5px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   NOTE
+   ========================================================= */
+
+.jr-payment-success-note {
+  margin:
+    8px
+    0
+    0;
+
+  color: #a0a09b;
+
+  font-size: 5.5px;
+  line-height: 1.25;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   390PX AND BELOW
+   ========================================================= */
+
+@media (max-width: 390px) {
+
+  .jr-payment-success-page {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .jr-payment-success-heading h1 {
+    font-size: 25px;
+  }
+
+  .jr-payment-success-code-digits {
+    gap: 6px;
+  }
+
+  .jr-payment-success-digit {
+    width: 41px;
+    height: 41px;
+  }
+}
+
+
+/* =========================================================
+   360PX AND BELOW
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+  .jr-payment-success-page {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .jr-payment-success-icon {
+    width: 55px;
+    height: 55px;
+  }
+
+  .jr-payment-success-heading h1 {
+    font-size: 23px;
+  }
+
+  .jr-payment-success-code-digits {
+    gap: 5px;
+  }
+
+  .jr-payment-success-digit {
+    width: 38px;
+    height: 38px;
+
+    font-size: 18px;
+  }
+
+  .jr-payment-success-payment-card {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
+  .jr-payment-success-payment-card > div {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+}
+
+
+/* =========================================================
+   SHORT MOBILE SCREENS
+   ========================================================= */
+
+@media (max-height: 700px) {
+
+  .jr-payment-success-page {
+    padding-top: 11px;
+  }
+
+  .jr-payment-success-icon {
+    width: 52px;
+    height: 52px;
+
+    margin-bottom: 8px;
+  }
+
+  .jr-payment-success-heading {
+    margin-bottom: 10px;
+  }
+
+  .jr-payment-success-code-card {
+    padding-top: 9px;
+    padding-bottom: 8px;
+  }
+
+  .jr-payment-success-code-digits {
+    margin-top: 7px;
+    margin-bottom: 5px;
+  }
+
+  .jr-payment-success-digit {
+    width: 37px;
+    height: 37px;
+
+    font-size: 17px;
+  }
+
+  .jr-payment-success-details {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+
+  .jr-payment-success-payment-card {
+    margin-bottom: 8px;
+  }
+
+  .jr-payment-success-primary {
+    height: 38px;
+  }
+}

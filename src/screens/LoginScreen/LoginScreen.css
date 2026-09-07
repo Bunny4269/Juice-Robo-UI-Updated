@@ -1,0 +1,754 @@
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.jr-login-screen {
+  width: 100%;
+  min-height: 100vh;
+
+  box-sizing: border-box;
+
+  background: #f8f9ef;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  overflow-y: auto;
+
+  padding: 44px 20px 34px;
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+   ========================================================= */
+
+.jr-login-container {
+  width: 100%;
+  max-width: 357px;
+
+  margin: 0 auto;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.jr-login-logo-container {
+  width: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin-bottom: 25px;
+}
+
+.jr-login-logo-image {
+  display: block;
+
+  width: 100%;
+  max-width: 218px;
+  height: auto;
+
+  object-fit: contain;
+}
+
+
+/* =========================================================
+   INTRO / COPY
+   ========================================================= */
+
+.jr-login-copy {
+  width: 100%;
+
+  margin-bottom: 25px;
+}
+
+.jr-login-eyebrow {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #317b50;
+
+  font-size: 9px;
+  line-height: 1.2;
+  font-weight: 800;
+
+  letter-spacing: 0.095em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   HEADING
+   ========================================================= */
+
+.jr-login-copy h1 {
+  margin: 0;
+
+  color: #102b1d;
+
+  font-size: 39px;
+  line-height: 0.94;
+
+  font-weight: 900;
+
+  letter-spacing: -1.7px;
+}
+
+.jr-login-copy h1 em {
+  color: #2d804b;
+
+  font-style: italic;
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   DESCRIPTION
+   ========================================================= */
+
+.jr-login-copy p {
+  margin: 17px 0 0;
+
+  color: #6d746f;
+
+  font-size: 13px;
+  line-height: 1.5;
+
+  font-weight: 400;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.jr-login-form {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 17px;
+}
+
+
+/* =========================================================
+   FIELD
+   ========================================================= */
+
+.jr-login-field {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.jr-login-field label {
+  display: block;
+
+  color: #606862;
+
+  font-size: 8px;
+  line-height: 1.2;
+
+  font-weight: 850;
+
+  letter-spacing: 0.09em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   INPUT
+   ========================================================= */
+
+.jr-login-field input {
+  width: 100%;
+  height: 49px;
+
+  box-sizing: border-box;
+
+  padding: 0 14px;
+
+  border: 1px solid #e2e4dc;
+  border-radius: 12px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #27332d;
+
+  font-family: inherit;
+
+  font-size: 12px;
+  line-height: 1;
+
+  font-weight: 600;
+
+  box-shadow:
+    0 2px 5px rgba(35, 55, 40, 0.025),
+    0 7px 18px rgba(35, 55, 40, 0.035);
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.jr-login-field input::placeholder {
+  color: #a3a8a4;
+
+  font-weight: 400;
+}
+
+.jr-login-field input:focus {
+  border-color: #5b9b70;
+
+  box-shadow:
+    0 0 0 3px rgba(45, 128, 75, 0.08),
+    0 7px 18px rgba(35, 55, 40, 0.04);
+}
+
+
+/* =========================================================
+   PASSWORD WRAPPER
+   ========================================================= */
+
+.jr-login-password-wrap {
+  position: relative;
+
+  width: 100%;
+}
+
+
+/* =========================================================
+   PASSWORD INPUT
+   ========================================================= */
+
+.jr-login-password-input {
+  padding-right: 48px !important;
+
+  background: #eaf2ff !important;
+
+  border-color: #dce5f3 !important;
+}
+
+.jr-login-password-input:focus {
+  background: #eef5ff !important;
+
+  border-color: #a9c2e4 !important;
+
+  box-shadow:
+    0 0 0 3px rgba(69, 125, 190, 0.08),
+    0 7px 18px rgba(35, 55, 40, 0.04) !important;
+}
+
+
+/* =========================================================
+   PASSWORD TOGGLE
+   ========================================================= */
+
+.jr-login-password-toggle {
+  position: absolute;
+
+  top: 50%;
+  right: 12px;
+
+  width: 27px;
+  height: 27px;
+
+  padding: 0;
+
+  transform: translateY(-50%);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #88939a;
+
+  cursor: pointer;
+
+  border-radius: 50%;
+
+  transition:
+    color 0.18s ease,
+    background 0.18s ease;
+}
+
+.jr-login-password-toggle:hover {
+  color: #52616a;
+
+  background: rgba(80, 100, 115, 0.06);
+}
+
+.jr-login-password-toggle:focus-visible {
+  outline: 2px solid #4f9468;
+  outline-offset: 2px;
+}
+
+.jr-login-password-toggle svg {
+  width: 20px;
+  height: 20px;
+
+  display: block;
+}
+
+
+/* =========================================================
+   REMEMBER / FORGOT
+   ========================================================= */
+
+.jr-login-options {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: -1px;
+}
+
+
+/* =========================================================
+   REMEMBER ME
+   ========================================================= */
+
+.jr-login-remember {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  margin: 0;
+
+  color: #606762;
+
+  font-size: 10px;
+
+  line-height: 1.2;
+
+  font-weight: 650;
+
+  cursor: pointer;
+}
+
+.jr-login-remember input {
+  appearance: none;
+
+  width: 16px;
+  height: 16px;
+
+  flex: 0 0 16px;
+
+  margin: 0;
+
+  border: 1px solid #cdd5ce;
+  border-radius: 4px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  position: relative;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.jr-login-remember input:checked {
+  background: #2f8750;
+
+  border-color: #2f8750;
+}
+
+.jr-login-remember input:checked::after {
+  content: "";
+
+  position: absolute;
+
+  left: 4px;
+  top: 1px;
+
+  width: 5px;
+  height: 9px;
+
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+
+  transform: rotate(45deg);
+}
+
+
+/* =========================================================
+   FORGOT PASSWORD
+   ========================================================= */
+
+.jr-login-forgot {
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #397c52;
+
+  font-family: inherit;
+
+  font-size: 10px;
+  line-height: 1.2;
+
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition: color 0.15s ease;
+}
+
+.jr-login-forgot:hover {
+  color: #225f3a;
+
+  text-decoration: underline;
+}
+
+.jr-login-forgot:focus-visible {
+  outline: 2px solid #4f9468;
+  outline-offset: 3px;
+
+  border-radius: 3px;
+}
+
+
+/* =========================================================
+   AUTHORIZATION
+   ========================================================= */
+
+.jr-login-authorization {
+  width: 100%;
+
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 9px;
+
+  margin-top: -1px;
+
+  cursor: pointer;
+}
+
+.jr-login-authorization input {
+  appearance: none;
+
+  width: 17px;
+  height: 17px;
+
+  flex: 0 0 17px;
+
+  margin: 0;
+
+  border: 1px solid #cfd6d0;
+  border-radius: 4px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  position: relative;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.jr-login-authorization input:checked {
+  background: #2f8750;
+
+  border-color: #2f8750;
+}
+
+.jr-login-authorization input:checked::after {
+  content: "";
+
+  position: absolute;
+
+  left: 4px;
+  top: 1px;
+
+  width: 5px;
+  height: 9px;
+
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+
+  transform: rotate(45deg);
+}
+
+.jr-login-authorization span {
+  display: block;
+
+  padding-top: 0;
+
+  color: #858b87;
+
+  font-size: 8px;
+
+  line-height: 1.35;
+
+  font-weight: 550;
+}
+
+
+/* =========================================================
+   SIGN IN BUTTON
+   ========================================================= */
+
+.jr-login-button {
+  width: 100%;
+  height: 51px;
+
+  margin-top: 5px;
+
+  padding: 0 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 11px;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: #2d8750;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 10px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.045em;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 18px rgba(45, 135, 80, 0.19);
+
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.jr-login-button:hover {
+  background: #267745;
+
+  box-shadow:
+    0 10px 22px rgba(45, 135, 80, 0.23);
+}
+
+.jr-login-button:active {
+  transform: translateY(1px);
+
+  box-shadow:
+    0 5px 12px rgba(45, 135, 80, 0.18);
+}
+
+.jr-login-button:focus-visible {
+  outline: 3px solid rgba(45, 135, 80, 0.25);
+  outline-offset: 3px;
+}
+
+
+/* =========================================================
+   ARROW
+   ========================================================= */
+
+.jr-login-arrow {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 17px;
+
+  line-height: 1;
+
+  font-weight: 400;
+
+  margin-top: -1px;
+}
+
+
+/* =========================================================
+   SECURITY NOTE
+   ========================================================= */
+
+.jr-login-note {
+  margin: 18px 0 0;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  gap: 5px;
+
+  color: #a0a49f;
+
+  font-size: 7px;
+
+  line-height: 1.4;
+
+  font-weight: 500;
+
+  text-align: center;
+}
+
+.jr-login-lock {
+  font-size: 7px;
+
+  line-height: 1;
+}
+
+
+/* =========================================================
+   TABLET / DESKTOP
+   ========================================================= */
+
+@media (min-width: 600px) {
+  .jr-login-screen {
+    padding-top: 55px;
+    padding-bottom: 45px;
+  }
+
+  .jr-login-container {
+    max-width: 380px;
+  }
+
+  .jr-login-logo-image {
+    max-width: 235px;
+  }
+
+  .jr-login-copy h1 {
+    font-size: 42px;
+  }
+
+  .jr-login-copy p {
+    font-size: 13px;
+  }
+
+  .jr-login-field input {
+    height: 51px;
+    font-size: 13px;
+  }
+
+  .jr-login-button {
+    height: 52px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE SCREENS
+   ========================================================= */
+
+@media (max-width: 360px) {
+  .jr-login-screen {
+    padding: 30px 17px 25px;
+  }
+
+  .jr-login-logo-container {
+    margin-bottom: 20px;
+  }
+
+  .jr-login-logo-image {
+    max-width: 195px;
+  }
+
+  .jr-login-copy {
+    margin-bottom: 21px;
+  }
+
+  .jr-login-copy h1 {
+    font-size: 35px;
+  }
+
+  .jr-login-copy p {
+    margin-top: 14px;
+
+    font-size: 12px;
+  }
+
+  .jr-login-form {
+    gap: 15px;
+  }
+
+  .jr-login-field input {
+    height: 46px;
+  }
+
+  .jr-login-button {
+    height: 48px;
+  }
+}
+
+
+/* =========================================================
+   VERY SHORT SCREENS
+   ========================================================= */
+
+@media (max-height: 700px) {
+  .jr-login-screen {
+    padding-top: 25px;
+    padding-bottom: 25px;
+  }
+
+  .jr-login-logo-container {
+    margin-bottom: 18px;
+  }
+
+  .jr-login-logo-image {
+    max-width: 190px;
+  }
+
+  .jr-login-copy {
+    margin-bottom: 18px;
+  }
+
+  .jr-login-copy h1 {
+    font-size: 34px;
+  }
+
+  .jr-login-copy p {
+    margin-top: 12px;
+  }
+
+  .jr-login-form {
+    gap: 13px;
+  }
+}

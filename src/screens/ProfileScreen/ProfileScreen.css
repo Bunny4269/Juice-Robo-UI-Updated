@@ -1,0 +1,1215 @@
+/* =========================================================
+   JUICE ROBO — PROFILE SCREEN
+   CLEAN LIGHT MOBILE DESIGN
+   ========================================================= */
+
+.jr-profile-page {
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+
+  box-sizing: border-box;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  padding:
+    12px
+    10px
+    26px;
+
+  background: #fbfaf4;
+  color: #171717;
+
+  font-family:
+    Inter,
+    Poppins,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  color-scheme: light;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.jr-profile-page::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* =========================================================
+   BACK TO MENU
+   ========================================================= */
+
+.jr-profile-page .jr-back-link {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+
+  margin:
+    0
+    0
+    8px;
+
+  padding: 3px 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #2d8050;
+
+  font-family: inherit;
+
+  font-size: 10px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: -.01em;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  transition:
+    opacity .15s ease,
+    transform .15s ease;
+}
+
+.jr-profile-page .jr-back-link:hover {
+  opacity: .8;
+}
+
+.jr-profile-page .jr-back-link:active {
+  transform: translateX(-2px);
+}
+
+.jr-profile-page .jr-back-link:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+
+/* =========================================================
+   EYEBROW
+   ========================================================= */
+
+.jr-profile-page .jr-eyebrow {
+  display: block;
+
+  margin:
+    0
+    0
+    4px;
+
+  color: #ed7900;
+
+  font-size: 8px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: .12em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   PAGE TITLE
+   ========================================================= */
+
+.jr-profile-page .jr-page-title {
+  margin:
+    0
+    0
+    13px;
+
+  color: #121212;
+
+  font-size: 31px;
+  line-height: .88;
+
+  font-weight: 950;
+
+  letter-spacing: -.065em;
+}
+
+.jr-profile-page .jr-page-title em {
+  color: #2d8050;
+
+  font-style: normal;
+}
+
+
+/* =========================================================
+   PROFILE IDENTITY
+   ========================================================= */
+
+.jr-profile-hero {
+  width: 100%;
+
+  min-height: 64px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  margin:
+    0
+    0
+    13px;
+
+  padding:
+    8px
+    9px;
+
+  border-radius: 13px;
+
+  background: #fffdf8;
+
+  border:
+    1px solid
+    #eeeade;
+
+  box-shadow:
+    0 4px 12px
+    rgba(36, 62, 39, .035);
+}
+
+
+/* =========================================================
+   AVATAR
+   ========================================================= */
+
+.jr-profile-avatar {
+  width: 43px;
+  height: 43px;
+
+  min-width: 43px;
+
+  display: grid;
+  place-items: center;
+
+  box-sizing: border-box;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fff3df,
+      #ffebc9
+    );
+
+  border:
+    1px solid
+    #f5dfbb;
+
+  color: #ed7900;
+
+  font-size: 15px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  box-shadow:
+    inset 0 0 0 3px
+    rgba(255,255,255,.6);
+}
+
+
+/* =========================================================
+   PROFILE NAME / EMAIL
+   ========================================================= */
+
+.jr-profile-hero > div:last-child {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.jr-profile-hero strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #1e1e1e;
+
+  font-size: 13px;
+  line-height: 1.05;
+
+  font-weight: 900;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.jr-profile-hero small {
+  display: block;
+
+  max-width: 100%;
+
+  overflow: hidden;
+
+  color: #898983;
+
+  font-size: 8px;
+  line-height: 1.15;
+
+  font-weight: 600;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   ACCOUNT / EDIT CARD
+   ========================================================= */
+
+.jr-account-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  margin:
+    0
+    0
+    11px;
+
+  padding:
+    12px;
+
+  border:
+    1px solid
+    #e3e3dc;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 16px
+    rgba(29, 52, 33, .045);
+
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease;
+}
+
+.jr-account-card-open {
+  border-color: #d5e4d5;
+
+  box-shadow:
+    0 7px 20px
+    rgba(45, 128, 80, .07);
+}
+
+
+/* =========================================================
+   EDIT ACCOUNT HEADER
+   ========================================================= */
+
+.jr-account-card-heading {
+  width: 100%;
+
+  min-height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin: 0;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  font-family: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.jr-account-edit-toggle {
+  color: #171717;
+}
+
+.jr-account-edit-toggle:disabled {
+  cursor: default;
+  opacity: .65;
+}
+
+
+/* =========================================================
+   ACCOUNT HEADER TEXT
+   ========================================================= */
+
+.jr-account-edit-toggle > div {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  gap: 3px;
+}
+
+.jr-account-edit-toggle .jr-eyebrow {
+  margin: 0 0 1px;
+
+  color: #4e8b65;
+
+  font-size: 7px;
+}
+
+.jr-account-edit-toggle strong {
+  display: block;
+
+  color: #1b1b1b;
+
+  font-size: 14px;
+  line-height: 1.05;
+
+  font-weight: 950;
+
+  letter-spacing: -.015em;
+}
+
+.jr-account-edit-toggle small {
+  display: block;
+
+  color: #969690;
+
+  font-size: 7.5px;
+  line-height: 1.2;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   DROPDOWN ARROW
+   ========================================================= */
+
+.jr-account-chevron {
+  width: 30px;
+  height: 30px;
+
+  min-width: 30px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #eef7ed;
+
+  color: #2d8050;
+
+  font-size: 14px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  transition:
+    transform .22s ease,
+    background .2s ease;
+}
+
+.jr-account-edit-toggle:active
+.jr-account-chevron {
+  background: #e3f1e1;
+}
+
+.jr-account-chevron-open {
+  transform: rotate(180deg);
+
+  background: #e5f2e3;
+}
+
+
+/* =========================================================
+   DROPDOWN CONTENT
+   ========================================================= */
+
+.jr-account-edit-panel {
+  margin-top: 11px;
+
+  padding-top: 12px;
+
+  border-top:
+    1px solid
+    #ecece6;
+
+  animation:
+    jrProfileDropdownOpen
+    .2s
+    ease-out;
+}
+
+@keyframes jrProfileDropdownOpen {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.jr-profile-page .jr-form {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+
+  margin: 0;
+}
+
+
+/* =========================================================
+   FORM LABEL
+   ========================================================= */
+
+.jr-profile-page .jr-form label {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  box-sizing: border-box;
+
+  color: #777771;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: .09em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   INPUT
+   ========================================================= */
+
+.jr-profile-page .jr-form input {
+  width: 100%;
+
+  height: 40px;
+
+  box-sizing: border-box;
+
+  margin: 0;
+
+  padding:
+    0
+    11px;
+
+  border:
+    1px solid
+    #deded7;
+
+  border-radius: 9px;
+
+  outline: none;
+
+  background: #fff;
+
+  color: #202020;
+
+  font-family: inherit;
+
+  font-size: 11px;
+  line-height: 1;
+
+  font-weight: 700;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  transition:
+    border-color .15s ease,
+    box-shadow .15s ease;
+}
+
+.jr-profile-page .jr-form input:hover {
+  border-color: #d2d8d1;
+}
+
+.jr-profile-page .jr-form input:focus {
+  border-color: #6fa17e;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(45, 128, 80, .08);
+}
+
+.jr-profile-page .jr-form input::placeholder {
+  color: #aaa9a3;
+}
+
+.jr-profile-page .jr-form input:disabled {
+  background: #f7f7f3;
+
+  color: #8f8f89;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SAVE PROFILE BUTTON
+   ========================================================= */
+
+.jr-profile-page
+.jr-button.jr-button-primary.jr-full {
+  width: 100%;
+
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 13px;
+
+  box-sizing: border-box;
+
+  margin:
+    2px
+    0
+    0;
+
+  padding:
+    0
+    13px;
+
+  border: 0;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #2d8950,
+      #278149
+    );
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 9px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: .04em;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  box-shadow:
+    0 7px 16px
+    rgba(45, 137, 80, .18);
+
+  transition:
+    transform .12s ease,
+    box-shadow .15s ease,
+    opacity .15s ease;
+}
+
+.jr-profile-page
+.jr-button.jr-button-primary.jr-full:hover {
+  box-shadow:
+    0 9px 20px
+    rgba(45, 137, 80, .22);
+}
+
+.jr-profile-page
+.jr-button.jr-button-primary.jr-full:active {
+  transform: translateY(1px);
+
+  box-shadow:
+    0 4px 10px
+    rgba(45, 137, 80, .14);
+}
+
+.jr-profile-page
+.jr-button.jr-button-primary.jr-full:disabled {
+  opacity: .55;
+
+  cursor: default;
+
+  box-shadow: none;
+}
+
+.jr-profile-page
+.jr-button.jr-button-primary.jr-full span {
+  font-size: 17px;
+  line-height: 1;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   FORM ERROR
+   ========================================================= */
+
+.jr-profile-page .jr-form-error {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding:
+    9px
+    10px;
+
+  border:
+    1px solid
+    #efcccc;
+
+  border-radius: 8px;
+
+  background: #fff6f6;
+
+  color: #ad4141;
+
+  font-size: 8px;
+  line-height: 1.35;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   ACTION CARDS
+   ========================================================= */
+
+.jr-profile-page .jr-account-action {
+  width: 100%;
+
+  min-height: 64px;
+
+  box-sizing: border-box;
+
+  display: grid;
+
+  grid-template-columns:
+    38px
+    minmax(0, 1fr)
+    20px;
+
+  align-items: center;
+
+  column-gap: 10px;
+
+  margin:
+    0
+    0
+    10px;
+
+  padding:
+    9px
+    10px;
+
+  border:
+    1px solid
+    #e4e4dd;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  color: #222222;
+
+  font-family: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  box-shadow:
+    0 4px 12px
+    rgba(29, 52, 33, .035);
+
+  transition:
+    border-color .15s ease,
+    box-shadow .15s ease,
+    transform .12s ease;
+}
+
+.jr-profile-page .jr-account-action:hover {
+  border-color: #d7ded5;
+
+  box-shadow:
+    0 6px 15px
+    rgba(29, 52, 33, .055);
+}
+
+.jr-profile-page .jr-account-action:active {
+  transform: translateY(1px);
+}
+
+.jr-profile-page .jr-account-action:disabled {
+  opacity: .6;
+
+  cursor: default;
+}
+
+
+/* =========================================================
+   ACTION ICON
+   ========================================================= */
+
+.jr-profile-page
+.jr-account-action
+> span:first-child {
+  width: 38px;
+  height: 38px;
+
+  min-width: 38px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+
+  background: #eef7ed;
+
+  color: #2d8050;
+
+  font-size: 15px;
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   ACTION TEXT
+   ========================================================= */
+
+.jr-profile-page
+.jr-account-action
+> div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.jr-profile-page
+.jr-account-action
+strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #242424;
+
+  font-size: 11px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.jr-profile-page
+.jr-account-action
+small {
+  display: block;
+
+  overflow: hidden;
+
+  color: #8b8b85;
+
+  font-size: 7.5px;
+  line-height: 1.15;
+
+  font-weight: 600;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   ACTION ARROW
+   ========================================================= */
+
+.jr-profile-page
+.jr-account-action
+> b {
+  color: #777771;
+
+  font-size: 16px;
+  line-height: 1;
+
+  font-weight: 500;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   MY ORDERS
+   ========================================================= */
+
+.jr-profile-page
+.jr-account-action:not(.jr-account-action-danger)
+> span:first-child {
+  background: #edf7ec;
+
+  color: #2c8050;
+}
+
+.jr-profile-page
+.jr-account-action:not(.jr-account-action-danger)
+> b {
+  color: #777771;
+}
+
+
+/* =========================================================
+   SIGN OUT
+   ========================================================= */
+
+.jr-profile-page
+.jr-account-action-danger {
+  margin-bottom: 12px;
+
+  border-color: #ecdede;
+
+  background:
+    linear-gradient(
+      180deg,
+      #fffdfd,
+      #fff9f9
+    );
+}
+
+.jr-profile-page
+.jr-account-action-danger:hover {
+  border-color: #e5cfcf;
+}
+
+.jr-profile-page
+.jr-account-action-danger
+> span:first-child {
+  background: #fff0f0;
+
+  color: #c45050;
+}
+
+.jr-profile-page
+.jr-account-action-danger
+strong {
+  color: #9f4141;
+}
+
+.jr-profile-page
+.jr-account-action-danger
+> b {
+  color: #bd5959;
+}
+
+
+/* =========================================================
+   LIGHT MODE ENFORCEMENT
+   ========================================================= */
+
+.jr-profile-page,
+.jr-profile-page * {
+  color-scheme: light;
+}
+
+.jr-profile-page input,
+.jr-profile-page button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+
+/* =========================================================
+   RESPONSIVE — 430PX AND BELOW
+   ========================================================= */
+
+@media (max-width: 430px) {
+
+  .jr-profile-page {
+    padding:
+      11px
+      9px
+      24px;
+  }
+
+  .jr-profile-page .jr-page-title {
+    font-size: 30px;
+  }
+
+  .jr-profile-hero {
+    min-height: 62px;
+
+    margin-bottom: 12px;
+  }
+
+  .jr-profile-avatar {
+    width: 42px;
+    height: 42px;
+
+    min-width: 42px;
+  }
+
+  .jr-account-card {
+    padding: 11px;
+  }
+
+  .jr-account-action {
+    min-height: 62px;
+  }
+}
+
+
+/* =========================================================
+   390PX AND BELOW
+   ========================================================= */
+
+@media (max-width: 390px) {
+
+  .jr-profile-page {
+    padding:
+      10px
+      8px
+      22px;
+  }
+
+  .jr-profile-page .jr-page-title {
+    font-size: 28px;
+  }
+
+  .jr-profile-hero {
+    min-height: 60px;
+  }
+
+  .jr-profile-avatar {
+    width: 40px;
+    height: 40px;
+
+    min-width: 40px;
+
+    font-size: 14px;
+  }
+
+  .jr-profile-page
+  .jr-account-action {
+    min-height: 60px;
+
+    grid-template-columns:
+      36px
+      minmax(0, 1fr)
+      18px;
+  }
+
+  .jr-profile-page
+  .jr-account-action
+  > span:first-child {
+    width: 36px;
+    height: 36px;
+
+    min-width: 36px;
+  }
+}
+
+
+/* =========================================================
+   360PX AND BELOW
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+  .jr-profile-page {
+    padding:
+      9px
+      7px
+      20px;
+  }
+
+  .jr-profile-page .jr-page-title {
+    font-size: 26px;
+  }
+
+  .jr-profile-hero {
+    gap: 9px;
+  }
+
+  .jr-profile-avatar {
+    width: 38px;
+    height: 38px;
+
+    min-width: 38px;
+
+    font-size: 13px;
+  }
+
+  .jr-profile-hero strong {
+    font-size: 12px;
+  }
+
+  .jr-profile-hero small {
+    font-size: 7.5px;
+  }
+
+  .jr-account-edit-toggle strong {
+    font-size: 13px;
+  }
+
+  .jr-account-edit-toggle small {
+    font-size: 7px;
+  }
+
+  .jr-profile-page
+  .jr-form input {
+    height: 38px;
+  }
+
+  .jr-profile-page
+  .jr-button.jr-button-primary.jr-full {
+    min-height: 40px;
+  }
+
+  .jr-profile-page
+  .jr-account-action {
+    min-height: 58px;
+  }
+}
+
+
+/* =========================================================
+   LARGE MOBILE HEIGHT — BETTER VERTICAL BALANCE
+   ========================================================= */
+
+@media (min-height: 780px) {
+
+  .jr-profile-page {
+    padding-bottom: 28px;
+  }
+
+  .jr-profile-page .jr-page-title {
+    margin-bottom: 14px;
+  }
+
+  .jr-profile-hero {
+    margin-bottom: 14px;
+  }
+
+  .jr-account-card {
+    margin-bottom: 12px;
+  }
+
+  .jr-profile-page
+  .jr-account-action {
+    min-height: 65px;
+  }
+}
+
+
+/* =========================================================
+   SHORT MOBILE SCREENS
+   ========================================================= */
+
+@media (max-height: 700px) {
+
+  .jr-profile-page {
+    padding-top: 8px;
+    padding-bottom: 16px;
+  }
+
+  .jr-profile-page .jr-page-title {
+    margin-bottom: 9px;
+
+    font-size: 27px;
+  }
+
+  .jr-profile-hero {
+    min-height: 54px;
+
+    margin-bottom: 9px;
+  }
+
+  .jr-profile-avatar {
+    width: 36px;
+    height: 36px;
+
+    min-width: 36px;
+  }
+
+  .jr-account-card {
+    margin-bottom: 8px;
+  }
+
+  .jr-profile-page
+  .jr-account-action {
+    min-height: 54px;
+
+    margin-bottom: 7px;
+  }
+}

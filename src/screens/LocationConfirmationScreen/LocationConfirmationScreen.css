@@ -1,0 +1,676 @@
+/* =========================================================
+   JUICE ROBO — LOCATION CONFIRMATION SCREEN
+   ========================================================= */
+
+.jr-location-confirmation-page {
+  width: 100%;
+  min-height: 100%;
+
+  box-sizing: border-box;
+
+  padding:
+    16px
+    10px
+    88px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  background: #fbfaf3;
+
+  color: #171717;
+
+  font-family:
+    Inter,
+    Poppins,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  scrollbar-width: none;
+}
+
+.jr-location-confirmation-page::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* =========================================================
+   BACK
+   ========================================================= */
+
+.jr-location-confirm-back {
+  display: inline-flex;
+  align-items: center;
+
+  margin:
+    0
+    0
+    18px;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #287f48;
+
+  font-family: inherit;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.jr-location-confirm-back:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.jr-location-confirm-heading {
+  margin:
+    0
+    0
+    16px;
+}
+
+.jr-location-confirm-eyebrow {
+  display: block;
+
+  margin:
+    0
+    5px;
+
+  color: #ed7800;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: .11em;
+
+  text-transform: uppercase;
+}
+
+.jr-location-confirm-heading h1 {
+  margin: 0;
+
+  color: #111111;
+
+  font-size: 26px;
+  line-height: .92;
+
+  font-weight: 950;
+
+  letter-spacing: -.055em;
+}
+
+.jr-location-confirm-heading h1 em {
+  color: #f07800;
+
+  font-style: normal;
+}
+
+.jr-location-confirm-heading p {
+  max-width: 300px;
+
+  margin:
+    7px
+    0
+    0;
+
+  color: #888884;
+
+  font-size: 7px;
+  line-height: 1.4;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   SECTION
+   ========================================================= */
+
+.jr-location-confirm-section {
+  margin:
+    0
+    0
+    10px;
+}
+
+.jr-location-confirm-section-label {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin:
+    0
+    0
+    6px;
+}
+
+.jr-location-confirm-section-label > span {
+  width: 22px;
+  height: 22px;
+
+  min-width: 22px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #f07800;
+
+  color: #ffffff;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+.jr-location-confirm-section-label > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.jr-location-confirm-section-label strong {
+  color: #272727;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: .04em;
+}
+
+.jr-location-confirm-section-label small {
+  color: #969692;
+
+  font-size: 5.5px;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   LOCATION / MACHINE CARD
+   ========================================================= */
+
+.jr-location-confirm-card {
+  width: 100%;
+  min-height: 61px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding:
+    8px
+    9px;
+
+  border:
+    2px solid
+    #f07800;
+
+  border-radius: 11px;
+
+  background: #fffefa;
+
+  box-shadow:
+    0 4px 11px
+    rgba(20, 45, 26, .035);
+}
+
+.jr-location-confirm-icon {
+  width: 35px;
+  height: 35px;
+
+  min-width: 35px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 9px;
+
+  background: #f0f7ed;
+
+  color: #368253;
+}
+
+.jr-location-confirm-svg {
+  width: 17px;
+  height: 17px;
+}
+
+.jr-location-confirm-card-copy {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.jr-location-confirm-card-copy small {
+  color: #999995;
+
+  font-size: 5px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: .08em;
+}
+
+.jr-location-confirm-card-copy strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #171717;
+
+  font-size: 10px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.jr-location-confirm-card-copy span {
+  display: block;
+
+  overflow: hidden;
+
+  color: #888884;
+
+  font-size: 5.5px;
+  line-height: 1;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.jr-location-confirm-check {
+  width: 20px;
+  height: 20px;
+
+  min-width: 20px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #f07800;
+
+  color: #ffffff;
+
+  font-size: 11px;
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   ORDER SUMMARY
+   ========================================================= */
+
+.jr-location-confirm-order-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  margin:
+    2px
+    0
+    10px;
+
+  padding:
+    10px;
+
+  border:
+    1px solid
+    #e5e5df;
+
+  border-radius: 11px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 4px 12px
+    rgba(20, 45, 26, .03);
+}
+
+.jr-location-confirm-order-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin:
+    0
+    0
+    8px;
+}
+
+.jr-location-confirm-order-heading h2 {
+  margin: 0;
+
+  color: #393939;
+
+  font-size: 9px;
+  line-height: 1;
+
+  font-weight: 800;
+}
+
+.jr-location-confirm-order-heading span {
+  color: #999995;
+
+  font-size: 5.5px;
+  line-height: 1;
+}
+
+.jr-location-confirm-items {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  padding-bottom: 8px;
+
+  border-bottom:
+    1px solid
+    #e9e9e5;
+}
+
+.jr-location-confirm-item {
+  display: flex;
+
+  align-items: center;
+
+  color: #5e5e5a;
+
+  font-size: 6.5px;
+  line-height: 1.2;
+
+  font-weight: 600;
+}
+
+.jr-location-confirm-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  padding-top: 8px;
+}
+
+.jr-location-confirm-total > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.jr-location-confirm-total span {
+  color: #3d3d39;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+.jr-location-confirm-total small {
+  color: #999995;
+
+  font-size: 5px;
+  line-height: 1;
+}
+
+.jr-location-confirm-total > strong {
+  color: #2d8450;
+
+  font-size: 16px;
+  line-height: 1;
+
+  font-weight: 950;
+}
+
+
+/* =========================================================
+   CONFIRM BUTTON
+   ========================================================= */
+
+.jr-location-confirm-button {
+  width: 100%;
+
+  height: 42px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding:
+    0
+    12px;
+
+  border: 0;
+
+  border-radius: 8px;
+
+  background: #f07800;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 950;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 14px
+    rgba(240, 120, 0, .15);
+
+  transition:
+    background .15s ease,
+    transform .12s ease,
+    opacity .15s ease;
+}
+
+.jr-location-confirm-button:hover:not(:disabled) {
+  background: #e66f00;
+}
+
+.jr-location-confirm-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.jr-location-confirm-button:disabled {
+  opacity: .45;
+
+  cursor: not-allowed;
+
+  box-shadow: none;
+}
+
+.jr-location-confirm-button strong {
+  font-size: 15px;
+
+  font-weight: 400;
+}
+
+
+/* =========================================================
+   NOTE / ERROR
+   ========================================================= */
+
+.jr-location-confirm-note {
+  margin:
+    8px
+    0
+    0;
+
+  color: #a0a09b;
+
+  font-size: 5.5px;
+  line-height: 1.25;
+
+  text-align: center;
+}
+
+.jr-location-confirm-error {
+  margin-top: 8px;
+
+  padding:
+    7px
+    8px;
+
+  border:
+    1px solid
+    #edcccc;
+
+  border-radius: 7px;
+
+  background: #fff3f2;
+
+  color: #c84f4b;
+
+  font-size: 6.5px;
+  line-height: 1.3;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   430PX AND BELOW
+   ========================================================= */
+
+@media (max-width: 430px) {
+  .jr-location-confirmation-page {
+    padding:
+      15px
+      10px
+      84px;
+  }
+
+  .jr-location-confirm-heading h1 {
+    font-size: 25px;
+  }
+}
+
+
+/* =========================================================
+   390PX AND BELOW
+   ========================================================= */
+
+@media (max-width: 390px) {
+  .jr-location-confirmation-page {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .jr-location-confirm-card {
+    min-height: 59px;
+  }
+
+  .jr-location-confirm-total > strong {
+    font-size: 15px;
+  }
+}
+
+
+/* =========================================================
+   360PX AND BELOW
+   ========================================================= */
+
+@media (max-width: 360px) {
+  .jr-location-confirmation-page {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .jr-location-confirm-heading h1 {
+    font-size: 23px;
+  }
+
+  .jr-location-confirm-card {
+    padding:
+      7px
+      8px;
+  }
+
+  .jr-location-confirm-icon {
+    width: 33px;
+    height: 33px;
+    min-width: 33px;
+  }
+}
+
+
+/* =========================================================
+   SHORT MOBILE SCREENS
+   ========================================================= */
+
+@media (max-height: 700px) {
+  .jr-location-confirmation-page {
+    padding-top: 11px;
+  }
+
+  .jr-location-confirm-back {
+    margin-bottom: 14px;
+  }
+
+  .jr-location-confirm-heading {
+    margin-bottom: 12px;
+  }
+
+  .jr-location-confirm-section {
+    margin-bottom: 7px;
+  }
+
+  .jr-location-confirm-order-card {
+    margin-bottom: 8px;
+  }
+
+  .jr-location-confirm-button {
+    height: 39px;
+  }
+}

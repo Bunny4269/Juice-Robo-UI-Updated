@@ -1,0 +1,2 @@
+email: juicerobo.test@gmail.com
+password: NGE_3926

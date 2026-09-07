@@ -1,0 +1,683 @@
+/* =========================================================
+   JUICE ROBO — HISTORY SCREEN
+   Screenshot-matched mobile UI
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.jr-history-page {
+  width: 100%;
+  min-height: 100%;
+  height: auto;
+
+  box-sizing: border-box;
+
+  padding:
+    22px
+    11px
+    88px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  color: #151515;
+
+  font-family:
+    Inter,
+    Poppins,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: none;
+}
+
+
+.jr-history-page::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* =========================================================
+   BACK TO ACCOUNT
+   ========================================================= */
+
+.jr-history-back {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 2px;
+
+  margin:
+    0
+    0
+    22px;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #287f46;
+
+  font-family: inherit;
+
+  font-size: 8px;
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+
+.jr-history-back:active {
+  opacity: 0.65;
+}
+
+
+/* =========================================================
+   PAGE HEADING
+   ========================================================= */
+
+.jr-history-heading {
+  width: 100%;
+
+  margin:
+    0
+    0
+    0;
+}
+
+
+.jr-history-eyebrow {
+  display: block;
+
+  margin:
+    0
+    5px;
+
+  color: #ee7800;
+
+  font-size: 7px;
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+
+.jr-history-title-row {
+  width: 100%;
+
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 8px;
+}
+
+
+.jr-history-title-row h1 {
+  margin: 0;
+
+  color: #111111;
+
+  font-family: inherit;
+
+  font-size: 25px;
+
+  line-height: 0.95;
+
+  font-weight: 950;
+
+  letter-spacing: -0.045em;
+}
+
+
+.jr-history-title-row p {
+  margin:
+    7px
+    0
+    0;
+
+  color: #888888;
+
+  font-size: 8px;
+
+  line-height: 1.3;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   CLEAR BUTTON
+   ========================================================= */
+
+.jr-history-clear {
+  width: 25px;
+  height: 25px;
+
+  flex: 0 0 25px;
+
+  display: grid;
+
+  place-items: center;
+
+  margin-top: 2px;
+
+  padding: 0;
+
+  border: 0;
+
+  border-radius: 50%;
+
+  background: #fff0ed;
+
+  color: #d45b4d;
+
+  font-family: inherit;
+
+  font-size: 16px;
+
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+
+.jr-history-clear:active {
+  transform: scale(0.94);
+}
+
+
+/* =========================================================
+   EMPTY HISTORY
+   ========================================================= */
+
+.jr-history-empty {
+  width: 100%;
+
+  min-height: 570px;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  padding-top: 122px;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   EMPTY ICON
+   ========================================================= */
+
+.jr-history-empty-icon {
+  width: 60px;
+  height: 60px;
+
+  display: grid;
+
+  place-items: center;
+
+  margin:
+    0
+    0
+    15px;
+
+  border-radius: 19px;
+
+  background: #f4f8f0;
+}
+
+
+.jr-history-empty-icon span {
+  font-size: 27px;
+
+  line-height: 1;
+}
+
+
+/* =========================================================
+   EMPTY TITLE
+   ========================================================= */
+
+.jr-history-empty h2 {
+  margin:
+    0
+    0
+    7px;
+
+  color: #171717;
+
+  font-family: inherit;
+
+  font-size: 17px;
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: -0.025em;
+}
+
+
+/* =========================================================
+   EMPTY DESCRIPTION
+   ========================================================= */
+
+.jr-history-empty p {
+  margin:
+    0
+    0
+    18px;
+
+  color: #888888;
+
+  font-size: 8px;
+
+  line-height: 1.45;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   BACK TO ACCOUNT BUTTON
+   ========================================================= */
+
+.jr-history-shop-button {
+  width: 168px;
+
+  height: 40px;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 13px;
+
+  padding:
+    0
+    12px;
+
+  border: 0;
+
+  border-radius: 9px;
+
+  background: #f07800;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 7px;
+
+  line-height: 1;
+
+  font-weight: 950;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 5px 12px
+    rgba(240, 120, 0, 0.13);
+
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease;
+}
+
+
+.jr-history-shop-button:hover {
+  background: #e66f00;
+}
+
+
+.jr-history-shop-button:active {
+  transform: translateY(1px);
+}
+
+
+.jr-history-shop-button strong {
+  font-size: 14px;
+
+  line-height: 1;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   ORDER LIST
+   ========================================================= */
+
+.jr-history-list {
+  width: 100%;
+
+  display: grid;
+
+  gap: 9px;
+
+  margin-top: 20px;
+}
+
+
+/* =========================================================
+   ORDER CARD
+   ========================================================= */
+
+.jr-history-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 12px;
+
+  border:
+    1px solid
+    #e8e8e2;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 4px 13px
+    rgba(20, 45, 26, 0.035);
+}
+
+
+/* =========================================================
+   CARD HEADER
+   ========================================================= */
+
+.jr-history-card-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 8px;
+}
+
+
+.jr-history-order-info {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+
+.jr-history-order-info span {
+  color: #999999;
+
+  font-size: 5px;
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+}
+
+
+.jr-history-order-info strong {
+  color: #171717;
+
+  font-size: 10px;
+
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.jr-history-status {
+  padding:
+    4px
+    8px;
+
+  border-radius: 999px;
+
+  background: #edf7ed;
+
+  color: #287f46;
+
+  font-size: 6px;
+
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   DATE
+   ========================================================= */
+
+.jr-history-date {
+  margin-top: 5px;
+
+  color: #999999;
+
+  font-size: 7px;
+
+  line-height: 1;
+}
+
+
+/* =========================================================
+   LOCATION
+   ========================================================= */
+
+.jr-history-location {
+  margin-top: 9px;
+
+  color: #555555;
+
+  font-size: 8px;
+
+  line-height: 1.35;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   ITEMS
+   ========================================================= */
+
+.jr-history-items {
+  margin-top: 9px;
+
+  display: grid;
+
+  gap: 5px;
+}
+
+
+.jr-history-item {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 8px;
+
+  color: #555555;
+
+  font-size: 8px;
+
+  line-height: 1.2;
+}
+
+
+/* =========================================================
+   TOTAL
+   ========================================================= */
+
+.jr-history-total {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 8px;
+
+  margin-top: 10px;
+
+  padding-top: 9px;
+
+  border-top:
+    1px solid
+    #eeeeea;
+}
+
+
+.jr-history-total span {
+  color: #555555;
+
+  font-size: 7px;
+
+  line-height: 1;
+
+  font-weight: 850;
+}
+
+
+.jr-history-total strong {
+  color: #111111;
+
+  font-size: 10px;
+
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   390PX AND BELOW
+   ========================================================= */
+
+@media (max-width: 390px) {
+
+  .jr-history-page {
+    padding:
+      21px
+      10px
+      85px;
+  }
+
+
+  .jr-history-back {
+    margin-bottom: 21px;
+  }
+
+
+  .jr-history-title-row h1 {
+    font-size: 24px;
+  }
+
+
+  .jr-history-empty {
+    padding-top: 120px;
+  }
+}
+
+
+/* =========================================================
+   360PX AND BELOW
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+  .jr-history-page {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+
+  .jr-history-empty {
+    padding-top: 112px;
+  }
+
+
+  .jr-history-empty h2 {
+    font-size: 16px;
+  }
+
+
+  .jr-history-empty p {
+    font-size: 7.5px;
+  }
+
+
+  .jr-history-shop-button {
+    width: 165px;
+  }
+}
+
+
+/* =========================================================
+   SHORT MOBILE SCREENS
+   ========================================================= */
+
+@media (max-height: 700px) {
+
+  .jr-history-page {
+    padding-top: 17px;
+  }
+
+
+  .jr-history-back {
+    margin-bottom: 18px;
+  }
+
+
+  .jr-history-empty {
+    padding-top: 90px;
+
+    min-height: 500px;
+  }
+}
