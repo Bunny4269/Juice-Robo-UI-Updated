@@ -3,9 +3,9 @@
   --jr-dark-green: #176a39;
   --jr-orange: #f07800;
   --jr-cream: #fbfaf3;
-  --jr-white: #fff;
+  --jr-white: #ffffff;
   --jr-text: #151515;
-  --jr-muted: #777;
+  --jr-muted: #777777;
   --jr-border: #e8e8e1;
   --jr-danger: #d94a3f;
   --jr-shadow: 0 8px 24px rgba(20, 45, 26, 0.07);
@@ -69,11 +69,12 @@ button:disabled {
 }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
   outline: 2px solid var(--jr-orange);
   outline-offset: 2px;
 }
-
 
 /* =========================================================
    APP
@@ -91,8 +92,6 @@ input:focus-visible {
   box-sizing: border-box;
 
   background: #252525;
-
-  padding-bottom: 62px;
 }
 
 .jr-mobile-frame {
@@ -109,6 +108,22 @@ input:focus-visible {
   background: var(--jr-cream);
 }
 
+/* =========================================================
+   SCREEN CONTAINER
+   ========================================================= */
+
+.jr-screen-container {
+  position: relative;
+
+  width: 100%;
+
+  flex: 1 1 auto;
+  min-height: 0;
+
+  overflow: hidden;
+
+  background: var(--jr-cream);
+}
 
 /* =========================================================
    HEADER
@@ -130,7 +145,7 @@ input:focus-visible {
 
   background: var(--jr-white);
 
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #eeeeee;
 }
 
 .jr-header-location {
@@ -148,9 +163,16 @@ input:focus-visible {
 
   background: transparent;
 
+  color: var(--jr-text);
+
   text-align: left;
 }
 
+.jr-header-location:hover {
+  background: transparent;
+}
+
+.jr-location-pin,
 .jr-header-location-icon {
   width: 28px;
   height: 28px;
@@ -166,7 +188,8 @@ input:focus-visible {
 
   color: var(--jr-green);
 
-  font-size: 15px;
+  font-size: 12px;
+  line-height: 1;
 }
 
 .jr-header-location-copy {
@@ -177,16 +200,23 @@ input:focus-visible {
 }
 
 .jr-header-location-copy small {
-  color: #999;
+  display: block;
+
+  color: #999999;
 
   font-size: 6.5px;
+  line-height: 1.2;
   font-weight: 850;
 
   letter-spacing: 0.08em;
 }
 
 .jr-header-location-copy strong {
+  display: block;
+
   overflow: hidden;
+
+  color: var(--jr-text);
 
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -196,14 +226,18 @@ input:focus-visible {
   font-weight: 850;
 }
 
+.jr-header-location-copy span,
 .jr-header-location-copy em {
+  display: block;
+
   overflow: hidden;
 
   margin-top: 1px;
 
-  color: #888;
+  color: #888888;
 
   font-size: 6.5px;
+  line-height: 1.2;
   font-style: normal;
 
   text-overflow: ellipsis;
@@ -211,81 +245,103 @@ input:focus-visible {
 }
 
 .jr-header-chevron {
+  flex: 0 0 auto;
+
   margin-left: 2px;
 
-  color: #777;
+  color: #777777;
 
   font-size: 13px;
+  line-height: 1;
 }
 
 .jr-header-actions {
+  flex: 0 0 auto;
+
   display: flex;
   align-items: center;
 
   gap: 6px;
 }
 
-.jr-header-profile,
-.jr-header-cart {
+/* =========================================================
+   HEADER PROFILE
+   ========================================================= */
+
+.jr-profile-button {
+  flex: 0 0 auto;
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jr-profile-button:hover {
+  background: #ffffff !important;
+}
+
+/* =========================================================
+   HEADER CART
+   ========================================================= */
+
+.jr-cart-button {
   position: relative;
 
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
+
+  min-width: 34px;
+
+  padding: 0;
 
   display: grid;
   place-items: center;
 
-  padding: 0;
+  border: 1px solid #eeeae3;
+  border-radius: 10px;
 
-  border: 1px solid #eee;
-  border-radius: 50%;
+  background: #ffffff;
 
-  background: var(--jr-white);
+  color: #222222;
 
-  color: #222;
+  box-shadow:
+    0 3px 10px rgba(30, 25, 45, 0.08);
 
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-size: 15px;
+  line-height: 1;
+
+  -webkit-tap-highlight-color: transparent;
 }
 
-.jr-header-profile {
-  border-color: var(--jr-green);
-
-  background: var(--jr-green);
-
-  color: var(--jr-white);
-
-  font-size: 10px;
-  font-weight: 900;
+.jr-cart-button:hover {
+  background: #ffffff;
 }
 
-.jr-header-cart {
-  font-size: 14px;
-}
-
-.jr-header-cart b {
+.jr-cart-badge {
   position: absolute;
 
-  top: -3px;
-  right: -3px;
+  top: -4px;
+  right: -4px;
 
   min-width: 15px;
   height: 15px;
 
   padding: 0 4px;
 
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   border-radius: 999px;
 
   background: var(--jr-orange);
 
-  color: var(--jr-white);
+  color: #ffffff;
 
   font-size: 7px;
+  line-height: 1;
   font-weight: 900;
-}
 
+  border: 2px solid #ffffff;
+}
 
 /* =========================================================
    CONTENT / PAGE
@@ -312,7 +368,6 @@ input:focus-visible {
 .jr-page::-webkit-scrollbar {
   display: none;
 }
-
 
 /* =========================================================
    COMMON
@@ -360,60 +415,63 @@ input:focus-visible {
   width: 100%;
 }
 
-
 /* =========================================================
    BOTTOM NAVIGATION
    ========================================================= */
 
-.jr-bottom-bar {
+.jr-bottom-nav {
   position: absolute;
-
-  z-index: 100;
 
   left: 0;
   right: 0;
   bottom: 0;
 
+  z-index: 100;
+
   width: 100%;
-  height: 62px;
+  height: 64px;
+  min-height: 64px;
 
   display: grid;
 
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
 
-  padding: 4px 6px 5px;
+  align-items: stretch;
+
+  padding: 5px 8px 4px;
+  margin: 0;
 
   box-sizing: border-box;
 
-  background: rgba(255, 255, 255, 0.98);
+  background:
+    rgba(255, 255, 255, 0.98);
 
-  border-top: 1px solid #e9ebe8;
+  border-top:
+    1px solid #ecece7;
 
   box-shadow:
-    0 -4px 18px rgba(0, 0, 0, 0.05);
+    0 -2px 10px rgba(20, 35, 24, 0.035);
 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-
 
 /* =========================================================
    BOTTOM NAV BUTTON
    ========================================================= */
 
-.jr-bottom-bar > button,
-.jr-bottom-button {
+.jr-bottom-nav > button {
   position: relative;
 
   width: 100%;
-  height: 52px;
+  height: 100%;
 
   min-width: 0;
-  min-height: 52px;
+  min-height: 0;
 
   margin: 0;
-
-  padding: 3px 2px;
+  padding: 0;
 
   display: flex;
   flex-direction: column;
@@ -421,21 +479,26 @@ input:focus-visible {
   align-items: center;
   justify-content: center;
 
-  gap: 3px;
+  gap: 4px;
 
   border: 0 !important;
   border-radius: 10px;
 
-  outline: none !important;
+  outline: 0 !important;
 
   background: transparent !important;
 
-  color: #999d99;
+  color: #929292;
 
-  font-family: inherit;
+  font-family:
+    Inter,
+    Poppins,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 
-  font-size: 8px;
-  font-weight: 750;
+  font-size: 7px;
   line-height: 1;
 
   appearance: none;
@@ -453,93 +516,85 @@ input:focus-visible {
   -webkit-tap-highlight-color: transparent;
 }
 
-
 /* =========================================================
    ACTIVE NAV BUTTON
    ========================================================= */
 
-.jr-bottom-bar > button.active,
-.jr-bottom-button.active {
+.jr-bottom-nav > button.active {
   color: var(--jr-green);
 }
-
 
 /* =========================================================
    NAV HOVER / FOCUS
    ========================================================= */
 
-.jr-bottom-bar > button:hover,
-.jr-bottom-bar > button:focus,
-.jr-bottom-bar > button:focus-visible,
-.jr-bottom-button:hover,
-.jr-bottom-button:focus,
-.jr-bottom-button:focus-visible {
+.jr-bottom-nav > button:hover,
+.jr-bottom-nav > button:focus,
+.jr-bottom-nav > button:focus-visible {
   background: transparent !important;
 
-  outline: none !important;
-}
+  color: inherit;
 
+  outline: none !important;
+
+  box-shadow: none !important;
+}
 
 /* =========================================================
    NAV PRESS EFFECT
    ========================================================= */
 
-.jr-bottom-button:active,
-.jr-bottom-bar > button:active {
+.jr-bottom-nav > button:active {
   transform: scale(0.95);
 }
 
-
 /* =========================================================
-   BOTTOM NAV ICON / SYMBOL
+   NAV ICON WRAPPER
    ========================================================= */
 
-.jr-bottom-bar .jr-bottom-symbol,
-.jr-bottom-bar .jr-bottom-icon,
-.jr-bottom-symbol {
-  position: relative;
+.jr-bottom-nav > button > span {
+  width: 21px;
+  height: 21px;
 
-  width: 24px;
-  height: 22px;
-
-  min-height: 22px;
+  min-width: 21px;
+  min-height: 21px;
 
   display: grid;
   place-items: center;
 
-  color: currentColor;
+  flex: 0 0 auto;
 
-  font-size: 18px;
-  line-height: 1;
+  position: relative;
+
+  color: currentColor;
 }
 
-
 /* =========================================================
-   SVG NAV ICONS
+   NAV SVG ICONS
    ========================================================= */
 
-.jr-bottom-bar .jr-bottom-symbol svg,
-.jr-bottom-bar .jr-bottom-icon svg,
-.jr-bottom-symbol svg {
-  width: 20px;
-  height: 20px;
+.jr-bottom-nav svg {
+  width: 21px;
+  height: 21px;
 
   display: block;
 
-  color: currentColor;
-
-  fill: none;
-
-  stroke: currentColor;
+  overflow: visible;
 }
 
+/*
+ * The SVG paths receive their actual active/inactive
+ * stroke color directly from BottomNav.jsx.
+ */
+.jr-bottom-nav svg path {
+  vector-effect: non-scaling-stroke;
+}
 
 /* =========================================================
-   BOTTOM NAV LABEL
+   NAV LABEL
    ========================================================= */
 
-.jr-bottom-bar > button small,
-.jr-bottom-button small {
+.jr-bottom-nav > button small {
   display: block;
 
   width: 100%;
@@ -561,40 +616,44 @@ input:focus-visible {
   white-space: nowrap;
 }
 
-
 /* =========================================================
-   CART BADGE
+   NAV CART BADGE
    ========================================================= */
 
-.jr-bottom-bar .jr-bottom-badge,
-.jr-bottom-badge {
+.jr-nav-cart-icon {
+  position: relative;
+}
+
+.jr-nav-cart-icon b {
   position: absolute;
 
-  top: -5px;
-  right: -7px;
+  top: -4px;
+  right: -5px;
 
-  min-width: 14px;
-  height: 14px;
+  min-width: 15px;
+  height: 15px;
 
-  padding: 0 4px;
-
-  display: grid;
-  place-items: center;
+  padding: 0 3px;
 
   box-sizing: border-box;
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   border-radius: 999px;
 
-  background: var(--jr-orange);
+  background: var(--jr-green);
 
-  color: var(--jr-white);
+  color: #ffffff;
 
-  font-size: 7px;
-  line-height: 14px;
+  font-size: 6px;
+  line-height: 1;
 
   font-weight: 900;
-}
 
+  border: 2px solid #ffffff;
+}
 
 /* =========================================================
    LOADING / SPLASH SCREEN
@@ -602,6 +661,7 @@ input:focus-visible {
 
 .jr-loading,
 .jr-mobile-only-screen {
+  width: 100%;
   min-height: 100vh;
 
   display: grid;
@@ -616,7 +676,6 @@ input:focus-visible {
 
   text-align: center;
 }
-
 
 /* =========================================================
    SPLASH IMAGE
@@ -658,7 +717,6 @@ input:focus-visible {
   display: block;
 }
 
-
 /* =========================================================
    LOADING MARK
    ========================================================= */
@@ -697,7 +755,6 @@ input:focus-visible {
   font-size: 9px;
 }
 
-
 /* =========================================================
    LOADER
    ========================================================= */
@@ -713,7 +770,8 @@ input:focus-visible {
 
   border-radius: 50%;
 
-  animation: jr-spin 0.8s linear infinite;
+  animation:
+    jr-spin 0.8s linear infinite;
 }
 
 @keyframes jr-spin {
@@ -721,7 +779,6 @@ input:focus-visible {
     transform: rotate(360deg);
   }
 }
-
 
 /* =========================================================
    MOBILE ONLY SCREEN
@@ -749,6 +806,43 @@ input:focus-visible {
   line-height: 1.5;
 }
 
+/* =========================================================
+   GLOBAL ERROR
+   ========================================================= */
+
+.jr-global-error {
+  position: fixed;
+
+  z-index: 200;
+
+  left: 50%;
+  bottom: 76px;
+
+  transform: translateX(-50%);
+
+  width: min(
+    calc(100% - 28px),
+    402px
+  );
+
+  padding: 10px 12px;
+
+  border-radius: 10px;
+
+  background: #fff0ee;
+
+  border: 1px solid #f2c9c4;
+
+  color: var(--jr-danger);
+
+  font-size: 8px;
+  line-height: 1.4;
+
+  font-weight: 700;
+
+  box-shadow:
+    0 8px 20px rgba(70, 30, 25, 0.08);
+}
 
 /* =========================================================
    TOAST
@@ -757,14 +851,17 @@ input:focus-visible {
 .jr-toast {
   position: fixed;
 
-  z-index: 100;
+  z-index: 300;
 
   left: 50%;
   bottom: 76px;
 
   transform: translateX(-50%);
 
-  width: min(calc(100% - 28px), 402px);
+  width: min(
+    calc(100% - 28px),
+    402px
+  );
 
   padding: 11px 13px;
 
@@ -784,7 +881,13 @@ input:focus-visible {
 
   font-size: 9px;
   font-weight: 700;
+
+  text-align: center;
 }
+
+/* =========================================================
+   TOAST CHECK
+   ========================================================= */
 
 .jr-toast-check {
   width: 18px;
@@ -797,9 +900,9 @@ input:focus-visible {
 
   border-radius: 50%;
 
-  background: rgba(255, 255, 255, 0.16);
+  background:
+    rgba(255, 255, 255, 0.16);
 }
-
 
 /* =========================================================
    DESKTOP / PC ACCESS NOTICE
@@ -871,7 +974,6 @@ input:focus-visible {
   background: var(--jr-white);
 }
 
-
 /* =========================================================
    DESKTOP NOTICE IMAGE RESET
    ========================================================= */
@@ -882,36 +984,58 @@ input:focus-visible {
   border: 0;
 }
 
-
 /* =========================================================
    MOBILE
    ========================================================= */
 
 @media (max-width: 600px) {
+  html,
+  body {
+    background: var(--jr-cream);
+  }
+
+  .jr-app {
+    width: 100%;
+    min-height: 100vh;
+
+    background: var(--jr-cream);
+  }
+
   .jr-mobile-frame {
     width: 100%;
     max-width: 430px;
+    min-height: 100vh;
   }
 
   .jr-desktop-block {
     display: none;
   }
 
-  .jr-loading img {
+  .jr-loading img,
+  .jr-loading-image,
+  .jr-loading-image img {
     width: 180px !important;
     height: 180px !important;
 
     max-width: 180px !important;
     max-height: 180px !important;
   }
-}
 
+  .jr-bottom-nav {
+    height: 64px;
+    min-height: 64px;
+  }
+}
 
 /* =========================================================
    DESKTOP
    ========================================================= */
 
 @media (min-width: 601px) {
+  .jr-app {
+    background: #252525;
+  }
+
   .jr-mobile-frame {
     width: min(430px, 100vw);
   }
@@ -940,21 +1064,49 @@ input:focus-visible {
   }
 }
 
-
 /* =========================================================
    MOBILE SAFE AREA
    ========================================================= */
 
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .jr-bottom-bar {
-    height: calc(62px + env(safe-area-inset-bottom));
+  .jr-bottom-nav {
+    height:
+      calc(64px + env(safe-area-inset-bottom));
+
+    min-height:
+      calc(64px + env(safe-area-inset-bottom));
 
     padding-bottom:
-      calc(5px + env(safe-area-inset-bottom));
+      calc(4px + env(safe-area-inset-bottom));
   }
 
-  .jr-app {
+  .jr-content,
+  .jr-page {
     padding-bottom:
-      calc(62px + env(safe-area-inset-bottom));
+      calc(88px + env(safe-area-inset-bottom));
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE DEVICES
+   ========================================================= */
+
+@media (max-width: 360px) {
+  .jr-header {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .jr-header-location-copy strong {
+    font-size: 8.5px;
+  }
+
+  .jr-bottom-nav {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
+  .jr-bottom-nav > button small {
+    font-size: 6.5px;
   }
 }

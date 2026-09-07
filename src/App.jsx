@@ -3071,6 +3071,9 @@ function BottomNav({
   loggedIn,
   onRequireSignIn,
 }) {
+  const activeColor = "#2f8050";
+  const inactiveColor = "#929292";
+
   const navButtonStyle = {
     appearance: "none",
     WebkitAppearance: "none",
@@ -3090,7 +3093,6 @@ function BottomNav({
     cursor: "pointer",
     fontFamily:
       "Inter, Poppins, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
-    color: "#8b8b8b",
   };
 
   const iconStyle = {
@@ -3104,18 +3106,13 @@ function BottomNav({
     margin: "0",
     padding: "0",
     fontSize: "7px",
-    lineHeight: "1",
+    lineHeight: "10px",
     fontWeight: 800,
     letterSpacing: "0",
     color: "inherit",
   };
 
-  const activeColor = "#2f8050";
-  const inactiveColor = "#929292";
-
-  function HomeIcon({
-    active,
-  }) {
+  function HomeIcon({ active }) {
     return (
       <svg
         viewBox="0 0 24 24"
@@ -3140,9 +3137,7 @@ function BottomNav({
     );
   }
 
-  function MachineIcon({
-    active,
-  }) {
+  function MachineIcon({ active }) {
     return (
       <svg
         viewBox="0 0 24 24"
@@ -3178,9 +3173,7 @@ function BottomNav({
     );
   }
 
-  function OrderIcon({
-    active,
-  }) {
+  function OrderIcon({ active }) {
     return (
       <svg
         viewBox="0 0 24 24"
@@ -3203,7 +3196,7 @@ function BottomNav({
         />
 
         <path
-          d="M4 5.2H6.1L7.1 15.2M9.2 18.8C9.2 19.55 8.6 20.15 7.85 20.15C7.1 20.15 6.5 19.55 6.5 18.8C6.5 18.05 7.1 17.45 7.85 17.45C8.6 17.45 9.2 18.05 9.2 18.8ZM18.4 18.8C18.4 19.55 17.8 20.15 17.05 20.15C16.3 20.15 15.7 19.55 15.7 18.8C15.7 18.05 16.3 17.45 17.05 17.45C17.8 17.45 18.4 18.05 18.4 18.8Z"
+          d="M4 5.2H6.1L7.1 15.2M9.2 18.8C9.2 19.55 8.6 20.15 7.85 20.15C7.1 20.15 6.5 19.55 6.5 18.8C6.5 18.05 7.1 17.45 7.85 17.45C8.6 17.45 9.2 18.05 9.2 18.8ZM18.4 18.8C18.4 19.55 17.8 20.15 17.05 20.15C16.3 20.15 15.7 19.55 15.7 18.8C15.7 18.05 16.3 17.45 17.05 17.45C18.4 18.05 18.4 18.8Z"
           stroke={
             active
               ? activeColor
@@ -3221,36 +3214,7 @@ function BottomNav({
     <nav
       className="jr-bottom-nav"
       aria-label="Primary navigation"
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 100,
-        width: "100%",
-        height: "64px",
-        minHeight: "64px",
-        boxSizing: "border-box",
-        display: "grid",
-        gridTemplateColumns:
-          "repeat(3, minmax(0, 1fr))",
-        alignItems: "stretch",
-        padding:
-          "5px 8px 4px",
-        margin: 0,
-        borderTop:
-          "1px solid #ecece7",
-        background:
-          "rgba(255, 255, 255, 0.98)",
-        boxShadow:
-          "0 -2px 10px rgba(20, 35, 24, 0.035)",
-        backdropFilter:
-          "blur(8px)",
-        WebkitBackdropFilter:
-          "blur(8px)",
-      }}
     >
-
       {/* MENU */}
 
       <button
@@ -3272,9 +3236,7 @@ function BottomNav({
               : inactiveColor,
         }}
       >
-        <span
-          style={iconStyle}
-        >
+        <span style={iconStyle}>
           <HomeIcon
             active={
               screen === "menu"
@@ -3282,9 +3244,7 @@ function BottomNav({
           />
         </span>
 
-        <small
-          style={labelStyle}
-        >
+        <small style={labelStyle}>
           Menu
         </small>
       </button>
@@ -3310,21 +3270,17 @@ function BottomNav({
               : inactiveColor,
         }}
       >
-        <span
-          style={iconStyle}
-        >
+        <span style={iconStyle}>
           <MachineIcon
             active={
-              screen ===
-              "location"
+              screen === "location"
             }
           />
         </span>
 
-        <small
-          style={labelStyle}
-        >
+        <small style={labelStyle}>
           Machine
+        </small>
       </button>
 
       {/* ORDER */}
@@ -3376,26 +3332,18 @@ function BottomNav({
                 right: "-5px",
                 minWidth: "15px",
                 height: "15px",
-                padding:
-                  "0 3px",
-                boxSizing:
-                  "border-box",
+                padding: "0 3px",
+                boxSizing: "border-box",
                 display: "flex",
-                alignItems:
-                  "center",
-                justifyContent:
-                  "center",
-                borderRadius:
-                  "999px",
-                background:
-                  "#2f8050",
-                color:
-                  "#ffffff",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "999px",
+                background: "#2f8050",
+                color: "#ffffff",
                 fontSize: "6px",
                 lineHeight: "1",
                 fontWeight: 900,
-                border:
-                  "2px solid #ffffff",
+                border: "2px solid #ffffff",
               }}
             >
               {cartCount}
@@ -3403,13 +3351,10 @@ function BottomNav({
           )}
         </span>
 
-        <small
-          style={labelStyle}
-        >
+        <small style={labelStyle}>
           Order
         </small>
       </button>
-
     </nav>
   );
 }
