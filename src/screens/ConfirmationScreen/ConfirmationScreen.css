@@ -1,6 +1,11 @@
 /* =========================================================
    JUICE ROBO — CONFIRMATION SCREEN
-   Screenshot-aligned mobile success screen
+   RESPONSIVE PORTRAIT + LANDSCAPE
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE
    ========================================================= */
 
 .jr-confirmation-page {
@@ -14,7 +19,7 @@
   align-items: center;
 
   padding:
-    22px
+    16px
     10px
     88px;
 
@@ -34,6 +39,7 @@
     sans-serif;
 
   scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .jr-confirmation-page::-webkit-scrollbar {
@@ -46,16 +52,18 @@
    ========================================================= */
 
 .jr-confirmation-success-icon {
-  width: 61px;
-  height: 61px;
+  width: clamp(55px, 15vw, 66px);
+  height: clamp(55px, 15vw, 66px);
+
+  flex: 0 0 auto;
 
   display: grid;
   place-items: center;
 
   margin:
-    5px
+    3px
     0
-    13px;
+    11px;
 
   border-radius: 20px;
 
@@ -63,7 +71,7 @@
 
   color: #2d8550;
 
-  font-size: 30px;
+  font-size: clamp(27px, 7vw, 32px);
   line-height: 1;
 
   font-weight: 950;
@@ -86,7 +94,7 @@
   margin:
     0
     0
-    14px;
+    11px;
 }
 
 .jr-confirmation-eyebrow {
@@ -99,7 +107,7 @@
 
   color: #ee7900;
 
-  font-size: 6.5px;
+  font-size: clamp(6px, 1.7vw, 8px);
   line-height: 1;
 
   font-weight: 900;
@@ -114,7 +122,7 @@
 
   color: #111111;
 
-  font-size: 25px;
+  font-size: clamp(24px, 6vw, 31px);
   line-height: 0.93;
 
   font-weight: 950;
@@ -129,7 +137,7 @@
 }
 
 .jr-confirmation-heading p {
-  max-width: 295px;
+  max-width: 310px;
 
   margin:
     7px
@@ -138,7 +146,7 @@
 
   color: #858581;
 
-  font-size: 7px;
+  font-size: clamp(7px, 1.9vw, 9px);
   line-height: 1.4;
 
   font-weight: 500;
@@ -161,13 +169,13 @@
   margin:
     0
     0
-    9px;
+    8px;
 
   padding:
-    12px
+    10px
     10px;
 
-  border-radius: 11px;
+  border-radius: 10px;
 
   background: #2e8250;
 
@@ -181,7 +189,7 @@
 .jr-confirmation-order-number span {
   color: rgba(255, 255, 255, 0.72);
 
-  font-size: 5.5px;
+  font-size: clamp(5px, 1.4vw, 7px);
   line-height: 1;
 
   font-weight: 900;
@@ -190,16 +198,20 @@
 }
 
 .jr-confirmation-order-number strong {
-  margin-top: 6px;
+  margin-top: 5px;
 
   color: #ffffff;
 
-  font-size: 17px;
+  font-size: clamp(16px, 4.2vw, 19px);
   line-height: 1;
 
   font-weight: 950;
 
   letter-spacing: 0.045em;
+
+  word-break: break-word;
+
+  text-align: center;
 }
 
 
@@ -210,23 +222,24 @@
 .jr-confirmation-location-card {
   width: 100%;
 
-  min-height: 58px;
+  min-height: 55px;
 
   box-sizing: border-box;
 
   display: flex;
+
   align-items: center;
 
-  gap: 9px;
+  gap: 8px;
 
   margin:
     0
     0
-    9px;
+    8px;
 
   padding:
     7px
-    9px;
+    8px;
 
   border:
     1px solid
@@ -238,12 +251,13 @@
 }
 
 .jr-confirmation-card-icon {
-  width: 31px;
-  height: 31px;
+  width: 30px;
+  height: 30px;
 
-  min-width: 31px;
+  min-width: 30px;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
@@ -261,6 +275,7 @@
   flex: 1;
 
   display: flex;
+
   flex-direction: column;
 
   gap: 2px;
@@ -275,15 +290,23 @@
   font-weight: 900;
 
   letter-spacing: 0.08em;
+
+  text-transform: uppercase;
 }
 
 .jr-confirmation-location-copy strong {
+  overflow: hidden;
+
   color: #191919;
 
-  font-size: 9px;
+  font-size: clamp(8px, 2vw, 10px);
   line-height: 1;
 
   font-weight: 900;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
 }
 
 .jr-confirmation-location-copy span {
@@ -293,7 +316,7 @@
 
   color: #888884;
 
-  font-size: 5.5px;
+  font-size: clamp(5.5px, 1.45vw, 7px);
   line-height: 1;
 
   white-space: nowrap;
@@ -303,7 +326,7 @@
 
 
 /* =========================================================
-   ORDER ITEMS
+   ORDER ITEMS CARD
    ========================================================= */
 
 .jr-confirmation-items-card {
@@ -314,10 +337,10 @@
   margin:
     0
     0
-    9px;
+    8px;
 
   padding:
-    10px;
+    9px;
 
   border:
     1px solid
@@ -334,10 +357,12 @@
   align-items: center;
   justify-content: space-between;
 
+  gap: 10px;
+
   margin:
     0
     0
-    8px;
+    7px;
 }
 
 .jr-confirmation-section-heading h2 {
@@ -345,7 +370,7 @@
 
   color: #3a3a3a;
 
-  font-size: 9px;
+  font-size: clamp(8px, 2vw, 10px);
   line-height: 1;
 
   font-weight: 800;
@@ -354,18 +379,30 @@
 .jr-confirmation-section-heading span {
   color: #9a9a95;
 
-  font-size: 5.5px;
+  font-size: clamp(5px, 1.4vw, 7px);
   line-height: 1;
 }
 
+
+/* =========================================================
+   ITEMS
+   ========================================================= */
+
 .jr-confirmation-items {
+  width: 100%;
+
   display: flex;
+
   flex-direction: column;
 
-  gap: 6px;
+  gap: 5px;
 }
 
 .jr-confirmation-item {
+  width: 100%;
+
+  min-width: 0;
+
   display: flex;
 
   align-items: center;
@@ -377,6 +414,8 @@
 .jr-confirmation-item-name {
   min-width: 0;
 
+  flex: 1;
+
   display: flex;
 
   align-items: baseline;
@@ -385,13 +424,15 @@
 }
 
 .jr-confirmation-item-name strong {
-  max-width: 230px;
+  max-width: 100%;
+
+  min-width: 0;
 
   overflow: hidden;
 
   color: #333333;
 
-  font-size: 7px;
+  font-size: clamp(7px, 1.8vw, 9px);
   line-height: 1.2;
 
   font-weight: 750;
@@ -402,9 +443,11 @@
 }
 
 .jr-confirmation-item-name span {
+  flex: 0 0 auto;
+
   color: #92928d;
 
-  font-size: 5.5px;
+  font-size: clamp(5.5px, 1.4vw, 7px);
   line-height: 1;
 }
 
@@ -413,10 +456,12 @@
 
   color: #292929;
 
-  font-size: 7px;
+  font-size: clamp(7px, 1.8vw, 9px);
   line-height: 1;
 
   font-weight: 850;
+
+  white-space: nowrap;
 }
 
 
@@ -439,10 +484,9 @@
   margin:
     0
     0
-    8px;
+    7px;
 
   padding:
-    11px
     10px;
 
   border:
@@ -457,7 +501,7 @@
 .jr-confirmation-total-card span {
   color: #656560;
 
-  font-size: 7px;
+  font-size: clamp(7px, 1.8vw, 9px);
   line-height: 1;
 
   font-weight: 850;
@@ -466,15 +510,17 @@
 .jr-confirmation-total-card strong {
   color: #2d8450;
 
-  font-size: 16px;
+  font-size: clamp(15px, 4vw, 18px);
   line-height: 1;
 
   font-weight: 950;
+
+  white-space: nowrap;
 }
 
 
 /* =========================================================
-   STATUS
+   STATUS CARD
    ========================================================= */
 
 .jr-confirmation-status-card {
@@ -491,11 +537,11 @@
   margin:
     0
     0
-    9px;
+    8px;
 
   padding:
-    9px
-    10px;
+    8px
+    9px;
 
   border:
     1px solid
@@ -513,11 +559,11 @@
 
   flex-direction: column;
 
-  gap: 4px;
+  gap: 3px;
 }
 
 .jr-confirmation-status-card > div + div {
-  padding-left: 9px;
+  padding-left: 8px;
 
   border-left:
     1px solid
@@ -527,7 +573,7 @@
 .jr-confirmation-status-card span {
   color: #999995;
 
-  font-size: 5px;
+  font-size: clamp(5px, 1.35vw, 7px);
   line-height: 1;
 
   font-weight: 900;
@@ -540,7 +586,7 @@
 
   color: #333333;
 
-  font-size: 7px;
+  font-size: clamp(7px, 1.75vw, 9px);
   line-height: 1.1;
 
   font-weight: 900;
@@ -565,17 +611,19 @@
   box-sizing: border-box;
 
   display: flex;
+
   flex-direction: column;
+
   align-items: center;
 
   margin:
     0
     0
-    10px;
+    8px;
 
   padding:
-    12px
-    10px;
+    10px
+    9px;
 
   border:
     1px solid
@@ -597,7 +645,7 @@
 .jr-collection-code-eyebrow {
   color: #d87900;
 
-  font-size: 6px;
+  font-size: clamp(5px, 1.4vw, 7px);
   line-height: 1;
 
   font-weight: 950;
@@ -612,13 +660,13 @@
 
 .jr-collection-code-value {
   margin:
-    7px
+    6px
     0
-    5px;
+    4px;
 
   color: #292929;
 
-  font-size: 25px;
+  font-size: clamp(22px, 6vw, 28px);
   line-height: 1;
 
   font-weight: 950;
@@ -627,13 +675,13 @@
 }
 
 .jr-collection-code-card p {
-  max-width: 280px;
+  max-width: 300px;
 
   margin: 0;
 
   color: #777771;
 
-  font-size: 5.5px;
+  font-size: clamp(5.5px, 1.45vw, 7px);
   line-height: 1.35;
 
   font-weight: 500;
@@ -641,13 +689,15 @@
 
 
 /* =========================================================
-   PRIMARY BUTTON
+   PRIMARY ACTION
    ========================================================= */
 
 .jr-confirmation-primary-button {
   width: 100%;
 
   height: 39px;
+
+  min-height: 39px;
 
   box-sizing: border-box;
 
@@ -670,7 +720,7 @@
 
   font-family: inherit;
 
-  font-size: 7px;
+  font-size: clamp(7px, 1.8vw, 9px);
   line-height: 1;
 
   font-weight: 950;
@@ -680,6 +730,18 @@
   box-shadow:
     0 6px 13px
     rgba(46, 134, 80, 0.15);
+
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease;
+}
+
+.jr-confirmation-primary-button:hover {
+  background: #287747;
+}
+
+.jr-confirmation-primary-button:active {
+  transform: translateY(1px);
 }
 
 .jr-confirmation-primary-button strong {
@@ -690,7 +752,7 @@
 
 
 /* =========================================================
-   SECONDARY BUTTON
+   SECONDARY ACTION
    ========================================================= */
 
 .jr-confirmation-secondary-button {
@@ -698,9 +760,11 @@
 
   height: 34px;
 
+  min-height: 34px;
+
   box-sizing: border-box;
 
-  margin-top: 7px;
+  margin-top: 6px;
 
   padding: 0;
 
@@ -716,17 +780,29 @@
 
   font-family: inherit;
 
-  font-size: 6.5px;
+  font-size: clamp(6.5px, 1.7vw, 8px);
   line-height: 1;
 
   font-weight: 900;
 
   cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease;
+}
+
+.jr-confirmation-secondary-button:hover {
+  background: #f7faf5;
+}
+
+.jr-confirmation-secondary-button:active {
+  transform: translateY(1px);
 }
 
 
 /* =========================================================
-   390PX AND BELOW
+   SMALL PORTRAIT
    ========================================================= */
 
 @media (max-width: 390px) {
@@ -741,17 +817,17 @@
   }
 
   .jr-confirmation-item-name strong {
-    max-width: 195px;
+    max-width: 190px;
   }
 
-  .jr-confirmation-total-card strong {
-    font-size: 15px;
+  .jr-collection-code-value {
+    font-size: 23px;
   }
 }
 
 
 /* =========================================================
-   360PX AND BELOW
+   VERY SMALL PORTRAIT
    ========================================================= */
 
 @media (max-width: 360px) {
@@ -762,61 +838,547 @@
   }
 
   .jr-confirmation-success-icon {
-    width: 57px;
-    height: 57px;
+    width: 55px;
+    height: 55px;
+
+    margin-bottom: 9px;
   }
 
   .jr-confirmation-heading h1 {
-    font-size: 23px;
+    font-size: 22px;
+  }
+
+  .jr-confirmation-heading p {
+    max-width: 250px;
   }
 
   .jr-confirmation-item-name strong {
-    max-width: 160px;
+    max-width: 155px;
   }
 
   .jr-collection-code-value {
-    font-size: 23px;
+    font-size: 21px;
   }
 }
 
 
 /* =========================================================
-   SHORT SCREENS
+   SHORT PORTRAIT
    ========================================================= */
 
-@media (max-height: 700px) {
+@media (orientation: portrait) and (max-height: 700px) {
 
   .jr-confirmation-page {
-    padding-top: 13px;
+    padding-top: 10px;
   }
 
   .jr-confirmation-success-icon {
-    width: 55px;
-    height: 55px;
+    width: 52px;
+    height: 52px;
 
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+
+    font-size: 25px;
   }
 
   .jr-confirmation-heading {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+  }
+
+  .jr-confirmation-heading p {
+    margin-top: 5px;
   }
 
   .jr-confirmation-order-number {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding:
+      8px
+      9px;
   }
 
   .jr-confirmation-location-card {
-    min-height: 53px;
+    min-height: 50px;
+
+    margin-bottom: 6px;
+  }
+
+  .jr-confirmation-items-card {
+    margin-bottom: 6px;
+
+    padding: 8px;
   }
 
   .jr-confirmation-total-card {
-    padding-top: 9px;
-    padding-bottom: 9px;
+    padding:
+      8px
+      9px;
+  }
+
+  .jr-confirmation-status-card {
+    margin-bottom: 6px;
+
+    padding:
+      7px
+      8px;
   }
 
   .jr-collection-code-card {
-    padding-top: 9px;
-    padding-bottom: 9px;
+    margin-bottom: 6px;
+
+    padding:
+      8px
+      9px;
+  }
+
+  .jr-collection-code-value {
+    margin:
+      5px
+      0
+      3px;
+  }
+}
+
+
+/* =========================================================
+   LANDSCAPE
+   ========================================================= */
+
+@media (orientation: landscape) {
+
+  .jr-confirmation-page {
+    width: 100%;
+
+    min-height: 100%;
+
+    padding:
+      7px
+      clamp(16px, 4vw, 50px)
+      60px;
+  }
+
+  .jr-confirmation-success-icon {
+    width: 43px;
+    height: 43px;
+
+    margin:
+      0
+      0
+      5px;
+
+    border-radius: 13px;
+
+    font-size: 22px;
+  }
+
+  .jr-confirmation-heading {
+    margin-bottom: 6px;
+  }
+
+  .jr-confirmation-eyebrow {
+    margin-bottom: 3px;
+
+    font-size: clamp(5px, 1.4vh, 7px);
+  }
+
+  .jr-confirmation-heading h1 {
+    font-size: clamp(18px, 4.5vh, 25px);
+  }
+
+  .jr-confirmation-heading p {
+    max-width: 400px;
+
+    margin-top: 4px;
+
+    font-size: clamp(5.5px, 1.45vh, 7px);
+  }
+
+  .jr-confirmation-order-number {
+    margin-bottom: 5px;
+
+    padding:
+      6px
+      9px;
+
+    border-radius: 8px;
+  }
+
+  .jr-confirmation-order-number span {
+    font-size: clamp(4px, 1.1vh, 6px);
+  }
+
+  .jr-confirmation-order-number strong {
+    margin-top: 3px;
+
+    font-size: clamp(12px, 3vh, 16px);
+  }
+
+  .jr-confirmation-location-card {
+    min-height: 39px;
+
+    margin-bottom: 5px;
+
+    padding:
+      5px
+      7px;
+
+    gap: 7px;
+
+    border-radius: 8px;
+  }
+
+  .jr-confirmation-card-icon {
+    width: 25px;
+    height: 25px;
+
+    min-width: 25px;
+
+    border-radius: 6px;
+
+    font-size: 10px;
+  }
+
+  .jr-confirmation-location-copy {
+    gap: 1px;
+  }
+
+  .jr-confirmation-location-copy small {
+    font-size: 4px;
+  }
+
+  .jr-confirmation-location-copy strong {
+    font-size: clamp(6px, 1.55vh, 8px);
+  }
+
+  .jr-confirmation-location-copy span {
+    font-size: clamp(4.5px, 1.15vh, 6px);
+  }
+
+  .jr-confirmation-items-card {
+    margin-bottom: 5px;
+
+    padding: 7px;
+
+    border-radius: 8px;
+  }
+
+  .jr-confirmation-section-heading {
+    margin-bottom: 4px;
+  }
+
+  .jr-confirmation-section-heading h2 {
+    font-size: clamp(6px, 1.55vh, 8px);
+  }
+
+  .jr-confirmation-section-heading span {
+    font-size: clamp(4.5px, 1.15vh, 6px);
+  }
+
+  .jr-confirmation-items {
+    gap: 3px;
+  }
+
+  .jr-confirmation-item-name strong {
+    font-size: clamp(5.5px, 1.45vh, 7px);
+  }
+
+  .jr-confirmation-item-name span {
+    font-size: clamp(4.5px, 1.1vh, 6px);
+  }
+
+  .jr-confirmation-item > strong {
+    font-size: clamp(5.5px, 1.45vh, 7px);
+  }
+
+  .jr-confirmation-total-card {
+    margin-bottom: 5px;
+
+    padding:
+      7px
+      9px;
+
+    border-radius: 8px;
+  }
+
+  .jr-confirmation-total-card span {
+    font-size: clamp(5.5px, 1.4vh, 7px);
+  }
+
+  .jr-confirmation-total-card strong {
+    font-size: clamp(12px, 3vh, 16px);
+  }
+
+  .jr-confirmation-status-card {
+    margin-bottom: 5px;
+
+    padding:
+      6px
+      8px;
+
+    border-radius: 8px;
+  }
+
+  .jr-confirmation-status-card > div {
+    gap: 2px;
+  }
+
+  .jr-confirmation-status-card > div + div {
+    padding-left: 7px;
+  }
+
+  .jr-confirmation-status-card span {
+    font-size: clamp(4px, 1.05vh, 5.5px);
+  }
+
+  .jr-confirmation-status-card strong {
+    font-size: clamp(5.5px, 1.4vh, 7px);
+  }
+
+  .jr-collection-code-card {
+    margin-bottom: 5px;
+
+    padding:
+      7px
+      9px;
+
+    border-radius: 8px;
+  }
+
+  .jr-collection-code-eyebrow {
+    font-size: clamp(4.5px, 1.1vh, 6px);
+  }
+
+  .jr-collection-code-value {
+    margin:
+      4px
+      0
+      3px;
+
+    font-size: clamp(17px, 4.5vh, 23px);
+  }
+
+  .jr-collection-code-card p {
+    max-width: 500px;
+
+    font-size: clamp(4.5px, 1.1vh, 6px);
+  }
+
+  .jr-confirmation-primary-button {
+    height: 31px;
+    min-height: 31px;
+
+    border-radius: 7px;
+
+    font-size: clamp(5.5px, 1.4vh, 7px);
+  }
+
+  .jr-confirmation-primary-button strong {
+    font-size: 12px;
+  }
+
+  .jr-confirmation-secondary-button {
+    height: 27px;
+    min-height: 27px;
+
+    margin-top: 4px;
+
+    border-radius: 7px;
+
+    font-size: clamp(5px, 1.25vh, 6.5px);
+  }
+}
+
+
+/* =========================================================
+   SHORT LANDSCAPE
+   Optimized for approximately 613 × 376
+   ========================================================= */
+
+@media (orientation: landscape) and (max-height: 430px) {
+
+  .jr-confirmation-page {
+    padding:
+      5px
+      clamp(12px, 3vw, 30px)
+      52px;
+  }
+
+  .jr-confirmation-success-icon {
+    width: 37px;
+    height: 37px;
+
+    margin-bottom: 3px;
+
+    border-radius: 11px;
+
+    font-size: 19px;
+  }
+
+  .jr-confirmation-heading {
+    margin-bottom: 4px;
+  }
+
+  .jr-confirmation-heading h1 {
+    font-size: 18px;
+  }
+
+  .jr-confirmation-heading p {
+    margin-top: 3px;
+
+    font-size: 5.5px;
+  }
+
+  .jr-confirmation-order-number {
+    margin-bottom: 3px;
+
+    padding:
+      5px
+      8px;
+  }
+
+  .jr-confirmation-order-number strong {
+    font-size: 12px;
+  }
+
+  .jr-confirmation-location-card {
+    min-height: 34px;
+
+    margin-bottom: 3px;
+
+    padding:
+      4px
+      6px;
+  }
+
+  .jr-confirmation-card-icon {
+    width: 22px;
+    height: 22px;
+
+    min-width: 22px;
+
+    font-size: 8px;
+  }
+
+  .jr-confirmation-location-copy strong {
+    font-size: 6.5px;
+  }
+
+  .jr-confirmation-location-copy span {
+    font-size: 4.5px;
+  }
+
+  .jr-confirmation-items-card {
+    margin-bottom: 3px;
+
+    padding: 5px;
+  }
+
+  .jr-confirmation-section-heading {
+    margin-bottom: 3px;
+  }
+
+  .jr-confirmation-items {
+    gap: 2px;
+  }
+
+  .jr-confirmation-item-name strong {
+    font-size: 5.5px;
+  }
+
+  .jr-confirmation-item-name span {
+    font-size: 4.5px;
+  }
+
+  .jr-confirmation-item > strong {
+    font-size: 5.5px;
+  }
+
+  .jr-confirmation-total-card {
+    margin-bottom: 3px;
+
+    padding:
+      5px
+      7px;
+  }
+
+  .jr-confirmation-total-card strong {
+    font-size: 12px;
+  }
+
+  .jr-confirmation-status-card {
+    margin-bottom: 3px;
+
+    padding:
+      5px
+      7px;
+  }
+
+  .jr-confirmation-status-card strong {
+    font-size: 5.5px;
+  }
+
+  .jr-collection-code-card {
+    margin-bottom: 3px;
+
+    padding:
+      5px
+      7px;
+  }
+
+  .jr-collection-code-value {
+    margin:
+      3px
+      0
+      2px;
+
+    font-size: 17px;
+  }
+
+  .jr-collection-code-card p {
+    font-size: 4.5px;
+  }
+
+  .jr-confirmation-primary-button {
+    height: 28px;
+    min-height: 28px;
+
+    font-size: 5.5px;
+  }
+
+  .jr-confirmation-primary-button strong {
+    font-size: 11px;
+  }
+
+  .jr-confirmation-secondary-button {
+    height: 24px;
+    min-height: 24px;
+
+    margin-top: 3px;
+
+    font-size: 5px;
+  }
+}
+
+
+/* =========================================================
+   EXTRA-WIDE LANDSCAPE
+   ========================================================= */
+
+@media (orientation: landscape) and (min-width: 700px) {
+
+  .jr-confirmation-page {
+    padding-left: clamp(28px, 7vw, 100px);
+    padding-right: clamp(28px, 7vw, 100px);
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .jr-confirmation-primary-button,
+  .jr-confirmation-secondary-button {
+    transition: none;
   }
 }

@@ -1,37 +1,61 @@
 import { useEffect, useState } from "react";
+
 import "./LoginScreen.css";
 
-const ASSET_BASE = `${import.meta.env.BASE_URL}assets/`;
+const ASSET_BASE =
+  `${import.meta.env.BASE_URL}assets/`;
 
-const REMEMBER_KEY = "juice_robo_remember_me";
-const SAVED_EMAIL_KEY = "juice_robo_saved_email";
+const REMEMBER_KEY =
+  "juice_robo_remember_me";
+
+const SAVED_EMAIL_KEY =
+  "juice_robo_saved_email";
 
 export default function LoginScreen({
   customer,
   setCustomer,
   onLogin,
+  busy = false,
+  error = "",
+  onContinueWithoutLogin,
 }) {
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] =
+    useState(false);
 
-  const [rememberMe, setRememberMe] = useState(() => {
-    return localStorage.getItem(REMEMBER_KEY) === "true";
-  });
+  const [rememberMe, setRememberMe] =
+    useState(() =>
+      localStorage.getItem(
+        REMEMBER_KEY
+      ) === "true"
+    );
 
-  const [formError, setFormError] = useState("");
-    /* =====================================================
+  const [formError, setFormError] =
+    useState("");
+
+  const email =
+    customer?.email || "";
+
+  const password =
+    customer?.password || "";
+
+  /* =====================================================
      RESTORE REMEMBERED EMAIL
      ===================================================== */
 
   useEffect(() => {
     const remembered =
-      localStorage.getItem(REMEMBER_KEY) === "true";
+      localStorage.getItem(
+        REMEMBER_KEY
+      ) === "true";
 
     if (!remembered) {
       return;
     }
 
     const savedEmail =
-      localStorage.getItem(SAVED_EMAIL_KEY) || "";
+      localStorage.getItem(
+        SAVED_EMAIL_KEY
+      ) || "";
 
     if (!savedEmail) {
       return;
@@ -42,53 +66,32 @@ export default function LoginScreen({
       email: savedEmail,
     }));
   }, [setCustomer]);
-    /* =====================================================
-     EMAIL CHANGE
+
+  /* =====================================================
+     FIELD UPDATE
      ===================================================== */
 
-  function handleEmailChange(event) {
-    const value = event.target.value;
-
+  function updateCustomer(
+    field,
+    value
+  ) {
     setCustomer((current) => ({
       ...current,
-      email: value,
-    }));
-
-    if (rememberMe) {
-      const email = value.trim();
-
-      if (email) {
-        localStorage.setItem(
-          SAVED_EMAIL_KEY,
-          email
-        );
-      } else {
-        localStorage.removeItem(
-          SAVED_EMAIL_KEY
-        );
-      }
-    }
-
-    setFormError("");
-  }
-    /* =====================================================
-     PASSWORD CHANGE
-     ===================================================== */
-
-  function handlePasswordChange(event) {
-    setCustomer((current) => ({
-      ...current,
-      password: event.target.value,
+      [field]: value,
     }));
 
     setFormError("");
   }
-    /* =====================================================
+
+  /* =====================================================
      REMEMBER ME
      ===================================================== */
 
-  function handleRememberChange(event) {
-    const checked = event.target.checked;
+  function handleRememberChange(
+    event
+  ) {
+    const checked =
+      event.target.checked;
 
     setRememberMe(checked);
 
@@ -98,14 +101,15 @@ export default function LoginScreen({
         "true"
       );
 
-      const email = String(
-        customer?.email || ""
-      ).trim();
+      const savedEmail =
+        String(
+          customer?.email || ""
+        ).trim();
 
-      if (email) {
+      if (savedEmail) {
         localStorage.setItem(
           SAVED_EMAIL_KEY,
-          email
+          savedEmail
         );
       }
     } else {
@@ -117,8 +121,56 @@ export default function LoginScreen({
         SAVED_EMAIL_KEY
       );
     }
+
+    setFormError("");
   }
-    /* =====================================================
+
+  /* =====================================================
+     EMAIL
+     ===================================================== */
+
+  function handleEmailChange(
+    event
+  ) {
+    const value =
+      event.target.value;
+
+    updateCustomer(
+      "email",
+      value
+    );
+
+    if (rememberMe) {
+      const savedEmail =
+        value.trim();
+
+      if (savedEmail) {
+        localStorage.setItem(
+          SAVED_EMAIL_KEY,
+          savedEmail
+        );
+      } else {
+        localStorage.removeItem(
+          SAVED_EMAIL_KEY
+        );
+      }
+    }
+  }
+
+  /* =====================================================
+     PASSWORD
+     ===================================================== */
+
+  function handlePasswordChange(
+    event
+  ) {
+    updateCustomer(
+      "password",
+      event.target.value
+    );
+  }
+
+  /* =====================================================
      FORGOT PASSWORD
      ===================================================== */
 
@@ -127,8 +179,9 @@ export default function LoginScreen({
       "Password recovery will be connected to the authentication service."
     );
   }
-    /* =====================================================
-     SUBMIT
+
+  /* =====================================================
+     SIGN IN
      ===================================================== */
 
   function handleSubmit(event) {
@@ -136,15 +189,10 @@ export default function LoginScreen({
 
     setFormError("");
 
-    const email = String(
-      customer?.email || ""
-    ).trim();
+    const trimmedEmail =
+      String(email).trim();
 
-    const password = String(
-      customer?.password || ""
-    );
-
-    if (!email) {
+    if (!trimmedEmail) {
       setFormError(
         "Enter your email address."
       );
@@ -158,7 +206,7 @@ export default function LoginScreen({
       return;
     }
 
-      /*
+    /*
      * Remember ONLY the email.
      * Never save the password.
      */
@@ -171,7 +219,7 @@ export default function LoginScreen({
 
       localStorage.setItem(
         SAVED_EMAIL_KEY,
-        email
+        trimmedEmail
       );
     } else {
       localStorage.removeItem(
@@ -183,220 +231,385 @@ export default function LoginScreen({
       );
     }
 
-    onLogin(event);
+    if (
+      typeof onLogin ===
+      "function"
+    ) {
+      onLogin(event);
+    }
   }
-    /* =====================================================
-     UI
+
+  /* =====================================================
+     CONTINUE WITHOUT LOGIN
      ===================================================== */
+
+  function handleContinueWithoutLogin() {
+    setFormError("");
+
+    if (
+      typeof onContinueWithoutLogin ===
+      "function"
+    ) {
+      onContinueWithoutLogin();
+    }
+  }
 
   return (
     <main className="jr-login-screen">
 
-      {/* =================================================
-          CENTRE LOGO
-          ================================================= */}
-
-      <div className="jr-login-logo-center">
-
-        <img
-          className="jr-login-logo-image"
-          src={`${ASSET_BASE}juice-robo-logo.jpg`}
-          alt="Juice Robo"
-        />
-
-      </div>
-
-
-      {/* =================================================
-          LOGIN COPY
-          ================================================= */}
-
-      <div className="jr-login-copy">
-
-        <span className="jr-login-eyebrow">
-          FRESH JUICE · READY WHEN YOU ARE
-        </span>
-
-        <h1>
-          Welcome
-          <br />
-          <em>back.</em>
-        </h1>
-
-        <p>
-          Sign in to continue your
-          Juice Robo experience.
-        </p>
-
-      </div>
-            {/* =================================================
-          LOGIN FORM
-          ================================================= */}
-
-      <form
-        className="jr-login-form"
-        onSubmit={handleSubmit}
-      >
+      <section className="jr-login-container">
 
         {/* =================================================
-            EMAIL
-            ================================================= */}
+            LOGO
+           ================================================= */}
 
-        <div className="jr-login-field">
+        <div className="jr-login-logo-container">
 
-          <label
-            className="jr-login-label"
-            htmlFor="jr-login-email"
-          >
-            EMAIL ADDRESS
-          </label>
-
-          <input
-            id="jr-login-email"
-            type="email"
-            value={customer?.email || ""}
-            onChange={handleEmailChange}
-            placeholder="Enter your Gmail address"
-            autoComplete="email"
+          <img
+            className="jr-login-logo-image"
+            src={`${ASSET_BASE}juice-robo-logo.jpg`}
+            alt="Juice Robo"
           />
 
         </div>
-                {/* =================================================
-            PASSWORD
-            ================================================= */}
 
-        <div className="jr-login-field">
+        {/* =================================================
+            INTRO
+           ================================================= */}
 
-          <label
-            className="jr-login-label"
-            htmlFor="jr-login-password"
-          >
-            PASSWORD
-          </label>
+        <div className="jr-login-copy">
 
-          <div className="jr-password-wrap">
+          <span className="jr-login-eyebrow">
+            FRESH JUICE · READY WHEN YOU ARE
+          </span>
+
+          <h1>
+            Welcome
+            <br />
+            <em>back.</em>
+          </h1>
+
+          <p>
+            Sign in to continue your
+            Juice Robo experience.
+          </p>
+
+        </div>
+
+        {/* =================================================
+            LOGIN FORM
+           ================================================= */}
+
+        <form
+          className="jr-login-form"
+          onSubmit={handleSubmit}
+        >
+
+          {/* =================================================
+              EMAIL
+             ================================================= */}
+
+          <div className="jr-login-field">
+
+            <label htmlFor="jr-login-email">
+              EMAIL ADDRESS
+            </label>
 
             <input
-              id="jr-login-password"
-              type={
-                showPassword
-                  ? "text"
-                  : "password"
+              id="jr-login-email"
+              type="email"
+              value={email}
+              onChange={
+                handleEmailChange
               }
-              value={customer?.password || ""}
-              onChange={handlePasswordChange}
-              placeholder="Enter your password"
-              autoComplete="current-password"
+              placeholder="Enter your email"
+              autoComplete="email"
+              disabled={busy}
+              required
             />
-
-            <button
-              type="button"
-              className="jr-password-toggle"
-              onClick={() =>
-                setShowPassword(
-                  (current) => !current
-                )
-              }
-              aria-label={
-                showPassword
-                  ? "Hide password"
-                  : "Show password"
-              }
-            >
-              <span
-                className={`jr-eye-icon ${
-                  showPassword
-                    ? "visible"
-                    : ""
-                }`}
-              />
-            </button>
 
           </div>
 
-        </div>
-                {/* =================================================
-            REMEMBER ME / FORGOT PASSWORD
-            ================================================= */}
+          {/* =================================================
+              PASSWORD
+             ================================================= */}
 
-        <div className="jr-login-options">
+          <div className="jr-login-field">
 
-          <label className="jr-remember">
+            <label htmlFor="jr-login-password">
+              PASSWORD
+            </label>
 
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={handleRememberChange}
-            />
+            <div className="jr-login-password-wrap">
 
-            <span className="jr-custom-checkbox">
-              {rememberMe ? "✓" : ""}
-            </span>
+              <input
+                id="jr-login-password"
+                className="jr-login-password-input"
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
+                value={password}
+                onChange={
+                  handlePasswordChange
+                }
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                disabled={busy}
+                required
+              />
 
-            <span className="jr-remember-text">
-              Remember me
-            </span>
+              <button
+                className="jr-login-password-toggle"
+                type="button"
+                onClick={() =>
+                  setShowPassword(
+                    (current) =>
+                      !current
+                  )
+                }
+                disabled={busy}
+                aria-label={
+                  showPassword
+                    ? "Hide password"
+                    : "Show password"
+                }
+                aria-pressed={
+                  showPassword
+                }
+              >
 
-          </label>
+                {showPassword ? (
 
+                  <svg
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
 
-          {/*
+                    <path
+                      d="M3 3l18 18"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+
+                    <path
+                      d="M10.6 10.6a2 2 0 0 0 2.8 2.8"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+
+                    <path
+                      d="M9.9 5.2A10.9 10.9 0 0 1 12 5c5.2 0 8.7 4.7 9.8 6.4-.5.8-1.6 2.3-3.4 3.7"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+
+                    <path
+                      d="M6.2 8.1C4.6 9.3 3.2 11 2.2 12.4 3.3 14.1 6.8 19 12 19c1.5 0 2.8-.4 4-.9"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+
+                  </svg>
+
+                ) : (
+
+                  <svg
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+
+                    <path
+                      d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                      strokeLinejoin="round"
+                    />
+
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="2.5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                    />
+
+                  </svg>
+
+                )}
+
+              </button>
+
+            </div>
+
+          </div>
+
+          {/* =================================================
+              REMEMBER / FORGOT
+             ================================================= */}
+
+          <div className="jr-login-options">
+
+            <label className="jr-login-remember">
+
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={
+                  handleRememberChange
+                }
+                disabled={busy}
+              />
+
+              <span>
+                Remember me
+              </span>
+
+            </label>
+
             <button
-              type="button"
               className="jr-login-forgot"
-              onClick={handleForgotPassword}
+              type="button"
+              onClick={
+                handleForgotPassword
+              }
+              disabled={busy}
             >
               Forgot password?
             </button>
-            */}
-
-        </div>
-        {/* =================================================
-         ERROR
-         ================================================= */}
-
-        {formError && (
-          <div
-            className="jr-login-error"
-            role="alert"
-          >
-            <span>!</span>
-
-            <p>
-              {formError}
-            </p>
 
           </div>
-        )}
 
+          {/* =================================================
+              ERROR
+             ================================================= */}
+
+          {(formError || error) && (
+
+            <div
+              className="jr-login-error"
+              role="alert"
+            >
+
+              <span className="jr-login-error-icon">
+                !
+              </span>
+
+              <p>
+                {formError || error}
+              </p>
+
+            </div>
+
+          )}
+
+          {/* =================================================
+              SIGN IN
+             ================================================= */}
+
+          <button
+            className="jr-login-button"
+            type="submit"
+            disabled={busy}
+          >
+
+            <span>
+              {busy
+                ? "PLEASE WAIT..."
+                : "SIGN IN"}
+            </span>
+
+            {!busy && (
+              <span className="jr-login-arrow">
+                →
+              </span>
+            )}
+
+          </button>
+
+        </form>
 
         {/* =================================================
-            SIGN IN
-            ================================================= */}
+            OR DIVIDER
+           ================================================= */}
+
+        <div className="jr-login-divider">
+
+          <span className="jr-login-divider-line" />
+
+          <span className="jr-login-divider-text">
+            OR
+          </span>
+
+          <span className="jr-login-divider-line" />
+
+        </div>
+
+        {/* =================================================
+            CONTINUE WITHOUT SIGN IN
+           ================================================= */}
 
         <button
-          type="submit"
-          className="jr-login-button"
+          type="button"
+          className="jr-continue-without-login"
+          onClick={
+            handleContinueWithoutLogin
+          }
+          disabled={busy}
         >
-          SIGN IN
-          <span>→</span>
+
+          <span>
+            CONTINUE WITHOUT SIGN IN
+          </span>
+
+          <span className="jr-login-arrow">
+            →
+          </span>
+
         </button>
 
-      </form>
-            {/* =================================================
-          SECURITY NOTE
-          ================================================= */}
+        {/* =================================================
+            GUEST NOTE
+           ================================================= */}
 
-      <div className="jr-login-note">
+        <p className="jr-login-guest-note">
+          Browse the menu first. Sign in when
+          you are ready to add items to your cart.
+        </p>
 
-        <span className="jr-login-lock">
-          🔒
-        </span>
+        {/* =================================================
+            SECURITY NOTE
+           ================================================= */}
 
-        Your login details are securely
-        protected.
+        <div className="jr-login-note">
 
-      </div>
+          <span
+            className="jr-login-lock"
+            aria-hidden="true"
+          >
+            🔒
+          </span>
+
+          <span>
+            Your login details are securely protected.
+          </span>
+
+        </div>
+
+      </section>
 
     </main>
   );

@@ -694,41 +694,70 @@ export default function App() {
      ======================================================= */
 
   const selectedLocation =
-    useMemo(
-      () =>
-        locations.find(
-          (location) =>
-            String(
-              location?.id ??
-                location?.storeId
-            ) ===
-            String(
-              selectedLocationId
+    useMemo(() => {
+      const targetId =
+        String(
+          selectedLocationId ||
+            ""
+        );
+
+      return (
+        locations.find((location) => {
+          const ids = [
+            location?.id,
+            location?.storeId,
+            location?.store_id,
+            location?.locId,
+            location?.locationId,
+            location?.location_id,
+            location?.outletId,
+            location?.outlet_id,
+          ]
+            .filter(
+              (value) =>
+                value !==
+                  undefined &&
+                value !== null &&
+                value !== ""
             )
-        ),
-      [
-        locations,
-        selectedLocationId,
-      ]
-    );
+            .map((value) =>
+              String(value)
+            );
+
+          return ids.includes(
+            targetId
+          );
+        }) ||
+        null
+      );
+    }, [
+      locations,
+      selectedLocationId,
+    ]);
 
   const selectedMachine =
-    useMemo(
-      () =>
+    useMemo(() => {
+      const targetId =
+        String(
+          selectedMachineId ||
+            ""
+        );
+
+      return (
         machines.find(
           (machine) =>
             String(
-              machine?.id
-            ) ===
-            String(
-              selectedMachineId
-            )
-        ),
-      [
-        machines,
-        selectedMachineId,
-      ]
-    );
+              machine?.id ??
+                machine?.machineId ??
+                machine?.machine_id ??
+                ""
+            ) === targetId
+        ) || null
+      );
+    }, [
+      machines,
+      selectedMachineId,
+    ]);
 
   /* =======================================================
      CART TOTALS
@@ -890,36 +919,91 @@ export default function App() {
               STORAGE.machine
             );
 
-          const machineExists =
-            savedMachine &&
-            loadedMachines.some(
+          const getMachineId = (machine) =>
+            String(
+              machine?.id ??
+                machine?.machineId ??
+                machine?.machine_id ??
+                ""
+            );
+
+          const getMachineLocationIds = (machine) =>
+            [
+              machine?.locationId,
+              machine?.location_id,
+              machine?.storeId,
+              machine?.store_id,
+              machine?.locId,
+              machine?.outletId,
+              machine?.outlet_id,
+              machine?.location?.id,
+              machine?.store?.id,
+              machine?.outlet?.id,
+            ]
+              .filter(
+                (value) =>
+                  value !==
+                    undefined &&
+                  value !== null &&
+                  value !== ""
+              )
+              .map((value) =>
+                String(value)
+              );
+
+          const selectedLocationMachine =
+            loadedMachines.find(
               (machine) =>
-                String(
-                  machine.id
-                ) ===
-                String(
-                  savedMachine
+                getMachineLocationIds(
+                  machine
+                ).includes(
+                  String(
+                    locationId
+                  )
                 )
             );
 
-          if (
-            !machineExists &&
-            loadedMachines.length
-          ) {
-            const firstMachine =
-              loadedMachines[0];
-
-            setSelectedMachineId(
-              String(
-                firstMachine.id
-              )
+          const savedMachineObject =
+            loadedMachines.find(
+              (machine) =>
+                getMachineId(
+                  machine
+                ) ===
+                String(
+                  savedMachine ||
+                    ""
+                )
             );
 
-            localStorage.setItem(
-              STORAGE.machine,
-              String(
-                firstMachine.id
-              )
+          const initialMachine =
+            selectedLocationMachine ||
+            savedMachineObject ||
+            loadedMachines[0] ||
+            null;
+
+          if (initialMachine) {
+            const machineId =
+              getMachineId(
+                initialMachine
+              );
+
+            if (machineId) {
+              setSelectedMachineId(
+                machineId
+              );
+
+              localStorage.setItem(
+                STORAGE.machine,
+                machineId
+              );
+            }
+          } else {
+            setSelectedMachineId(
+              ""
+            );
+
+            localStorage.removeItem(
+              STORAGE.machine
             );
           }
         }
@@ -1247,15 +1331,11 @@ export default function App() {
      ======================================================= */
 
   async function handleSignOut() {
-    try {
-      await api.logout();
-    } catch (logoutError) {
-      console.warn(
-        "[Juice Robo] Logout API failed:",
-        logoutError
-      );
-    }
-
+    /*
+     * The current legacy API adapter does not expose a backend
+     * logout endpoint. Sign-out is therefore handled locally by
+     * clearing the client authentication/session state.
+     */
     localStorage.removeItem(
       STORAGE.loggedIn
     );
@@ -1515,15 +1595,71 @@ export default function App() {
       id
     );
 
-    setSelectedMachineId(
-      ""
-    );
+    /*
+     * The current Juice Robo API adapter represents the physical
+     * machine through the outlet/store record. Keep the complete
+     * machine list in memory and immediately select the machine
+     * belonging to the newly selected location.
+     */
+    const matchingMachine =
+      machines.find(
+        (machine) => {
+          const machineLocationIds = [
+            machine?.locationId,
+            machine?.location_id,
+            machine?.storeId,
+            machine?.store_id,
+            machine?.locId,
+            machine?.outletId,
+            machine?.outlet_id,
+            machine?.location?.id,
+            machine?.store?.id,
+            machine?.outlet?.id,
+          ]
+            .filter(
+              (value) =>
+                value !==
+                  undefined &&
+                value !== null &&
+                value !== ""
+            )
+            .map((value) =>
+              String(value)
+            );
 
-    localStorage.removeItem(
-      STORAGE.machine
-    );
+          return machineLocationIds.includes(
+            String(id)
+          );
+        }
+      );
 
-    setMachines([]);
+    if (matchingMachine) {
+      const machineId =
+        String(
+          matchingMachine?.id ??
+            ""
+        );
+
+      setSelectedMachineId(
+        machineId
+      );
+
+      localStorage.setItem(
+        STORAGE.machine,
+        machineId
+      );
+    } else {
+      /*
+       * Do not keep a machine from the previous location.
+       */
+      setSelectedMachineId(
+        ""
+      );
+
+      localStorage.removeItem(
+        STORAGE.machine
+      );
+    }
 
     await loadProductsForLocation(
       location
@@ -2123,33 +2259,67 @@ export default function App() {
      MOBILE VIEWPORT
      ======================================================= */
 
+  const MOBILE_BREAKPOINT = 1024;
+
+  const getMobileViewport = () => {
+    if (typeof window === "undefined") {
+      return true;
+    }
+
+    return window.matchMedia(
+      `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
+    ).matches;
+  };
+
   const [
     isMobileViewport,
     setIsMobileViewport,
   ] = useState(
-    () =>
-      typeof window === "undefined"
-        ? true
-        : window.innerWidth <= 600
+    getMobileViewport
   );
 
   useEffect(() => {
-    function handleResize() {
-      setIsMobileViewport(
-        window.innerWidth <= 600
-      );
+    if (typeof window === "undefined") {
+      return undefined;
     }
 
-    window.addEventListener(
-      "resize",
-      handleResize
+    const mediaQuery =
+      window.matchMedia(
+        `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
+      );
+
+    const handleViewportChange = (event) => {
+      setIsMobileViewport(
+        event.matches
+      );
+    };
+
+    if (
+      typeof mediaQuery.addEventListener ===
+      "function"
+    ) {
+      mediaQuery.addEventListener(
+        "change",
+        handleViewportChange
+      );
+
+      return () => {
+        mediaQuery.removeEventListener(
+          "change",
+          handleViewportChange
+        );
+      };
+    }
+
+    mediaQuery.addListener(
+      handleViewportChange
     );
 
-    return () =>
-      window.removeEventListener(
-        "resize",
-        handleResize
+    return () => {
+      mediaQuery.removeListener(
+        handleViewportChange
       );
+    };
   }, []);
 
   /* =======================================================
@@ -2180,7 +2350,7 @@ export default function App() {
         <div className="jr-mobile-frame">
           <div className="jr-loading">
             <img
-              src={`${ASSET_BASE}juice-robo-logo.jpg`}
+              src="/assets/juice-logo-plain.jpg"
               alt="Juice Robo"
               className="jr-loading-image"
               style={{
@@ -2264,20 +2434,49 @@ export default function App() {
           cartCount={
             cartCount
           }
+
           location={
             selectedLocation
           }
+
           machine={
             selectedMachine
           }
+
+          locations={
+            locations
+          }
+
+          machines={
+            machines
+          }
+
+          selectedLocationId={
+            selectedLocationId
+          }
+
+          selectedMachineId={
+            selectedMachineId
+          }
+
+          onLocation={
+            selectLocation
+          }
+
+          onMachine={
+            selectMachine
+          }
+
           onCart={() => {
             if (!loggedIn) {
               showToast(
                 "Please sign in to view your cart"
               );
+
               setScreen(
                 "login"
               );
+
               return;
             }
 
@@ -2285,19 +2484,17 @@ export default function App() {
               "cart"
             );
           }}
-          onLocation={() =>
-            setScreen(
-              "location"
-            )
-          }
+
           onProfile={() => {
             if (!loggedIn) {
               showToast(
                 "Please sign in to view your profile"
               );
+
               setScreen(
                 "login"
               );
+
               return;
             }
 
@@ -2880,6 +3077,7 @@ export default function App() {
                 showToast(
                   "Please sign in to view your cart"
                 );
+
                 setScreen(
                   "login"
                 );
@@ -2923,142 +3121,273 @@ function Header({
   cartCount,
   location,
   machine,
-  onCart,
+  locations = [],
+  machines = [],
+  selectedLocationId,
+  selectedMachineId,
   onLocation,
+  onMachine,
+  onCart,
   onProfile,
 }) {
-  const locationName =
-    location?.name ||
-    location?.storeName ||
-    "Choose location";
+  const [open, setOpen] = useState(false);
 
-  const secondary =
-    location?.address ||
-    location?.locAddress ||
-    "";
+  const clean = (value) =>
+    String(value ?? "")
+      .replace(/\bundefined\b/gi, "")
+      .replace(/\bnull\b/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
 
-  const machineName =
-    machine?.name ||
-    machine?.machineCode ||
-    "";
+  const locationId = (item) =>
+    String(
+      item?.id ??
+        item?.storeId ??
+        item?.store_id ??
+        item?.locId ??
+        item?.locationId ??
+        item?.location_id ??
+        item?.outletId ??
+        item?.outlet_id ??
+        ""
+    );
+
+  const locationName = (item) =>
+    clean(
+      item?.outletName ??
+        item?.locationName ??
+        item?.storeName ??
+        item?.name ??
+        item?.outlet?.name ??
+        item?.location?.name ??
+        item?.store?.name
+    );
+
+  const machineId = (item) =>
+    String(
+      item?.id ??
+        item?.machineId ??
+        item?.machine_id ??
+        ""
+    );
+
+  const machineName = (item) =>
+    clean(
+      item?.machineName ??
+        item?.machine_name ??
+        item?.name ??
+        item?.machineCode ??
+        item?.machine_code ??
+        item?.code
+    );
+
+  const currentLocationName =
+    locationName(location) || "Choose location";
+
+  const currentMachineName =
+    machineName(machine) || "Choose machine";
+
+  const availableMachines = machines.filter((item) => {
+    if (!selectedLocationId) return true;
+
+    const ids = [
+      item?.locationId,
+      item?.location_id,
+      item?.storeId,
+      item?.store_id,
+      item?.locId,
+      item?.outletId,
+      item?.outlet_id,
+      item?.location?.id,
+      item?.store?.id,
+      item?.outlet?.id,
+    ]
+      .filter(
+        (value) =>
+          value !== undefined &&
+          value !== null &&
+          value !== ""
+      )
+      .map((value) => String(value));
+
+    return ids.includes(String(selectedLocationId));
+  });
+
+  const machineOptions =
+    availableMachines.length
+      ? availableMachines
+      : machine
+        ? [machine]
+        : [];
+
+  function chooseLocation(item) {
+    if (typeof onLocation === "function") {
+      onLocation(item);
+    }
+    setOpen(false);
+  }
+
+  function chooseMachine(item) {
+    if (typeof onMachine === "function") {
+      onMachine(item);
+    }
+    setOpen(false);
+  }
 
   return (
     <header className="jr-header">
+      <div className="jr-header-selection">
+        <div className="jr-header-location-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.5" />
+            <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+          </svg>
+        </div>
 
-      <button
-        type="button"
-        className="jr-header-location"
-        onClick={
-          onLocation
-        }
-        aria-label="Change collection location"
-      >
-        <span className="jr-location-pin">
-          ●
-        </span>
+        {/* ONE COMBINED LOCATION + MACHINE DROPDOWN */}
+        <div className="jr-combined-picker">
+          <button
+            type="button"
+            className={`jr-combined-picker-trigger ${open ? "open" : ""}`}
+            onClick={() => setOpen((value) => !value)}
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            aria-label="Choose location and machine"
+          >
+            <span className="jr-combined-picker-copy">
+              <span className="jr-combined-picker-line">
+                <small>LOCATION</small>
+                <strong>{currentLocationName}</strong>
+              </span>
 
-        <span className="jr-header-location-copy">
+              <span className="jr-combined-picker-line machine-line">
+                <small>MACHINE</small>
+                <strong>{currentMachineName}</strong>
+              </span>
+            </span>
 
-          <small>
-            COLLECT FROM
-          </small>
+            <svg
+              className="jr-combined-picker-chevron"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M7 9L12 14L17 9"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
 
-          <strong>
-            {locationName}
-          </strong>
+          {open && (
+            <div className="jr-combined-picker-menu">
+              <div className="jr-combined-picker-section">
+                <div className="jr-combined-picker-section-title">
+                  LOCATION
+                </div>
 
-          <span>
-            {machineName ||
-              secondary}
-          </span>
+                {locations.length ? (
+                  locations.map((item, index) => {
+                    const id = locationId(item);
+                    const active =
+                      String(id) === String(selectedLocationId || "");
 
-        </span>
+                    return (
+                      <button
+                        type="button"
+                        className={`jr-combined-picker-option ${active ? "active" : ""}`}
+                        key={id || `location-${index}`}
+                        onClick={() => chooseLocation(item)}
+                      >
+                        <span>{locationName(item) || "Unnamed location"}</span>
+                        {active && (
+                          <span className="jr-combined-picker-check">✓</span>
+                        )}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="jr-combined-picker-empty">
+                    No locations available
+                  </div>
+                )}
+              </div>
 
-        <span className="jr-header-chevron">
-          ⌄
-        </span>
-      </button>
+              <div className="jr-combined-picker-divider" />
+
+              <div className="jr-combined-picker-section">
+                <div className="jr-combined-picker-section-title">
+                  MACHINE
+                </div>
+
+                {machineOptions.length ? (
+                  machineOptions.map((item, index) => {
+                    const id = machineId(item);
+                    const active =
+                      String(id) === String(selectedMachineId || "");
+
+                    return (
+                      <button
+                        type="button"
+                        className={`jr-combined-picker-option ${active ? "active" : ""}`}
+                        key={id || `machine-${index}`}
+                        onClick={() => chooseMachine(item)}
+                      >
+                        <span>{machineName(item) || "Unnamed machine"}</span>
+                        {active && (
+                          <span className="jr-combined-picker-check">✓</span>
+                        )}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="jr-combined-picker-empty">
+                    No machines available
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="jr-header-actions">
-
-        {/* PROFILE */}
-
         <button
           type="button"
           className="jr-profile-button"
-          onClick={
-            onProfile
-          }
+          onClick={onProfile}
           aria-label="Profile"
-          style={{
-            width: "34px",
-            height: "34px",
-            minWidth: "34px",
-            padding: "0",
-            display: "grid",
-            placeItems: "center",
-            boxSizing: "border-box",
-            border:
-              "1px solid #eeeae3",
-            borderRadius:
-              "10px",
-            background:
-              "#ffffff",
-            color:
-              "#60408f",
-            boxShadow:
-              "0 3px 10px rgba(30, 25, 45, 0.08)",
-            cursor:
-              "pointer",
-            WebkitTapHighlightColor:
-              "transparent",
-          }}
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <circle
-              cx="12"
-              cy="7.5"
-              r="3.2"
-              fill="currentColor"
-            />
-
-            <path
-              d="M5.5 20C5.9 15.9 8.2 13.7 12 13.7C15.8 13.7 18.1 15.9 18.5 20"
-              fill="currentColor"
-            />
+          <svg className="jr-header-action-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="7.5" r="3.15" fill="currentColor" />
+            <path d="M5.5 20C5.9 15.9 8.2 13.7 12 13.7C15.8 13.7 18.1 15.9 18.5 20" fill="currentColor" />
           </svg>
         </button>
-
-        {/* CART */}
 
         <button
           type="button"
           className="jr-cart-button"
-          onClick={
-            onCart
-          }
-          aria-label="Cart"
+          onClick={onCart}
+          aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
         >
-          🛒
+          <svg className="jr-header-action-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4.2 5.2H6.25L7.75 15.1H17.55L19.15 8H7.05" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="9.15" cy="19" r="1.35" fill="currentColor" />
+            <circle cx="16.25" cy="19" r="1.35" fill="currentColor" />
+          </svg>
 
           {cartCount > 0 && (
-            <span className="jr-cart-badge">
-              {cartCount}
-            </span>
+            <span className="jr-cart-badge">{cartCount}</span>
           )}
         </button>
-
       </div>
     </header>
   );
 }
+
 
 /* =========================================================
    BOTTOM NAV
@@ -3071,55 +3400,111 @@ function BottomNav({
   loggedIn,
   onRequireSignIn,
 }) {
-  const activeColor = "#2f8050";
-  const inactiveColor = "#929292";
+  const activeColor =
+    "#2f8050";
+
+  const inactiveColor =
+    "#929292";
 
   const navButtonStyle = {
-    appearance: "none",
-    WebkitAppearance: "none",
-    border: "0",
-    outline: "0",
-    background: "transparent",
-    padding: "0",
-    margin: "0",
-    minWidth: "0",
-    width: "100%",
-    height: "100%",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "4px",
-    cursor: "pointer",
+    appearance:
+      "none",
+
+    WebkitAppearance:
+      "none",
+
+    border:
+      "0",
+
+    outline:
+      "0",
+
+    background:
+      "transparent",
+
+    padding:
+      "0",
+
+    margin:
+      "0",
+
+    minWidth:
+      "0",
+
+    width:
+      "100%",
+
+    height:
+      "100%",
+
+    display:
+      "flex",
+
+    flexDirection:
+      "column",
+
+    alignItems:
+      "center",
+
+    justifyContent:
+      "center",
+
+    gap:
+      "4px",
+
+    cursor:
+      "pointer",
+
     fontFamily:
       "Inter, Poppins, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
   };
 
   const iconStyle = {
-    width: "21px",
-    height: "21px",
-    display: "block",
-    flex: "0 0 auto",
+    width:
+      "23px",
+
+    height:
+      "23px",
+
+    display:
+      "block",
+
+    flex:
+      "0 0 auto",
   };
 
   const labelStyle = {
-    margin: "0",
-    padding: "0",
-    fontSize: "7px",
-    lineHeight: "10px",
-    fontWeight: 800,
-    letterSpacing: "0",
-    color: "inherit",
+    margin:
+      "0",
+
+    padding:
+      "0",
+
+    fontSize:
+      "9px",
+
+    lineHeight:
+      "11px",
+
+    fontWeight:
+      800,
+
+    letterSpacing:
+      "0",
+
+    color:
+      "inherit",
   };
 
-  function HomeIcon({ active }) {
+  function HomeIcon({
+    active,
+  }) {
     return (
       <svg
         viewBox="0 0 24 24"
-        width="21"
-        height="21"
+        width="23"
+        height="23"
         fill="none"
-        xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
         <path
@@ -3137,54 +3522,19 @@ function BottomNav({
     );
   }
 
-  function MachineIcon({ active }) {
+  function OrderIcon({
+    active,
+  }) {
     return (
       <svg
         viewBox="0 0 24 24"
-        width="21"
-        height="21"
+        width="23"
+        height="23"
         fill="none"
-        xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
         <path
-          d="M12 3.8L13.35 9.35L18.9 10.7L13.35 12.05L12 17.6L10.65 12.05L5.1 10.7L10.65 9.35L12 3.8Z"
-          stroke={
-            active
-              ? activeColor
-              : inactiveColor
-          }
-          strokeWidth="1.55"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        <path
-          d="M18.2 4.2V7.1M16.75 5.65H19.65"
-          stroke={
-            active
-              ? activeColor
-              : inactiveColor
-          }
-          strokeWidth="1.35"
-          strokeLinecap="round"
-        />
-      </svg>
-    );
-  }
-
-  function OrderIcon({ active }) {
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        width="21"
-        height="21"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <path
-          d="M5.1 7.2H18.9L17.7 15.2H7.1L5.1 7.2Z"
+          d="M4.2 5.2H6.2L7.7 15.2H17.7L19.3 8H7"
           stroke={
             active
               ? activeColor
@@ -3195,16 +3545,26 @@ function BottomNav({
           strokeLinejoin="round"
         />
 
-        <path
-          d="M4 5.2H6.1L7.1 15.2M9.2 18.8C9.2 19.55 8.6 20.15 7.85 20.15C7.1 20.15 6.5 19.55 6.5 18.8C6.5 18.05 7.1 17.45 7.85 17.45C8.6 17.45 9.2 18.05 9.2 18.8ZM18.4 18.8C18.4 19.55 17.8 20.15 17.05 20.15C16.3 20.15 15.7 19.55 15.7 18.8C15.7 18.05 16.3 17.45 17.05 17.45C18.4 18.05 18.4 18.8Z"
-          stroke={
+        <circle
+          cx="9.1"
+          cy="19"
+          r="1.35"
+          fill={
             active
               ? activeColor
               : inactiveColor
           }
-          strokeWidth="1.55"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        />
+
+        <circle
+          cx="16.5"
+          cy="19"
+          r="1.35"
+          fill={
+            active
+              ? activeColor
+              : inactiveColor
+          }
         />
       </svg>
     );
@@ -3212,78 +3572,61 @@ function BottomNav({
 
   return (
     <nav
-      className="jr-bottom-nav"
+      className="jr-bottom-nav jr-bottom-nav-two"
       aria-label="Primary navigation"
     >
+
       {/* MENU */}
 
       <button
         type="button"
         className={
-          screen === "menu"
+          screen === "menu" ||
+          screen === "home"
             ? "active"
             : ""
         }
         onClick={() =>
-          setScreen("menu")
+          setScreen(
+            "menu"
+          )
         }
         aria-label="Menu"
         style={{
           ...navButtonStyle,
           color:
-            screen === "menu"
+            screen === "menu" ||
+            screen === "home"
               ? activeColor
               : inactiveColor,
         }}
       >
-        <span style={iconStyle}>
+
+        <span
+          style={
+            iconStyle
+          }
+        >
           <HomeIcon
             active={
-              screen === "menu"
+              screen === "menu" ||
+              screen === "home"
             }
           />
         </span>
 
-        <small style={labelStyle}>
+        <small
+          style={
+            labelStyle
+          }
+        >
           Menu
         </small>
+
       </button>
 
-      {/* MACHINE */}
 
-      <button
-        type="button"
-        className={
-          screen === "location"
-            ? "active"
-            : ""
-        }
-        onClick={() =>
-          setScreen("location")
-        }
-        aria-label="Machine"
-        style={{
-          ...navButtonStyle,
-          color:
-            screen === "location"
-              ? activeColor
-              : inactiveColor,
-        }}
-      >
-        <span style={iconStyle}>
-          <MachineIcon
-            active={
-              screen === "location"
-            }
-          />
-        </span>
-
-        <small style={labelStyle}>
-          Machine
-        </small>
-      </button>
-
-      {/* ORDER */}
+      {/* CART */}
 
       <button
         type="button"
@@ -3298,9 +3641,11 @@ function BottomNav({
             return;
           }
 
-          setScreen("cart");
+          setScreen(
+            "cart"
+          );
         }}
-        aria-label="Order"
+        aria-label="Cart"
         style={{
           ...navButtonStyle,
           color:
@@ -3309,15 +3654,20 @@ function BottomNav({
               : inactiveColor,
         }}
       >
+
         <span
           className="jr-nav-cart-icon"
           style={{
             ...iconStyle,
-            position: "relative",
-            display: "grid",
-            placeItems: "center",
+            position:
+              "relative",
+            display:
+              "grid",
+            placeItems:
+              "center",
           }}
         >
+
           <OrderIcon
             active={
               screen === "cart"
@@ -3326,38 +3676,29 @@ function BottomNav({
 
           {cartCount > 0 && (
             <b
-              style={{
-                position: "absolute",
-                top: "-4px",
-                right: "-5px",
-                minWidth: "15px",
-                height: "15px",
-                padding: "0 3px",
-                boxSizing: "border-box",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: "999px",
-                background: "#2f8050",
-                color: "#ffffff",
-                fontSize: "6px",
-                lineHeight: "1",
-                fontWeight: 900,
-                border: "2px solid #ffffff",
-              }}
+              className="jr-nav-cart-badge"
             >
               {cartCount}
             </b>
           )}
+
         </span>
 
-        <small style={labelStyle}>
-          Order
+        <small
+          style={
+            labelStyle
+          }
+        >
+          Cart
         </small>
+
       </button>
+
     </nav>
   );
 }
+
+
 
 /* =========================================================
    LOADING / TOAST

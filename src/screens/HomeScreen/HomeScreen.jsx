@@ -1,504 +1,373 @@
-import React from "react";
 import "./HomeScreen.css";
 
-/* =========================================================
-   JUICE ROBO — HOME SCREEN
-   ========================================================= */
+/*
+ * Juice Robo — Home Screen
+ *
+ * The collection-point logo is served from:
+ * public/assets/app_logo.jpg
+ */
 
-function clean(value) {
-  return String(value ?? "").trim();
-}
-
-function getFirstName(user, customer) {
-  const name =
-    user?.name ||
-    user?.firstname ||
-    customer?.name ||
-    "Juice Lover";
-
-  return clean(name).split(/\s+/)[0] || "Juice Lover";
-}
-
-function getLocationName(location) {
-  return (
-    clean(
-      location?.name ||
-        location?.storeName ||
-        location?.locationName ||
-        location?.outletName
-    ) || "Select collection point"
-  );
-}
-
-function getLocationAddress(location) {
-  return (
-    clean(
-      location?.address ||
-        location?.locAddress ||
-        location?.storeAddress ||
-        location?.location
-    ) || "Choose a Juice Robo machine near you"
-  );
-}
-
-function getMachineName(machine) {
-  return (
-    clean(
-      machine?.name ||
-        machine?.machineName ||
-        machine?.machine_code ||
-        machine?.machineCode
-    ) || "Choose a machine"
-  );
-}
-
-function getProductName(product) {
-  return (
-    clean(
-      product?.displayName ||
-        product?.name ||
-        product?.productName ||
-        product?.product_name ||
-        product?.title
-    ) || "Fresh Sugarcane Juice"
-  );
-}
-
-function getProductPrice(product) {
-  const value =
-    product?.price ??
-    product?.sellingPrice ??
-    product?.selling_price ??
-    product?.unitPrice ??
-    product?.unit_price ??
-    0;
-
-  const number = Number(value);
-
-  return Number.isFinite(number)
-    ? number
-    : 0;
-}
-
-function formatMoney(value, money) {
-  if (typeof money === "function") {
-    return money(value);
-  }
-
-  return `₹${Number(value || 0).toLocaleString("en-IN")}`;
-}
-
-
-/* =========================================================
-   MAIN SCREEN
-   ========================================================= */
+const JUICE_ROBO_LOGO =
+  `${import.meta.env.BASE_URL}assets/app_logo.jpg`;
 
 export default function HomeScreen({
-  user,
-  customer,
-  location,
-  machine,
   products = [],
-  cart = [],
-  onMenu,
-  onLocation,
-  onOrders,
-  onProfile,
+  selectedLocation,
+  selectedMachine,
   onProduct,
+  productImage,
+  displayProductName,
+  displayDescription,
   money,
 }) {
-  const firstName =
-    getFirstName(user, customer);
-
-  const safeProducts =
-    Array.isArray(products)
-      ? products
-      : [];
-
-  const safeCart =
-    Array.isArray(cart)
-      ? cart
-      : [];
-
-  const cartCount =
-    safeCart.reduce(
-      (sum, item) =>
-        sum +
-        Number(
-          item?.quantity ??
-            item?.qty ??
-            1
-        ),
-      0
-    );
-
-  const hasLocation =
-    Boolean(location);
-
-  const hasMachine =
-    Boolean(machine);
+  const safeProducts = Array.isArray(products)
+    ? products
+    : [];
 
   return (
-    <main className="jr-content jr-page jr-home-page">
+    <main className="jr-content jr-home-page">
 
       {/* =================================================
-          TOP BAR
+          HERO / WELCOME
          ================================================= */}
 
-      <header className="jr-home-topbar">
+      <section className="jr-welcome">
 
-        <button
-          type="button"
-          className="jr-home-location"
-          onClick={onLocation}
-        >
+        <div className="jr-welcome-copy">
 
-          <span className="jr-home-location-pin">
-            📍
-          </span>
-
-          <span className="jr-home-location-copy">
-
-            <small>
-              COLLECT FROM
-            </small>
-
-            <strong>
-              {getLocationName(location)}
-            </strong>
-
-          </span>
-
-          <span className="jr-home-chevron">
-            ▾
-          </span>
-
-        </button>
-
-
-        <button
-          type="button"
-          className="jr-home-profile-button"
-          onClick={onProfile}
-          aria-label="Open profile"
-        >
-          {String(firstName[0] || "J").toUpperCase()}
-        </button>
-
-      </header>
-
-
-      {/* =================================================
-          HERO
-         ================================================= */}
-
-      <section className="jr-home-hero">
-
-        <div className="jr-home-hero-copy">
-
-          <span className="jr-home-eyebrow">
-            FRESH. FAST. SIMPLE.
+          <span className="jr-eyebrow">
+            FRESHLY MADE
           </span>
 
           <h1>
-            Your juice,
+            Your favourite
             <br />
-            <em>your way.</em>
+            <em>
+              juice, your way.
+            </em>
           </h1>
 
           <p>
-            Freshly pressed sugarcane juice,
-            made when you order.
+            Pick your juice, choose your quantity and
+            collect it fresh from your Juice Robo machine.
           </p>
-
-          <button
-            type="button"
-            className="jr-home-primary-button"
-            onClick={onMenu}
-          >
-            <span>
-              ORDER NOW
-            </span>
-
-            <strong>
-              →
-            </strong>
-          </button>
 
         </div>
 
-
         <div
-          className="jr-home-hero-art"
+          className="jr-welcome-icon jr-app-logo"
           aria-hidden="true"
         >
-          <div className="jr-home-art-glow" />
-
-          <div className="jr-home-glass">
-            <div className="jr-home-glass-juice" />
-            <div className="jr-home-glass-top" />
-            <div className="jr-home-straw" />
-          </div>
-
-          <span className="jr-home-leaf jr-home-leaf-one">
-            ✦
-          </span>
-
-          <span className="jr-home-leaf jr-home-leaf-two">
-            ✦
-          </span>
+          <img
+            src={JUICE_ROBO_LOGO}
+            alt=""
+            className="jr-app-logo-image"
+          />
         </div>
 
       </section>
 
 
       {/* =================================================
-          COLLECTION STATUS
+          SELECTED LOCATION / MACHINE
          ================================================= */}
 
-      <section className="jr-home-collection-card">
+      <section
+        className="jr-selected-machine-banner"
+        aria-label="Collection point"
+      >
 
-        <div className="jr-home-collection-icon">
-          📍
+        <div
+          className="jr-selected-machine-icon jr-collection-logo"
+          aria-hidden="true"
+        >
+          <img
+            src={JUICE_ROBO_LOGO}
+            alt=""
+            className="jr-collection-logo-image"
+            onError={(event) => {
+              event.currentTarget.style.display =
+                "none";
+            }}
+          />
         </div>
 
-        <div className="jr-home-collection-copy">
+        <div className="jr-selected-machine-copy">
 
-          <span>
-            COLLECTION POINT
-          </span>
+          <small>
+            COLLECTING FROM
+          </small>
 
           <strong>
-            {getLocationName(location)}
+            {selectedLocation?.name ||
+              "Selected location"}
           </strong>
 
           <small>
-            {hasLocation
-              ? getLocationAddress(location)
-              : "Select your collection location"}
+            {selectedMachine?.name ||
+              "Selected machine"}
           </small>
 
-          {hasMachine && (
-            <small>
-              Machine: {getMachineName(machine)}
-            </small>
-          )}
-
         </div>
-
-        <button
-          type="button"
-          onClick={onLocation}
-          className="jr-home-change-button"
-        >
-          {hasLocation ? "CHANGE" : "SELECT"}
-        </button>
 
       </section>
 
 
       {/* =================================================
-          QUICK MENU
+          AVAILABLE JUICES
          ================================================= */}
 
-      <section className="jr-home-menu-section">
+      <section className="jr-menu-section">
 
-        <div className="jr-home-section-heading">
+        <div className="jr-section-heading">
 
           <div>
-            <span>
-              EXPLORE
+
+            <span className="jr-eyebrow">
+              AVAILABLE JUICES
             </span>
 
             <h2>
               What are you craving?
             </h2>
+
           </div>
 
-          <button
-            type="button"
-            onClick={onMenu}
+          <span className="jr-count">
+            {safeProducts.length}
+          </span>
+
+        </div>
+
+        <p className="jr-section-subtitle">
+          Choose your favourite fresh juice.
+        </p>
+
+
+        {/* =================================================
+            PRODUCTS
+           ================================================= */}
+
+        <div className="jr-products">
+
+          {safeProducts.length === 0 ? (
+
+            <div className="jr-products-empty">
+
+              <span
+                className="jr-empty-logo"
+                aria-hidden="true"
+              >
+                <img
+                  src={JUICE_ROBO_LOGO}
+                  alt=""
+                  className="jr-empty-logo-image"
+                />
+              </span>
+
+              <strong>
+                No juices available
+              </strong>
+
+              <p>
+                Fresh juice options will appear here
+                when available.
+              </p>
+
+            </div>
+
+          ) : (
+
+            safeProducts.map(
+              (product, index) => (
+
+                <ProductCard
+                  key={
+                    product?.id ??
+                    product?.productId ??
+                    product?.product_id ??
+                    `product-${index}`
+                  }
+                  product={product}
+                  onSelect={onProduct}
+                  productImage={productImage}
+                  displayProductName={
+                    displayProductName
+                  }
+                  displayDescription={
+                    displayDescription
+                  }
+                  money={money}
+                />
+
+              )
+            )
+
+          )}
+
+        </div>
+
+      </section>
+
+    </main>
+  );
+}
+
+
+/* =========================================================
+   PRODUCT CARD
+   ========================================================= */
+
+function ProductCard({
+  product = {},
+  onSelect,
+  productImage,
+  displayProductName,
+  displayDescription,
+  money,
+}) {
+  const name =
+    product?.displayName ||
+    (
+      typeof displayProductName === "function"
+        ? displayProductName(product)
+        : ""
+    ) ||
+    product?.name ||
+    product?.productName ||
+    product?.product_name ||
+    product?.title ||
+    "Juice";
+
+  const description =
+    product?.displayDescription ||
+    (
+      typeof displayDescription === "function"
+        ? displayDescription(product)
+        : ""
+    ) ||
+    product?.description ||
+    "Freshly prepared juice.";
+
+  const image =
+    product?.image ||
+    product?.image_url ||
+    product?.imageUrl ||
+    (
+      typeof productImage === "function"
+        ? productImage(product)
+        : ""
+    );
+
+  const price = Number(
+    product?.price ??
+      product?.sellingPrice ??
+      product?.selling_price ??
+      product?.amount ??
+      product?.unitPrice ??
+      product?.unit_price ??
+      0
+  );
+
+  function handleSelect() {
+    if (typeof onSelect === "function") {
+      onSelect(product);
+    }
+  }
+
+  return (
+    <button
+      className="jr-product-card"
+      type="button"
+      onClick={handleSelect}
+      aria-label={`Select ${name}`}
+    >
+
+      {/* PRODUCT IMAGE */}
+
+      <div className="jr-product-image-wrap">
+
+        {image ? (
+
+          <img
+            src={image}
+            alt={name}
+            className="jr-product-image"
+            loading="lazy"
+            onError={(event) => {
+              if (
+                typeof productImage ===
+                "function"
+              ) {
+                event.currentTarget.src =
+                  productImage(product);
+              }
+            }}
+          />
+
+        ) : (
+
+          <div
+            className="jr-product-image-placeholder jr-product-logo-placeholder"
+            aria-hidden="true"
           >
-            VIEW ALL →
-          </button>
+            <img
+              src={JUICE_ROBO_LOGO}
+              alt=""
+              className="jr-product-logo-image"
+            />
+          </div>
+
+        )}
+
+        <span className="jr-fresh-badge">
+          <i />
+          FRESH
+        </span>
+
+      </div>
+
+
+      {/* PRODUCT DETAILS */}
+
+      <div className="jr-product-info">
+
+        <div className="jr-product-main">
+
+          <h3>
+            {name}
+          </h3>
+
+          {description && (
+            <p>
+              {description}
+            </p>
+          )}
 
         </div>
 
 
-        {safeProducts.length > 0 ? (
+        {/* PRICE / SELECT */}
 
-          <div className="jr-home-product-row">
+        <div className="jr-product-footer">
 
-            {safeProducts
-              .slice(0, 3)
-              .map((product, index) => (
+          <strong className="jr-product-price">
+            {typeof money === "function"
+              ? money(price)
+              : `₹${price.toLocaleString("en-IN")}`}
+          </strong>
 
-                <button
-                  type="button"
-                  className="jr-home-product-card"
-                  key={
-                    product?.id ||
-                    product?.productId ||
-                    index
-                  }
-                  onClick={() =>
-                    onProduct?.(product)
-                  }
-                >
-
-                  <div className="jr-home-product-image">
-                    <span>
-                      🧃
-                    </span>
-                  </div>
-
-                  <strong>
-                    {getProductName(product)}
-                  </strong>
-
-                  <small>
-                    {formatMoney(
-                      getProductPrice(product),
-                      money
-                    )}
-                  </small>
-
-                </button>
-
-              ))}
-
-          </div>
-
-        ) : (
-
-          <button
-            type="button"
-            className="jr-home-empty-products"
-            onClick={onMenu}
+          <span
+            className="jr-select-circle"
+            aria-hidden="true"
           >
-            <span>
-              🧃
-            </span>
-
-            <div>
-              <strong>
-                Fresh juices are waiting
-              </strong>
-
-              <small>
-                Tap to browse the menu
-              </small>
-            </div>
-
-            <b>
-              →
-            </b>
-          </button>
-
-        )}
-
-      </section>
-
-
-      {/* =================================================
-          ORDER HISTORY / PROFILE SHORTCUTS
-         ================================================= */}
-
-      <section className="jr-home-shortcuts">
-
-        <button
-          type="button"
-          onClick={onOrders}
-        >
-          <span className="jr-home-shortcut-icon">
-            ▤
+            +
           </span>
 
-          <span>
-            <strong>
-              Order history
-            </strong>
+        </div>
 
-            <small>
-              View previous orders
-            </small>
-          </span>
+      </div>
 
-          <b>
-            →
-          </b>
-        </button>
-
-
-        <button
-          type="button"
-          onClick={onProfile}
-        >
-          <span className="jr-home-shortcut-icon">
-            ◯
-          </span>
-
-          <span>
-            <strong>
-              My account
-            </strong>
-
-            <small>
-              Manage your profile
-            </small>
-          </span>
-
-          <b>
-            →
-          </b>
-        </button>
-
-      </section>
-
-
-      {/* =================================================
-          CART FLOATING BAR
-         ================================================= */}
-
-      {cartCount > 0 && (
-        <button
-          type="button"
-          className="jr-home-cart-bar"
-          onClick={onMenu}
-        >
-
-          <span className="jr-home-cart-count">
-            {cartCount}
-          </span>
-
-          <span>
-            <strong>
-              {cartCount === 1
-                ? "1 item in your cart"
-                : `${cartCount} items in your cart`}
-            </strong>
-
-            <small>
-              Tap to continue ordering
-            </small>
-          </span>
-
-          <b>
-            →
-          </b>
-
-        </button>
-      )}
-
-
-      {/* =================================================
-          FOOTER
-         ================================================= */}
-
-      <p className="jr-home-footer">
-        Juice Robo · Fresh juice, simple ordering.
-      </p>
-
-    </main>
+    </button>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import "./ProfileScreen.css";
 
 /* =========================================================
@@ -8,130 +8,154 @@ import "./ProfileScreen.css";
 export default function ProfileScreen({
   user,
   customer,
-  setCustomer,
   orders = [],
-  onSave,
   onLogout,
   onBack,
-  busy,
-  error,
+  busy = false,
   onOrders,
 }) {
   /* =======================================================
-     EDIT ACCOUNT DROPDOWN
+     SAFE DATA NORMALIZATION
      ======================================================= */
 
-  const [isEditing, setIsEditing] = useState(false);
+  const safeOrders = Array.isArray(orders) ? orders : [];
 
   /* =======================================================
-     USER DISPLAY DATA
+     USER NAME
      ======================================================= */
+
+  const rawName =
+    user?.name ??
+    user?.firstname ??
+    customer?.name ??
+    "";
 
   const name =
-    user?.name ||
-    user?.firstname ||
-    customer?.name ||
-    "Juice Lover";
+    String(rawName).trim() || "Juice Lover";
+
+  /* =======================================================
+     FIRST NAME
+     ======================================================= */
 
   const firstName =
-    String(name)
-      .trim()
-      .split(/\s+/)[0] || "Juice";
-
-  const initial =
-    String(name)
+    name
       .trim()
       .split(/\s+/)
-      .map((part) => part?.[0] || "")
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
+      .filter(Boolean)[0] || "Juice";
 
   /* =======================================================
-     UPDATE CUSTOMER
+     INITIALS
      ======================================================= */
 
-  function update(field, value) {
-    setCustomer((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  }
+  const initial = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0))
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "JL";
 
   /* =======================================================
-     TOGGLE EDIT ACCOUNT
+     CONTACT / ACCOUNT DETAIL
      ======================================================= */
 
-  function toggleEditAccount() {
-    if (busy) {
-      return;
-    }
+  const contact =
+    user?.email ??
+    user?.phone ??
+    customer?.email ??
+    customer?.phone ??
+    "";
 
-    setIsEditing((current) => !current);
-  }
+  const contactText =
+    String(contact).trim() || "Juice Robo member";
+
+  /* =======================================================
+     ORDER COUNT
+     ======================================================= */
+
+  const orderCount = safeOrders.length;
+
+  const orderLabel =
+    `${orderCount} saved order${orderCount === 1 ? "" : "s"}`;
+
+
+  /* =======================================================
+     RENDER
+     ======================================================= */
 
   return (
     <main
       className="jr-content jr-page jr-profile-page"
       data-theme="light"
-      style={{
-        background: "#fbfaf3",
-        color: "#151515",
-        colorScheme: "light",
-      }}
+      aria-label="Profile"
     >
 
       {/* ===================================================
-          BACK
+          BACK TO MENU
          =================================================== */}
 
       <button
         className="jr-back-link"
-        onClick={onBack}
         type="button"
+        onClick={onBack}
         disabled={busy}
+        aria-label="Back to menu"
       >
-        ← Back to menu
+        <span aria-hidden="true">←</span>
+        <span>&nbsp;Back to menu</span>
       </button>
 
 
       {/* ===================================================
-          ACCOUNT HEADING
+          PAGE INTRO
          =================================================== */}
 
-      <span className="jr-eyebrow">
-        YOUR ACCOUNT
-      </span>
+      <div className="jr-profile-heading">
 
-      <h1 className="jr-page-title">
-        Hello,
-        <br />
-        <em>{firstName}.</em>
-      </h1>
+        <span className="jr-eyebrow">
+          Your account
+        </span>
+
+        <h1 className="jr-page-title">
+          Hello,
+          <br />
+          <em>{firstName}.</em>
+        </h1>
+
+      </div>
 
 
       {/* ===================================================
-          PROFILE HERO
+          PROFILE IDENTITY
          =================================================== */}
 
-      <section className="jr-profile-hero">
+      <section
+        className="jr-profile-hero"
+        aria-label="Account information"
+      >
 
-        <div className="jr-profile-avatar">
+        <div
+          className="jr-profile-avatar"
+          aria-hidden="true"
+        >
           {initial}
         </div>
 
-        <div>
+        <div className="jr-profile-identity">
 
-          <strong>
+          <strong
+            className="jr-profile-name"
+            title={name}
+          >
             {name}
           </strong>
 
-          <small>
-            {user?.email ||
-              user?.phone ||
-              customer?.email ||
-              customer?.phone ||
-              "Juice Robo member"}
+          <small
+            className="jr-profile-contact"
+            title={contactText}
+          >
+            {contactText}
           </small>
 
         </div>
@@ -140,238 +164,88 @@ export default function ProfileScreen({
 
 
       {/* ===================================================
-          EDIT ACCOUNT DROPDOWN
+          ACCOUNT ACTIONS
          =================================================== */}
 
       <section
-        className={
-          isEditing
-            ? "jr-account-card jr-account-card-open"
-            : "jr-account-card"
-        }
+        className="jr-profile-actions"
+        aria-label="Account actions"
       >
 
         {/* =================================================
-            DROPDOWN HEADER
+            MY ORDERS
            ================================================= */}
 
         <button
-          className="jr-account-card-heading jr-account-edit-toggle"
+          className="jr-account-action"
           type="button"
-          onClick={toggleEditAccount}
-          aria-expanded={isEditing}
+          onClick={onOrders}
           disabled={busy}
+          aria-label={`My orders. ${orderLabel}`}
         >
 
-          <div>
+          <span
+            className="jr-account-action-icon"
+            aria-hidden="true"
+          >
+            ▣
+          </span>
 
-            <span className="jr-eyebrow">
-              PROFILE
-            </span>
+          <div className="jr-account-action-content">
 
             <strong>
-              Edit account details
+              My orders
             </strong>
 
             <small>
-              {isEditing
-                ? "Update your account information"
-                : "Tap to edit your account information"}
+              {orderLabel}
             </small>
 
           </div>
 
-
-          {/* =================================================
-              ARROW
-             ================================================= */}
-
-          <span
-            className={
-              isEditing
-                ? "jr-account-chevron jr-account-chevron-open"
-                : "jr-account-chevron"
-            }
+          <b
+            className="jr-account-action-arrow"
             aria-hidden="true"
           >
-            ↓
-          </span>
+            →
+          </b>
 
         </button>
 
 
         {/* =================================================
-            EDIT FORM
+            LOGOUT
            ================================================= */}
 
-        {isEditing && (
-          <div className="jr-account-edit-panel">
+        <button
+          className="
+            jr-account-action
+            jr-account-action-danger
+          "
+          type="button"
+          onClick={onLogout}
+          disabled={busy}
+          aria-label="Logout"
+        >
 
-            <form
-              className="jr-form"
-              onSubmit={onSave}
-            >
+          <span
+            className="jr-account-action-icon"
+            aria-hidden="true"
+          >
+            ↪
+          </span>
 
-              {/* =========================================
-                  FULL NAME
-                 ========================================= */}
+          <div className="jr-account-action-content">
 
-              <label>
-                FULL NAME
-
-                <input
-                  type="text"
-                  value={
-                    customer?.name || ""
-                  }
-                  onChange={(event) =>
-                    update(
-                      "name",
-                      event.target.value
-                    )
-                  }
-                  autoComplete="name"
-                  disabled={busy}
-                />
-              </label>
-
-
-              {/* =========================================
-                  EMAIL
-                 ========================================= */}
-
-              <label>
-                EMAIL
-
-                <input
-                  type="email"
-                  value={
-                    customer?.email ||
-                    user?.email ||
-                    ""
-                  }
-                  onChange={(event) =>
-                    update(
-                      "email",
-                      event.target.value
-                    )
-                  }
-                  autoComplete="email"
-                  disabled={busy}
-                />
-              </label>
-
-
-              {/* =========================================
-                  ERROR
-                 ========================================= */}
-
-              {error && (
-                <div className="jr-form-error">
-                  {error}
-                </div>
-              )}
-
-
-              {/* =========================================
-                  SAVE
-                 ========================================= */}
-
-              <button
-                className="jr-button jr-button-primary jr-full"
-                type="submit"
-                disabled={busy}
-              >
-
-                {busy
-                  ? "SAVING..."
-                  : "SAVE PROFILE"}
-
-                {!busy && (
-                  <span>
-                    →
-                  </span>
-                )}
-
-              </button>
-
-            </form>
+            <strong>
+              Logout
+            </strong>
 
           </div>
-        )}
+
+        </button>
 
       </section>
-
-
-      {/* ===================================================
-          MY ORDERS
-         =================================================== */}
-
-      <button
-        className="jr-account-action"
-        type="button"
-        onClick={onOrders}
-        disabled={busy}
-      >
-
-        <span>
-          ▣
-        </span>
-
-        <div>
-
-          <strong>
-            My orders
-          </strong>
-
-          <small>
-            {orders.length} saved order
-            {orders.length === 1
-              ? ""
-              : "s"}
-          </small>
-
-        </div>
-
-        <b>
-          →
-        </b>
-
-      </button>
-
-
-      {/* ===================================================
-          SIGN OUT
-         =================================================== */}
-
-      <button
-        className="jr-account-action jr-account-action-danger"
-        type="button"
-        onClick={onLogout}
-        disabled={busy}
-      >
-
-        <span>
-          ↪
-        </span>
-
-        <div>
-
-          <strong>
-            Sign out
-          </strong>
-
-          <small>
-            Sign out of this Juice Robo account
-          </small>
-
-        </div>
-
-        <b>
-          →
-        </b>
-
-      </button>
 
     </main>
   );

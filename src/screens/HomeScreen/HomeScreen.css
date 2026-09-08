@@ -1,1158 +1,158 @@
-/* =========================================================
-   JUICE ROBO — HOME SCREEN
-   Mobile-first UI
-   ================================================= */
-
-.jr-home-page {
-  width: 100%;
-  min-height: 100%;
-
-  box-sizing: border-box;
-
-  padding:
-    10px
-    10px
-    88px;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  background: #fbfaf3;
-
-  color: #171717;
-
-  font-family:
-    Inter,
-    Poppins,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-
-  scrollbar-width: none;
-}
-
-.jr-home-page::-webkit-scrollbar {
-  display: none;
-}
-
 
 /* =========================================================
-   TOP BAR
+   COLLECTION POINT — JUICE ROBO LOGO
    ========================================================= */
 
-.jr-home-topbar {
-  width: 100%;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 8px;
-
-  margin:
-    0
-    0
-    14px;
-}
-
-.jr-home-location {
-  min-width: 0;
-
-  flex: 1;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 7px;
-
-  padding: 0;
-
-  border: 0;
-
-  background: transparent;
-
-  text-align: left;
-
-  cursor: pointer;
-}
-
-.jr-home-location-pin {
-  width: 27px;
-  height: 27px;
-
-  min-width: 27px;
-
+.jr-collection-logo {
+  overflow: hidden;
   display: grid;
   place-items: center;
-
-  border-radius: 7px;
-
-  background: #eef7eb;
-
-  font-size: 11px;
-  line-height: 1;
+  background: #f0f8ed;
 }
 
-.jr-home-location-copy {
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 3px;
-}
-
-.jr-home-location-copy small {
-  color: #999995;
-
-  font-size: 5px;
-  line-height: 1;
-
-  font-weight: 900;
-
-  letter-spacing: .08em;
-}
-
-.jr-home-location-copy strong {
-  max-width: 190px;
-
-  overflow: hidden;
-
-  color: #202020;
-
-  font-size: 8px;
-  line-height: 1;
-
-  font-weight: 900;
-
-  white-space: nowrap;
-
-  text-overflow: ellipsis;
-}
-
-.jr-home-chevron {
-  color: #6e6e69;
-
-  font-size: 9px;
-}
-
-.jr-home-profile-button {
-  width: 30px;
-  height: 30px;
-
-  min-width: 30px;
-
-  display: grid;
-  place-items: center;
-
-  padding: 0;
-
-  border: 0;
-
-  border-radius: 50%;
-
-  background: #fff0dd;
-
-  color: #ee7900;
-
-  font-family: inherit;
-
-  font-size: 9px;
-  line-height: 1;
-
-  font-weight: 950;
-
-  cursor: pointer;
-}
-
-
-/* =========================================================
-   HERO
-   ========================================================= */
-
-.jr-home-hero {
-  position: relative;
-
-  width: 100%;
-  min-height: 154px;
-
-  box-sizing: border-box;
-
-  display: flex;
-
-  overflow: hidden;
-
-  margin:
-    0
-    0
-    11px;
-
-  padding:
-    18px
-    13px;
-
-  border-radius: 13px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #edf5e7 0%,
-      #f7f5e8 55%,
-      #fff5e6 100%
-    );
-}
-
-.jr-home-hero-copy {
-  position: relative;
-
-  z-index: 2;
-
-  width: 63%;
-}
-
-.jr-home-eyebrow {
+.jr-collection-logo-image {
   display: block;
 
-  margin:
-    0
-    0
-    6px;
-
-  color: #ef7800;
-
-  font-size: 6px;
-  line-height: 1;
-
-  font-weight: 950;
-
-  letter-spacing: .1em;
-}
-
-.jr-home-hero-copy h1 {
-  margin: 0;
-
-  color: #141414;
-
-  font-size: 24px;
-  line-height: .92;
-
-  font-weight: 950;
-
-  letter-spacing: -.055em;
-}
-
-.jr-home-hero-copy h1 em {
-  color: #2f8650;
-
-  font-style: normal;
-}
-
-.jr-home-hero-copy p {
-  max-width: 165px;
-
-  margin:
-    7px
-    0
-    9px;
-
-  color: #767a72;
-
-  font-size: 6.5px;
-  line-height: 1.35;
-
-  font-weight: 500;
-}
-
-.jr-home-primary-button {
-  width: 102px;
-  height: 29px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: space-between;
-
-  padding:
-    0
-    8px;
-
-  border: 0;
-
-  border-radius: 7px;
-
-  background: #2e8650;
-
-  color: #ffffff;
-
-  font-family: inherit;
-
-  font-size: 6px;
-  line-height: 1;
-
-  font-weight: 950;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 5px 10px
-    rgba(46, 134, 80, .14);
-}
-
-.jr-home-primary-button strong {
-  font-size: 12px;
-
-  font-weight: 400;
-}
-
-
-/* =========================================================
-   HERO ART
-   ========================================================= */
-
-.jr-home-hero-art {
-  position: absolute;
-
-  right: -7px;
-  bottom: -12px;
-
-  width: 145px;
-  height: 145px;
-}
-
-.jr-home-art-glow {
-  position: absolute;
-
-  width: 115px;
-  height: 115px;
-
-  top: 16px;
-  left: 16px;
-
-  border-radius: 50%;
-
-  background: rgba(255, 255, 255, .55);
-}
-
-.jr-home-glass {
-  position: absolute;
-
-  left: 40px;
-  top: 28px;
-
-  width: 56px;
-  height: 86px;
-
-  overflow: hidden;
-
-  border:
-    2px solid
-    rgba(255, 255, 255, .85);
-
-  border-radius:
-    8px
-    8px
-    15px
-    15px;
-
-  background: rgba(255, 255, 255, .32);
-
-  transform:
-    rotate(5deg);
-}
-
-.jr-home-glass-juice {
-  position: absolute;
-
-  left: -5px;
-  right: -5px;
-  bottom: -2px;
-
-  height: 57px;
-
-  background:
-    linear-gradient(
-      180deg,
-      #f7ca56,
-      #e9aa32
-    );
-
-  border-radius:
-    10px
-    10px
-    14px
-    14px;
-}
-
-.jr-home-glass-top {
-  position: absolute;
-
-  left: 0;
-  right: 0;
-  top: 10px;
-
-  height: 5px;
-
-  border-radius: 50%;
-
-  background: rgba(255, 255, 255, .6);
-}
-
-.jr-home-straw {
-  position: absolute;
-
-  width: 4px;
-  height: 63px;
-
-  left: 35px;
-  top: -16px;
-
-  border-radius: 5px;
-
-  background: #ee7900;
-
-  transform:
-    rotate(16deg);
-}
-
-.jr-home-leaf {
-  position: absolute;
-
-  color: #438b54;
-
-  font-size: 17px;
-
-  line-height: 1;
-}
-
-.jr-home-leaf-one {
-  left: 15px;
-  top: 25px;
-
-  transform: rotate(-22deg);
-}
-
-.jr-home-leaf-two {
-  right: 10px;
-  bottom: 23px;
-
-  transform: rotate(24deg);
-}
-
-
-/* =========================================================
-   COLLECTION CARD
-   ========================================================= */
-
-.jr-home-collection-card {
   width: 100%;
+  height: 100%;
 
-  min-height: 58px;
+  max-width: 100%;
+  max-height: 100%;
 
-  box-sizing: border-box;
+  object-fit: contain;
+  object-position: center;
 
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-
-  margin:
-    0
-    0
-    14px;
-
-  padding:
-    7px
-    8px;
-
-  border:
-    1px solid
-    #e5e5df;
-
-  border-radius: 9px;
-
-  background: #ffffff;
-
-  box-shadow:
-    0 3px 10px
-    rgba(20, 45, 26, .025);
+  border-radius: inherit;
 }
 
-.jr-home-collection-icon {
-  width: 30px;
-  height: 30px;
-
-  min-width: 30px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 7px;
-
-  background: #eff7ed;
-
-  font-size: 11px;
-}
-
-.jr-home-collection-copy {
-  min-width: 0;
-
-  flex: 1;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 2px;
-}
-
-.jr-home-collection-copy span {
-  color: #999995;
-
-  font-size: 5px;
-  line-height: 1;
-
-  font-weight: 900;
-
-  letter-spacing: .08em;
-}
-
-.jr-home-collection-copy strong {
-  overflow: hidden;
-
-  color: #222222;
-
-  font-size: 8px;
-  line-height: 1;
-
-  font-weight: 900;
-
-  white-space: nowrap;
-
-  text-overflow: ellipsis;
-}
-
-.jr-home-collection-copy small {
-  overflow: hidden;
-
-  color: #8a8a86;
-
-  font-size: 5px;
-  line-height: 1;
-
-  white-space: nowrap;
-
-  text-overflow: ellipsis;
-}
-
-.jr-home-change-button {
-  flex: 0 0 auto;
-
-  padding: 0;
-
-  border: 0;
-
-  background: transparent;
-
-  color: #2f8050;
-
-  font-family: inherit;
-
-  font-size: 5.5px;
-  line-height: 1;
-
-  font-weight: 950;
-
-  cursor: pointer;
-}
-
-
-/* =========================================================
-   SECTION HEADING
-   ========================================================= */
-
-.jr-home-section-heading {
-  display: flex;
-
-  align-items: flex-end;
-  justify-content: space-between;
-
-  gap: 8px;
-
-  margin:
-    0
-    0
-    8px;
-}
-
-.jr-home-section-heading > div {
-  display: flex;
-  flex-direction: column;
-
-  gap: 4px;
-}
-
-.jr-home-section-heading span {
-  color: #ed7800;
-
-  font-size: 5.5px;
-  line-height: 1;
-
-  font-weight: 950;
-
-  letter-spacing: .1em;
-}
-
-.jr-home-section-heading h2 {
-  margin: 0;
-
-  color: #202020;
-
-  font-size: 11px;
-  line-height: 1;
-
-  font-weight: 900;
-}
-
-.jr-home-section-heading > button {
-  padding: 0;
-
-  border: 0;
-
-  background: transparent;
-
-  color: #2f8050;
-
-  font-family: inherit;
-
-  font-size: 5.5px;
-  line-height: 1;
-
-  font-weight: 900;
-
-  cursor: pointer;
-}
-
-
-/* =========================================================
-   PRODUCTS
-   ========================================================= */
-
-.jr-home-product-row {
-  width: 100%;
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
-
-  gap: 7px;
-
-  margin-bottom: 12px;
-}
-
-.jr-home-product-card {
-  min-width: 0;
-
-  box-sizing: border-box;
-
-  display: flex;
-  flex-direction: column;
-
-  align-items: flex-start;
-
-  padding:
-    5px;
-
-  border:
-    1px solid
-    #e6e6e1;
-
-  border-radius: 9px;
-
-  background: #ffffff;
-
-  color: #222222;
-
-  font-family: inherit;
-
-  text-align: left;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 2px 7px
-    rgba(20, 45, 26, .025);
-}
-
-.jr-home-product-image {
-  width: 100%;
-  height: 59px;
-
-  display: grid;
-  place-items: center;
-
-  margin-bottom: 5px;
-
-  border-radius: 7px;
-
-  background: #f3f7ef;
-}
-
-.jr-home-product-image span {
-  font-size: 27px;
-}
-
-.jr-home-product-card strong {
-  width: 100%;
-
-  overflow: hidden;
-
-  color: #292929;
-
-  font-size: 6.5px;
-  line-height: 1.15;
-
-  font-weight: 850;
-
-  display: -webkit-box;
-
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-
-  line-clamp: 2;
-}
-
-.jr-home-product-card small {
-  margin-top: 4px;
-
-  color: #2e8350;
-
-  font-size: 7px;
-  line-height: 1;
-
-  font-weight: 900;
-}
-
-
-/* =========================================================
-   EMPTY PRODUCTS
-   ========================================================= */
-
-.jr-home-empty-products {
-  width: 100%;
-
-  min-height: 57px;
-
-  box-sizing: border-box;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-
-  margin-bottom: 12px;
-
-  padding:
-    7px
-    9px;
-
-  border:
-    1px dashed
-    #dcdcd6;
-
-  border-radius: 9px;
-
-  background: #fafaf6;
-
-  text-align: left;
-
-  cursor: pointer;
-}
-
-.jr-home-empty-products > span {
-  font-size: 21px;
-}
-
-.jr-home-empty-products > div {
-  min-width: 0;
-
-  flex: 1;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 3px;
-}
-
-.jr-home-empty-products strong {
-  color: #303030;
-
-  font-size: 7px;
-  line-height: 1;
-
-  font-weight: 900;
-}
-
-.jr-home-empty-products small {
-  color: #92928d;
-
-  font-size: 5.5px;
-  line-height: 1;
-}
-
-.jr-home-empty-products b {
-  color: #2f8050;
-
-  font-size: 13px;
-
-  font-weight: 400;
-}
-
-
-/* =========================================================
-   SHORTCUTS
-   ========================================================= */
-
-.jr-home-shortcuts {
-  width: 100%;
-
-  display: grid;
-
-  grid-template-columns:
-    1fr
-    1fr;
-
-  gap: 7px;
-
-  margin-bottom: 12px;
-}
-
-.jr-home-shortcuts button {
-  min-width: 0;
-
-  box-sizing: border-box;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 6px;
-
-  padding:
-    7px;
-
-  border:
-    1px solid
-    #e5e5e0;
-
-  border-radius: 9px;
-
-  background: #ffffff;
-
-  color: #222222;
-
-  font-family: inherit;
-
-  text-align: left;
-
-  cursor: pointer;
-}
-
-.jr-home-shortcut-icon {
-  width: 27px;
-  height: 27px;
-
-  min-width: 27px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 7px;
-
-  background: #f1f7ee;
-
-  color: #3b8054;
-
-  font-size: 11px;
-}
-
-.jr-home-shortcuts button > span:nth-child(2) {
-  min-width: 0;
-
-  flex: 1;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 3px;
-}
-
-.jr-home-shortcuts strong {
-  color: #303030;
-
-  font-size: 6.5px;
-  line-height: 1;
-
-  font-weight: 900;
-}
-
-.jr-home-shortcuts small {
-  color: #999995;
-
-  font-size: 5px;
-  line-height: 1;
-}
-
-.jr-home-shortcuts b {
-  color: #747470;
-
-  font-size: 11px;
-
-  font-weight: 400;
-}
-
-
-/* =========================================================
-   CART BAR
-   ========================================================= */
-
-.jr-home-cart-bar {
-  position: sticky;
-
-  bottom: 7px;
-
-  z-index: 5;
-
-  width: 100%;
-
-  min-height: 44px;
-
-  box-sizing: border-box;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 7px;
-
-  margin:
-    0
-    0
-    10px;
-
-  padding:
-    6px
-    8px;
-
-  border: 0;
-
-  border-radius: 9px;
-
-  background: #2e8650;
-
-  color: #ffffff;
-
-  font-family: inherit;
-
-  text-align: left;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 7px 15px
-    rgba(46, 134, 80, .17);
-}
-
-.jr-home-cart-count {
-  width: 25px;
-  height: 25px;
-
-  min-width: 25px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 50%;
-
-  background: rgba(255,255,255,.18);
-
-  font-size: 8px;
-
-  font-weight: 950;
-}
-
-.jr-home-cart-bar > span:nth-child(2) {
-  min-width: 0;
-
-  flex: 1;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 3px;
-}
-
-.jr-home-cart-bar strong {
-  font-size: 7px;
-
-  line-height: 1;
-
-  font-weight: 900;
-}
-
-.jr-home-cart-bar small {
-  color: rgba(255,255,255,.7);
-
-  font-size: 5px;
-
-  line-height: 1;
-}
-
-.jr-home-cart-bar b {
-  font-size: 14px;
-
-  line-height: 1;
-
-  font-weight: 400;
-}
-
-
-/* =========================================================
-   FOOTER
-   ========================================================= */
-
-.jr-home-footer {
-  margin: 0;
-
-  color: #a0a09b;
-
-  font-size: 5.5px;
-
-  line-height: 1.2;
-
-  text-align: center;
-}
-
-
-/* =========================================================
-   430PX AND BELOW
-   ========================================================= */
-
+/* Prevent the JPEG from becoming oversized on compact screens. */
 @media (max-width: 430px) {
-  .jr-home-page {
-    padding:
-      9px
-      10px
-      84px;
+  .jr-collection-logo {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    flex: 0 0 36px;
+    border-radius: 11px;
   }
+}
 
-  .jr-home-hero {
-    min-height: 151px;
+@media (orientation: landscape) and (min-width: 500px) {
+  .jr-collection-logo {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    flex-basis: 34px;
+  }
+}
+
+@media (orientation: landscape) and (min-width: 560px) and (max-height: 420px) {
+  .jr-collection-logo {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    flex-basis: 30px;
+    border-radius: 9px;
   }
 }
 
 
 /* =========================================================
-   390PX AND BELOW
+   JUICE ROBO APP LOGO
+   Source:
+   public/assets/app_logo.jpg
    ========================================================= */
 
-@media (max-width: 390px) {
-  .jr-home-page {
-    padding-left: 9px;
-    padding-right: 9px;
+.jr-app-logo {
+  display: grid !important;
+  place-items: center;
+
+  overflow: hidden;
+
+  background: rgba(255,255,255,.72);
+}
+
+.jr-app-logo-image {
+  display: block;
+
+  width: 72%;
+  height: 72%;
+
+  object-fit: contain;
+  object-position: center;
+
+  border-radius: 0;
+}
+
+.jr-empty-logo {
+  width: clamp(42px, 11vw, 58px);
+  height: clamp(42px, 11vw, 58px);
+
+  display: grid;
+  place-items: center;
+
+  overflow: hidden;
+
+  margin: 0 auto;
+}
+
+.jr-empty-logo-image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+  object-position: center;
+}
+
+.jr-product-logo-placeholder {
+  display: grid;
+  place-items: center;
+
+  overflow: hidden;
+}
+
+.jr-product-logo-image {
+  display: block;
+
+  width: 62%;
+  height: 62%;
+
+  object-fit: contain;
+  object-position: center;
+}
+
+/* Keep the collection-point logo using the same app logo. */
+.jr-collection-logo-image {
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (orientation: landscape) and (min-width: 500px) {
+  .jr-empty-logo {
+    width: 44px;
+    height: 44px;
   }
 
-  .jr-home-hero-copy h1 {
-    font-size: 23px;
-  }
-
-  .jr-home-hero-art {
-    right: -10px;
-    transform: scale(.95);
-    transform-origin: bottom right;
-  }
-
-  .jr-home-product-image {
-    height: 54px;
-  }
-
-  .jr-home-product-image span {
-    font-size: 24px;
+  .jr-app-logo-image {
+    width: 68%;
+    height: 68%;
   }
 }
 
-
-/* =========================================================
-   360PX AND BELOW
-   ========================================================= */
-
-@media (max-width: 360px) {
-  .jr-home-page {
-    padding-left: 8px;
-    padding-right: 8px;
+@media (orientation: landscape) and (min-width: 560px) and (max-height: 420px) {
+  .jr-empty-logo {
+    width: 34px;
+    height: 34px;
   }
 
-  .jr-home-hero {
-    min-height: 145px;
-
-    padding:
-      15px
-      11px;
-  }
-
-  .jr-home-hero-copy {
+  .jr-app-logo-image {
     width: 66%;
+    height: 66%;
   }
 
-  .jr-home-hero-copy h1 {
-    font-size: 22px;
-  }
-
-  .jr-home-hero-art {
-    transform: scale(.88);
-  }
-
-  .jr-home-shortcuts {
-    gap: 5px;
-  }
-}
-
-
-/* =========================================================
-   SHORT SCREENS
-   ========================================================= */
-
-@media (max-height: 700px) {
-  .jr-home-page {
-    padding-top: 7px;
-  }
-
-  .jr-home-topbar {
-    margin-bottom: 10px;
-  }
-
-  .jr-home-hero {
-    min-height: 137px;
-
-    margin-bottom: 8px;
-
-    padding-top: 14px;
-    padding-bottom: 14px;
-  }
-
-  .jr-home-collection-card {
-    margin-bottom: 10px;
-  }
-
-  .jr-home-product-image {
-    height: 48px;
-  }
-
-  .jr-home-shortcuts {
-    margin-bottom: 8px;
+  .jr-product-logo-image {
+    width: 58%;
+    height: 58%;
   }
 }

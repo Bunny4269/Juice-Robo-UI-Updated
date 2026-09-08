@@ -1,7 +1,12 @@
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import "./HistoryScreen.css";
 
 /* =========================================================
-   JUICE ROBO — HISTORY SCREEN
+   JUICE ROBO — HISTORY / MY ORDERS
    ========================================================= */
 
 export default function HistoryScreen({
@@ -10,175 +15,201 @@ export default function HistoryScreen({
   onClear,
   money,
 }) {
-  const safeOrders = Array.isArray(orders) ? orders : [];
+  const safeOrders =
+    Array.isArray(orders)
+      ? orders
+      : [];
 
-  function formatDate(value) {
-    if (!value) return "Recent order";
+  /* =======================================================
+     EXPANDED ORDER
+     ======================================================= */
 
-    const date = new Date(value);
+  const [
+    expandedIndex,
+    setExpandedIndex,
+  ] = useState(
+    safeOrders.length > 0
+      ? 0
+      : null
+  );
 
-    if (Number.isNaN(date.getTime())) {
+
+  /* =======================================================
+     HANDLE ORDER LIST CHANGES
+     ======================================================= */
+
+  useEffect(() => {
+    setExpandedIndex(
+      safeOrders.length > 0
+        ? 0
+        : null
+    );
+  }, [
+    safeOrders.length,
+  ]);
+
+
+  /* =======================================================
+     MONEY
+     ======================================================= */
+
+  function formatMoney(value) {
+    const amount =
+      Number(value);
+
+    if (
+      !Number.isFinite(amount)
+    ) {
+      return "₹0.00";
+    }
+
+    return `₹${amount.toFixed(2)}`;
+  }
+
+
+  /* =======================================================
+     DATE / TIME
+     ======================================================= */
+
+  function formatDateTime(
+    value
+  ) {
+    if (!value) {
+      return "Recent order";
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
       return String(value);
     }
 
-    return date.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    return `${date.toLocaleDateString(
+      "en-IN",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }
+    )}, ${date.toLocaleTimeString(
+      "en-IN",
+      {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }
+    )}`;
   }
 
-  function getOrderNumber(order, index) {
-    return (
-      order?.orderNumber ||
-      order?.orderNo ||
-      order?.order_no ||
-      order?.order_id ||
-      order?.orderId ||
-      `#${String(index + 1).padStart(4, "0")}`
-    );
-  }
 
-  function getStatus(order) {
-    return (
-      order?.status ||
-      order?.orderStatus ||
-      order?.order_status ||
-      "Placed"
-    );
-  }
+  /* =======================================================
+     PAYMENT STATUS CLASS
+     ======================================================= */
 
-  function getTotal(order) {
-    return Number(
-      order?.total ??
-        order?.grandTotal ??
-        order?.grand_total ??
-        order?.amount ??
-        order?.totalAmount ??
-        order?.total_amount ??
-        0
-    );
-  }
+  function getStatusClass(
+    status
+  ) {
+    const value =
+      String(
+        status || ""
+      )
+        .trim()
+        .toUpperCase();
 
-  function getItems(order) {
-    if (Array.isArray(order?.items)) {
-      return order.items;
+    if (
+      value.includes(
+        "SUCCESS"
+      )
+    ) {
+      return "success";
     }
 
-    if (Array.isArray(order?.orderItems)) {
-      return order.orderItems;
+    if (
+      value.includes(
+        "FAILED"
+      )
+    ) {
+      return "failed";
     }
 
-    if (Array.isArray(order?.order_items)) {
-      return order.order_items;
+    if (
+      value.includes(
+        "PENDING"
+      )
+    ) {
+      return "pending";
     }
 
-    return [];
+    return "default";
   }
 
-  function getLocation(order) {
-    return (
-      order?.location?.name ||
-      order?.locationName ||
-      order?.location_name ||
-      order?.collectionLocation ||
-      order?.collection_location ||
-      order?.storeName ||
-      order?.store_name ||
-      "Juice Robo location"
+
+  /* =======================================================
+     ACCORDION TOGGLE
+     ======================================================= */
+
+  function toggleOrder(
+    index
+  ) {
+    setExpandedIndex(
+      (currentIndex) => {
+        if (
+          currentIndex === index
+        ) {
+          return null;
+        }
+
+        return index;
+      }
     );
   }
 
-  function getItemName(item) {
-    return (
-      item?.displayName ||
-      item?.name ||
-      item?.productName ||
-      item?.product_name ||
-      item?.title ||
-      "Sugarcane Juice"
-    );
-  }
 
-  function getItemQuantity(item) {
-    const quantity = Number(
-      item?.quantity ??
-        item?.qty ??
-        item?.count ??
-        1
-    );
-
-    return Number.isFinite(quantity) && quantity > 0
-      ? quantity
-      : 1;
-  }
-
-  function formatMoney(value) {
-    if (typeof money === "function") {
-      return money(value);
-    }
-
-    return `₹${Number(value || 0).toLocaleString("en-IN", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    })}`;
-  }
+  /* =======================================================
+     RENDER
+     ======================================================= */
 
   return (
-    <main className="jr-content jr-page jr-history-page">
+    <main className="jr-history-page">
 
       {/* =================================================
-          BACK TO ACCOUNT
+          BACK TO PROFILE
          ================================================= */}
 
       <button
         type="button"
         className="jr-history-back"
         onClick={onBack}
+        aria-label="Back to Profile"
       >
-        ← Back to account
+        <span aria-hidden="true">
+          ←
+        </span>
+
+        <span>
+          Back to Profile
+        </span>
       </button>
 
 
       {/* =================================================
-          HEADER
+          PAGE HEADER
          ================================================= */}
 
-      <header className="jr-history-heading">
-
-        <span className="jr-history-eyebrow">
-          ORDER HISTORY
-        </span>
-
-        <div className="jr-history-title-row">
-          <div>
-            <h1>
-              My orders.
-            </h1>
-
-            <p>
-              View your previous Juice Robo orders.
-            </p>
-          </div>
-
-          {safeOrders.length > 0 && (
-            <button
-              type="button"
-              className="jr-history-clear"
-              onClick={onClear}
-              aria-label="Clear order history"
-              title="Clear order history"
-            >
-              ×
-            </button>
-          )}
-        </div>
-
+      <header className="jr-history-header">
+        <h1>
+          My Orders
+        </h1>
       </header>
 
 
       {/* =================================================
-          EMPTY HISTORY
+          EMPTY STATE
          ================================================= */}
 
       {safeOrders.length === 0 ? (
@@ -186,7 +217,9 @@ export default function HistoryScreen({
         <section className="jr-history-empty">
 
           <div className="jr-history-empty-icon">
-            <span>🧃</span>
+            <span>
+              🧃
+            </span>
           </div>
 
           <h2>
@@ -194,9 +227,9 @@ export default function HistoryScreen({
           </h2>
 
           <p>
-            Your Juice Robo orders will appear here after you
-            <br className="jr-history-empty-break" />
-            place an order.
+            Your Juice Robo orders
+            will appear here after
+            you place an order.
           </p>
 
           <button
@@ -204,8 +237,11 @@ export default function HistoryScreen({
             className="jr-history-shop-button"
             onClick={onBack}
           >
-            <span>BACK TO ACCOUNT</span>
-            <strong>→</strong>
+            BACK TO PROFILE
+
+            <span>
+              →
+            </span>
           </button>
 
         </section>
@@ -216,116 +252,299 @@ export default function HistoryScreen({
            ORDER LIST
            ================================================= */
 
-        <section className="jr-history-list">
+        <section
+          className="jr-history-list"
+          aria-label="Order history"
+        >
 
-          {safeOrders.map((order, index) => {
+          {safeOrders.map(
+            (
+              order,
+              index
+            ) => {
 
-            const orderNumber =
-              getOrderNumber(order, index);
+              /* ===========================================
+                 API FIELD MAPPING
+                 =========================================== */
 
-            const status =
-              getStatus(order);
+              const pickupCode =
+                order?.orderPin;
 
-            const total =
-              getTotal(order);
+              const transactionId =
+                order?.transactionId;
 
-            const items =
-              getItems(order);
+              const orderDate =
+                order?.orderDate;
 
-            const date =
-              order?.createdAt ||
-              order?.created_at ||
-              order?.orderDate ||
-              order?.order_date ||
-              order?.date;
+              const orderQuantity =
+                Number(
+                  order?.orderQuantity ??
+                    0
+                );
 
-            return (
-              <article
-                className="jr-history-card"
-                key={
-                  order?.id ||
-                  order?.orderId ||
-                  orderNumber ||
-                  index
-                }
-              >
+              const itemsTotal =
+                Number(
+                  order?.grossBill ??
+                    0
+                );
 
-                <div className="jr-history-card-header">
+              const gst =
+                Number(
+                  order?.cartGST ??
+                    0
+                );
 
-                  <div className="jr-history-order-info">
+              const totalAmount =
+                Number(
+                  order?.netBill ??
+                    0
+                );
 
-                    <span>
-                      ORDER
-                    </span>
+              const paymentStatus =
+                String(
+                  order?.orderStatus ||
+                    order?.paymentStatus ||
+                    "PAYMENT-PENDING"
+                )
+                  .trim()
+                  .toUpperCase();
 
-                    <strong>
-                      {orderNumber}
-                    </strong>
+              const isExpanded =
+                expandedIndex ===
+                index;
 
-                  </div>
-
-                  <span className="jr-history-status">
-                    {status}
-                  </span>
-
-                </div>
-
-
-                <div className="jr-history-date">
-                  {formatDate(date)}
-                </div>
-
-
-                <div className="jr-history-location">
-                  {getLocation(order)}
-                </div>
+              const hasPickupCode =
+                pickupCode !== null &&
+                pickupCode !== undefined &&
+                String(
+                  pickupCode
+                ).trim() !== "";
 
 
-                {items.length > 0 && (
-                  <div className="jr-history-items">
+              return (
+                <article
+                  key={
+                    order?.orderId ||
+                    order?.transactionId ||
+                    index
+                  }
+                  className={
+                    `jr-history-card ${
+                      isExpanded
+                        ? "is-expanded"
+                        : ""
+                    }`
+                  }
+                >
 
-                    {items.map((item, itemIndex) => (
+                  {/* =====================================
+                      CARD HEADER / TRIGGER
+                     ===================================== */}
 
-                      <div
-                        className="jr-history-item"
-                        key={
-                          item?.id ||
-                          item?.productId ||
-                          itemIndex
-                        }
-                      >
-                        <span>
-                          {getItemName(item)}
-                          {" × "}
-                          {getItemQuantity(item)}
+                  <button
+                    type="button"
+                    className="jr-history-card-trigger"
+                    onClick={() =>
+                      toggleOrder(
+                        index
+                      )
+                    }
+                    aria-expanded={
+                      isExpanded
+                    }
+                    aria-controls={
+                      `jr-history-details-${index}`
+                    }
+                  >
+
+                    <div className="jr-history-card-main">
+
+                      {/* =================================
+                          TRANSACTION + STATUS
+                         ================================= */}
+
+                      <div className="jr-history-transaction-row">
+
+                        <div className="jr-history-transaction">
+
+                          <span className="jr-history-label">
+                            Transaction Id #
+                          </span>
+
+                          <strong>
+                            {transactionId ||
+                              "—"}
+                          </strong>
+
+                        </div>
+
+
+                        {/* PAYMENT STATUS */}
+
+                        <span
+                          className={
+                            `jr-history-status ${getStatusClass(
+                              paymentStatus
+                            )}`
+                          }
+                        >
+                          {paymentStatus}
                         </span>
 
                       </div>
 
-                    ))}
 
-                  </div>
-                )}
+                      {/* =================================
+                          DATE
+                         ================================= */}
+
+                      <div className="jr-history-date">
+                        {formatDateTime(
+                          orderDate
+                        )}
+                      </div>
+
+                    </div>
 
 
-                <div className="jr-history-total">
+                    {/* =====================================
+                        CHEVRON
+                       ===================================== */}
 
-                  <span>
-                    TOTAL
-                  </span>
+                    <span
+                      className={
+                        `jr-history-chevron ${
+                          isExpanded
+                            ? "expanded"
+                            : ""
+                        }`
+                      }
+                      aria-hidden="true"
+                    >
+                      ⌄
+                    </span>
 
-                  <strong>
-                    {formatMoney(total)}
-                  </strong>
+                  </button>
 
-                </div>
 
-              </article>
-            );
-          })}
+                  {/* =====================================
+                      EXPANDED DETAILS
+                     ===================================== */}
+
+                  {isExpanded && (
+
+                    <div
+                      id={
+                        `jr-history-details-${index}`
+                      }
+                      className="jr-history-details"
+                    >
+
+                      {/* =================================
+                          PICKUP CODE
+                          
+                          IMPORTANT:
+                          Only shown when this specific
+                          transaction is expanded.
+                         ================================= */}
+
+                      {hasPickupCode && (
+                        <div className="jr-history-detail-row jr-history-pickup-row">
+
+                          <span>
+                            Pickup Code
+                          </span>
+
+                          <strong className="jr-history-pickup-code">
+                            {pickupCode}
+                          </strong>
+
+                        </div>
+                      )}
+
+
+                      {/* =================================
+                          ORDER QUANTITY
+                         ================================= */}
+
+                      <div className="jr-history-detail-row">
+
+                        <span>
+                          Order Quantity
+                        </span>
+
+                        <strong>
+                          {orderQuantity}
+                        </strong>
+
+                      </div>
+
+
+                      {/* =================================
+                          ITEMS TOTAL
+                         ================================= */}
+
+                      <div className="jr-history-detail-row">
+
+                        <span>
+                          Items Total
+                        </span>
+
+                        <strong>
+                          {formatMoney(
+                            itemsTotal
+                          )}
+                        </strong>
+
+                      </div>
+
+
+                      {/* =================================
+                          GST
+                         ================================= */}
+
+                      <div className="jr-history-detail-row">
+
+                        <span>
+                          GST
+                        </span>
+
+                        <strong>
+                          {formatMoney(
+                            gst
+                          )}
+                        </strong>
+
+                      </div>
+
+
+                      {/* =================================
+                          TOTAL AMOUNT
+                         ================================= */}
+
+                      <div className="jr-history-detail-total">
+
+                        <span>
+                          Total Amount
+                        </span>
+
+                        <strong>
+                          {formatMoney(
+                            totalAmount
+                          )}
+                        </strong>
+
+                      </div>
+
+                    </div>
+                  )}
+
+                </article>
+              );
+            }
+          )}
 
         </section>
-
       )}
 
     </main>

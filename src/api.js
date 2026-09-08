@@ -2289,6 +2289,10 @@ export const api = {
      ORDERS
      ========================================================== */
 
+  // The production/test Orders page uses the Order Master
+  // recent-orders endpoint, not /tporder/api/v1/orders.
+
+
   orders:
     async (
       params = {}
@@ -2325,9 +2329,27 @@ export const api = {
           : "";
 
 
+      const storedToken =
+        getStoredToken();
+
+      const authorization =
+        storedToken
+          ? (/^Bearer\s/i.test(storedToken)
+              ? storedToken
+              : `Bearer ${storedToken}`)
+          : "";
+
       const response =
         await request(
-          `/v1/orders${suffix}`
+          `/v1/order/recent${suffix}`,
+          authorization
+            ? {
+                headers: {
+                  Authorization: authorization,
+                },
+              }
+            : {},
+          ORDER_API_BASE
         );
 
 

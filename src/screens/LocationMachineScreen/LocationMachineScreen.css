@@ -1,4 +1,22 @@
 /* =========================================================
+   JUICE ROBO
+   LOCATION + MACHINE SCREEN
+   FULL RESPONSIVE STYLESHEET
+
+   Supports:
+   - Portrait phones
+   - Landscape phones
+   - Tablets
+   - Desktop responsive preview
+   - Short landscape viewports
+
+   IMPORTANT:
+   The Continue button remains in normal document flow.
+   It is NOT fixed and NOT sticky.
+   ========================================================= */
+
+
+/* =========================================================
    PAGE
    ========================================================= */
 
@@ -6,21 +24,26 @@
 .jr-location-page,
 .jr-location-machine-screen {
   width: 100%;
+  min-width: 0;
   min-height: 0;
 
-  flex: 1;
+  flex: 1 1 auto;
 
   box-sizing: border-box;
 
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+
   overflow-x: hidden;
+  overflow-y: auto;
 
   scrollbar-width: none;
+  -ms-overflow-style: none;
 
   padding:
     10px
-    14px    
-    88px;
+    14px
+    14px;
 
   background: #ffffff;
 
@@ -33,12 +56,19 @@
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+
+  color-scheme: light;
+
+  -webkit-overflow-scrolling: touch;
 }
 
 .jr-location-machine-page::-webkit-scrollbar,
 .jr-location-page::-webkit-scrollbar,
 .jr-location-machine-screen::-webkit-scrollbar {
   display: none;
+
+  width: 0;
+  height: 0;
 }
 
 
@@ -48,8 +78,11 @@
 
 .jr-location-header {
   width: 100%;
+  max-width: none;
 
   box-sizing: border-box;
+
+  flex: 0 0 auto;
 
   text-align: center;
 
@@ -74,7 +107,7 @@
 
   color: #e87900;
 
-  font-size: 9px;
+  font-size: clamp(8px, 2.2vw, 10px);
   line-height: 1;
 
   font-weight: 900;
@@ -94,7 +127,7 @@
 
   color: #111111;
 
-  font-size: 28px;
+  font-size: clamp(23px, 7vw, 30px);
   line-height: 0.96;
 
   font-weight: 950;
@@ -114,14 +147,16 @@
    ========================================================= */
 
 .jr-location-description {
+  max-width: 420px;
+
   margin:
     10px
-    0
+    auto
     0;
 
   color: #777777;
 
-  font-size: 10px;
+  font-size: clamp(8px, 2.5vw, 11px);
   line-height: 1.45;
 
   font-weight: 450;
@@ -136,8 +171,11 @@
 
 .jr-flow-section {
   width: 100%;
+  max-width: none;
 
   box-sizing: border-box;
+
+  flex: 0 0 auto;
 
   margin:
     0
@@ -152,6 +190,8 @@
 
 .jr-flow-heading {
   width: 100%;
+
+  box-sizing: border-box;
 
   display: flex;
 
@@ -181,6 +221,8 @@
   align-items: center;
   justify-content: center;
 
+  box-sizing: border-box;
+
   border-radius: 50%;
 
   background: #ef7900;
@@ -191,6 +233,8 @@
   line-height: 1;
 
   font-weight: 900;
+
+  flex: 0 0 auto;
 }
 
 
@@ -200,6 +244,8 @@
 
 .jr-flow-heading-copy {
   min-width: 0;
+
+  flex: 1 1 auto;
 
   display: flex;
 
@@ -213,43 +259,58 @@
 .jr-flow-heading-copy strong {
   display: block;
 
+  overflow: hidden;
+
   color: #171717;
 
-  font-size: 11px;
+  font-size: clamp(10px, 3vw, 12px);
   line-height: 1;
 
   font-weight: 950;
 
   letter-spacing: -0.01em;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .jr-flow-heading-copy small {
   display: block;
 
+  overflow: hidden;
+
   color: #8a8a8a;
 
-  font-size: 7px;
+  font-size: clamp(6px, 2vw, 8px);
   line-height: 1.1;
 
   font-weight: 500;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 
 /* =========================================================
-   LOCATION LIST
+   LOCATION / MACHINE LIST
    ========================================================= */
 
 .jr-choice-list,
 .jr-machine-list {
   width: 100%;
+  max-width: none;
+
+  min-width: 0;
 
   display: flex;
 
   flex-direction: column;
 
-  gap: 7px;
+  gap: clamp(6px, 1.8vw, 8px);
 
   margin: 0;
+
+  padding: 0;
 }
 
 
@@ -259,7 +320,9 @@
 
 .jr-choice {
   width: 100%;
+  max-width: none;
 
+  min-width: 0;
   min-height: 62px;
 
   box-sizing: border-box;
@@ -302,6 +365,8 @@
     background 0.15s ease,
     box-shadow 0.15s ease,
     transform 0.12s ease;
+
+  -webkit-tap-highlight-color: transparent;
 }
 
 
@@ -320,7 +385,6 @@
     0 3px 10px
     rgba(237, 121, 0, 0.06);
 }
-
 
 .jr-choice:active {
   transform: scale(0.994);
@@ -342,19 +406,24 @@
   align-items: center;
   justify-content: center;
 
+  box-sizing: border-box;
+
   border-radius: 8px;
 
   background: #f2f7ed;
 
   overflow: hidden;
-}
 
+  flex: 0 0 auto;
+}
 
 .jr-location-pin-svg {
   width: 23px;
   height: 23px;
 
   display: block;
+
+  flex: 0 0 auto;
 }
 
 
@@ -365,7 +434,7 @@
 .jr-choice-copy {
   min-width: 0;
 
-  flex: 1;
+  flex: 1 1 auto;
 
   display: flex;
 
@@ -374,15 +443,16 @@
   gap: 3px;
 }
 
-
 .jr-choice-copy strong {
   display: block;
+
+  min-width: 0;
 
   overflow: hidden;
 
   color: #171717;
 
-  font-size: 11px;
+  font-size: clamp(10px, 3vw, 12px);
   line-height: 1.05;
 
   font-weight: 900;
@@ -392,15 +462,16 @@
   text-overflow: ellipsis;
 }
 
-
 .jr-choice-copy small {
   display: block;
+
+  min-width: 0;
 
   overflow: hidden;
 
   color: #8a8a8a;
 
-  font-size: 7px;
+  font-size: clamp(6.5px, 2vw, 8px);
   line-height: 1.1;
 
   font-weight: 500;
@@ -437,8 +508,9 @@
   background: #ffffff;
 
   color: #ffffff;
-}
 
+  flex: 0 0 auto;
+}
 
 .jr-choice.active
 .jr-choice-check,
@@ -450,7 +522,6 @@
 
   background: #ed7900;
 }
-
 
 .jr-check-svg {
   width: 14px;
@@ -465,6 +536,12 @@
    ========================================================= */
 
 .jr-machine-section {
+  width: 100%;
+
+  min-width: 0;
+
+  box-sizing: border-box;
+
   margin-top: 0;
 }
 
@@ -475,7 +552,9 @@
 
 .jr-machine-card {
   width: 100%;
+  max-width: none;
 
+  min-width: 0;
   min-height: 60px;
 
   box-sizing: border-box;
@@ -518,8 +597,9 @@
     background 0.15s ease,
     box-shadow 0.15s ease,
     transform 0.12s ease;
-}
 
+  -webkit-tap-highlight-color: transparent;
+}
 
 .jr-machine-card.active,
 .jr-machine-card.selected,
@@ -532,7 +612,6 @@
     0 3px 10px
     rgba(237, 121, 0, 0.06);
 }
-
 
 .jr-machine-card:active {
   transform: scale(0.994);
@@ -554,13 +633,16 @@
   align-items: center;
   justify-content: center;
 
+  box-sizing: border-box;
+
   border-radius: 8px;
 
   background: #f2f7ed;
 
   overflow: hidden;
-}
 
+  flex: 0 0 auto;
+}
 
 .jr-machine-svg {
   width: 29px;
@@ -577,7 +659,7 @@
 .jr-machine-copy {
   min-width: 0;
 
-  flex: 1;
+  flex: 1 1 auto;
 
   display: flex;
 
@@ -586,15 +668,16 @@
   gap: 3px;
 }
 
-
 .jr-machine-copy strong {
   display: block;
+
+  min-width: 0;
 
   overflow: hidden;
 
   color: #171717;
 
-  font-size: 11px;
+  font-size: clamp(10px, 3vw, 12px);
   line-height: 1.05;
 
   font-weight: 900;
@@ -604,15 +687,16 @@
   text-overflow: ellipsis;
 }
 
-
 .jr-machine-copy small {
   display: block;
+
+  min-width: 0;
 
   overflow: hidden;
 
   color: #8a8a8a;
 
-  font-size: 7px;
+  font-size: clamp(6.5px, 2vw, 8px);
   line-height: 1.05;
 
   font-weight: 500;
@@ -640,7 +724,7 @@
 
   color: #2c8750;
 
-  font-size: 6px;
+  font-size: clamp(5.5px, 1.8vw, 7px);
   line-height: 1;
 
   font-weight: 900;
@@ -649,7 +733,6 @@
 
   white-space: nowrap;
 }
-
 
 .jr-machine-status i {
   width: 5px;
@@ -660,8 +743,9 @@
   border-radius: 50%;
 
   background: #2d955b;
-}
 
+  flex: 0 0 auto;
+}
 
 .jr-machine-status.selected {
   color: #2c8750;
@@ -683,6 +767,8 @@
   align-items: center;
   justify-content: center;
 
+  box-sizing: border-box;
+
   border:
     1px solid
     #d8d8d5;
@@ -692,8 +778,9 @@
   background: #ffffff;
 
   color: #ffffff;
-}
 
+  flex: 0 0 auto;
+}
 
 .jr-machine-card.active
 .jr-machine-check,
@@ -739,7 +826,6 @@
   text-align: center;
 }
 
-
 .jr-location-empty strong {
   color: #333333;
 
@@ -747,7 +833,6 @@
 
   font-weight: 850;
 }
-
 
 .jr-location-empty p {
   margin:
@@ -761,7 +846,6 @@
 
   line-height: 1.4;
 }
-
 
 .jr-empty-machine-icon {
   width: 34px;
@@ -779,7 +863,6 @@
   background: #f2f7ed;
 }
 
-
 .jr-empty-machine-icon .jr-machine-svg {
   width: 25px;
   height: 25px;
@@ -788,29 +871,43 @@
 
 /* =========================================================
    CONTINUE BUTTON
+   =========================================================
+   
+   IMPORTANT:
+   Normal document flow.
+
+   DO NOT use:
+     position: sticky;
+     position: fixed;
+
+   This ensures:
+   - Button stays below machine card
+   - Button scrolls naturally with content
+   - No overlap with bottom navigation
+   - Correct portrait behaviour
+   - Correct landscape behaviour
    ========================================================= */
 
 .jr-location-continue {
-  position: sticky;
+  position: relative !important;
 
-  bottom: 0;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
 
-  z-index: 10;
+  z-index: 1;
 
-  width: 100%;
+  width: 100% !important;
+  max-width: none !important;
 
-  height: 38px;
+  height: clamp(38px, 9vw, 44px);
+
+  min-height: clamp(38px, 9vw, 44px);
+
+  flex: 0 0 auto;
 
   box-sizing: border-box;
-
-  margin:
-    9px
-    0
-    0;
-
-  padding:
-    0
-    15px;
 
   display: flex;
 
@@ -819,6 +916,15 @@
   justify-content: center;
 
   gap: 9px;
+
+  margin:
+    8px
+    0
+    0;
+
+  padding:
+    0
+    15px;
 
   border: 0;
 
@@ -830,10 +936,12 @@
 
   font-family: inherit;
 
-  font-size: 9px;
+  font-size: clamp(8px, 2.6vw, 10px);
   line-height: 1;
 
   font-weight: 900;
+
+  letter-spacing: 0.01em;
 
   cursor: pointer;
 
@@ -841,13 +949,17 @@
     0 5px 13px
     rgba(244, 122, 0, 0.18);
 
+  appearance: none;
+  -webkit-appearance: none;
+
   transition:
     background 0.15s ease,
     opacity 0.15s ease,
     transform 0.12s ease,
     box-shadow 0.15s ease;
-}
 
+  -webkit-tap-highlight-color: transparent;
+}
 
 .jr-location-continue:hover:not(:disabled) {
   background: #e97000;
@@ -857,11 +969,9 @@
     rgba(244, 122, 0, 0.22);
 }
 
-
 .jr-location-continue:active:not(:disabled) {
   transform: translateY(1px);
 }
-
 
 .jr-location-continue:disabled {
   opacity: 0.45;
@@ -869,15 +979,77 @@
   cursor: not-allowed;
 
   box-shadow: none;
+
+  transform: none;
 }
 
+.jr-location-continue:focus-visible {
+  outline:
+    3px solid
+    rgba(244, 122, 0, 0.25);
+
+  outline-offset: 2px;
+}
 
 .jr-continue-arrow {
-  font-size: 14px;
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  font-size: clamp(13px, 3.5vw, 15px);
 
   line-height: 1;
 
   font-weight: 400;
+}
+
+
+/* =========================================================
+   REMOVE OLD ACTION POSITIONING
+   ========================================================= */
+
+.jr-location-actions {
+  position: relative !important;
+
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+
+  width: 100% !important;
+  max-width: none !important;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+  margin:
+    8px
+    0
+    0;
+
+  padding: 0;
+
+  transform: none !important;
+}
+
+
+/* =========================================================
+   IF CONTINUE IS INSIDE ACTION CONTAINER
+   ========================================================= */
+
+.jr-location-actions
+.jr-location-continue {
+  width: 100% !important;
+
+  margin: 0 !important;
 }
 
 
@@ -893,14 +1065,12 @@
     padding:
       9px
       13px
-      82px;
+      12px;
   }
-
 
   .jr-location-header {
     margin-bottom: 13px;
   }
-
 
   .jr-location-eyebrow {
     font-size: 8px;
@@ -908,18 +1078,15 @@
     margin-bottom: 6px;
   }
 
-
   .jr-location-title {
     font-size: 27px;
   }
-
 
   .jr-location-description {
     margin-top: 9px;
 
     font-size: 9px;
   }
-
 
   .jr-flow-number {
     width: 27px;
@@ -928,19 +1095,19 @@
     min-width: 27px;
   }
 
-
   .jr-choice {
     min-height: 61px;
   }
-
 
   .jr-machine-card {
     min-height: 61px;
   }
 
-
   .jr-location-continue {
     height: 38px;
+    min-height: 38px;
+
+    margin-top: 7px;
   }
 }
 
@@ -957,29 +1124,24 @@
     padding:
       8px
       10px
-      80px;
+      10px;
   }
-
 
   .jr-location-title {
     font-size: 25px;
   }
 
-
   .jr-location-description {
     font-size: 8px;
   }
-
 
   .jr-location-desktop-break {
     display: none;
   }
 
-
   .jr-flow-heading {
     gap: 7px;
   }
-
 
   .jr-flow-number {
     width: 26px;
@@ -990,16 +1152,13 @@
     font-size: 9px;
   }
 
-
   .jr-flow-heading-copy strong {
     font-size: 10px;
   }
 
-
   .jr-flow-heading-copy small {
     font-size: 6.5px;
   }
-
 
   .jr-choice {
     min-height: 59px;
@@ -1009,7 +1168,6 @@
       8px;
   }
 
-
   .jr-choice-icon {
     width: 35px;
     height: 35px;
@@ -1017,16 +1175,13 @@
     min-width: 35px;
   }
 
-
   .jr-choice-copy strong {
     font-size: 10px;
   }
 
-
   .jr-choice-copy small {
     font-size: 6.5px;
   }
-
 
   .jr-machine-card {
     min-height: 59px;
@@ -1036,7 +1191,6 @@
       8px;
   }
 
-
   .jr-machine-icon {
     width: 35px;
     height: 35px;
@@ -1044,24 +1198,21 @@
     min-width: 35px;
   }
 
-
   .jr-machine-copy strong {
     font-size: 10px;
   }
-
 
   .jr-machine-copy small {
     font-size: 6.5px;
   }
 
-
   .jr-machine-status {
     font-size: 5.5px;
   }
 
-
   .jr-location-continue {
     height: 38px;
+    min-height: 38px;
 
     font-size: 8px;
   }
@@ -1080,34 +1231,36 @@
     padding:
       7px
       8px
-      78px;
+      8px;
   }
-
 
   .jr-location-title {
     font-size: 23px;
   }
 
-
   .jr-location-description {
     font-size: 7.5px;
   }
-
 
   .jr-choice-copy strong,
   .jr-machine-copy strong {
     font-size: 9.5px;
   }
 
-
   .jr-choice-copy small,
   .jr-machine-copy small {
     font-size: 6px;
   }
 
-
   .jr-machine-status {
     font-size: 5px;
+  }
+
+  .jr-location-continue {
+    height: 37px;
+    min-height: 37px;
+
+    font-size: 8px;
   }
 }
 
@@ -1116,7 +1269,8 @@
    SHORT SCREEN
    ========================================================= */
 
-@media (max-height: 700px) {
+@media (max-height: 700px)
+  and (orientation: portrait) {
 
   .jr-location-machine-page,
   .jr-location-page,
@@ -1124,44 +1278,603 @@
     padding-top: 6px;
   }
 
-
   .jr-location-header {
     margin-bottom: 9px;
   }
-
 
   .jr-location-eyebrow {
     margin-bottom: 5px;
   }
 
-
   .jr-location-title {
     font-size: 24px;
   }
-
 
   .jr-location-description {
     margin-top: 7px;
   }
 
-
   .jr-flow-section {
     margin-bottom: 6px;
   }
 
-
   .jr-flow-heading {
     margin-bottom: 4px;
   }
-
 
   .jr-choice,
   .jr-machine-card {
     min-height: 55px;
   }
 
-
   .jr-location-continue {
     margin-top: 6px;
   }
+}
+
+
+/* =========================================================
+   LANDSCAPE
+   =========================================================
+   
+   The page uses the entire available horizontal space.
+   There is no portrait-width constraint here.
+   ========================================================= */
+
+@media (orientation: landscape) {
+
+  .jr-location-machine-page,
+  .jr-location-page,
+  .jr-location-machine-screen {
+    width: 100%;
+    max-width: none;
+
+    min-width: 0;
+
+    padding:
+      7px
+      clamp(14px, 3vw, 28px)
+      10px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .jr-location-header {
+    width: 100%;
+    max-width: 620px;
+
+    margin:
+      0
+      auto
+      8px;
+  }
+
+  .jr-location-eyebrow {
+    margin-bottom: 4px;
+
+    font-size: 7px;
+  }
+
+  .jr-location-title {
+    font-size: clamp(22px, 5vw, 28px);
+  }
+
+  .jr-location-description {
+    max-width: 560px;
+
+    margin-top: 6px;
+
+    font-size: clamp(7px, 1.8vw, 9px);
+  }
+
+  .jr-flow-section {
+    width: 100%;
+
+    max-width: none;
+
+    margin-bottom: 6px;
+  }
+
+  .jr-flow-heading {
+    gap: 7px;
+
+    margin-bottom: 5px;
+  }
+
+  .jr-flow-number {
+    width: 25px;
+    height: 25px;
+
+    min-width: 25px;
+
+    font-size: 9px;
+  }
+
+  .jr-flow-heading-copy strong {
+    font-size: 10px;
+  }
+
+  .jr-flow-heading-copy small {
+    font-size: 6.5px;
+  }
+
+  .jr-choice-list,
+  .jr-machine-list {
+    width: 100%;
+
+    gap: 6px;
+  }
+
+  .jr-choice,
+  .jr-machine-card {
+    width: 100%;
+
+    min-height: 54px;
+
+    padding:
+      6px
+      9px;
+  }
+
+  .jr-choice-icon {
+    width: 35px;
+    height: 35px;
+
+    min-width: 35px;
+  }
+
+  .jr-machine-icon {
+    width: 36px;
+    height: 36px;
+
+    min-width: 36px;
+  }
+
+  .jr-choice-copy strong,
+  .jr-machine-copy strong {
+    font-size: 10px;
+  }
+
+  .jr-choice-copy small,
+  .jr-machine-copy small {
+    font-size: 6.5px;
+  }
+
+  .jr-machine-status {
+    font-size: 5.5px;
+  }
+
+  /*
+   * FINAL CONTINUE BUTTON FIX
+   *
+   * Full available width.
+   * Normal flow.
+   * Immediately after machine card.
+   */
+
+  .jr-location-continue {
+    position: relative !important;
+
+    width: 100% !important;
+    max-width: none !important;
+
+    height: 38px;
+    min-height: 38px;
+
+    margin:
+      7px
+      0
+      0;
+
+    font-size: 8px;
+  }
+}
+
+
+/* =========================================================
+   LANDSCAPE — 600PX+
+   ========================================================= */
+
+@media (orientation: landscape)
+  and (min-width: 600px) {
+
+  .jr-location-machine-page,
+  .jr-location-page,
+  .jr-location-machine-screen {
+    padding-left:
+      clamp(18px, 4vw, 40px);
+
+    padding-right:
+      clamp(18px, 4vw, 40px);
+  }
+
+  .jr-location-header {
+    max-width: 720px;
+  }
+
+  .jr-location-title {
+    font-size: clamp(24px, 4vw, 30px);
+  }
+
+  .jr-location-description {
+    max-width: 650px;
+
+    font-size: 9px;
+  }
+
+  .jr-flow-number {
+    width: 27px;
+    height: 27px;
+
+    min-width: 27px;
+  }
+
+  .jr-choice,
+  .jr-machine-card {
+    min-height: 58px;
+  }
+
+  .jr-choice-icon {
+    width: 38px;
+    height: 38px;
+
+    min-width: 38px;
+  }
+
+  .jr-machine-icon {
+    width: 39px;
+    height: 39px;
+
+    min-width: 39px;
+  }
+
+  .jr-choice-copy strong,
+  .jr-machine-copy strong {
+    font-size: 11px;
+  }
+
+  .jr-choice-copy small,
+  .jr-machine-copy small {
+    font-size: 7px;
+  }
+
+  .jr-location-continue {
+    height: 40px;
+    min-height: 40px;
+
+    font-size: 9px;
+  }
+}
+
+
+/* =========================================================
+   LANDSCAPE — SHORT HEIGHT
+   ========================================================= */
+
+@media (orientation: landscape)
+  and (max-height: 500px) {
+
+  .jr-location-machine-page,
+  .jr-location-page,
+  .jr-location-machine-screen {
+    padding-top: 5px;
+    padding-bottom: 7px;
+  }
+
+  .jr-location-header {
+    margin-bottom: 6px;
+  }
+
+  .jr-location-eyebrow {
+    margin-bottom: 3px;
+
+    font-size: 6.5px;
+  }
+
+  .jr-location-title {
+    font-size: clamp(20px, 5vw, 25px);
+  }
+
+  .jr-location-description {
+    margin-top: 5px;
+
+    font-size: 7px;
+  }
+
+  .jr-flow-section {
+    margin-bottom: 5px;
+  }
+
+  .jr-flow-heading {
+    margin-bottom: 4px;
+  }
+
+  .jr-flow-number {
+    width: 23px;
+    height: 23px;
+
+    min-width: 23px;
+
+    font-size: 8px;
+  }
+
+  .jr-flow-heading-copy strong {
+    font-size: 9px;
+  }
+
+  .jr-flow-heading-copy small {
+    font-size: 6px;
+  }
+
+  .jr-choice-list,
+  .jr-machine-list {
+    gap: 5px;
+  }
+
+  .jr-choice,
+  .jr-machine-card {
+    min-height: 48px;
+
+    padding:
+      5px
+      8px;
+  }
+
+  .jr-choice-icon {
+    width: 32px;
+    height: 32px;
+
+    min-width: 32px;
+  }
+
+  .jr-machine-icon {
+    width: 33px;
+    height: 33px;
+
+    min-width: 33px;
+  }
+
+  .jr-choice-copy strong,
+  .jr-machine-copy strong {
+    font-size: 9px;
+  }
+
+  .jr-choice-copy small,
+  .jr-machine-copy small {
+    font-size: 6px;
+  }
+
+  .jr-machine-status {
+    font-size: 5px;
+  }
+
+  .jr-choice-check,
+  .jr-machine-check {
+    width: 21px;
+    height: 21px;
+
+    min-width: 21px;
+  }
+
+  .jr-location-continue {
+    height: 34px;
+    min-height: 34px;
+
+    margin-top: 5px;
+
+    font-size: 7.5px;
+  }
+
+  .jr-continue-arrow {
+    font-size: 12px;
+  }
+}
+
+
+/* =========================================================
+   LANDSCAPE — VERY SHORT
+   ========================================================= */
+
+@media (orientation: landscape)
+  and (max-height: 400px) {
+
+  .jr-location-machine-page,
+  .jr-location-page,
+  .jr-location-machine-screen {
+    padding-top: 3px;
+    padding-bottom: 5px;
+  }
+
+  .jr-location-header {
+    margin-bottom: 4px;
+  }
+
+  .jr-location-title {
+    font-size: 20px;
+  }
+
+  .jr-location-description {
+    margin-top: 3px;
+
+    font-size: 6.5px;
+  }
+
+  .jr-flow-section {
+    margin-bottom: 4px;
+  }
+
+  .jr-flow-heading {
+    margin-bottom: 3px;
+  }
+
+  .jr-flow-number {
+    width: 21px;
+    height: 21px;
+
+    min-width: 21px;
+
+    font-size: 7px;
+  }
+
+  .jr-flow-heading-copy strong {
+    font-size: 8px;
+  }
+
+  .jr-flow-heading-copy small {
+    font-size: 5.5px;
+  }
+
+  .jr-choice-list,
+  .jr-machine-list {
+    gap: 4px;
+  }
+
+  .jr-choice,
+  .jr-machine-card {
+    min-height: 43px;
+
+    padding:
+      4px
+      7px;
+
+    border-radius: 7px;
+  }
+
+  .jr-choice-icon {
+    width: 29px;
+    height: 29px;
+
+    min-width: 29px;
+  }
+
+  .jr-machine-icon {
+    width: 30px;
+    height: 30px;
+
+    min-width: 30px;
+  }
+
+  .jr-choice-copy,
+  .jr-machine-copy {
+    gap: 2px;
+  }
+
+  .jr-choice-copy strong,
+  .jr-machine-copy strong {
+    font-size: 8px;
+  }
+
+  .jr-choice-copy small,
+  .jr-machine-copy small {
+    font-size: 5.5px;
+  }
+
+  .jr-machine-status {
+    font-size: 4.5px;
+
+    gap: 3px;
+  }
+
+  .jr-machine-status i {
+    width: 4px;
+    height: 4px;
+  }
+
+  .jr-choice-check,
+  .jr-machine-check {
+    width: 19px;
+    height: 19px;
+
+    min-width: 19px;
+  }
+
+  .jr-location-continue {
+    height: 31px;
+    min-height: 31px;
+
+    margin-top: 4px;
+
+    border-radius: 6px;
+
+    font-size: 7px;
+  }
+
+  .jr-continue-arrow {
+    font-size: 11px;
+  }
+}
+
+
+/* =========================================================
+   SAFE AREA SUPPORT
+   ========================================================= */
+
+@supports (padding-left: env(safe-area-inset-left)) {
+
+  .jr-location-machine-page,
+  .jr-location-page,
+  .jr-location-machine-screen {
+    padding-left:
+      max(
+        10px,
+        env(safe-area-inset-left)
+      );
+
+    padding-right:
+      max(
+        10px,
+        env(safe-area-inset-right)
+      );
+  }
+
+  @media (orientation: landscape) {
+
+    .jr-location-machine-page,
+    .jr-location-page,
+    .jr-location-machine-screen {
+      padding-left:
+        max(
+          clamp(14px, 3vw, 28px),
+          env(safe-area-inset-left)
+        );
+
+      padding-right:
+        max(
+          clamp(14px, 3vw, 28px),
+          env(safe-area-inset-right)
+        );
+    }
+  }
+}
+
+
+/* =========================================================
+   FINAL OVERRIDES
+   =========================================================
+   
+   These guarantee that old fixed/sticky rules cannot
+   accidentally reappear from another imported stylesheet.
+   ========================================================= */
+
+.jr-location-machine-page .jr-location-continue,
+.jr-location-page .jr-location-continue,
+.jr-location-machine-screen .jr-location-continue {
+  position: relative !important;
+
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+
+  width: 100% !important;
+  max-width: none !important;
+
+  transform: none;
+}
+
+.jr-location-machine-page .jr-location-continue:active,
+.jr-location-page .jr-location-continue:active,
+.jr-location-machine-screen .jr-location-continue:active {
+  transform: translateY(1px);
 }
