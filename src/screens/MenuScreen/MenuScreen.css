@@ -1,61 +1,57 @@
 /* =========================================================
    JUICE ROBO — MENU SCREEN
-   Responsive:
-   - Mobile portrait
-   - Small phones
-   - Tablet portrait
-   - Phone landscape
-   - 613 × 376 landscape
-   - Tablet / desktop landscape
-   ========================================================= */
-
-
-/* =========================================================
-   PAGE
+   FLUID SMARTPHONE DESIGN
+   ---------------------------------------------------------
+   Layout is driven by available space, not phone-model widths.
+   No device-specific width breakpoints are used.
    ========================================================= */
 
 .jr-menu-page {
-  width: 100%;
-  min-height: 100%;
+  --jr-page-x: clamp(0.5rem, 3.2vw, 1.125rem);
+  --jr-page-y: clamp(0.625rem, 3vw, 1.25rem);
+  --jr-gap: clamp(0.5rem, 2.5vw, 0.875rem);
+  --jr-radius: clamp(0.75rem, 3.5vw, 1.25rem);
 
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 100%;
   box-sizing: border-box;
 
   padding:
-    clamp(12px, 3vw, 22px)
-    clamp(12px, 3vw, 24px)
-    30px;
+    var(--jr-page-y)
+    var(--jr-page-x)
+    calc(1.25rem + env(safe-area-inset-bottom, 0px));
 
   background: #fbfaf3;
-
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
+.jr-menu-page::-webkit-scrollbar {
+  display: none;
+}
 
 /* =========================================================
-   WELCOME CARD
+   WELCOME
    ========================================================= */
 
 .jr-menu-welcome {
   width: 100%;
-
+  min-width: 0;
   box-sizing: border-box;
 
-  min-height: clamp(145px, 38vw, 190px);
-
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
+  gap: clamp(0.5rem, 3vw, 1.125rem);
 
-  gap: 14px;
+  padding: clamp(0.75rem, 4vw, 1.5625rem);
+  margin: 0 0 clamp(0.5625rem, 2.8vw, 0.875rem);
 
-  padding:
-    clamp(18px, 4vw, 26px);
-
-  margin-bottom: 12px;
-
-  border-radius:
-    clamp(16px, 4vw, 22px);
-
+  border-radius: var(--jr-radius);
   background:
     linear-gradient(
       135deg,
@@ -64,114 +60,73 @@
       #fff8e9 100%
     );
 
-  overflow: hidden;
-
   position: relative;
+  overflow: hidden;
 }
 
 .jr-menu-welcome::after {
   content: "";
-
   position: absolute;
-
-  width: 150px;
-  height: 150px;
-
-  right: -60px;
-  top: -65px;
-
+  width: clamp(5.5rem, 24vw, 9.75rem);
+  aspect-ratio: 1;
+  right: clamp(-4.375rem, -8vw, -2.1875rem);
+  top: clamp(-4.375rem, -10vw, -2.1875rem);
   border-radius: 50%;
-
   background: rgba(255, 255, 255, 0.38);
-
   pointer-events: none;
 }
 
-
-/* =========================================================
-   WELCOME COPY
-   ========================================================= */
-
 .jr-welcome-copy {
   min-width: 0;
+  position: relative;
+  z-index: 1;
+}
 
-  flex: 1;
+.jr-welcome-copy .jr-eyebrow,
+.jr-section-eyebrow {
+  display: block;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .jr-welcome-copy .jr-eyebrow {
-  display: block;
-
-  margin-bottom: 8px;
-
+  margin-bottom: clamp(0.3125rem, 1.5vw, 0.5rem);
   color: #2d7d4d;
-
-  font-size:
-    clamp(8px, 2vw, 10px);
-
-  line-height: 1.1;
-
-  font-weight: 900;
-
-  letter-spacing: 0.09em;
-
-  text-transform: uppercase;
+  font-size: clamp(0.4375rem, 2vw, 0.625rem);
 }
 
 .jr-welcome-copy h1 {
   margin: 0;
-
   color: #153123;
-
-  font-size:
-    clamp(25px, 7vw, 38px);
-
-  line-height: 0.96;
-
+  font-size: clamp(1.375rem, 7vw, 2.375rem);
+  line-height: 0.97;
   font-weight: 950;
-
-  letter-spacing: -1.3px;
+  letter-spacing: -0.055em;
+  overflow-wrap: anywhere;
 }
 
 .jr-welcome-copy h1 em {
   color: #2e7e4b;
-
   font-style: italic;
-
   font-weight: 950;
 }
 
 .jr-welcome-copy p {
-  max-width: 390px;
-
-  margin:
-    11px
-    0
-    0;
-
+  width: 100%;
+  max-width: 40ch;
+  margin: clamp(0.4375rem, 2vw, 0.6875rem) 0 0;
   color: #6f776f;
-
-  font-size:
-    clamp(9px, 2.5vw, 12px);
-
-  line-height: 1.45;
-
+  font-size: clamp(0.5rem, 2.35vw, 0.75rem);
+  line-height: 1.42;
   font-weight: 500;
 }
 
-
-/* =========================================================
-   WELCOME ICON
-   ========================================================= */
-
 .jr-welcome-icon {
-  width:
-    clamp(54px, 14vw, 82px);
-
-  height:
-    clamp(54px, 14vw, 82px);
-
-  min-width:
-    clamp(54px, 14vw, 82px);
+  width: clamp(2.75rem, 14vw, 4.875rem);
+  aspect-ratio: 1;
+  min-width: clamp(2.75rem, 14vw, 4.875rem);
 
   display: grid;
   place-items: center;
@@ -180,179 +135,108 @@
   z-index: 1;
 
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.66);
+  box-shadow: 0 0.4375rem 1.375rem rgba(54, 91, 57, 0.08);
 
-  background: rgba(255, 255, 255, 0.62);
-
-  box-shadow:
-    0 8px 24px rgba(54, 91, 57, 0.08);
-
-  font-size:
-    clamp(25px, 7vw, 42px);
-
+  font-size: clamp(1.3125rem, 7vw, 2.5rem);
   line-height: 1;
 }
 
-
 /* =========================================================
-   COLLECTION BANNER
+   LOCATION / MACHINE
    ========================================================= */
 
 .jr-selected-machine-banner {
   width: 100%;
-
-  min-height: 58px;
-
+  min-width: 0;
   box-sizing: border-box;
 
-  display: flex;
-
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
+  gap: clamp(0.4375rem, 2.5vw, 0.6875rem);
 
-  gap: 10px;
+  padding: clamp(0.4375rem, 2.2vw, 0.625rem);
+  margin-bottom: clamp(0.625rem, 3.5vw, 1.125rem);
 
-  margin-bottom: 18px;
-
-  padding:
-    8px
-    10px;
-
-  border:
-    1px solid #e2e8df;
-
-  border-radius: 13px;
-
+  border: 1px solid #e2e8df;
+  border-radius: clamp(0.625rem, 3vw, 0.9375rem);
   background: #ffffff;
-
-  box-shadow:
-    0 4px 13px rgba(36, 61, 41, 0.035);
+  box-shadow: 0 0.25rem 0.8125rem rgba(36, 61, 41, 0.035);
 }
 
-
-/* =========================================================
-   LOCATION ICON
-   ========================================================= */
-
 .jr-selected-machine-icon {
-  width: 36px;
-  height: 36px;
-
-  min-width: 36px;
+  width: clamp(1.875rem, 9vw, 2.375rem);
+  aspect-ratio: 1;
+  min-width: clamp(1.875rem, 9vw, 2.375rem);
 
   display: grid;
   place-items: center;
 
-  border-radius: 10px;
-
+  border-radius: clamp(0.5rem, 2.5vw, 0.6875rem);
   background: #eef7ed;
-
   color: #2f8150;
-
-  font-size: 16px;
-  line-height: 1;
+  font-size: clamp(0.75rem, 4vw, 1.0625rem);
 }
-
-
-/* =========================================================
-   LOCATION COPY
-   ========================================================= */
 
 .jr-selected-machine-copy {
   min-width: 0;
-
-  flex: 1;
-
   display: flex;
   flex-direction: column;
+  gap: 0.125rem;
+}
 
-  gap: 2px;
+.jr-selected-machine-copy small,
+.jr-selected-machine-copy strong,
+.jr-selected-machine-copy span {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .jr-selected-machine-copy small {
-  display: block;
-
   color: #919991;
-
-  font-size:
-    clamp(7px, 1.8vw, 9px);
-
+  font-size: clamp(0.375rem, 1.7vw, 0.5625rem);
   line-height: 1.1;
-
   font-weight: 850;
-
   letter-spacing: 0.08em;
-
   text-transform: uppercase;
 }
 
 .jr-selected-machine-copy strong {
-  display: block;
-
-  min-width: 0;
-
-  overflow: hidden;
-
   color: #24342b;
-
-  font-size:
-    clamp(10px, 2.8vw, 13px);
-
+  font-size: clamp(0.5625rem, 2.8vw, 0.8125rem);
   line-height: 1.15;
-
   font-weight: 900;
-
-  white-space: nowrap;
-
-  text-overflow: ellipsis;
 }
 
 .jr-selected-machine-copy span {
-  display: block;
-
-  min-width: 0;
-
-  overflow: hidden;
-
   color: #7f8780;
-
-  font-size:
-    clamp(8px, 2.2vw, 10px);
-
+  font-size: clamp(0.4375rem, 2.1vw, 0.625rem);
   line-height: 1.15;
-
   font-weight: 600;
-
-  white-space: nowrap;
-
-  text-overflow: ellipsis;
 }
-
-
-/* =========================================================
-   MENU SECTION
-   ========================================================= */
-
-.jr-menu-section {
-  width: 100%;
-
-  box-sizing: border-box;
-}
-
 
 /* =========================================================
    SECTION HEADING
    ========================================================= */
 
+.jr-menu-section {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .jr-section-heading {
   width: 100%;
+  min-width: 0;
 
-  display: flex;
-
-  align-items: flex-end;
-  justify-content: space-between;
-
-  gap: 10px;
-
-  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.5rem;
 }
 
 .jr-section-heading-copy {
@@ -360,112 +244,71 @@
 }
 
 .jr-section-eyebrow {
-  display: block;
-
-  margin-bottom: 5px;
-
+  margin-bottom: clamp(0.1875rem, 1vw, 0.375rem);
   color: #ee7900;
-
-  font-size:
-    clamp(7px, 1.8vw, 9px);
-
-  line-height: 1;
-
-  font-weight: 900;
-
-  letter-spacing: 0.075em;
-
-  text-transform: uppercase;
+  font-size: clamp(0.375rem, 1.8vw, 0.5625rem);
 }
 
 .jr-section-heading h2 {
   margin: 0;
-
   color: #202b24;
-
-  font-size:
-    clamp(18px, 5vw, 25px);
-
+  font-size: clamp(1.0625rem, 5.5vw, 1.625rem);
   line-height: 1;
-
   font-weight: 950;
-
-  letter-spacing: -0.7px;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
 }
 
-
-/* =========================================================
-   PRODUCT COUNT
-   ========================================================= */
-
 .jr-count {
-  width:
-    clamp(27px, 7vw, 34px);
-
-  height:
-    clamp(27px, 7vw, 34px);
-
-  min-width:
-    clamp(27px, 7vw, 34px);
+  width: clamp(1.5625rem, 7.5vw, 2.125rem);
+  aspect-ratio: 1;
+  min-width: clamp(1.5625rem, 7.5vw, 2.125rem);
 
   display: grid;
   place-items: center;
 
   border-radius: 50%;
-
   background: #edf7ec;
-
   color: #2e7e4b;
 
-  font-size:
-    clamp(9px, 2.5vw, 12px);
-
+  font-size: clamp(0.5rem, 2.5vw, 0.75rem);
   line-height: 1;
-
   font-weight: 900;
 }
 
-
-/* =========================================================
-   SUBTITLE
-   ========================================================= */
-
 .jr-section-subtitle {
+  width: 100%;
   margin:
-    7px
+    clamp(0.3125rem, 1.7vw, 0.5rem)
     0
-    13px;
+    clamp(0.5625rem, 2.8vw, 0.875rem);
 
   color: #8a918b;
-
-  font-size:
-    clamp(9px, 2.3vw, 11px);
-
+  font-size: clamp(0.5rem, 2.25vw, 0.6875rem);
   line-height: 1.35;
-
   font-weight: 500;
 }
 
-
 /* =========================================================
    PRODUCT GRID
+   ---------------------------------------------------------
+   minmax() + auto-fit lets the browser decide the number of
+   columns from the actual available width.
    ========================================================= */
 
 .jr-products {
   width: 100%;
+  min-width: 0;
 
   display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, 9.0625rem), 1fr)
+  );
 
-  grid-template-columns:
-    repeat(
-      2,
-      minmax(0, 1fr)
-    );
-
-  gap:
-    clamp(9px, 2.5vw, 14px);
+  gap: var(--jr-gap);
+  align-items: stretch;
 }
-
 
 /* =========================================================
    PRODUCT CARD
@@ -473,37 +316,29 @@
 
 .jr-product-card {
   width: 100%;
-
   min-width: 0;
-
+  max-width: 100%;
   box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
 
   padding: 0;
 
-  border:
-    1px solid #e7e8e2;
-
-  border-radius:
-    clamp(13px, 3.5vw, 18px);
+  border: 1px solid #e7e8e2;
+  border-radius: clamp(0.6875rem, 3.2vw, 1.125rem);
 
   background: #ffffff;
-
   color: #202020;
 
   font-family: inherit;
-
   text-align: left;
 
   cursor: pointer;
-
+  outline: none;
   overflow: hidden;
 
-  appearance: none;
-  -webkit-appearance: none;
-
-  box-shadow:
-    0 4px 14px
-    rgba(32, 55, 38, 0.045);
+  box-shadow: 0 0.25rem 0.875rem rgba(32, 55, 38, 0.045);
 
   transition:
     transform 0.16s ease,
@@ -513,11 +348,7 @@
 
 .jr-product-card:hover {
   border-color: #d8dfd5;
-
-  box-shadow:
-    0 8px 20px
-    rgba(32, 55, 38, 0.075);
-
+  box-shadow: 0 0.5rem 1.25rem rgba(32, 55, 38, 0.075);
   transform: translateY(-1px);
 }
 
@@ -526,13 +357,13 @@
 }
 
 .jr-product-card:focus-visible {
-  outline:
-    3px solid
-    rgba(47, 128, 80, 0.2);
-
+  outline: 3px solid rgba(47, 128, 80, 0.2);
   outline-offset: 2px;
 }
 
+.jr-product-card-in-cart {
+  border-color: #cfe2d1;
+}
 
 /* =========================================================
    PRODUCT IMAGE
@@ -540,30 +371,23 @@
 
 .jr-product-image-wrap {
   width: 100%;
-
-  aspect-ratio: 1.25 / 1;
-
-  min-height: 115px;
+  aspect-ratio: 1.22 / 1;
+  min-width: 0;
 
   position: relative;
 
   display: flex;
-
   align-items: center;
   justify-content: center;
 
   box-sizing: border-box;
+  padding: clamp(0.3125rem, 2vw, 0.625rem);
 
-  padding:
-    8px
-    12px;
-
-  background:
-    linear-gradient(
-      145deg,
-      #f3f7ed,
-      #fbf8eb
-    );
+  background: linear-gradient(
+    145deg,
+    #f3f7ed,
+    #fbf8eb
+  );
 
   overflow: hidden;
 }
@@ -571,225 +395,253 @@
 .jr-product-image {
   width: 100%;
   height: 100%;
-
+  min-width: 0;
+  min-height: 0;
   display: block;
-
   object-fit: contain;
-
   object-position: center;
-
-  transition:
-    transform 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
-.jr-product-card:hover
-.jr-product-image {
+.jr-product-card:hover .jr-product-image {
   transform: scale(1.025);
 }
-
-
-/* =========================================================
-   IMAGE FALLBACK
-   ========================================================= */
 
 .jr-product-image-placeholder {
   width: 100%;
   height: 100%;
-
   display: flex;
-
   align-items: center;
   justify-content: center;
-
   color: #2f8150;
-
-  font-size:
-    clamp(32px, 9vw, 48px);
-
+  font-size: clamp(1.75rem, 9vw, 3rem);
   line-height: 1;
 }
-
-
-/* =========================================================
-   FRESH BADGE
-   ========================================================= */
 
 .jr-fresh-badge {
   position: absolute;
-
-  left: 8px;
-  top: 8px;
+  left: clamp(0.3125rem, 1.8vw, 0.5625rem);
+  top: clamp(0.3125rem, 1.8vw, 0.5625rem);
 
   display: inline-flex;
-
   align-items: center;
-
-  gap: 4px;
+  gap: clamp(0.125rem, 0.8vw, 0.25rem);
 
   padding:
-    4px
-    6px;
+    clamp(0.1875rem, 1vw, 0.25rem)
+    clamp(0.3125rem, 1.3vw, 0.4375rem);
 
   border-radius: 999px;
-
-  background: rgba(255, 255, 255, 0.92);
-
+  background: rgba(255, 255, 255, 0.93);
   color: #2e7e4b;
 
-  font-size:
-    clamp(6px, 1.6vw, 8px);
-
+  font-size: clamp(0.3125rem, 1.65vw, 0.5rem);
   line-height: 1;
-
   font-weight: 900;
-
   letter-spacing: 0.04em;
 
-  box-shadow:
-    0 3px 8px rgba(36, 60, 42, 0.08);
+  box-shadow: 0 0.1875rem 0.5rem rgba(36, 60, 42, 0.08);
 }
 
 .jr-fresh-badge i {
-  width: 5px;
-  height: 5px;
-
+  width: clamp(0.1875rem, 1vw, 0.3125rem);
+  aspect-ratio: 1;
   display: block;
-
+  flex: 0 0 auto;
   border-radius: 50%;
-
   background: #42a35f;
 }
 
-
 /* =========================================================
-   PRODUCT INFORMATION
+   PRODUCT CONTENT
    ========================================================= */
 
 .jr-product-info {
   width: 100%;
-
   min-width: 0;
-
   box-sizing: border-box;
 
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
   padding:
-    10px
-    10px
-    11px;
+    clamp(0.4375rem, 2.4vw, 0.75rem)
+    clamp(0.4375rem, 2.4vw, 0.75rem)
+    clamp(0.5rem, 2.6vw, 0.8125rem);
+}
+
+.jr-product-main {
+  min-width: 0;
+  flex: 1;
 }
 
 .jr-product-info h3 {
   width: 100%;
-
+  min-width: 0;
   margin: 0;
-
   overflow: hidden;
 
   color: #202820;
-
-  font-size:
-    clamp(11px, 3vw, 15px);
-
+  font-size: clamp(0.625rem, 3vw, 0.9375rem);
   line-height: 1.12;
-
   font-weight: 900;
 
   white-space: nowrap;
-
   text-overflow: ellipsis;
 }
 
 .jr-product-info p {
-  min-height: 26px;
+  width: 100%;
+  min-width: 0;
 
   margin:
-    5px
+    clamp(0.1875rem, 1.3vw, 0.375rem)
     0
-    8px;
-
-  overflow: hidden;
+    clamp(0.375rem, 1.8vw, 0.5625rem);
 
   color: #858c85;
-
-  font-size:
-    clamp(8px, 2.1vw, 10px);
-
+  font-size: clamp(0.4375rem, 2.05vw, 0.625rem);
   line-height: 1.35;
-
   font-weight: 500;
 
   display: -webkit-box;
-
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
-
 /* =========================================================
-   PRODUCT BOTTOM ROW
+   PRICE + QUANTITY FOOTER
+   ---------------------------------------------------------
+   Both sides are allowed to shrink. Quantity never has a
+   device-specific fixed width.
    ========================================================= */
 
-.jr-product-bottom {
+.jr-product-footer {
   width: 100%;
+  min-width: 0;
+  min-height: clamp(1.6875rem, 8vw, 2.125rem);
 
-  min-height: 27px;
-
-  display: flex;
-
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
 
-  gap: 7px;
+  gap: clamp(0.1875rem, 1.5vw, 0.5rem);
 }
-
-
-/* =========================================================
-   PRODUCT PRICE
-   ========================================================= */
 
 .jr-product-price {
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 
   color: #287f46;
-
-  font-size:
-    clamp(12px, 3.2vw, 16px);
-
+  font-size: clamp(0.6875rem, 3.3vw, 1rem);
   line-height: 1;
-
   font-weight: 950;
 }
 
-
 /* =========================================================
-   PRODUCT ARROW
+   BLENDED QUANTITY CONTROL
    ========================================================= */
 
-.jr-product-arrow {
-  width:
-    clamp(25px, 6.5vw, 31px);
+.jr-quantity-control {
+  width: clamp(3.75rem, 21vw, 5.625rem);
+  min-width: clamp(3.75rem, 21vw, 5.625rem);
+  height: clamp(1.625rem, 7.5vw, 2rem);
 
-  height:
-    clamp(25px, 6.5vw, 31px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
 
-  min-width:
-    clamp(25px, 6.5vw, 31px);
+  padding: 0.125rem;
+  box-sizing: border-box;
+
+  border: 1px solid #cfe1d1;
+  border-radius: 999px;
+
+  background: #f5faf4;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.jr-quantity-control.has-items {
+  background: #eef8ee;
+  border-color: #bcd9c1;
+}
+
+.jr-quantity-control.is-empty {
+  background: #f7fbf6;
+}
+
+.jr-quantity-button {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 1.25rem;
 
   display: grid;
   place-items: center;
 
-  border-radius: 50%;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
 
-  background: #eef7ed;
+  background: transparent;
+  color: #2f8050;
 
-  color: #2f8150;
-
-  font-size:
-    clamp(12px, 3.2vw, 16px);
-
+  font-family: inherit;
+  font-size: clamp(0.6875rem, 3.8vw, 1rem);
   line-height: 1;
+  font-weight: 800;
+
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    background 120ms ease,
+    transform 120ms ease,
+    opacity 120ms ease;
 }
 
+.jr-quantity-button:hover:not(:disabled) {
+  background: rgba(47, 128, 80, 0.1);
+}
+
+.jr-quantity-button:active:not(:disabled) {
+  transform: scale(0.88);
+}
+
+.jr-quantity-button:disabled {
+  color: #aebbb0;
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.jr-quantity-button:focus-visible {
+  outline: 2px solid #ef7d24;
+  outline-offset: 1px;
+}
+
+.jr-quantity-value {
+  min-width: clamp(1.1875rem, 6vw, 1.625rem);
+  padding: 0 clamp(0.125rem, 0.8vw, 0.25rem);
+
+  color: #245f39;
+  font-size: clamp(0.5625rem, 2.8vw, 0.8125rem);
+  line-height: 1;
+  font-weight: 900;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
 
 /* =========================================================
    EMPTY PRODUCTS
@@ -799,688 +651,167 @@
   grid-column: 1 / -1;
 
   width: 100%;
-
-  min-height: 180px;
+  min-width: 0;
+  min-height: clamp(9.375rem, 45vw, 13.75rem);
 
   box-sizing: border-box;
 
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
   justify-content: center;
 
-  gap: 7px;
+  gap: 0.4375rem;
+  padding: clamp(1.125rem, 6vw, 1.875rem);
 
-  padding: 25px;
-
-  border:
-    1px dashed #dfe3db;
-
-  border-radius: 15px;
+  border: 1px dashed #dfe3db;
+  border-radius: clamp(0.75rem, 3vw, 1rem);
 
   background: #ffffff;
-
   text-align: center;
 }
 
 .jr-products-empty > span {
-  font-size: 35px;
-
+  font-size: clamp(1.75rem, 9vw, 2.5rem);
   line-height: 1;
 }
 
 .jr-products-empty strong {
   color: #29362e;
-
-  font-size: 13px;
-
+  font-size: clamp(0.6875rem, 3vw, 0.875rem);
   line-height: 1.2;
-
   font-weight: 900;
 }
 
 .jr-products-empty p {
-  max-width: 260px;
-
+  width: min(100%, 32ch);
   margin: 0;
-
   color: #929991;
-
-  font-size: 9px;
-
+  font-size: clamp(0.5rem, 2.2vw, 0.625rem);
   line-height: 1.4;
 }
 
-
-/* =========================================================
-   SMALL PHONES
-   ========================================================= */
-
-@media (max-width: 360px) {
-  .jr-menu-page {
-    padding:
-      10px
-      8px
-      24px;
-  }
-
-  .jr-menu-welcome {
-    min-height: 130px;
-
-    padding: 15px;
-
-    border-radius: 15px;
-  }
-
-  .jr-welcome-copy h1 {
-    font-size: 24px;
-  }
-
-  .jr-welcome-copy p {
-    margin-top: 8px;
-
-    font-size: 8px;
-  }
-
-  .jr-welcome-icon {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-
-    font-size: 23px;
-  }
-
-  .jr-selected-machine-banner {
-    min-height: 53px;
-
-    margin-bottom: 14px;
-  }
-
-  .jr-selected-machine-icon {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-  }
-
-  .jr-products {
-    gap: 8px;
-  }
-
-  .jr-product-image-wrap {
-    min-height: 100px;
-  }
-
-  .jr-product-info {
-    padding:
-      8px
-      8px
-      9px;
-  }
-
-  .jr-product-info p {
-    min-height: 23px;
-
-    margin:
-      4px
-      0
-      6px;
-  }
-}
-
-
 /* =========================================================
    SHORT PORTRAIT
+   Height-based only: no phone width assumption.
    ========================================================= */
 
-@media (orientation: portrait)
-  and (max-height: 700px) {
-
+@media (orientation: portrait) and (max-height: 43.75rem) {
   .jr-menu-page {
-    padding-top: 10px;
+    padding-top: 0.5rem;
   }
 
   .jr-menu-welcome {
-    min-height: 125px;
-
-    margin-bottom: 9px;
-  }
-
-  .jr-welcome-copy h1 {
-    font-size: 25px;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
   }
 
   .jr-welcome-copy p {
-    margin-top: 7px;
+    margin-top: 0.375rem;
   }
 
   .jr-selected-machine-banner {
-    min-height: 51px;
-
-    margin-bottom: 12px;
+    margin-bottom: 0.625rem;
   }
 
   .jr-section-subtitle {
-    margin-bottom: 9px;
+    margin-bottom: 0.5625rem;
   }
 
   .jr-product-image-wrap {
-    min-height: 95px;
+    aspect-ratio: 1.28 / 1;
   }
 }
 
-
 /* =========================================================
-   LANDSCAPE
+   LANDSCAPE SMARTPHONES
    ========================================================= */
 
 @media (orientation: landscape) {
-
   .jr-menu-page {
     padding:
-      12px
-      clamp(14px, 3vw, 28px)
-      22px;
+      clamp(0.375rem, 1.8vh, 0.75rem)
+      clamp(0.75rem, 3vw, 2rem)
+      calc(0.75rem + env(safe-area-inset-bottom, 0px));
   }
 
   .jr-menu-welcome {
-    min-height: 118px;
-
-    margin-bottom: 9px;
-
-    padding:
-      15px
-      18px;
+    padding-block: clamp(0.5rem, 2.8vh, 0.875rem);
+    margin-bottom: clamp(0.4375rem, 2vh, 0.75rem);
   }
 
   .jr-welcome-copy h1 {
-    font-size:
-      clamp(25px, 5vw, 34px);
+    font-size: clamp(1.1875rem, 5vw, 2rem);
   }
 
   .jr-welcome-copy p {
-    max-width: 360px;
-
-    margin-top: 8px;
-
-    font-size: 9px;
+    margin-top: 0.375rem;
+    font-size: clamp(0.4375rem, 1.7vw, 0.625rem);
   }
 
   .jr-welcome-icon {
-    width: 62px;
-    height: 62px;
-    min-width: 62px;
-
-    font-size: 30px;
+    width: clamp(2.375rem, 10vw, 4rem);
+    min-width: clamp(2.375rem, 10vw, 4rem);
+    font-size: clamp(1.125rem, 5vw, 2rem);
   }
 
   .jr-selected-machine-banner {
-    min-height: 47px;
-
-    margin-bottom: 12px;
-
-    padding:
-      6px
-      9px;
+    margin-bottom: clamp(0.4375rem, 2vh, 0.6875rem);
+    padding-block: clamp(0.3125rem, 1.8vh, 0.5rem);
   }
 
-  .jr-selected-machine-icon {
-    width: 31px;
-    height: 31px;
-    min-width: 31px;
-
-    font-size: 13px;
-  }
-
-  .jr-selected-machine-copy {
-    gap: 1px;
-  }
-
-  .jr-selected-machine-copy small {
-    font-size: 7px;
-  }
-
-  .jr-selected-machine-copy strong {
-    font-size: 10px;
-  }
-
-  .jr-selected-machine-copy span {
-    font-size: 8px;
-  }
-
-  .jr-section-heading h2 {
-    font-size: 20px;
-  }
-
-  .jr-section-subtitle {
-    margin:
-      5px
-      0
-      8px;
-
-    font-size: 8px;
-  }
-
-  /*
-   * More columns in landscape so horizontal space
-   * is actually used instead of producing tall cards.
-   */
   .jr-products {
-    grid-template-columns:
-      repeat(
-        4,
-        minmax(0, 1fr)
-      );
-
-    gap: 10px;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, 12rem), 1fr)
+    );
   }
 
   .jr-product-image-wrap {
     aspect-ratio: 1.35 / 1;
-
-    min-height: 80px;
-
-    padding: 6px 9px;
-  }
-
-  .jr-fresh-badge {
-    left: 6px;
-    top: 6px;
-
-    padding:
-      3px
-      5px;
   }
 
   .jr-product-info {
-    padding:
-      7px
-      8px
-      8px;
-  }
-
-  .jr-product-info h3 {
-    font-size: 10px;
+    padding-block: 0.375rem 0.4375rem;
   }
 
   .jr-product-info p {
-    min-height: 22px;
-
-    margin:
-      3px
-      0
-      5px;
-
-    font-size: 7px;
-  }
-
-  .jr-product-bottom {
-    min-height: 22px;
-  }
-
-  .jr-product-price {
-    font-size: 11px;
-  }
-
-  .jr-product-arrow {
-    width: 23px;
-    height: 23px;
-    min-width: 23px;
-
-    font-size: 12px;
+    margin-block: 0.125rem 0.3125rem;
   }
 }
-
 
 /* =========================================================
-   COMPACT LANDSCAPE
-   Optimized for approximately 613 × 376
+   ACCESSIBILITY
    ========================================================= */
 
-@media (orientation: landscape)
-  and (min-width: 600px)
-  and (max-width: 900px) {
-
-  .jr-menu-page {
-    padding:
-      9px
-      18px
-      15px;
-  }
-
-  .jr-menu-welcome {
-    min-height: 92px;
-
-    margin-bottom: 7px;
-
-    padding:
-      10px
-      14px;
-
-    border-radius: 13px;
-  }
-
-  .jr-welcome-copy .jr-eyebrow {
-    margin-bottom: 5px;
-
-    font-size: 6px;
-  }
-
-  .jr-welcome-copy h1 {
-    font-size: 23px;
-
-    letter-spacing: -0.8px;
-  }
-
-  .jr-welcome-copy p {
-    max-width: 300px;
-
-    margin-top: 5px;
-
-    font-size: 7px;
-  }
-
-  .jr-welcome-icon {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-
-    font-size: 23px;
-  }
-
-  .jr-selected-machine-banner {
-    min-height: 37px;
-
-    margin-bottom: 8px;
-
-    padding:
-      4px
-      7px;
-
-    border-radius: 9px;
-  }
-
-  .jr-selected-machine-icon {
-    width: 26px;
-    height: 26px;
-    min-width: 26px;
-
-    border-radius: 7px;
-
-    font-size: 11px;
-  }
-
-  .jr-selected-machine-copy small {
-    font-size: 5.5px;
-  }
-
-  .jr-selected-machine-copy strong {
-    font-size: 8px;
-  }
-
-  .jr-selected-machine-copy span {
-    font-size: 6.5px;
-  }
-
-  .jr-section-eyebrow {
-    margin-bottom: 3px;
-
-    font-size: 6px;
-  }
-
-  .jr-section-heading h2 {
-    font-size: 15px;
-  }
-
-  .jr-count {
-    width: 22px;
-    height: 22px;
-    min-width: 22px;
-
-    font-size: 7px;
-  }
-
-  .jr-section-subtitle {
-    margin:
-      3px
-      0
-      6px;
-
-    font-size: 6.5px;
-  }
-
-  .jr-products {
-    gap: 7px;
-  }
-
-  .jr-product-card {
-    border-radius: 10px;
-  }
-
-  .jr-product-image-wrap {
-    min-height: 64px;
-
-    padding:
-      4px
-      7px;
-  }
-
-  .jr-fresh-badge {
-    left: 4px;
-    top: 4px;
-
-    gap: 2px;
-
-    padding:
-      2px
-      4px;
-
-    font-size: 5px;
-  }
-
-  .jr-fresh-badge i {
-    width: 3px;
-    height: 3px;
-  }
-
-  .jr-product-info {
-    padding:
-      5px
-      6px
-      6px;
-  }
-
-  .jr-product-info h3 {
-    font-size: 8px;
-  }
-
-  .jr-product-info p {
-    min-height: 17px;
-
-    margin:
-      2px
-      0
-      3px;
-
-    font-size: 5.5px;
-
-    line-height: 1.3;
-  }
-
-  .jr-product-bottom {
-    min-height: 17px;
-  }
-
-  .jr-product-price {
-    font-size: 8px;
-  }
-
-  .jr-product-arrow {
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
-
-    font-size: 9px;
+@media (prefers-reduced-motion: reduce) {
+  .jr-product-card,
+  .jr-product-image,
+  .jr-quantity-control,
+  .jr-quantity-button {
+    transition: none;
   }
 }
-
-
-/* =========================================================
-   VERY SHORT LANDSCAPE
-   ========================================================= */
-
-@media (orientation: landscape)
-  and (max-height: 400px) {
-
-  .jr-menu-page {
-    padding-top: 6px;
-    padding-bottom: 10px;
-  }
-
-  .jr-menu-welcome {
-    min-height: 80px;
-
-    padding:
-      8px
-      12px;
-
-    margin-bottom: 6px;
-  }
-
-  .jr-welcome-copy h1 {
-    font-size: 20px;
-  }
-
-  .jr-welcome-copy p {
-    display: none;
-  }
-
-  .jr-welcome-icon {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-
-    font-size: 19px;
-  }
-
-  .jr-selected-machine-banner {
-    min-height: 32px;
-
-    margin-bottom: 6px;
-  }
-
-  .jr-selected-machine-icon {
-    width: 23px;
-    height: 23px;
-    min-width: 23px;
-  }
-
-  .jr-section-heading h2 {
-    font-size: 14px;
-  }
-
-  .jr-section-subtitle {
-    display: none;
-  }
-
-  .jr-product-image-wrap {
-    min-height: 57px;
-  }
-
-  .jr-product-info p {
-    display: none;
-  }
-}
-
-
-/* =========================================================
-   TABLET / LARGE LANDSCAPE
-   ========================================================= */
-
-@media (orientation: landscape)
-  and (min-width: 901px) {
-
-  .jr-menu-page {
-    padding:
-      18px
-      clamp(20px, 4vw, 40px)
-      30px;
-  }
-
-  .jr-menu-welcome {
-    min-height: 145px;
-
-    padding: 22px 26px;
-  }
-
-  .jr-welcome-copy h1 {
-    font-size: 38px;
-  }
-
-  .jr-welcome-copy p {
-    font-size: 12px;
-  }
-
-  .jr-products {
-    grid-template-columns:
-      repeat(
-        4,
-        minmax(0, 1fr)
-      );
-
-    gap: 14px;
-  }
-
-  .jr-product-image-wrap {
-    min-height: 145px;
-  }
-
-  .jr-product-info {
-    padding:
-      11px
-      12px
-      13px;
-  }
-
-  .jr-product-info h3 {
-    font-size: 14px;
-  }
-
-  .jr-product-info p {
-    font-size: 9px;
-  }
-
-  .jr-product-price {
-    font-size: 14px;
-  }
-}
-
 
 /* =========================================================
    SAFE AREA
    ========================================================= */
 
-@supports (
-  padding-bottom: env(safe-area-inset-bottom)
-) {
+@supports (padding: max(0px)) {
   .jr-menu-page {
-    padding-bottom:
-      calc(
-        30px +
-        env(safe-area-inset-bottom)
-      );
-  }
-}
+    padding-left: max(
+      var(--jr-page-x),
+      env(safe-area-inset-left, 0px)
+    );
 
+    padding-right: max(
+      var(--jr-page-x),
+      env(safe-area-inset-right, 0px)
+    );
 
-/* =========================================================
-   REDUCED MOTION
-   ========================================================= */
-
-@media (prefers-reduced-motion: reduce) {
-  .jr-product-card,
-  .jr-product-image {
-    transition: none;
+    padding-bottom: max(
+      1.25rem,
+      env(safe-area-inset-bottom, 0px)
+    );
   }
 }

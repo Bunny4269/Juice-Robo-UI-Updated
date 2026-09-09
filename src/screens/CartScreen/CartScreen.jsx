@@ -69,10 +69,17 @@ export default function CartScreen({
   }
 
   function getQuantity(item) {
-    return Math.max(
-      1,
-      Number(item?.quantity || 1)
+    const quantity = Number(
+      item?.quantity ??
+        item?.qty ??
+        item?.count ??
+        1
     );
+
+    return Number.isFinite(quantity) &&
+      quantity > 0
+      ? Math.floor(quantity)
+      : 1;
   }
 
   function formatMoney(value) {
@@ -369,7 +376,7 @@ export default function CartScreen({
                       onClick={() =>
                         onUpdate?.(
                           item.id,
-                          quantity - 1
+                          Math.max(0, quantity - 1)
                         )
                       }
                     >

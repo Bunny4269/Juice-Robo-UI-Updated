@@ -1,17 +1,24 @@
-  /* =========================================================
-   PAGE
+/* =========================================================
+   JUICE ROBO — CART SCREEN
+   FLUID SMARTPHONE DESIGN
+   ---------------------------------------------------------
+   No device-specific width breakpoints.
+   Layout responds to available width and viewport height.
    ========================================================= */
 
 .jr-cart-page {
-  width: 100%;
-  min-height: 100%;
+  --jr-cart-x: clamp(0.5rem, 3.2vw, 1.125rem);
+  --jr-cart-gap: clamp(0.375rem, 2vw, 0.625rem);
 
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
   box-sizing: border-box;
 
   padding:
-    10px
-    10px
-    88px;
+    clamp(0.5rem, 2.8vw, 0.75rem)
+    var(--jr-cart-x)
+    calc(5.5rem + env(safe-area-inset-bottom, 0px));
 
   background: #fbfaf5;
   color: #171717;
@@ -24,9 +31,8 @@
     "Segoe UI",
     sans-serif;
 
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: auto;
-
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -35,44 +41,32 @@
   display: none;
 }
 
-
 /* =========================================================
-   BACK BUTTON
+   BACK
    ========================================================= */
 
 .jr-cart-back {
   display: inline-flex;
-
   align-items: center;
   justify-content: flex-start;
 
-  min-height: 34px;
+  min-height: clamp(2rem, 8vw, 2.375rem);
 
-  margin:
-    0
-    0
-    7px;
-
-  padding:
-    0
-    7px;
+  margin: 0 0 clamp(0.3125rem, 1.8vw, 0.5rem);
+  padding: 0 clamp(0.3125rem, 1.8vw, 0.5rem);
 
   border: 0;
-  border-radius: 7px;
+  border-radius: 0.4375rem;
 
   background: transparent;
-
   color: #2f8050;
 
   font-family: inherit;
-
-  font-size: clamp(10px, 2.7vw, 14px);
+  font-size: clamp(0.5625rem, 2.7vw, 0.875rem);
   line-height: 1.2;
-
   font-weight: 900;
 
   cursor: pointer;
-
   -webkit-tap-highlight-color: transparent;
 
   transition:
@@ -88,61 +82,42 @@
   transform: translateX(-1px);
 }
 
-
 /* =========================================================
-   EYEBROW
+   EYEBROW / HEADING
    ========================================================= */
 
 .jr-cart-page .jr-eyebrow {
   display: block;
-
   margin: 0;
 
   color: #ed7800;
-
-  font-size: clamp(6px, 1.65vw, 8px);
+  font-size: clamp(0.375rem, 1.65vw, 0.5rem);
   line-height: 1;
-
   font-weight: 950;
-
-  letter-spacing: 0.10em;
-
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-
-/* =========================================================
-   PAGE HEADING
-   ========================================================= */
-
 .jr-cart-heading {
   width: 100%;
-
-  margin:
-    0
-    0
-    11px;
+  min-width: 0;
+  margin: 0 0 clamp(0.5rem, 2.5vw, 0.75rem);
 }
 
 .jr-cart-heading h1 {
-  margin: 3px 0 0;
+  margin: 0.1875rem 0 0;
 
   color: #171717;
-
-  font-size: clamp(24px, 6vw, 32px);
+  font-size: clamp(1.5rem, 6vw, 2rem);
   line-height: 0.94;
-
   font-weight: 950;
-
   letter-spacing: -0.055em;
 }
 
 .jr-cart-heading h1 em {
   color: #287f46;
-
   font-style: normal;
 }
-
 
 /* =========================================================
    LOCATION CARD
@@ -150,132 +125,93 @@
 
 .jr-cart-location-card {
   width: 100%;
-  min-height: 52px;
+  min-width: 0;
+  min-height: clamp(3.125rem, 13vw, 4rem);
 
   box-sizing: border-box;
 
-  display: flex;
-
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
+  gap: clamp(0.375rem, 2vw, 0.625rem);
 
-  gap: 8px;
+  margin: 0 0 clamp(0.5rem, 2.5vw, 0.75rem);
+  padding: clamp(0.4375rem, 2.2vw, 0.625rem);
 
-  margin:
-    0
-    0
-    10px;
-
-  padding:
-    7px
-    8px;
-
-  border:
-    1px solid
-    #e6e6df;
-
-  border-radius: 10px;
+  border: 1px solid #e6e6df;
+  border-radius: clamp(0.625rem, 3vw, 0.875rem);
 
   background: #ffffff;
-
-  box-shadow:
-    0 2px 8px
-    rgba(20, 45, 26, 0.025);
+  box-shadow: 0 0.125rem 0.5rem rgba(20, 45, 26, 0.025);
 }
 
 .jr-cart-location-icon {
-  width: 30px;
-  height: 30px;
-
-  min-width: 30px;
+  width: clamp(1.75rem, 8vw, 2.25rem);
+  aspect-ratio: 1;
+  min-width: clamp(1.75rem, 8vw, 2.25rem);
 
   display: grid;
-
   place-items: center;
 
-  border-radius: 8px;
-
+  border-radius: clamp(0.4375rem, 2.5vw, 0.6875rem);
   background: #eef7ed;
-
-  font-size: 12px;
+  font-size: clamp(0.6875rem, 3.5vw, 1rem);
 }
 
 .jr-cart-location-copy {
   min-width: 0;
-
-  flex: 1;
-
   display: flex;
-
   flex-direction: column;
+  gap: 0.125rem;
+}
 
-  gap: 2px;
+.jr-cart-location-copy small,
+.jr-cart-location-copy strong,
+.jr-cart-location-copy span {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .jr-cart-location-copy small {
   color: #999995;
-
-  font-size: 5px;
+  font-size: clamp(0.3125rem, 1.5vw, 0.5rem);
   line-height: 1;
-
   font-weight: 900;
-
   letter-spacing: 0.08em;
-
   text-transform: uppercase;
 }
 
 .jr-cart-location-copy strong {
-  overflow: hidden;
-
   color: #222222;
-
-  font-size: clamp(8px, 2vw, 10px);
+  font-size: clamp(0.5rem, 2vw, 0.625rem);
   line-height: 1;
-
   font-weight: 900;
-
-  white-space: nowrap;
-
-  text-overflow: ellipsis;
 }
 
 .jr-cart-location-copy span {
-  overflow: hidden;
-
   color: #8b8b87;
-
-  font-size: clamp(5.5px, 1.45vw, 7px);
+  font-size: clamp(0.34375rem, 1.45vw, 0.4375rem);
   line-height: 1;
-
-  white-space: nowrap;
-
-  text-overflow: ellipsis;
 }
 
 .jr-cart-change-button {
   flex: 0 0 auto;
-
-  padding:
-    6px
-    4px;
+  padding: 0.375rem 0.25rem;
 
   border: 0;
-
   background: transparent;
-
   color: #287f46;
 
   font-family: inherit;
-
-  font-size: 6px;
-
+  font-size: clamp(0.375rem, 1.6vw, 0.5rem);
   line-height: 1;
-
   font-weight: 900;
 
   cursor: pointer;
 }
-
 
 /* =========================================================
    ITEM HEADER
@@ -283,57 +219,37 @@
 
 .jr-cart-items-header {
   width: 100%;
-
+  min-width: 0;
   box-sizing: border-box;
 
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
+  gap: 0.625rem;
 
-  gap: 10px;
-
-  margin:
-    0
-    0
-    6px;
-
-  padding:
-    0
-    2px;
+  margin: 0 0 clamp(0.3125rem, 1.5vw, 0.4375rem);
+  padding: 0 0.125rem;
 }
 
 .jr-cart-items-header > span {
   color: #777772;
-
-  font-size: clamp(6px, 1.65vw, 8px);
+  font-size: clamp(0.375rem, 1.65vw, 0.5rem);
   line-height: 1;
-
   font-weight: 900;
-
   letter-spacing: 0.08em;
 }
 
 .jr-cart-items-header button {
-  padding: 4px 2px;
-
+  padding: 0.25rem 0.125rem;
   border: 0;
-
   background: transparent;
-
   color: #287f46;
-
   font-family: inherit;
-
-  font-size: clamp(7px, 1.8vw, 9px);
+  font-size: clamp(0.4375rem, 1.8vw, 0.5625rem);
   line-height: 1;
-
   font-weight: 900;
-
   cursor: pointer;
 }
-
 
 /* =========================================================
    CART ITEMS
@@ -341,333 +257,272 @@
 
 .jr-cart-items {
   width: 100%;
+  min-width: 0;
 
   display: flex;
-
   flex-direction: column;
-
-  gap: 7px;
+  gap: var(--jr-cart-gap);
 }
-
 
 /* =========================================================
    CART ITEM
+   ---------------------------------------------------------
+   Flexible columns prevent overflow on narrow phones.
    ========================================================= */
 
 .jr-cart-item {
   width: 100%;
-
   min-width: 0;
-
   box-sizing: border-box;
 
   display: grid;
-
   grid-template-columns:
-    clamp(62px, 17vw, 78px)
+    clamp(3.75rem, 17vw, 4.875rem)
     minmax(0, 1fr)
     auto;
 
   align-items: center;
+  gap: clamp(0.375rem, 2vw, 0.625rem);
 
-  gap: 8px;
+  padding: clamp(0.375rem, 2vw, 0.5rem);
 
-  padding: 7px;
-
-  border:
-    1px solid
-    #e5e5e0;
-
-  border-radius: 10px;
+  border: 1px solid #e5e5e0;
+  border-radius: clamp(0.625rem, 3vw, 0.875rem);
 
   background: #ffffff;
-
-  box-shadow:
-    0 2px 7px
-    rgba(20, 45, 26, 0.025);
+  box-shadow: 0 0.125rem 0.4375rem rgba(20, 45, 26, 0.025);
 }
 
-
-/* =========================================================
-   ITEM IMAGE
-   ========================================================= */
-
 .jr-cart-item-image {
-  width: clamp(62px, 17vw, 78px);
-  height: clamp(62px, 17vw, 78px);
-
+  width: 100%;
+  aspect-ratio: 1;
   min-width: 0;
 
   box-sizing: border-box;
 
   display: grid;
-
   place-items: center;
 
   overflow: hidden;
-
-  border-radius: 8px;
-
+  border-radius: clamp(0.4375rem, 2.2vw, 0.625rem);
   background: #f6f8f2;
 }
 
 .jr-cart-item-image img {
   display: block;
-
   width: 100%;
   height: 100%;
-
   object-fit: contain;
 }
 
 .jr-cart-image-placeholder {
   display: grid;
-
   place-items: center;
-
   width: 100%;
   height: 100%;
-
-  font-size: clamp(22px, 7vw, 32px);
+  font-size: clamp(1.375rem, 7vw, 2rem);
 }
 
-
 /* =========================================================
-   ITEM INFORMATION
+   ITEM INFO
    ========================================================= */
 
 .jr-cart-item-info {
   min-width: 0;
 
   display: flex;
-
   flex-direction: column;
-
   align-items: flex-start;
-
-  gap: 3px;
+  gap: clamp(0.125rem, 0.8vw, 0.1875rem);
 }
 
 .jr-cart-item-type {
   display: block;
-
   color: #ee7900;
-
-  font-size: clamp(5px, 1.35vw, 7px);
+  font-size: clamp(0.3125rem, 1.35vw, 0.4375rem);
   line-height: 1;
-
   font-weight: 900;
-
   letter-spacing: 0.07em;
 }
 
 .jr-cart-item-info h2 {
   width: 100%;
-
+  min-width: 0;
   margin: 0;
 
   overflow: hidden;
 
   color: #171717;
-
-  font-size: clamp(9px, 2.5vw, 12px);
+  font-size: clamp(0.5625rem, 2.5vw, 0.75rem);
   line-height: 1.1;
-
   font-weight: 900;
 
   white-space: nowrap;
-
   text-overflow: ellipsis;
 }
 
 .jr-cart-item-variant {
   max-width: 100%;
-
   overflow: hidden;
 
   color: #888883;
-
-  font-size: clamp(6px, 1.55vw, 8px);
+  font-size: clamp(0.375rem, 1.55vw, 0.5rem);
   line-height: 1;
 
   font-weight: 600;
-
   white-space: nowrap;
-
   text-overflow: ellipsis;
 }
 
-
 /* =========================================================
-   ITEM BOTTOM
+   ITEM PRICE + QUANTITY
    ========================================================= */
 
 .jr-cart-item-bottom {
   width: 100%;
-
   min-width: 0;
 
-  display: flex;
-
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
+  gap: clamp(0.25rem, 1.5vw, 0.5rem);
 
-  justify-content: space-between;
-
-  gap: 8px;
-
-  margin-top: 2px;
+  margin-top: clamp(0.0625rem, 0.5vw, 0.125rem);
 }
 
 .jr-cart-item-price {
-  flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 
   color: #287f46;
-
-  font-size: clamp(9px, 2.3vw, 11px);
+  font-size: clamp(0.5625rem, 2.3vw, 0.6875rem);
   line-height: 1;
-
   font-weight: 900;
 }
 
-
 /* =========================================================
-   QUANTITY
+   CART QUANTITY
    ========================================================= */
 
 .jr-cart-quantity {
-  height: 25px;
-
-  min-width: 69px;
+  width: clamp(3.75rem, 21vw, 5.25rem);
+  min-width: clamp(3.75rem, 21vw, 5.25rem);
+  height: clamp(1.5rem, 6.8vw, 1.75rem);
 
   box-sizing: border-box;
 
-  display: inline-flex;
-
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-
-  justify-content: space-between;
 
   overflow: hidden;
 
-  border:
-    1px solid
-    #e2e2dc;
-
-  border-radius: 7px;
-
-  background: #ffffff;
+  border: 1px solid #cfe1d1;
+  border-radius: 999px;
+  background: #f5faf4;
 }
 
 .jr-cart-quantity button {
-  width: 22px;
-  height: 24px;
-
-  flex: 0 0 22px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
 
   display: grid;
-
   place-items: center;
 
   padding: 0;
-
   border: 0;
+  border-radius: 999px;
 
   background: transparent;
-
-  color: #252525;
+  color: #2f8050;
 
   font-family: inherit;
-
-  font-size: 13px;
-
+  font-size: clamp(0.6875rem, 3.4vw, 0.875rem);
   line-height: 1;
-
-  font-weight: 700;
+  font-weight: 800;
 
   cursor: pointer;
-
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+
+  transition:
+    background 120ms ease,
+    transform 120ms ease;
 }
 
 .jr-cart-quantity button:hover {
-  background: #f4f4ef;
+  background: rgba(47, 128, 80, 0.1);
+}
+
+.jr-cart-quantity button:active {
+  transform: scale(0.88);
+}
+
+.jr-cart-quantity button:focus-visible {
+  outline: 2px solid #ef7d24;
+  outline-offset: 1px;
 }
 
 .jr-cart-quantity strong {
-  min-width: 20px;
+  min-width: clamp(1rem, 5vw, 1.375rem);
+  padding: 0 0.125rem;
 
   display: grid;
-
   place-items: center;
 
-  color: #222222;
-
-  font-size: 8px;
-
+  color: #245f39;
+  font-size: clamp(0.4375rem, 2.2vw, 0.5625rem);
   line-height: 1;
-
   font-weight: 900;
+  font-variant-numeric: tabular-nums;
 }
 
-
 /* =========================================================
-   ITEM RIGHT SIDE
+   RIGHT SIDE
    ========================================================= */
 
 .jr-cart-item-right {
-  min-width: 42px;
+  min-width: clamp(2.25rem, 11vw, 3rem);
 
   display: flex;
-
   flex-direction: column;
-
   align-items: flex-end;
-
   justify-content: space-between;
-
   align-self: stretch;
-
-  gap: 8px;
+  gap: clamp(0.375rem, 2vw, 0.625rem);
 }
 
 .jr-cart-item-right > strong {
   color: #222222;
-
-  font-size: clamp(9px, 2.3vw, 11px);
+  font-size: clamp(0.5625rem, 2.3vw, 0.6875rem);
   line-height: 1;
-
   font-weight: 950;
-
   white-space: nowrap;
 }
 
-
 /* =========================================================
-   REMOVE BUTTON
+   REMOVE
    ========================================================= */
 
 .jr-cart-remove {
-  width: 21px;
-  height: 21px;
+  width: clamp(1.125rem, 5.5vw, 1.375rem);
+  aspect-ratio: 1;
 
   display: grid;
-
   place-items: center;
 
   padding: 0;
-
   border: 0;
-
   border-radius: 50%;
 
   background: transparent;
-
   color: #a1a19c;
 
   font-family: inherit;
-
-  font-size: 18px;
-
+  font-size: clamp(0.875rem, 4.5vw, 1.125rem);
   line-height: 1;
 
   cursor: pointer;
@@ -675,10 +530,8 @@
 
 .jr-cart-remove:hover {
   background: #f5f5f1;
-
   color: #777772;
 }
-
 
 /* =========================================================
    CONTINUE SHOPPING
@@ -686,40 +539,25 @@
 
 .jr-cart-continue {
   width: 100%;
-
-  min-height: 34px;
-
+  min-height: clamp(2rem, 8vw, 2.375rem);
   box-sizing: border-box;
 
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 
-  margin:
-    8px
-    0
-    0;
-
-  padding:
-    0
-    10px;
+  margin: clamp(0.375rem, 2vw, 0.625rem) 0 0;
+  padding: 0 0.625rem;
 
   border: 0;
-
-  border-radius: 8px;
+  border-radius: 0.5rem;
 
   background: transparent;
-
   color: #287f46;
 
   font-family: inherit;
-
-  font-size: clamp(7px, 1.9vw, 9px);
-
+  font-size: clamp(0.4375rem, 1.9vw, 0.5625rem);
   line-height: 1;
-
   font-weight: 900;
 
   cursor: pointer;
@@ -729,250 +567,153 @@
   background: rgba(40, 127, 70, 0.06);
 }
 
-
 /* =========================================================
    ORDER SUMMARY
    ========================================================= */
 
 .jr-cart-summary {
   width: 100%;
-
+  min-width: 0;
   box-sizing: border-box;
 
-  margin:
-    8px
-    0
-    0;
+  margin: clamp(0.375rem, 2vw, 0.625rem) 0 0;
+  padding: clamp(0.5625rem, 2.5vw, 0.75rem);
 
-  padding: 10px;
-
-  border:
-    1px solid
-    #e5e5df;
-
-  border-radius: 10px;
+  border: 1px solid #e5e5df;
+  border-radius: clamp(0.625rem, 3vw, 0.875rem);
 
   background: #ffffff;
-
-  box-shadow:
-    0 2px 7px
-    rgba(20, 45, 26, 0.02);
+  box-shadow: 0 0.125rem 0.4375rem rgba(20, 45, 26, 0.02);
 }
-
-
-/* =========================================================
-   SUMMARY HEADING
-   ========================================================= */
 
 .jr-cart-summary-heading {
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
-
-  gap: 10px;
-
-  margin:
-    0
-    0
-    7px;
+  gap: 0.625rem;
+  margin: 0 0 clamp(0.3125rem, 1.5vw, 0.4375rem);
 }
 
 .jr-cart-summary-heading > strong {
   color: #777772;
-
-  font-size: 7px;
-
+  font-size: clamp(0.4375rem, 1.7vw, 0.5rem);
   line-height: 1;
-
   font-weight: 800;
 }
 
-
-/* =========================================================
-   SUMMARY ROW
-   ========================================================= */
-
 .jr-summary-row {
   width: 100%;
-
-  min-height: 20px;
-
+  min-height: clamp(1.125rem, 5vw, 1.375rem);
   box-sizing: border-box;
 
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
+  gap: 0.625rem;
 
-  gap: 10px;
-
-  padding:
-    3px
-    0;
+  padding: 0.1875rem 0;
 }
 
 .jr-summary-row > span {
   color: #858580;
-
-  font-size: clamp(7px, 1.8vw, 9px);
+  font-size: clamp(0.4375rem, 1.8vw, 0.5625rem);
   line-height: 1;
-
   font-weight: 700;
 }
 
 .jr-summary-row > span small {
   color: #a2a29d;
-
   font-size: 0.85em;
-
   font-weight: 700;
 }
 
 .jr-summary-row > strong {
   color: #222222;
-
-  font-size: clamp(8px, 2vw, 10px);
+  font-size: clamp(0.5rem, 2vw, 0.625rem);
   line-height: 1;
-
   font-weight: 900;
-
   white-space: nowrap;
 }
 
-
-/* =========================================================
-   SUMMARY DIVIDER
-   ========================================================= */
-
 .jr-summary-divider {
   width: 100%;
-
   height: 1px;
-
-  margin:
-    5px
-    0;
-
+  margin: 0.3125rem 0;
   background: #eeeeea;
 }
 
-
-/* =========================================================
-   SUMMARY TOTAL
-   ========================================================= */
-
 .jr-summary-total {
   width: 100%;
-
   box-sizing: border-box;
 
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
+  gap: 0.625rem;
 
-  gap: 10px;
-
-  padding:
-    3px
-    0
-    5px;
+  padding: 0.1875rem 0 0.3125rem;
 }
 
 .jr-summary-total > div {
   min-width: 0;
-
   display: flex;
-
   flex-direction: column;
-
-  gap: 2px;
+  gap: 0.125rem;
 }
 
 .jr-summary-total > div > span {
   color: #222222;
-
-  font-size: clamp(8px, 2vw, 10px);
+  font-size: clamp(0.5rem, 2vw, 0.625rem);
   line-height: 1;
-
   font-weight: 950;
 }
 
 .jr-summary-total > div > small {
   color: #999994;
-
-  font-size: clamp(5px, 1.35vw, 7px);
+  font-size: clamp(0.3125rem, 1.35vw, 0.4375rem);
   line-height: 1;
 }
 
 .jr-summary-total > strong {
   color: #287f46;
-
-  font-size: clamp(15px, 4vw, 19px);
+  font-size: clamp(0.9375rem, 4vw, 1.1875rem);
   line-height: 1;
-
   font-weight: 950;
-
   white-space: nowrap;
 }
 
-
 /* =========================================================
-   CHECKOUT BUTTON
+   CHECKOUT
    ========================================================= */
 
 .jr-cart-checkout {
   width: 100%;
-
-  min-height: 42px;
-
+  min-height: clamp(2.375rem, 10vw, 2.75rem);
   box-sizing: border-box;
 
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
+  gap: 0.625rem;
 
-  gap: 10px;
-
-  margin:
-    7px
-    0
-    0;
-
-  padding:
-    0
-    13px;
+  margin: 0.4375rem 0 0;
+  padding: 0 0.8125rem;
 
   border: 0;
-
-  border-radius: 9px;
+  border-radius: 0.5625rem;
 
   background: #287f46;
-
   color: #ffffff;
 
   font-family: inherit;
-
-  font-size: clamp(7px, 2vw, 10px);
-
+  font-size: clamp(0.4375rem, 2vw, 0.625rem);
   line-height: 1;
-
   font-weight: 900;
-
   letter-spacing: 0.03em;
 
-  box-shadow:
-    0 7px 16px
-    rgba(40, 127, 70, 0.18);
+  box-shadow: 0 0.4375rem 1rem rgba(40, 127, 70, 0.18);
 
   cursor: pointer;
-
   -webkit-tap-highlight-color: transparent;
 
   transition:
@@ -983,10 +724,7 @@
 
 .jr-cart-checkout:hover {
   background: #236e3d;
-
-  box-shadow:
-    0 8px 18px
-    rgba(40, 127, 70, 0.22);
+  box-shadow: 0 0.5rem 1.125rem rgba(40, 127, 70, 0.22);
 }
 
 .jr-cart-checkout:active {
@@ -994,23 +732,18 @@
 }
 
 .jr-cart-checkout > span {
+  min-width: 0;
   overflow: hidden;
-
   white-space: nowrap;
-
   text-overflow: ellipsis;
 }
 
 .jr-cart-checkout b {
   flex: 0 0 auto;
-
-  font-size: 15px;
-
+  font-size: clamp(0.8125rem, 3.5vw, 0.9375rem);
   line-height: 1;
-
   font-weight: 500;
 }
-
 
 /* =========================================================
    EMPTY CART
@@ -1018,145 +751,96 @@
 
 .jr-cart-empty {
   width: 100%;
+  min-width: 0;
 
-  min-height:
-    calc(
-      100dvh - 160px
-    );
-
+  min-height: calc(100dvh - 10rem);
   box-sizing: border-box;
 
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
-
   justify-content: center;
 
   padding:
-    20px
-    12px
-    80px;
+    1.25rem
+    0.75rem
+    5rem;
 
   text-align: center;
 }
 
 .jr-cart-empty-icon {
-  width: 58px;
-  height: 58px;
+  width: clamp(3.25rem, 15vw, 4rem);
+  aspect-ratio: 1;
 
   display: grid;
-
   place-items: center;
 
-  margin:
-    0
-    0
-    12px;
-
-  border-radius: 18px;
+  margin: 0 0 0.75rem;
+  border-radius: clamp(1rem, 4vw, 1.25rem);
 
   background: #edf7ed;
-
   color: #287f46;
+  font-size: clamp(1.375rem, 6.5vw, 1.75rem);
 
-  font-size: 25px;
-
-  box-shadow:
-    0 5px 14px
-    rgba(40, 127, 70, 0.07);
+  box-shadow: 0 0.3125rem 0.875rem rgba(40, 127, 70, 0.07);
 }
 
 .jr-cart-empty h1 {
-  margin: 4px 0 0;
-
+  margin: 0.25rem 0 0;
   color: #111111;
-
-  font-size: clamp(24px, 6vw, 32px);
+  font-size: clamp(1.5rem, 6vw, 2rem);
   line-height: 0.95;
-
   font-weight: 950;
-
   letter-spacing: -0.045em;
 }
 
 .jr-cart-empty h1 em {
   color: #287f46;
-
   font-style: normal;
 }
 
 .jr-cart-empty p {
-  max-width: 270px;
-
-  margin:
-    8px
-    auto
-    16px;
+  max-width: 32ch;
+  margin: 0.5rem auto 1rem;
 
   color: #777773;
-
-  font-size: clamp(7px, 1.9vw, 9px);
+  font-size: clamp(0.4375rem, 1.9vw, 0.5625rem);
   line-height: 1.45;
-
   font-weight: 500;
 }
 
-
-/* =========================================================
-   EMPTY CART CTA
-   ========================================================= */
-
 .jr-cart-primary-button {
   width: auto;
-
-  min-width: 148px;
-
-  min-height: 40px;
+  min-width: clamp(8.5rem, 42vw, 10rem);
+  min-height: clamp(2.375rem, 9vw, 2.75rem);
 
   box-sizing: border-box;
 
   display: inline-flex;
-
   align-items: center;
-
   justify-content: center;
-
-  gap: 15px;
+  gap: clamp(0.75rem, 4vw, 1rem);
 
   margin: 0;
-
-  padding:
-    0
-    14px;
+  padding: 0 0.875rem;
 
   border: 0;
-
-  border-radius: 9px;
+  border-radius: 0.5625rem;
 
   background: #f07800;
-
   color: #ffffff;
 
   font-family: inherit;
-
-  font-size: clamp(7px, 1.9vw, 9px);
-
+  font-size: clamp(0.4375rem, 1.9vw, 0.5625rem);
   line-height: 1;
-
   font-weight: 950;
-
   letter-spacing: 0.025em;
-
   text-transform: uppercase;
 
-  box-shadow:
-    0 7px 15px
-    rgba(240, 120, 0, 0.16);
+  box-shadow: 0 0.4375rem 0.9375rem rgba(240, 120, 0, 0.16);
 
   cursor: pointer;
-
   appearance: none;
   -webkit-appearance: none;
 
@@ -1168,10 +852,7 @@
 
 .jr-cart-primary-button:hover {
   background: #df6f00;
-
-  box-shadow:
-    0 8px 17px
-    rgba(240, 120, 0, 0.20);
+  box-shadow: 0 0.5rem 1.0625rem rgba(240, 120, 0, 0.2);
 }
 
 .jr-cart-primary-button:active {
@@ -1180,755 +861,198 @@
 
 .jr-cart-primary-button span {
   display: inline-flex;
-
   align-items: center;
   justify-content: center;
-
-  font-size: 14px;
-
+  font-size: clamp(0.75rem, 3.5vw, 0.875rem);
   line-height: 1;
-
   font-weight: 500;
 }
 
-
-/* =========================================================
-   PORTRAIT — 430PX AND BELOW
-   ========================================================= */
-
-@media (max-width: 430px) {
-
-  .jr-cart-page {
-    padding:
-      9px
-      9px
-      86px;
-  }
-
-  .jr-cart-item {
-    grid-template-columns:
-      70px
-      minmax(0, 1fr)
-      auto;
-  }
-
-  .jr-cart-item-image {
-    width: 70px;
-    height: 70px;
-  }
-}
-
-
-/* =========================================================
-   SMALL PORTRAIT — 390PX AND BELOW
-   ========================================================= */
-
-@media (max-width: 390px) {
-
-  .jr-cart-page {
-    padding-left: 8px;
-    padding-right: 8px;
-  }
-
-  .jr-cart-item {
-    grid-template-columns:
-      64px
-      minmax(0, 1fr)
-      auto;
-
-    gap: 7px;
-
-    padding: 6px;
-  }
-
-  .jr-cart-item-image {
-    width: 64px;
-    height: 64px;
-  }
-
-  .jr-cart-item-info h2 {
-    font-size: 9px;
-  }
-
-  .jr-cart-quantity {
-    min-width: 64px;
-  }
-
-  .jr-cart-quantity button {
-    width: 20px;
-    flex-basis: 20px;
-  }
-
-  .jr-cart-summary {
-    padding: 9px;
-  }
-}
-
-
-/* =========================================================
-   VERY SMALL PORTRAIT — 360PX AND BELOW
-   ========================================================= */
-
-@media (max-width: 360px) {
-
-  .jr-cart-page {
-    padding:
-      8px
-      7px
-      82px;
-  }
-
-  .jr-cart-item {
-    grid-template-columns:
-      58px
-      minmax(0, 1fr)
-      auto;
-
-    gap: 6px;
-  }
-
-  .jr-cart-item-image {
-    width: 58px;
-    height: 58px;
-  }
-
-  .jr-cart-item-type {
-    font-size: 5px;
-  }
-
-  .jr-cart-item-info h2 {
-    font-size: 8px;
-  }
-
-  .jr-cart-item-variant {
-    font-size: 5.5px;
-  }
-
-  .jr-cart-item-price,
-  .jr-cart-item-right > strong {
-    font-size: 8px;
-  }
-
-  .jr-cart-quantity {
-    height: 23px;
-    min-width: 60px;
-  }
-
-  .jr-cart-quantity button {
-    width: 19px;
-    height: 22px;
-    flex-basis: 19px;
-
-    font-size: 11px;
-  }
-
-  .jr-cart-quantity strong {
-    min-width: 18px;
-    font-size: 7px;
-  }
-
-  .jr-cart-empty-icon {
-    width: 54px;
-    height: 54px;
-
-    font-size: 23px;
-  }
-
-  .jr-cart-empty p {
-    max-width: 240px;
-  }
-
-  .jr-cart-primary-button {
-    min-width: 140px;
-    min-height: 38px;
-  }
-}
-
-
 /* =========================================================
    SHORT PORTRAIT
+   Height only; no width/device dependency.
    ========================================================= */
 
-@media (orientation: portrait) and (max-height: 700px) {
-
+@media (orientation: portrait) and (max-height: 43.75rem) {
   .jr-cart-page {
-    padding-bottom: 80px;
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .jr-cart-heading {
-    margin-bottom: 8px;
+    margin-bottom: 0.5rem;
   }
 
   .jr-cart-location-card {
-    margin-bottom: 7px;
+    margin-bottom: 0.4375rem;
   }
 
   .jr-cart-items {
-    gap: 5px;
+    gap: 0.3125rem;
   }
 
   .jr-cart-item {
-    padding: 6px;
-  }
-
-  .jr-cart-item-image {
-    width: 60px;
-    height: 60px;
+    padding: 0.375rem;
   }
 
   .jr-cart-summary {
-    margin-top: 6px;
-    padding: 8px;
+    margin-top: 0.375rem;
+    padding: 0.5rem;
   }
 
   .jr-cart-checkout {
-    min-height: 38px;
+    min-height: 2.25rem;
   }
 }
-
 
 /* =========================================================
    LANDSCAPE
    ========================================================= */
 
 @media (orientation: landscape) {
-
   .jr-cart-page {
-    width: 100%;
-
-    min-height: 100%;
-
     padding:
-      7px
-      clamp(14px, 3vw, 36px)
-      62px;
+      clamp(0.375rem, 1.8vh, 0.625rem)
+      clamp(0.75rem, 3vw, 2.25rem)
+      calc(3.875rem + env(safe-area-inset-bottom, 0px));
   }
 
   .jr-cart-back {
-    min-height: 26px;
-
-    margin-bottom: 3px;
-
-    padding-left: 2px;
-
-    font-size: clamp(8px, 1.8vh, 11px);
+    min-height: clamp(1.625rem, 6vh, 2rem);
+    margin-bottom: 0.1875rem;
+    padding-left: 0.125rem;
+    font-size: clamp(0.5rem, 1.8vh, 0.6875rem);
   }
 
   .jr-cart-heading {
-    margin-bottom: 6px;
+    margin-bottom: 0.375rem;
   }
 
   .jr-cart-page .jr-eyebrow {
-    font-size: clamp(5px, 1.5vh, 7px);
+    font-size: clamp(0.3125rem, 1.5vh, 0.4375rem);
   }
 
   .jr-cart-heading h1 {
-    margin-top: 2px;
-
-    font-size: clamp(18px, 4vh, 25px);
+    font-size: clamp(1.125rem, 4vh, 1.5625rem);
   }
 
   .jr-cart-location-card {
-    min-height: 40px;
-
-    margin-bottom: 6px;
-
-    padding:
-      5px
-      7px;
-
-    gap: 7px;
-
-    border-radius: 8px;
+    min-height: clamp(2.5rem, 9vh, 3.125rem);
+    margin-bottom: 0.375rem;
+    padding-block: 0.3125rem;
   }
 
   .jr-cart-location-icon {
-    width: 25px;
-    height: 25px;
-
-    min-width: 25px;
-
-    border-radius: 7px;
-
-    font-size: 10px;
-  }
-
-  .jr-cart-location-copy {
-    gap: 1px;
-  }
-
-  .jr-cart-location-copy small {
-    font-size: 4.5px;
-  }
-
-  .jr-cart-location-copy strong {
-    font-size: clamp(7px, 1.7vh, 9px);
-  }
-
-  .jr-cart-location-copy span {
-    font-size: clamp(5px, 1.25vh, 6.5px);
-  }
-
-  .jr-cart-change-button {
-    font-size: 5px;
+    width: clamp(1.4375rem, 6vh, 1.875rem);
+    min-width: clamp(1.4375rem, 6vh, 1.875rem);
   }
 
   .jr-cart-items-header {
-    margin-bottom: 4px;
-  }
-
-  .jr-cart-items-header > span {
-    font-size: clamp(5px, 1.4vh, 7px);
-  }
-
-  .jr-cart-items-header button {
-    font-size: clamp(6px, 1.5vh, 8px);
+    margin-bottom: 0.25rem;
   }
 
   .jr-cart-items {
     display: grid;
-
-    grid-template-columns:
-      repeat(
-        auto-fit,
-        minmax(
-          210px,
-          1fr
-        )
-      );
-
-    gap: 6px;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, 13rem), 1fr)
+    );
+    gap: 0.375rem;
   }
 
   .jr-cart-item {
     grid-template-columns:
-      clamp(52px, 12vh, 68px)
+      clamp(3.25rem, 12vh, 4.25rem)
       minmax(0, 1fr)
       auto;
-
-    gap: 6px;
-
-    padding: 5px;
-
-    border-radius: 8px;
-  }
-
-  .jr-cart-item-image {
-    width: clamp(52px, 12vh, 68px);
-    height: clamp(52px, 12vh, 68px);
-
-    border-radius: 7px;
-  }
-
-  .jr-cart-image-placeholder {
-    font-size: clamp(20px, 5vh, 28px);
+    gap: 0.375rem;
+    padding: 0.3125rem;
   }
 
   .jr-cart-item-info {
-    gap: 2px;
-  }
-
-  .jr-cart-item-type {
-    font-size: clamp(4.5px, 1.2vh, 6px);
-  }
-
-  .jr-cart-item-info h2 {
-    font-size: clamp(7px, 1.8vh, 9px);
-  }
-
-  .jr-cart-item-variant {
-    font-size: clamp(5px, 1.25vh, 6.5px);
+    gap: 0.125rem;
   }
 
   .jr-cart-item-bottom {
-    gap: 5px;
-  }
-
-  .jr-cart-item-price {
-    font-size: clamp(7px, 1.7vh, 9px);
+    gap: 0.3125rem;
   }
 
   .jr-cart-quantity {
-    height: 22px;
-
-    min-width: 61px;
-  }
-
-  .jr-cart-quantity button {
-    width: 19px;
-    height: 21px;
-
-    flex-basis: 19px;
-
-    font-size: 11px;
-  }
-
-  .jr-cart-quantity strong {
-    min-width: 17px;
-
-    font-size: 7px;
+    width: clamp(3.5rem, 15vh, 4.5rem);
+    min-width: clamp(3.5rem, 15vh, 4.5rem);
+    height: clamp(1.25rem, 6vh, 1.5rem);
   }
 
   .jr-cart-item-right {
-    min-width: 35px;
-
-    gap: 5px;
-  }
-
-  .jr-cart-item-right > strong {
-    font-size: clamp(7px, 1.7vh, 9px);
-  }
-
-  .jr-cart-remove {
-    width: 18px;
-    height: 18px;
-
-    font-size: 15px;
-  }
-
-  .jr-cart-continue {
-    min-height: 27px;
-
-    margin-top: 5px;
-
-    font-size: clamp(6px, 1.45vh, 8px);
+    min-width: clamp(2rem, 9vh, 2.625rem);
+    gap: 0.3125rem;
   }
 
   .jr-cart-summary {
-    margin-top: 5px;
-
-    padding: 7px;
-
-    border-radius: 8px;
-  }
-
-  .jr-cart-summary-heading {
-    margin-bottom: 4px;
+    margin-top: 0.3125rem;
+    padding: 0.4375rem;
   }
 
   .jr-summary-row {
-    min-height: 16px;
-
-    padding: 2px 0;
-  }
-
-  .jr-summary-row > span {
-    font-size: clamp(6px, 1.4vh, 7px);
-  }
-
-  .jr-summary-row > strong {
-    font-size: clamp(7px, 1.6vh, 8px);
+    min-height: 1rem;
+    padding: 0.125rem 0;
   }
 
   .jr-summary-divider {
-    margin: 3px 0;
+    margin: 0.1875rem 0;
   }
 
   .jr-summary-total {
-    padding:
-      2px
-      0
-      3px;
-  }
-
-  .jr-summary-total > div > span {
-    font-size: clamp(7px, 1.6vh, 9px);
-  }
-
-  .jr-summary-total > div > small {
-    font-size: clamp(4.5px, 1.1vh, 6px);
+    padding: 0.125rem 0 0.1875rem;
   }
 
   .jr-summary-total > strong {
-    font-size: clamp(12px, 3vh, 16px);
+    font-size: clamp(0.75rem, 3vh, 1rem);
   }
 
   .jr-cart-checkout {
-    min-height: 32px;
-
-    margin-top: 4px;
-
-    padding:
-      0
-      11px;
-
-    border-radius: 7px;
-
-    font-size: clamp(6px, 1.5vh, 8px);
-  }
-
-  .jr-cart-checkout b {
-    font-size: 13px;
+    min-height: clamp(1.8125rem, 7vh, 2.125rem);
+    margin-top: 0.25rem;
   }
 
   .jr-cart-empty {
-    min-height:
-      calc(
-        100dvh -
-        95px
-      );
-
-    padding:
-      10px
-      20px
-      55px;
-  }
-
-  .jr-cart-empty-icon {
-    width: 45px;
-    height: 45px;
-
-    margin-bottom: 7px;
-
-    border-radius: 13px;
-
-    font-size: 20px;
-  }
-
-  .jr-cart-empty h1 {
-    font-size: clamp(20px, 4.5vh, 27px);
-  }
-
-  .jr-cart-empty p {
-    max-width: 320px;
-
-    margin:
-      6px
-      auto
-      10px;
-
-    font-size: clamp(6px, 1.5vh, 8px);
-  }
-
-  .jr-cart-primary-button {
-    min-height: 32px;
-
-    min-width: 135px;
-
-    font-size: clamp(6px, 1.5vh, 8px);
-  }
-
-  .jr-cart-primary-button span {
-    font-size: 12px;
+    min-height: calc(100dvh - 6rem);
+    padding: 0.625rem 1.25rem 3.5rem;
   }
 }
 
-
 /* =========================================================
-   SHORT LANDSCAPE
-   Optimized for approximately 613 × 376
-   ========================================================= */
-
-@media (orientation: landscape) and (max-height: 430px) {
-
-  .jr-cart-page {
-    padding:
-      5px
-      clamp(12px, 2.8vw, 28px)
-      56px;
-  }
-
-  .jr-cart-heading {
-    margin-bottom: 4px;
-  }
-
-  .jr-cart-heading h1 {
-    font-size: 19px;
-  }
-
-  .jr-cart-location-card {
-    min-height: 36px;
-
-    margin-bottom: 4px;
-
-    padding: 4px 6px;
-  }
-
-  .jr-cart-location-icon {
-    width: 23px;
-    height: 23px;
-
-    min-width: 23px;
-
-    font-size: 9px;
-  }
-
-  .jr-cart-items-header {
-    margin-bottom: 3px;
-  }
-
-  .jr-cart-items {
-    grid-template-columns:
-      repeat(
-        auto-fit,
-        minmax(
-          190px,
-          1fr
-        )
-      );
-
-    gap: 5px;
-  }
-
-  .jr-cart-item {
-    grid-template-columns:
-      50px
-      minmax(0, 1fr)
-      auto;
-
-    padding: 4px;
-
-    gap: 5px;
-  }
-
-  .jr-cart-item-image {
-    width: 50px;
-    height: 50px;
-  }
-
-  .jr-cart-item-info h2 {
-    font-size: 7px;
-  }
-
-  .jr-cart-item-type {
-    font-size: 4.5px;
-  }
-
-  .jr-cart-item-variant {
-    font-size: 5px;
-  }
-
-  .jr-cart-item-bottom {
-    margin-top: 1px;
-  }
-
-  .jr-cart-item-price {
-    font-size: 7px;
-  }
-
-  .jr-cart-quantity {
-    height: 20px;
-
-    min-width: 57px;
-  }
-
-  .jr-cart-quantity button {
-    width: 18px;
-    height: 19px;
-
-    flex-basis: 18px;
-
-    font-size: 10px;
-  }
-
-  .jr-cart-quantity strong {
-    min-width: 16px;
-
-    font-size: 6.5px;
-  }
-
-  .jr-cart-item-right {
-    min-width: 32px;
-
-    gap: 3px;
-  }
-
-  .jr-cart-item-right > strong {
-    font-size: 7px;
-  }
-
-  .jr-cart-remove {
-    width: 17px;
-    height: 17px;
-
-    font-size: 14px;
-  }
-
-  .jr-cart-continue {
-    min-height: 24px;
-
-    margin-top: 3px;
-  }
-
-  .jr-cart-summary {
-    margin-top: 3px;
-
-    padding: 6px;
-  }
-
-  .jr-cart-summary-heading {
-    margin-bottom: 2px;
-  }
-
-  .jr-summary-row {
-    min-height: 14px;
-
-    padding: 1px 0;
-  }
-
-  .jr-summary-divider {
-    margin: 2px 0;
-  }
-
-  .jr-summary-total {
-    padding:
-      1px
-      0
-      2px;
-  }
-
-  .jr-summary-total > strong {
-    font-size: 12px;
-  }
-
-  .jr-cart-checkout {
-    min-height: 29px;
-
-    margin-top: 3px;
-
-    font-size: 6px;
-  }
-
-  .jr-cart-checkout b {
-    font-size: 12px;
-  }
-}
-
-
-/* =========================================================
-   EXTRA-WIDE LANDSCAPE
-   ========================================================= */
-
-@media (orientation: landscape) and (min-width: 700px) {
-
-  .jr-cart-page {
-    padding-left: clamp(28px, 6vw, 90px);
-    padding-right: clamp(28px, 6vw, 90px);
-  }
-
-  .jr-cart-items {
-    grid-template-columns:
-      repeat(
-        auto-fit,
-        minmax(
-          250px,
-          1fr
-        )
-      );
-  }
-}
-
-
-/* =========================================================
-   REDUCED MOTION
+   ACCESSIBILITY
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
-
   .jr-cart-back,
   .jr-cart-checkout,
   .jr-cart-primary-button,
-  .jr-cart-remove {
+  .jr-cart-remove,
+  .jr-cart-quantity button {
     transition: none;
+  }
+}
+
+/* =========================================================
+   SAFE AREA
+   ========================================================= */
+
+@supports (padding: max(0px)) {
+  .jr-cart-page {
+    padding-left: max(
+      var(--jr-cart-x),
+      env(safe-area-inset-left, 0px)
+    );
+
+    padding-right: max(
+      var(--jr-cart-x),
+      env(safe-area-inset-right, 0px)
+    );
+
+    padding-bottom: max(
+      5.5rem,
+      calc(5.5rem + env(safe-area-inset-bottom, 0px))
+    );
   }
 }
