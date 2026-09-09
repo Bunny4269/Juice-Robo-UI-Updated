@@ -22,10 +22,15 @@ const DEFAULT_ORG_ID =
    ============================================================ */
 
 const JR_API_KEY =
-  import.meta.env.VITE_JR_API_KEY || "";
+  import.meta.env.VITE_JR_API_KEY ||
+  import.meta.env.VITE_JUICE_ROBO_API_KEY ||
+  "";
 
 const JR_API_KEY_SECRET =
-  import.meta.env.VITE_JR_API_KEY_SECRET || "";
+  import.meta.env.VITE_JR_API_KEY_SECRET ||
+  import.meta.env.VITE_JR_API_SECRET ||
+  import.meta.env.VITE_JUICE_ROBO_API_KEY_SECRET ||
+  "";
 
 
 /* ============================================================
@@ -427,6 +432,19 @@ function normalizeError(
   }
 
 
+  if (status === 401) {
+    return (
+      "Juice Robo authentication failed (401). " +
+      "Check the configured API credentials and stored login session."
+    );
+  }
+
+  if (status === 403) {
+    return (
+      "Juice Robo access was forbidden (403)."
+    );
+  }
+
   return (
     `Juice Robo request failed (${status})`
   );
@@ -458,14 +476,23 @@ async function request(
 
 
   /*
-   * IMPORTANT:
+   * Juice Robo legacy API credentials.
    *
-   * Legacy Juice Robo API authentication
-   * uses these two headers.
-   *
-   * We intentionally DO NOT attach
-   * Authorization: Bearer.
+   * A logged-in session may also have an access token.
+   * Send that token as Bearer authentication unless this
+   * request explicitly uses skipAuth (the login request).
    */
+  const storedToken =
+    getStoredToken();
+
+  const bearerToken =
+    storedToken
+      ? (
+          /^Bearer\s/i.test(storedToken)
+            ? storedToken
+            : `Bearer ${storedToken}`
+        )
+      : "";
 
   const headers = {
     Accept:
@@ -484,9 +511,22 @@ async function request(
         }
       : {}),
 
+    ...(options.skipAuth
+      ? {}
+      : bearerToken
+        ? {
+            Authorization:
+              bearerToken,
+          }
+        : {}),
+
     ...(options.headers || {}),
   };
 
+  if (options.skipAuth) {
+    delete headers.Authorization;
+    delete headers.authorization;
+  }
 
   const method =
     options.method ||
@@ -526,13 +566,17 @@ async function request(
 
 
   try {
+    const fetchOptions = {
+      ...options,
+      headers,
+    };
+
+    delete fetchOptions.skipAuth;
+
     response =
       await fetch(
         url,
-        {
-          ...options,
-          headers,
-        }
+        fetchOptions
       );
 
   } catch (error) {
@@ -636,73 +680,70 @@ async function request(
 /* ============================================================
    PRODUCT HELPERS
    ============================================================ */
-
-function getVariant(
-  item
-) {
+function getVariant(item) {
   if (
     item?._variant &&
-    typeof item._variant ===
-      "object"
+    typeof item._variant === "object"
   ) {
     return item._variant;
   }
 
-
   if (
     item?.variant &&
-    typeof item.variant ===
-      "object"
+    typeof item.variant === "object"
   ) {
     return item.variant;
   }
 
-
   const variants =
-    Array.isArray(
-      item?.variants
-    )
-      ? item.variants
-      : [];
-
+    Array.isArray(item?.lstVariants)
+      ? item.lstVariants
+      : Array.isArray(item?.variants)
+        ? item.variants
+        : [];
 
   return (
     variants.find(
       (variant) =>
         variant &&
-        variant.isAvailable !==
-          false
+        variant.quantity !== 0 &&
+        variant.isAvailable !== false &&
+        variant.is_available !== false
     ) ||
     variants[0] ||
     item
   );
 }
-
-
-function normalizeProduct(
-  item
-) {
+/* ============================================================
+    PRODUCT NORMALIZATION
+    ============================================================ */
+function normalizeProduct(item) {
   if (
     !item ||
-    typeof item !==
-      "object"
+    typeof item !== "object"
   ) {
     return null;
   }
 
-
+  /*
+   * The Item Master API currently returns variants in
+   * `lstVariants`. Keep support for `variants` as well.
+   */
   const variants =
-    Array.isArray(
-      item.variants
-    )
-      ? item.variants
-      : [];
-
+    Array.isArray(item?.lstVariants)
+      ? item.lstVariants
+      : Array.isArray(item?.variants)
+        ? item.variants
+        : [];
 
   const availableVariant =
     getVariant(item);
 
-
+  /*
+   * IMPORTANT:
+   * The backend's variantId is the identifier required by
+   * the Order Master cart API.
+   */
   const variantId =
     Number(
       firstDefined(
@@ -710,41 +751,47 @@ function normalizeProduct(
         availableVariant?.variant_id,
         availableVariant?.id,
         item?.variantId,
+        item?.variant_id,
         item?.id,
+        item?.itemId,
         0
       )
     );
 
-
   if (!variantId) {
+    console.warn(
+      "[Juice Robo] Product skipped — no variantId:",
+      item
+    );
+
     return null;
   }
-
 
   const displayName =
     String(
       firstDefined(
         item?.itemName,
+        item?.displayName,
         item?.name,
-        availableVariant?.itemName,
+        item?.productName,
+        availableVariant?.variantName,
         availableVariant?.name,
-        "Juice"
+        "Product"
       )
-    );
-
+    ).trim();
 
   const description =
     String(
       firstDefined(
+        item?.desc,
+        item?.displayDescription,
         item?.itemDesc,
         item?.description,
-        item?.desc,
         availableVariant?.variantDesc,
         availableVariant?.description,
-        "Fresh sugarcane juice."
+        ""
       )
-    );
-
+    ).trim();
 
   const price =
     Number(
@@ -759,7 +806,6 @@ function normalizeProduct(
       )
     );
 
-
   const imageUrl =
     firstDefined(
       availableVariant?.variantPhoto,
@@ -773,7 +819,6 @@ function normalizeProduct(
       null
     );
 
-
   const storeId =
     clean(
       firstDefined(
@@ -783,8 +828,27 @@ function normalizeProduct(
       )
     );
 
+  /*
+   * Do not treat quantity === 0 as unavailable.
+   *
+   * The current Item Master response uses quantity: 0,
+   * while the product itself is still returned by the API.
+   */
+  const isAvailable =
+    availableVariant?.isAvailable !== false &&
+    availableVariant?.is_available !== false &&
+    item?.isAvailable !== false &&
+    item?.is_available !== false;
 
   return {
+    /*
+     * Preserve the complete backend item.
+     */
+    ...item,
+
+    /*
+     * Frontend-compatible identifiers.
+     */
     id:
       variantId,
 
@@ -792,53 +856,112 @@ function normalizeProduct(
       firstDefined(
         item?.itemId,
         item?.item_id,
-        item?.id,
         null
       ),
 
     variantId,
 
+    /*
+     * Frontend display fields.
+     */
     name:
       displayName,
 
+    displayName:
+      displayName,
+
+    itemName:
+      firstDefined(
+        item?.itemName,
+        displayName
+      ),
+
     description,
 
+    displayDescription:
+      description,
+
+    desc:
+      firstDefined(
+        item?.desc,
+        description
+      ),
+
+    /*
+     * Real backend price.
+     */
     price,
 
+    unitPrice:
+      price,
+
+    /*
+     * Image fields.
+     */
     image_url:
       imageUrl,
 
-    is_available:
-      availableVariant?.isAvailable !==
-        false &&
-      item?.isAvailable !==
-        false,
+    image:
+      imageUrl,
 
+    /*
+     * Availability.
+     */
+    is_available:
+      isAvailable,
+
+    isAvailable:
+      isAvailable,
+
+    /*
+     * Selected location.
+     */
     storeId,
+
+    /*
+     * Preserve the backend variant collection.
+     */
+    lstVariants:
+      variants,
 
     variants,
 
-    _legacyItem:
-      item,
-
+    /*
+     * Preserve useful raw references.
+     */
     _variant:
       availableVariant,
+
+    _legacyItem:
+      item,
   };
 }
 
 
-function normalizeProducts(
-  response
-) {
-  return asArray(
-    response
-  )
+/*
+ * Normalize the complete Item Master response.
+ *
+ * Supported response shapes:
+ *
+ * {
+ *   status: 200,
+ *   message: "Loaded successfully",
+ *   data: [...]
+ * }
+ *
+ * or directly [...]
+ */
+function normalizeProducts(response) {
+  const items =
+    asArray(response);
+
+  return items
     .map(
-      normalizeProduct
+      (item) =>
+        normalizeProduct(item)
     )
     .filter(Boolean);
 }
-
 
 /* ============================================================
    LOCATION HELPERS
@@ -1726,6 +1849,7 @@ export const api = {
     {
       method: "POST",
       body: JSON.stringify(loginPayload),
+      skipAuth: true,
     },
     API_BASE
   );
@@ -1898,52 +2022,79 @@ export const api = {
      PRODUCTS
      ========================================================== */
 
-  products:
-    async () => {
-      let storeId =
-        getStoreId();
+  products: async (
+  requestedStoreId = ""
+) => {
+  let storeId =
+    clean(
+      requestedStoreId
+    );
 
+  if (!storeId) {
+    storeId =
+      getStoreId();
+  }
 
-      if (
-        !storeId
-      ) {
-        const locations =
-          await api.locations();
+  if (!storeId) {
+    const locations =
+      await api.locations();
 
-
-        if (
-          !locations.length
-        ) {
-          throw new Error(
-            "No Juice Robo collection location is available."
-          );
-        }
-
-
-        storeId =
-          saveStoreId(
-            locations[0].storeId
-          );
-      }
-
-
-      const response =
-        await request(
-          `/v1/itemmaster/items/${encodeURIComponent(
-            storeId
-          )}`
-        );
-
-
-      return normalizeProducts(
-        response
+    if (!locations.length) {
+      throw new Error(
+        "No Juice Robo collection location is available."
       );
-    },
+    }
+
+    storeId =
+      saveStoreId(
+        locations[0].storeId
+      );
+  }
+
+  console.log(
+    "[Juice Robo] Loading products:",
+    {
+      storeId,
+      url:
+        `${API_BASE}/v1/itemmaster/items/${encodeURIComponent(
+          storeId
+        )}`,
+    }
+  );
+
+  const response =
+    await request(
+      `/v1/itemmaster/items/${encodeURIComponent(
+        storeId
+      )}`
+    );
+
+  console.log(
+    "[Juice Robo] Raw products API response:",
+    response
+  );
+
+  const normalized =
+    normalizeProducts(
+      response
+    );
+
+  console.log(
+    "[Juice Robo] Normalized products:",
+    normalized
+  );
+
+  return normalized;
+},
 
 
   getProducts:
-    async () =>
-      api.products(),
+    async (
+      storeId = ""
+    ) =>
+      api.products(
+        storeId
+      ),
 
 
   /* ==========================================================
@@ -2037,10 +2188,15 @@ export const api = {
      ========================================================== */
 
   machines:
-    async () => {
+    async (
+      providedLocations = null
+    ) => {
       const locations =
-        await api.locations();
-
+        Array.isArray(
+          providedLocations
+        )
+          ? providedLocations
+          : await api.locations();
 
       return normalizeMachines(
         locations

@@ -118,13 +118,23 @@ function normalizeCart(value) {
         item &&
         typeof item === "object"
     )
-    .map((item) => ({
-      ...item,
-      quantity: Math.max(
-        1,
-        Number(item.quantity || 1)
-      ),
-    }));
+    .map((item) => {
+      const parsedQuantity = Number(
+        item?.quantity ??
+          item?.qty ??
+          item?.count ??
+          1
+      );
+
+      return {
+        ...item,
+        quantity:
+          Number.isFinite(parsedQuantity) &&
+          parsedQuantity > 0
+            ? Math.floor(parsedQuantity)
+            : 1,
+      };
+    });
 }
 
 function readCart(user) {
@@ -770,11 +780,21 @@ export default function App() {
     useMemo(
       () =>
         safeCart.reduce(
-          (sum, item) =>
-            sum +
-            Number(
-              item.quantity || 0
-            ),
+          (sum, item) => {
+            const quantity = Number(
+              item?.quantity || 0
+            );
+
+            return (
+              sum +
+              (
+                Number.isFinite(quantity) &&
+                quantity > 0
+                  ? Math.floor(quantity)
+                  : 0
+              )
+            );
+          },
           0
         ),
       [safeCart]
@@ -834,6 +854,8 @@ export default function App() {
         setLocations(
           loadedLocations
         );
+
+        setError("");
 
         let locationId =
           localStorage.getItem(
@@ -903,11 +925,15 @@ export default function App() {
                 ? loadedProducts
                 : []
             );
+
+            setError("");
           }
         }
 
         const loadedMachines =
-          await api.machines();
+          await api.machines(
+            loadedLocations
+          );
 
         if (!cancelled) {
           setMachines(
@@ -1284,7 +1310,9 @@ export default function App() {
       }
 
       const loadedMachines =
-        await api.machines();
+        await api.machines(
+          loadedLocations
+        );
 
       setMachines(
         loadedMachines
@@ -2322,23 +2350,65 @@ export default function App() {
     };
   }, []);
 
-  /* =======================================================
-     DESKTOP BLOCK
-     ======================================================= */
+/* =======================================================
+   DESKTOP BLOCK
+   ======================================================= */
 
-  if (!isMobileViewport) {
-    return (
-      <div className="jr-desktop-block">
-        <div className="jr-desktop-block-card">
-          <img
-            src={`${ASSET_BASE}desktop-mobile-notice.jpg`}
-            alt="Please use a mobile device to access Juice Robo"
-            className="jr-desktop-notice-image"
-          />
+if (!isMobileViewport) {
+  return (
+    <div className="jr-desktop-block" role="status" aria-live="polite">
+      <div className="jr-desktop-block-content">
+        <div className="jr-desktop-device-icon" aria-hidden="true">
+          <svg
+            viewBox="0 0 64 64"
+            xmlns="http://www.w3.org/2000/svg"
+            focusable="false"
+          >
+            <rect
+              x="17"
+              y="7"
+              width="30"
+              height="50"
+              rx="7"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+            />
+
+            <rect
+              x="22"
+              y="13"
+              width="20"
+              height="34"
+              rx="2"
+              fill="currentColor"
+              opacity="0.08"
+            />
+
+            <circle
+              cx="32"
+              cy="51"
+              r="2"
+              fill="currentColor"
+            />
+          </svg>
         </div>
+
+        <span className="jr-desktop-block-eyebrow">
+          JUICE ROBO
+        </span>
+
+        <h1>Mobile Only</h1>
+
+        <p>
+          This site is optimised for mobile devices.
+          <br />
+          Please access Juice Robo using your mobile phone.
+        </p>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   /* =======================================================
      LOADING
@@ -2350,7 +2420,7 @@ export default function App() {
         <div className="jr-mobile-frame">
           <div className="jr-loading">
             <img
-              src="/assets/juice-logo-plain.jpg"
+              src={`${ASSET_BASE}app_logo.jpg`}
               alt="Juice Robo"
               className="jr-loading-image"
               style={{
@@ -2710,8 +2780,16 @@ export default function App() {
                 selectedMachine
               }
 
+              cart={
+                safeCart
+              }
+
               onProduct={
                 openProduct
+              }
+
+              onUpdate={
+                updateQuantity
               }
 
               productImage={
@@ -3104,8 +3182,41 @@ export default function App() {
         {error &&
           screen !== "login" &&
           screen !== "payment" && (
-            <div className="jr-global-error">
-              {error}
+            <div
+              className="jr-global-error"
+              role="alert"
+              aria-live="polite"
+              style={{
+                position: "fixed",
+                left: "16px",
+                right: "16px",
+                bottom: "92px",
+                zIndex: 1200,
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                minHeight: "46px",
+                padding: "10px 12px",
+                borderRadius: "14px",
+                boxSizing: "border-box",
+              }}
+            >
+              <span className="jr-global-error-icon">
+                !
+              </span>
+
+              <span className="jr-global-error-text">
+                {error}
+              </span>
+
+              <button
+                type="button"
+                className="jr-global-error-close"
+                onClick={() => setError("")}
+                aria-label="Dismiss error"
+              >
+                ×
+              </button>
             </div>
           )}
       </div>
@@ -3237,11 +3348,13 @@ function Header({
   return (
     <header className="jr-header">
       <div className="jr-header-selection">
-        <div className="jr-header-location-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.5" />
-            <circle cx="12" cy="12" r="2.5" fill="currentColor" />
-          </svg>
+        <div
+          className="jr-header-location-icon"
+          aria-hidden="true"
+          role="img"
+          aria-label="Location"
+        >
+          <span className="jr-location-pin">📍</span>
         </div>
 
         {/* ONE COMBINED LOCATION + MACHINE DROPDOWN */}
@@ -3456,7 +3569,7 @@ function BottomNav({
       "pointer",
 
     fontFamily:
-      "Inter, Poppins, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+      "Poppins, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
   };
 
   const iconStyle = {
