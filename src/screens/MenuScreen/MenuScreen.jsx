@@ -525,6 +525,7 @@ export default function MenuScreen({
   cart = [],
   onProduct,
   onUpdate,
+  onAddToCart,
   productImage,
   displayProductName,
   displayDescription,
@@ -666,6 +667,7 @@ export default function MenuScreen({
                 cart={cart}
                 onSelect={onProduct}
                 onUpdate={onUpdate}
+                onAddToCart={onAddToCart}
                 productImage={productImage}
                 displayProductName={displayProductName}
                 displayDescription={displayDescription}
@@ -688,6 +690,7 @@ function ProductCard({
   cart = [],
   onSelect,
   onUpdate,
+  onAddToCart,
   productImage,
   displayProductName,
   displayDescription,
@@ -749,15 +752,38 @@ function ProductCard({
   }
 
   function handlePlus(event) {
+    event.preventDefault();
     event.stopPropagation();
 
     /*
-     * A product that is not yet in the cart still uses the
-     * existing Product Detail flow. This preserves the current
-     * authentication/API behavior for the first add.
+     * FIRST +:
+     * Use App's real add-to-cart flow. This is important because
+     * onUpdate() only updates an item that already exists in the
+     * local cart; it cannot create the first cart item.
+     *
+     * SUBSEQUENT +:
+     * Use the existing quantity update flow.
      */
     if (cartQuantity <= 0) {
-      handleSelect();
+      if (typeof onAddToCart !== "function") {
+        return;
+      }
+
+      const variants = Array.isArray(product?.lstVariants)
+        ? product.lstVariants
+        : Array.isArray(product?.variants)
+          ? product.variants
+          : [];
+
+      const availableVariant =
+        variants.find(
+          (variant) =>
+            variant &&
+            variant?.isAvailable !== false &&
+            variant?.is_available !== false
+        ) || variants[0] || null;
+
+      onAddToCart(product, availableVariant, 1);
       return;
     }
 
@@ -808,21 +834,19 @@ function ProductCard({
           ? "jr-product-card-in-cart"
           : ""
       }`}
-      role="button"
-      tabIndex={0}
-      onClick={handleSelect}
-      onKeyDown={handleCardKeyDown}
-      aria-label={`${name}. ${
-        cartQuantity > 0
-          ? `${cartQuantity} in cart`
-          : "Add to cart"
-      }`}
     >
       {/* =================================================
           IMAGE
          ================================================= */}
 
-      <div className="jr-product-image-wrap">
+      <div
+        className="jr-product-image-wrap"
+        role="button"
+        tabIndex={0}
+        onClick={handleSelect}
+        onKeyDown={handleCardKeyDown}
+        aria-label={`View details for ${name}`}
+      >
         {initialImage ? (
           <>
             <img
@@ -862,7 +886,14 @@ function ProductCard({
          ================================================= */}
 
       <div className="jr-product-info">
-        <div className="jr-product-main">
+        <div
+          className="jr-product-main"
+          role="button"
+          tabIndex={0}
+          onClick={handleSelect}
+          onKeyDown={handleCardKeyDown}
+          aria-label={`View details for ${name}`}
+        >
           <h3>{name}</h3>
 
           {description && <p>{description}</p>}
@@ -885,9 +916,13 @@ function ProductCard({
             }`}
             role="group"
             aria-label={`Quantity for ${name}`}
-            onClick={(event) =>
-              event.stopPropagation()
-            }
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            onPointerDown={(event) => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
+            onTouchStart={(event) => event.stopPropagation()}
           >
             <button
               type="button"

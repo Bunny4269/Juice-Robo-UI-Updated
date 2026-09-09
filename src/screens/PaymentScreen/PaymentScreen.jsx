@@ -157,9 +157,14 @@ export default function PaymentScreen({
         calculatedSubtotal
     ) || 0;
 
+  const grossSubtotal = calculatedSubtotal;
+
+  const calculatedTaxableSubtotal =
+    grossSubtotal / 1.05;
+
   const gstAmount =
     Number(gst ?? 0) ||
-    calculatedSubtotal * 0.12;
+    grossSubtotal - calculatedTaxableSubtotal;
 
   const locationName =
     clean(
@@ -353,7 +358,7 @@ export default function PaymentScreen({
 
         <div className="jr-payment-price-row">
           <span>
-            GST 12%
+            GST 5%
           </span>
 
           <strong>
@@ -373,7 +378,7 @@ export default function PaymentScreen({
             </span>
 
             <small>
-              Inclusive of 12% GST
+              Inclusive of 5% GST
             </small>
           </div>
 
@@ -403,7 +408,7 @@ export default function PaymentScreen({
           </strong>
 
           <p>
-            Your payment is securely processed by Razorpay.
+            Your payment is securely processed through UPI.
             After successful payment, Juice Robo will generate
             your 4-digit collection code.
           </p>

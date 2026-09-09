@@ -1,3 +1,7 @@
+/* =========================================================
+   JUICE ROBO — PROFILE SCREEN
+   ========================================================= */
+
 .jr-profile-page {
   width: 100%;
   min-height: 0;
@@ -37,6 +41,20 @@
   display: none;
 }
 
+/* =========================================================
+   GLOBAL PROFILE RULES
+   ========================================================= */
+
+.jr-profile-page,
+.jr-profile-page * {
+  box-sizing: border-box;
+  color-scheme: light;
+}
+
+.jr-profile-page input,
+.jr-profile-page button {
+  -webkit-tap-highlight-color: transparent;
+}
 
 /* =========================================================
    BACK TO MENU
@@ -51,47 +69,34 @@
 
   min-height: clamp(32px, 8vw, 40px);
 
-  margin:
-    0
-    0
-    clamp(7px, 2vw, 10px);
-
-  padding:
-    0
-    clamp(5px, 1.5vw, 8px);
+  margin: 0 0 clamp(7px, 2vw, 10px);
+  padding: 0 clamp(5px, 1.5vw, 8px);
 
   border: 0;
   border-radius: clamp(6px, 1.8vw, 9px);
 
   background: transparent;
-
   color: #2d8050;
 
   font-family: inherit;
-
   font-size: clamp(11px, 3vw, 14px);
-  line-height: 1.2;
-
+  line-height: 1;
   font-weight: 900;
-
-  letter-spacing: -.01em;
 
   cursor: pointer;
 
   appearance: none;
   -webkit-appearance: none;
 
-  -webkit-tap-highlight-color: transparent;
-
   transition:
-    opacity .15s ease,
-    background .15s ease,
-    transform .15s ease;
+    opacity 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
 }
 
 .jr-profile-page .jr-back-link:hover {
-  opacity: .8;
-  background: rgba(45, 128, 80, .06);
+  opacity: 0.8;
+  background: rgba(45, 128, 80, 0.06);
 }
 
 .jr-profile-page .jr-back-link:active {
@@ -99,10 +104,9 @@
 }
 
 .jr-profile-page .jr-back-link:disabled {
-  opacity: .5;
+  opacity: 0.5;
   cursor: default;
 }
-
 
 /* =========================================================
    EYEBROW
@@ -111,89 +115,66 @@
 .jr-profile-page .jr-eyebrow {
   display: block;
 
-  margin:
-    0
-    0
-    clamp(4px, 1.2vw, 6px);
+  margin: 0 0 clamp(4px, 1.2vw, 6px);
 
   color: #ed7900;
 
   font-size: clamp(8px, 2.2vw, 11px);
   line-height: 1.1;
-
   font-weight: 950;
 
-  letter-spacing: .12em;
-
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-
 
 /* =========================================================
    PAGE TITLE
    ========================================================= */
 
 .jr-profile-page .jr-page-title {
-  margin:
-    0
-    0
-    clamp(13px, 3.5vw, 18px);
+  margin: 0 0 clamp(13px, 3.5vw, 18px);
 
   color: #121212;
 
   font-size: clamp(27px, 8vw, 38px);
-  line-height: .94;
-
+  line-height: 0.94;
   font-weight: 950;
 
-  letter-spacing: -.065em;
+  letter-spacing: -0.065em;
 }
 
 .jr-profile-page .jr-page-title em {
   color: #2d8050;
-
   font-style: normal;
 }
 
-
 /* =========================================================
-   PROFILE IDENTITY
+   PROFILE HERO
    ========================================================= */
 
 .jr-profile-hero {
   width: 100%;
-
   min-height: clamp(60px, 15vw, 70px);
-
-  box-sizing: border-box;
 
   display: flex;
   align-items: center;
 
   gap: clamp(9px, 2.7vw, 13px);
 
-  margin:
-    0
-    0
-    clamp(12px, 3.2vw, 16px);
+  margin: 0 0 clamp(12px, 3.2vw, 16px);
 
   padding:
     clamp(7px, 2vw, 10px)
     clamp(8px, 2.5vw, 12px);
 
+  border: 1px solid #eeeade;
   border-radius: clamp(11px, 3vw, 15px);
 
   background: #fffdf8;
 
-  border:
-    1px solid
-    #eeeade;
-
   box-shadow:
-    0 4px 12px
-    rgba(36, 62, 39, .035);
+    0 4px 12px rgba(36, 62, 39, 0.035);
 }
-
 
 /* =========================================================
    AVATAR
@@ -202,14 +183,12 @@
 .jr-profile-avatar {
   width: clamp(40px, 11vw, 48px);
   height: clamp(40px, 11vw, 48px);
-
   min-width: clamp(40px, 11vw, 48px);
 
   display: grid;
   place-items: center;
 
-  box-sizing: border-box;
-
+  border: 1px solid #f5dfbb;
   border-radius: 50%;
 
   background:
@@ -219,22 +198,15 @@
       #ffebc9
     );
 
-  border:
-    1px solid
-    #f5dfbb;
-
   color: #ed7900;
 
   font-size: clamp(13px, 3.8vw, 17px);
   line-height: 1;
-
   font-weight: 950;
 
   box-shadow:
-    inset 0 0 0 3px
-    rgba(255,255,255,.6);
+    inset 0 0 0 3px rgba(255, 255, 255, 0.6);
 }
-
 
 /* =========================================================
    PROFILE NAME / EMAIL
@@ -242,7 +214,6 @@
 
 .jr-profile-hero > div:last-child {
   min-width: 0;
-
   flex: 1;
 
   display: flex;
@@ -253,14 +224,13 @@
 
 .jr-profile-hero strong {
   display: block;
-
+  min-width: 0;
   overflow: hidden;
 
   color: #1e1e1e;
 
   font-size: clamp(12px, 3.4vw, 16px);
   line-height: 1.1;
-
   font-weight: 900;
 
   white-space: nowrap;
@@ -269,488 +239,44 @@
 
 .jr-profile-hero small {
   display: block;
-
   max-width: 100%;
-
   overflow: hidden;
 
   color: #898983;
 
   font-size: clamp(8px, 2.2vw, 11px);
   line-height: 1.2;
-
   font-weight: 600;
 
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-
 /* =========================================================
-   ACCOUNT / EDIT CARD
+   PROFILE ACTION AREA
    ========================================================= */
 
-.jr-account-card {
+.jr-profile-page .jr-profile-actions {
   width: 100%;
 
-  box-sizing: border-box;
-
-  margin:
-    0
-    0
-    clamp(10px, 2.8vw, 13px);
-
-  padding:
-    clamp(11px, 3vw, 15px);
-
-  border:
-    1px solid
-    #e3e3dc;
-
-  border-radius: clamp(12px, 3vw, 16px);
-
-  background: #ffffff;
-
-  box-shadow:
-    0 5px 16px
-    rgba(29, 52, 33, .045);
-
-  transition:
-    border-color .2s ease,
-    box-shadow .2s ease;
-}
-
-.jr-account-card-open {
-  border-color: #d5e4d5;
-
-  box-shadow:
-    0 7px 20px
-    rgba(45, 128, 80, .07);
-}
-
-
-/* =========================================================
-   EDIT ACCOUNT HEADER
-   ========================================================= */
-
-.jr-account-card-heading {
-  width: 100%;
-
-  min-height: clamp(42px, 11vw, 48px);
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: clamp(9px, 2.5vw, 13px);
-
-  margin: 0;
-  padding: 0;
-
-  border: 0;
-
-  background: transparent;
-
-  font-family: inherit;
-
-  text-align: left;
-
-  cursor: pointer;
-
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-.jr-account-edit-toggle {
-  color: #171717;
-}
-
-.jr-account-edit-toggle:disabled {
-  cursor: default;
-  opacity: .65;
-}
-
-
-/* =========================================================
-   ACCOUNT HEADER TEXT
-   ========================================================= */
-
-.jr-account-edit-toggle > div {
-  min-width: 0;
-
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
 
   display: flex;
   flex-direction: column;
 
-  align-items: flex-start;
-
-  gap: clamp(2px, .8vw, 4px);
+  gap: 0;
 }
-
-.jr-account-edit-toggle .jr-eyebrow {
-  margin:
-    0
-    0
-    1px;
-
-  color: #4e8b65;
-
-  font-size: clamp(8px, 2vw, 10px);
-}
-
-.jr-account-edit-toggle strong {
-  display: block;
-
-  color: #1b1b1b;
-
-  font-size: clamp(13px, 3.7vw, 17px);
-  line-height: 1.1;
-
-  font-weight: 950;
-
-  letter-spacing: -.015em;
-}
-
-.jr-account-edit-toggle small {
-  display: block;
-
-  color: #969690;
-
-  font-size: clamp(8px, 2.15vw, 11px);
-  line-height: 1.25;
-
-  font-weight: 600;
-}
-
 
 /* =========================================================
-   DROPDOWN ARROW
-   ========================================================= */
-
-.jr-account-chevron {
-  width: clamp(28px, 7.5vw, 34px);
-  height: clamp(28px, 7.5vw, 34px);
-
-  min-width: clamp(28px, 7.5vw, 34px);
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 50%;
-
-  background: #eef7ed;
-
-  color: #2d8050;
-
-  font-size: clamp(13px, 3.5vw, 17px);
-  line-height: 1;
-
-  font-weight: 950;
-
-  transition:
-    transform .22s ease,
-    background .2s ease;
-}
-
-.jr-account-edit-toggle:active
-.jr-account-chevron {
-  background: #e3f1e1;
-}
-
-.jr-account-chevron-open {
-  transform: rotate(180deg);
-
-  background: #e5f2e3;
-}
-
-
-/* =========================================================
-   DROPDOWN CONTENT
-   ========================================================= */
-
-.jr-account-edit-panel {
-  margin-top: clamp(10px, 2.8vw, 13px);
-
-  padding-top: clamp(11px, 3vw, 14px);
-
-  border-top:
-    1px solid
-    #ecece6;
-
-  animation:
-    jrProfileDropdownOpen
-    .2s
-    ease-out;
-}
-
-@keyframes jrProfileDropdownOpen {
-  from {
-    opacity: 0;
-
-    transform:
-      translateY(-5px);
-  }
-
-  to {
-    opacity: 1;
-
-    transform:
-      translateY(0);
-  }
-}
-
-
-/* =========================================================
-   FORM
-   ========================================================= */
-
-.jr-profile-page .jr-form {
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: clamp(9px, 2.5vw, 12px);
-
-  margin: 0;
-}
-
-
-/* =========================================================
-   FORM LABEL
-   ========================================================= */
-
-.jr-profile-page .jr-form label {
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: clamp(4px, 1.2vw, 6px);
-
-  box-sizing: border-box;
-
-  color: #777771;
-
-  font-size: clamp(8px, 2.2vw, 11px);
-  line-height: 1.1;
-
-  font-weight: 950;
-
-  letter-spacing: .09em;
-
-  text-transform: uppercase;
-}
-
-
-/* =========================================================
-   INPUT
-   ========================================================= */
-
-.jr-profile-page .jr-form input {
-  width: 100%;
-
-  height: clamp(40px, 10.5vw, 48px);
-
-  box-sizing: border-box;
-
-  margin: 0;
-
-  padding:
-    0
-    clamp(10px, 3vw, 14px);
-
-  border:
-    1px solid
-    #deded7;
-
-  border-radius: clamp(8px, 2.4vw, 11px);
-
-  outline: none;
-
-  background: #fff;
-
-  color: #202020;
-
-  font-family: inherit;
-
-  font-size: clamp(11px, 3vw, 14px);
-  line-height: 1;
-
-  font-weight: 700;
-
-  appearance: none;
-  -webkit-appearance: none;
-
-  transition:
-    border-color .15s ease,
-    box-shadow .15s ease;
-}
-
-.jr-profile-page .jr-form input:hover {
-  border-color: #d2d8d1;
-}
-
-.jr-profile-page .jr-form input:focus {
-  border-color: #6fa17e;
-
-  box-shadow:
-    0 0 0 3px
-    rgba(45, 128, 80, .08);
-}
-
-.jr-profile-page .jr-form input::placeholder {
-  color: #aaa9a3;
-}
-
-.jr-profile-page .jr-form input:disabled {
-  background: #f7f7f3;
-
-  color: #8f8f89;
-
-  cursor: not-allowed;
-}
-
-
-/* =========================================================
-   SAVE PROFILE BUTTON
-   ========================================================= */
-
-.jr-profile-page
-.jr-button.jr-button-primary.jr-full {
-  width: 100%;
-
-  min-height: clamp(42px, 11vw, 50px);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: clamp(10px, 3vw, 14px);
-
-  box-sizing: border-box;
-
-  margin:
-    2px
-    0
-    0;
-
-  padding:
-    0
-    clamp(12px, 3.5vw, 16px);
-
-  border: 0;
-
-  border-radius: clamp(9px, 2.5vw, 12px);
-
-  background:
-    linear-gradient(
-      135deg,
-      #2d8950,
-      #278149
-    );
-
-  color: #ffffff;
-
-  font-family: inherit;
-
-  font-size: clamp(10px, 2.8vw, 14px);
-  line-height: 1;
-
-  font-weight: 950;
-
-  letter-spacing: .04em;
-
-  cursor: pointer;
-
-  appearance: none;
-  -webkit-appearance: none;
-
-  box-shadow:
-    0 7px 16px
-    rgba(45, 137, 80, .18);
-
-  transition:
-    transform .12s ease,
-    box-shadow .15s ease,
-    opacity .15s ease;
-}
-
-.jr-profile-page
-.jr-button.jr-button-primary.jr-full:hover {
-  box-shadow:
-    0 9px 20px
-    rgba(45, 137, 80, .22);
-}
-
-.jr-profile-page
-.jr-button.jr-button-primary.jr-full:active {
-  transform: translateY(1px);
-
-  box-shadow:
-    0 4px 10px
-    rgba(45, 137, 80, .14);
-}
-
-.jr-profile-page
-.jr-button.jr-button-primary.jr-full:disabled {
-  opacity: .55;
-
-  cursor: default;
-
-  box-shadow: none;
-}
-
-.jr-profile-page
-.jr-button.jr-button-primary.jr-full span {
-  font-size: clamp(15px, 4.5vw, 19px);
-  line-height: 1;
-
-  font-weight: 500;
-}
-
-
-/* =========================================================
-   FORM ERROR
-   ========================================================= */
-
-.jr-profile-page .jr-form-error {
-  width: 100%;
-
-  box-sizing: border-box;
-
-  padding:
-    clamp(8px, 2.3vw, 11px)
-    clamp(9px, 2.7vw, 12px);
-
-  border:
-    1px solid
-    #efcccc;
-
-  border-radius: clamp(7px, 2vw, 9px);
-
-  background: #fff6f6;
-
-  color: #ad4141;
-
-  font-size: clamp(9px, 2.5vw, 12px);
-  line-height: 1.4;
-
-  font-weight: 700;
-}
-
-
-/* =========================================================
-   ACTION CARDS
+   ACCOUNT ACTION CARDS
    ========================================================= */
 
 .jr-profile-page .jr-account-action {
   width: 100%;
 
   min-height: clamp(60px, 16vw, 70px);
-
-  box-sizing: border-box;
+  flex: 0 0 auto;
 
   display: grid;
 
@@ -763,27 +289,19 @@
 
   column-gap: clamp(8px, 2.5vw, 11px);
 
-  margin:
-    0
-    0
-    clamp(8px, 2.5vw, 11px);
+  margin: 0 0 clamp(8px, 2.5vw, 11px);
 
   padding:
     clamp(8px, 2.5vw, 11px)
     clamp(9px, 2.8vw, 12px);
 
-  border:
-    1px solid
-    #e4e4dd;
-
+  border: 1px solid #e4e4dd;
   border-radius: clamp(12px, 3vw, 16px);
 
   background: #ffffff;
-
   color: #222222;
 
   font-family: inherit;
-
   text-align: left;
 
   cursor: pointer;
@@ -792,21 +310,20 @@
   -webkit-appearance: none;
 
   box-shadow:
-    0 4px 12px
-    rgba(29, 52, 33, .035);
+    0 4px 12px rgba(29, 52, 33, 0.035);
 
   transition:
-    border-color .15s ease,
-    box-shadow .15s ease,
-    transform .12s ease;
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease,
+    background 0.15s ease;
 }
 
 .jr-profile-page .jr-account-action:hover {
   border-color: #d7ded5;
 
   box-shadow:
-    0 6px 15px
-    rgba(29, 52, 33, .055);
+    0 6px 15px rgba(29, 52, 33, 0.055);
 }
 
 .jr-profile-page .jr-account-action:active {
@@ -814,22 +331,19 @@
 }
 
 .jr-profile-page .jr-account-action:disabled {
-  opacity: .6;
-
+  opacity: 0.6;
   cursor: default;
 }
 
-
 /* =========================================================
-   ACTION ICON
+   NORMAL ACTION ICON
    ========================================================= */
 
 .jr-profile-page
-.jr-account-action
+.jr-account-action:not(.jr-account-action-danger)
 > span:first-child {
   width: clamp(36px, 10vw, 42px);
   height: clamp(36px, 10vw, 42px);
-
   min-width: clamp(36px, 10vw, 42px);
 
   display: grid;
@@ -838,18 +352,15 @@
   border-radius: clamp(9px, 2.5vw, 11px);
 
   background: #eef7ed;
-
   color: #2d8050;
 
   font-size: clamp(14px, 4vw, 18px);
   line-height: 1;
-
   font-weight: 900;
 }
 
-
 /* =========================================================
-   ACTION TEXT
+   ACTION CONTENT
    ========================================================= */
 
 .jr-profile-page
@@ -867,14 +378,12 @@
 .jr-account-action
 strong {
   display: block;
-
   overflow: hidden;
 
   color: #242424;
 
   font-size: clamp(11px, 3vw, 15px);
   line-height: 1.1;
-
   font-weight: 950;
 
   white-space: nowrap;
@@ -885,20 +394,17 @@ strong {
 .jr-account-action
 small {
   display: block;
-
   overflow: hidden;
 
   color: #8b8b85;
 
   font-size: clamp(8px, 2.2vw, 11px);
   line-height: 1.2;
-
   font-weight: 600;
 
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
 
 /* =========================================================
    ACTION ARROW
@@ -911,183 +417,90 @@ small {
 
   font-size: clamp(15px, 4vw, 19px);
   line-height: 1;
-
   font-weight: 500;
 
   text-align: center;
 }
 
-
 /* =========================================================
-   MY ORDERS
+   LOGOUT ACTION
+   IMPORTANT:
+   The old CSS used display:none !important here, which
+   completely hid the Logout button from the screen.
    ========================================================= */
 
 .jr-profile-page
-.jr-account-action:not(.jr-account-action-danger)
-> span:first-child {
-  background: #edf7ec;
+.jr-account-action.jr-account-action-danger {
+  display: grid !important;
 
-  color: #2c8050;
-}
+  margin-top: auto;
 
-.jr-profile-page
-.jr-account-action:not(.jr-account-action-danger)
-> b {
-  color: #777771;
-}
+  border-color: #f0cccc;
+  background: #fff8f8;
 
-
-/* =========================================================
-   LOGOUT — COMPACT PROFILE BUTTON
-   ========================================================= */
-
-.jr-profile-page
-.jr-account-action-danger {
-  /*
-   * Keep Logout in the same position on the Profile page.
-   * Only make the control visually smaller and simpler.
-   */
-  width: fit-content;
-
-  min-width: clamp(88px, 23vw, 108px);
-  min-height: clamp(36px, 9vw, 42px);
-
-  grid-template-columns:
-    clamp(27px, 7vw, 32px)
-    minmax(0, 1fr);
-
-  column-gap:
-    clamp(7px, 2vw, 9px);
-
-  margin:
-    0
-    0
-    clamp(10px, 3vw, 14px);
-
-  padding:
-    clamp(5px, 1.5vw, 7px)
-    clamp(8px, 2.5vw, 11px);
-
-  border-color: #ecdede;
-
-  border-radius:
-    clamp(9px, 2.5vw, 12px);
-
-  background:
-    linear-gradient(
-      180deg,
-      #fffdfd,
-      #fff9f9
-    );
+  color: #c91c1c;
 
   box-shadow:
-    0 3px 9px
-    rgba(160, 70, 70, .035);
+    0 4px 12px rgba(198, 40, 40, 0.045);
 }
 
 .jr-profile-page
-.jr-account-action-danger:hover {
-  border-color: #e5cfcf;
+.jr-account-action.jr-account-action-danger:hover {
+  border-color: #e9b7b7;
+  background: #fff4f4;
 
   box-shadow:
-    0 4px 11px
-    rgba(160, 70, 70, .055);
+    0 6px 15px rgba(198, 40, 40, 0.08);
 }
 
 .jr-profile-page
-.jr-account-action-danger:active {
-  transform: translateY(1px);
+.jr-account-action.jr-account-action-danger:active {
+  background: #ffeded;
 }
 
-
-/* Logout icon */
-
 .jr-profile-page
-.jr-account-action-danger
+.jr-account-action.jr-account-action-danger
 > span:first-child {
-  width: clamp(27px, 7vw, 32px);
-  height: clamp(27px, 7vw, 32px);
+  width: clamp(36px, 10vw, 42px);
+  height: clamp(36px, 10vw, 42px);
+  min-width: clamp(36px, 10vw, 42px);
 
-  min-width: clamp(27px, 7vw, 32px);
+  display: grid;
+  place-items: center;
 
-  border-radius:
-    clamp(7px, 2vw, 9px);
+  border-radius: clamp(9px, 2.5vw, 11px);
 
-  background: #fff0f0;
+  background: #ffe5e5;
+  color: #c91c1c;
 
-  color: #c45050;
-
-  font-size:
-    clamp(12px, 3.2vw, 15px);
-
+  font-size: clamp(17px, 4.5vw, 21px);
   line-height: 1;
-}
-
-
-/* Logout text */
-
-.jr-profile-page
-.jr-account-action-danger
-> div {
-  min-width: 0;
-
-  display: flex;
-  align-items: center;
-
-  gap: 0;
-}
-
-.jr-profile-page
-.jr-account-action-danger
-strong {
-  display: block;
-
-  color: #9f4141;
-
-  font-size:
-    clamp(10px, 2.7vw, 13px);
-
-  line-height: 1.1;
-
   font-weight: 900;
-
-  white-space: nowrap;
 }
 
-
-/* Compact Logout has no description or arrow */
+.jr-profile-page
+.jr-account-action.jr-account-action-danger
+strong {
+  color: #b71919;
+}
 
 .jr-profile-page
-.jr-account-action-danger
-small,
+.jr-account-action.jr-account-action-danger
+small {
+  color: #9f6b6b;
+}
+
 .jr-profile-page
-.jr-account-action-danger
+.jr-account-action.jr-account-action-danger
 > b {
-  display: none;
+  color: #c91c1c;
 }
-
 
 /* =========================================================
-   LIGHT MODE ENFORCEMENT
-   ========================================================= */
-
-.jr-profile-page,
-.jr-profile-page * {
-  color-scheme: light;
-}
-
-.jr-profile-page input,
-.jr-profile-page button {
-  -webkit-tap-highlight-color: transparent;
-}
-
-
-/* =========================================================
-   NARROW MOBILE — 360PX AND BELOW
+   NARROW MOBILE
    ========================================================= */
 
 @media (max-width: 360px) {
-
   .jr-profile-page {
     padding:
       9px
@@ -1106,7 +519,6 @@ small,
   .jr-profile-avatar {
     width: 38px;
     height: 38px;
-
     min-width: 38px;
   }
 
@@ -1123,18 +535,15 @@ small,
   > span:first-child {
     width: 36px;
     height: 36px;
-
     min-width: 36px;
   }
 }
-
 
 /* =========================================================
    SHORT MOBILE SCREENS
    ========================================================= */
 
 @media (max-height: 700px) {
-
   .jr-profile-page {
     padding-top: 8px;
     padding-bottom: 16px;
@@ -1146,36 +555,27 @@ small,
 
   .jr-profile-hero {
     min-height: 56px;
-
     margin-bottom: 10px;
   }
 
   .jr-profile-avatar {
     width: 38px;
     height: 38px;
-
     min-width: 38px;
-  }
-
-  .jr-account-card {
-    margin-bottom: 9px;
   }
 
   .jr-profile-page
   .jr-account-action {
     min-height: 56px;
-
     margin-bottom: 7px;
   }
 }
-
 
 /* =========================================================
    LARGE MOBILE HEIGHT
    ========================================================= */
 
 @media (min-height: 780px) {
-
   .jr-profile-page {
     padding-bottom: 28px;
   }
@@ -1188,172 +588,42 @@ small,
     margin-bottom: 15px;
   }
 
-  .jr-account-card {
-    margin-bottom: 12px;
-  }
-
   .jr-profile-page
   .jr-account-action {
     min-height: 66px;
   }
 }
-/* =========================================================
-   LOGOUT — FINAL RESPONSIVE OVERRIDE
-   ========================================================= */
-
-.jr-profile-page
-.jr-account-action-danger {
-  width: fit-content;
-  max-width: 100%;
-}
-
-.jr-profile-page
-.jr-account-action-danger
-> div {
-  flex: 0 0 auto;
-}
-
 
 /* =========================================================
-   JUICE ROBO — LOGOUT BLEND OVERRIDE
-   Match Logout to the neutral account-card UI while keeping
-   the destructive action identifiable through subtle red.
+   LANDSCAPE MOBILE
    ========================================================= */
 
-.jr-profile-page .jr-account-action-danger {
-  width: 100%;
-  max-width: none;
+@media
+  (orientation: landscape)
+  and (min-width: 560px)
+  and (max-height: 420px) {
 
-  min-height: clamp(48px, 12vw, 56px);
-
-  margin: 0;
-  padding: clamp(6px, 1.8vw, 8px) clamp(9px, 2.8vw, 12px);
-
-  border: 1px solid #e5e5df;
-  border-radius: clamp(10px, 2.8vw, 13px);
-
-  background: #ffffff;
-
-  box-shadow: 0 4px 13px rgba(35, 55, 37, .035);
-
-  transition:
-    border-color .15s ease,
-    background .15s ease,
-    box-shadow .15s ease,
-    transform .12s ease;
-}
-
-.jr-profile-page .jr-account-action-danger:hover {
-  border-color: #deded8;
-  background: #fff;
-  box-shadow: 0 5px 15px rgba(35, 55, 37, .055);
-}
-
-.jr-profile-page .jr-account-action-danger:active {
-  transform: translateY(1px);
-  background: #fafbf8;
-}
-
-.jr-profile-page .jr-account-action-danger > span:first-child,
-.jr-profile-page .jr-account-action-danger .jr-account-action-icon {
-  width: clamp(32px, 8.5vw, 38px);
-  height: clamp(32px, 8.5vw, 38px);
-  min-width: clamp(32px, 8.5vw, 38px);
-
-  display: grid;
-  place-items: center;
-
-  border-radius: clamp(8px, 2.2vw, 10px);
-
-  background: #f8eeee;
-  color: #b95555;
-
-  font-size: clamp(13px, 3.5vw, 16px);
-  line-height: 1;
-}
-
-.jr-profile-page .jr-account-action-danger > div,
-.jr-profile-page .jr-account-action-danger .jr-account-action-content {
-  min-width: 0;
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-}
-
-.jr-profile-page .jr-account-action-danger strong,
-.jr-profile-page .jr-account-action-danger .jr-account-action-content strong {
-  color: #444844;
-  font-size: clamp(11px, 3vw, 14px);
-  line-height: 1.1;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.jr-profile-page .jr-account-action-danger small,
-.jr-profile-page .jr-account-action-danger > b,
-.jr-profile-page .jr-account-action-danger .jr-account-action-arrow {
-  display: none;
-}
-
-/* 613 × 376 landscape */
-@media (orientation: landscape) and (min-width: 560px) and (max-height: 420px) {
-  .jr-profile-page .jr-account-action-danger {
-    min-height: 42px;
-    padding: 5px 8px;
-    border-radius: 10px;
+  .jr-profile-page
+  .jr-account-action {
+    min-height: 52px;
   }
 
-  .jr-profile-page .jr-account-action-danger > span:first-child,
-  .jr-profile-page .jr-account-action-danger .jr-account-action-icon {
-    width: 31px;
-    height: 31px;
-    min-width: 31px;
-    border-radius: 8px;
-    font-size: 13px;
-  }
-
-  .jr-profile-page .jr-account-action-danger strong,
-  .jr-profile-page .jr-account-action-danger .jr-account-action-content strong {
-    font-size: 11px;
+  .jr-profile-page
+  .jr-account-action
+  > span:first-child {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
   }
 }
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
-  .jr-profile-page .jr-account-action-danger {
+  .jr-profile-page .jr-back-link,
+  .jr-profile-page .jr-account-action {
     transition: none !important;
   }
-}
-
-
-/* =========================================================
-   LOGOUT — RED ACCENT
-   ========================================================= */
-
-.jr-profile-page .jr-account-action-danger {
-  border-color: #f0cccc !important;
-  background: #ffffff !important;
-  color: #c62828 !important;
-  box-shadow: 0 4px 13px rgba(198, 40, 40, .045) !important;
-}
-
-.jr-profile-page .jr-account-action-danger:hover {
-  border-color: #e7b7b7 !important;
-  background: #fff8f8 !important;
-  box-shadow: 0 5px 15px rgba(198, 40, 40, .07) !important;
-}
-
-.jr-profile-page .jr-account-action-danger:active {
-  background: #fff1f1 !important;
-}
-
-.jr-profile-page .jr-account-action-danger > span:first-child,
-.jr-profile-page .jr-account-action-danger .jr-account-action-icon {
-  background: #fdeaea !important;
-  color: #c62828 !important;
-  border-color: #f3cccc !important;
-}
-
-.jr-profile-page .jr-account-action-danger strong,
-.jr-profile-page .jr-account-action-danger .jr-account-action-content strong {
-  color: #c62828 !important;
 }

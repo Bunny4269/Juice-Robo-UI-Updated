@@ -2,7 +2,7 @@ import "./CartScreen.css";
 
 /* =========================================================
    JUICE ROBO — CART SCREEN
-   GST = 12%
+   GST = 5%
    ========================================================= */
 
 export default function CartScreen({
@@ -120,7 +120,7 @@ export default function CartScreen({
     0
   );
 
-  const GST_RATE = 0.12;
+  const GST_RATE = 0.05;
 
   const subtotal = grossTotal / (1 + GST_RATE);
   const gst = grossTotal - subtotal;
@@ -490,7 +490,7 @@ export default function CartScreen({
           <span>
             GST
             <small>
-              {" "}12%
+              {" "}5%
             </small>
           </span>
 
@@ -514,7 +514,7 @@ export default function CartScreen({
             </span>
 
             <small>
-              Inclusive of 12% GST
+              Inclusive of 5% GST
             </small>
           </div>
 

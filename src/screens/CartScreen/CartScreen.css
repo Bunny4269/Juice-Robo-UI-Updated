@@ -1,14 +1,6 @@
-/* =========================================================
-   JUICE ROBO — CART SCREEN
-   FLUID SMARTPHONE DESIGN
-   ---------------------------------------------------------
-   No device-specific width breakpoints.
-   Layout responds to available width and viewport height.
-   ========================================================= */
-
 .jr-cart-page {
-  --jr-cart-x: clamp(0.5rem, 3.2vw, 1.125rem);
-  --jr-cart-gap: clamp(0.375rem, 2vw, 0.625rem);
+  --jr-cart-x: clamp(0.625rem, 3.2vw, 1.125rem);
+  --jr-cart-gap: clamp(0.5rem, 2vw, 0.75rem);
 
   width: 100%;
   min-width: 0;
@@ -16,7 +8,7 @@
   box-sizing: border-box;
 
   padding:
-    clamp(0.5rem, 2.8vw, 0.75rem)
+    clamp(0.625rem, 2.8vw, 0.875rem)
     var(--jr-cart-x)
     calc(5.5rem + env(safe-area-inset-bottom, 0px));
 
@@ -33,6 +25,7 @@
 
   overflow-x: clip;
   overflow-y: auto;
+
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -50,19 +43,25 @@
   align-items: center;
   justify-content: flex-start;
 
-  min-height: clamp(2rem, 8vw, 2.375rem);
+  min-height: clamp(2.125rem, 8vw, 2.5rem);
 
-  margin: 0 0 clamp(0.3125rem, 1.8vw, 0.5rem);
-  padding: 0 clamp(0.3125rem, 1.8vw, 0.5rem);
+  margin:
+    0
+    0
+    clamp(0.375rem, 1.8vw, 0.5625rem);
+
+  padding:
+    0
+    clamp(0.375rem, 1.8vw, 0.5rem);
 
   border: 0;
-  border-radius: 0.4375rem;
+  border-radius: 0.5rem;
 
   background: transparent;
   color: #2f8050;
 
   font-family: inherit;
-  font-size: clamp(0.5625rem, 2.7vw, 0.875rem);
+  font-size: clamp(0.6875rem, 3vw, 0.875rem);
   line-height: 1.2;
   font-weight: 900;
 
@@ -88,12 +87,16 @@
 
 .jr-cart-page .jr-eyebrow {
   display: block;
+
   margin: 0;
 
   color: #ed7800;
-  font-size: clamp(0.375rem, 1.65vw, 0.5rem);
+
+  font-size: clamp(0.5rem, 2vw, 0.625rem);
   line-height: 1;
+
   font-weight: 950;
+
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -101,16 +104,26 @@
 .jr-cart-heading {
   width: 100%;
   min-width: 0;
-  margin: 0 0 clamp(0.5rem, 2.5vw, 0.75rem);
+
+  margin:
+    0
+    0
+    clamp(0.625rem, 2.5vw, 0.875rem);
 }
 
 .jr-cart-heading h1 {
-  margin: 0.1875rem 0 0;
+  margin:
+    0.25rem
+    0
+    0;
 
   color: #171717;
-  font-size: clamp(1.5rem, 6vw, 2rem);
-  line-height: 0.94;
+
+  font-size: clamp(1.75rem, 7vw, 2.25rem);
+  line-height: 0.96;
+
   font-weight: 950;
+
   letter-spacing: -0.055em;
 }
 
@@ -126,43 +139,75 @@
 .jr-cart-location-card {
   width: 100%;
   min-width: 0;
-  min-height: clamp(3.125rem, 13vw, 4rem);
+
+  min-height:
+    clamp(3.5rem, 14vw, 4.25rem);
 
   box-sizing: border-box;
 
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+
+  grid-template-columns:
+    auto
+    minmax(0, 1fr)
+    auto;
+
   align-items: center;
-  gap: clamp(0.375rem, 2vw, 0.625rem);
 
-  margin: 0 0 clamp(0.5rem, 2.5vw, 0.75rem);
-  padding: clamp(0.4375rem, 2.2vw, 0.625rem);
+  gap:
+    clamp(0.5rem, 2vw, 0.75rem);
 
-  border: 1px solid #e6e6df;
-  border-radius: clamp(0.625rem, 3vw, 0.875rem);
+  margin:
+    0
+    0
+    clamp(0.625rem, 2.5vw, 0.875rem);
+
+  padding:
+    clamp(0.5rem, 2.2vw, 0.75rem);
+
+  border:
+    1px solid #e6e6df;
+
+  border-radius:
+    clamp(0.75rem, 3vw, 0.9375rem);
 
   background: #ffffff;
-  box-shadow: 0 0.125rem 0.5rem rgba(20, 45, 26, 0.025);
+
+  box-shadow:
+    0
+    0.125rem
+    0.5rem
+    rgba(20, 45, 26, 0.025);
 }
 
 .jr-cart-location-icon {
-  width: clamp(1.75rem, 8vw, 2.25rem);
+  width:
+    clamp(2rem, 8vw, 2.5rem);
+
   aspect-ratio: 1;
-  min-width: clamp(1.75rem, 8vw, 2.25rem);
+
+  min-width:
+    clamp(2rem, 8vw, 2.5rem);
 
   display: grid;
   place-items: center;
 
-  border-radius: clamp(0.4375rem, 2.5vw, 0.6875rem);
+  border-radius:
+    clamp(0.5rem, 2.5vw, 0.6875rem);
+
   background: #eef7ed;
-  font-size: clamp(0.6875rem, 3.5vw, 1rem);
+
+  font-size:
+    clamp(0.875rem, 3.5vw, 1.125rem);
 }
 
 .jr-cart-location-copy {
   min-width: 0;
+
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+
+  gap: 0.1875rem;
 }
 
 .jr-cart-location-copy small,
@@ -170,44 +215,69 @@
 .jr-cart-location-copy span {
   min-width: 0;
   max-width: 100%;
+
   overflow: hidden;
+
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .jr-cart-location-copy small {
   color: #999995;
-  font-size: clamp(0.3125rem, 1.5vw, 0.5rem);
+
+  font-size:
+    clamp(0.4375rem, 1.8vw, 0.5625rem);
+
   line-height: 1;
+
   font-weight: 900;
+
   letter-spacing: 0.08em;
+
   text-transform: uppercase;
 }
 
 .jr-cart-location-copy strong {
   color: #222222;
-  font-size: clamp(0.5rem, 2vw, 0.625rem);
-  line-height: 1;
+
+  font-size:
+    clamp(0.6875rem, 2.7vw, 0.8125rem);
+
+  line-height: 1.15;
+
   font-weight: 900;
 }
 
 .jr-cart-location-copy span {
   color: #8b8b87;
-  font-size: clamp(0.34375rem, 1.45vw, 0.4375rem);
-  line-height: 1;
+
+  font-size:
+    clamp(0.4375rem, 1.8vw, 0.5625rem);
+
+  line-height: 1.1;
+
+  font-weight: 600;
 }
 
 .jr-cart-change-button {
   flex: 0 0 auto;
-  padding: 0.375rem 0.25rem;
+
+  padding:
+    0.4375rem
+    0.3125rem;
 
   border: 0;
+
   background: transparent;
   color: #287f46;
 
   font-family: inherit;
-  font-size: clamp(0.375rem, 1.6vw, 0.5rem);
+
+  font-size:
+    clamp(0.5rem, 2vw, 0.625rem);
+
   line-height: 1;
+
   font-weight: 900;
 
   cursor: pointer;
@@ -220,34 +290,57 @@
 .jr-cart-items-header {
   width: 100%;
   min-width: 0;
+
   box-sizing: border-box;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.625rem;
 
-  margin: 0 0 clamp(0.3125rem, 1.5vw, 0.4375rem);
-  padding: 0 0.125rem;
+  gap: 0.75rem;
+
+  margin:
+    0
+    0
+    clamp(0.375rem, 1.5vw, 0.5rem);
+
+  padding:
+    0
+    0.125rem;
 }
 
 .jr-cart-items-header > span {
   color: #777772;
-  font-size: clamp(0.375rem, 1.65vw, 0.5rem);
+
+  font-size:
+    clamp(0.5rem, 2vw, 0.625rem);
+
   line-height: 1;
+
   font-weight: 900;
+
   letter-spacing: 0.08em;
 }
 
 .jr-cart-items-header button {
-  padding: 0.25rem 0.125rem;
+  padding:
+    0.3125rem
+    0.125rem;
+
   border: 0;
+
   background: transparent;
   color: #287f46;
+
   font-family: inherit;
-  font-size: clamp(0.4375rem, 1.8vw, 0.5625rem);
+
+  font-size:
+    clamp(0.5625rem, 2.2vw, 0.6875rem);
+
   line-height: 1;
+
   font-weight: 900;
+
   cursor: pointer;
 }
 
@@ -261,41 +354,55 @@
 
   display: flex;
   flex-direction: column;
+
   gap: var(--jr-cart-gap);
 }
 
 /* =========================================================
    CART ITEM
-   ---------------------------------------------------------
-   Flexible columns prevent overflow on narrow phones.
    ========================================================= */
 
 .jr-cart-item {
   width: 100%;
   min-width: 0;
+
   box-sizing: border-box;
 
   display: grid;
+
   grid-template-columns:
-    clamp(3.75rem, 17vw, 4.875rem)
+    clamp(4.25rem, 18vw, 5.25rem)
     minmax(0, 1fr)
     auto;
 
   align-items: center;
-  gap: clamp(0.375rem, 2vw, 0.625rem);
 
-  padding: clamp(0.375rem, 2vw, 0.5rem);
+  gap:
+    clamp(0.5rem, 2vw, 0.75rem);
 
-  border: 1px solid #e5e5e0;
-  border-radius: clamp(0.625rem, 3vw, 0.875rem);
+  padding:
+    clamp(0.4375rem, 2vw, 0.625rem);
+
+  border:
+    1px solid #e5e5e0;
+
+  border-radius:
+    clamp(0.75rem, 3vw, 0.9375rem);
 
   background: #ffffff;
-  box-shadow: 0 0.125rem 0.4375rem rgba(20, 45, 26, 0.025);
+
+  box-shadow:
+    0
+    0.125rem
+    0.4375rem
+    rgba(20, 45, 26, 0.025);
 }
 
 .jr-cart-item-image {
   width: 100%;
+
   aspect-ratio: 1;
+
   min-width: 0;
 
   box-sizing: border-box;
@@ -304,23 +411,31 @@
   place-items: center;
 
   overflow: hidden;
-  border-radius: clamp(0.4375rem, 2.2vw, 0.625rem);
+
+  border-radius:
+    clamp(0.5rem, 2.2vw, 0.6875rem);
+
   background: #f6f8f2;
 }
 
 .jr-cart-item-image img {
   display: block;
+
   width: 100%;
   height: 100%;
+
   object-fit: contain;
 }
 
 .jr-cart-image-placeholder {
   display: grid;
   place-items: center;
+
   width: 100%;
   height: 100%;
-  font-size: clamp(1.375rem, 7vw, 2rem);
+
+  font-size:
+    clamp(1.5rem, 7vw, 2.125rem);
 }
 
 /* =========================================================
@@ -333,28 +448,41 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: clamp(0.125rem, 0.8vw, 0.1875rem);
+
+  gap:
+    clamp(0.1875rem, 0.8vw, 0.25rem);
 }
 
 .jr-cart-item-type {
   display: block;
+
   color: #ee7900;
-  font-size: clamp(0.3125rem, 1.35vw, 0.4375rem);
+
+  font-size:
+    clamp(0.4375rem, 1.7vw, 0.5625rem);
+
   line-height: 1;
+
   font-weight: 900;
+
   letter-spacing: 0.07em;
 }
 
 .jr-cart-item-info h2 {
   width: 100%;
   min-width: 0;
+
   margin: 0;
 
   overflow: hidden;
 
   color: #171717;
-  font-size: clamp(0.5625rem, 2.5vw, 0.75rem);
-  line-height: 1.1;
+
+  font-size:
+    clamp(0.75rem, 3vw, 0.9375rem);
+
+  line-height: 1.15;
+
   font-weight: 900;
 
   white-space: nowrap;
@@ -363,13 +491,18 @@
 
 .jr-cart-item-variant {
   max-width: 100%;
+
   overflow: hidden;
 
   color: #888883;
-  font-size: clamp(0.375rem, 1.55vw, 0.5rem);
-  line-height: 1;
 
-  font-weight: 600;
+  font-size:
+    clamp(0.5rem, 1.9vw, 0.625rem);
+
+  line-height: 1.1;
+
+  font-weight: 650;
+
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -383,22 +516,35 @@
   min-width: 0;
 
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: clamp(0.25rem, 1.5vw, 0.5rem);
 
-  margin-top: clamp(0.0625rem, 0.5vw, 0.125rem);
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap:
+    clamp(0.375rem, 1.5vw, 0.625rem);
+
+  margin-top:
+    clamp(0.125rem, 0.5vw, 0.1875rem);
 }
 
 .jr-cart-item-price {
   min-width: 0;
+
   overflow: hidden;
+
   white-space: nowrap;
   text-overflow: ellipsis;
 
   color: #287f46;
-  font-size: clamp(0.5625rem, 2.3vw, 0.6875rem);
+
+  font-size:
+    clamp(0.6875rem, 2.7vw, 0.8125rem);
+
   line-height: 1;
+
   font-weight: 900;
 }
 
@@ -407,32 +553,47 @@
    ========================================================= */
 
 .jr-cart-quantity {
-  width: clamp(3.75rem, 21vw, 5.25rem);
-  min-width: clamp(3.75rem, 21vw, 5.25rem);
-  height: clamp(1.5rem, 6.8vw, 1.75rem);
+  width:
+    clamp(4rem, 22vw, 5.5rem);
+
+  min-width:
+    clamp(4rem, 22vw, 5.5rem);
+
+  height:
+    clamp(1.75rem, 7vw, 2rem);
 
   box-sizing: border-box;
 
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto
+    minmax(0, 1fr);
+
   align-items: center;
 
   overflow: hidden;
 
-  border: 1px solid #cfe1d1;
+  border:
+    1px solid #cfe1d1;
+
   border-radius: 999px;
+
   background: #f5faf4;
 }
 
 .jr-cart-quantity button {
   width: 100%;
   height: 100%;
+
   min-width: 0;
 
   display: grid;
   place-items: center;
 
   padding: 0;
+
   border: 0;
   border-radius: 999px;
 
@@ -440,12 +601,18 @@
   color: #2f8050;
 
   font-family: inherit;
-  font-size: clamp(0.6875rem, 3.4vw, 0.875rem);
+
+  font-size:
+    clamp(0.8125rem, 3.7vw, 1rem);
+
   line-height: 1;
-  font-weight: 800;
+
+  font-weight: 900;
 
   cursor: pointer;
+
   touch-action: manipulation;
+
   -webkit-tap-highlight-color: transparent;
 
   transition:
@@ -462,21 +629,34 @@
 }
 
 .jr-cart-quantity button:focus-visible {
-  outline: 2px solid #ef7d24;
+  outline:
+    2px
+    solid
+    #ef7d24;
+
   outline-offset: 1px;
 }
 
 .jr-cart-quantity strong {
-  min-width: clamp(1rem, 5vw, 1.375rem);
-  padding: 0 0.125rem;
+  min-width:
+    clamp(1.125rem, 5vw, 1.5rem);
+
+  padding:
+    0
+    0.1875rem;
 
   display: grid;
   place-items: center;
 
   color: #245f39;
-  font-size: clamp(0.4375rem, 2.2vw, 0.5625rem);
+
+  font-size:
+    clamp(0.625rem, 2.6vw, 0.75rem);
+
   line-height: 1;
+
   font-weight: 900;
+
   font-variant-numeric: tabular-nums;
 }
 
@@ -485,21 +665,30 @@
    ========================================================= */
 
 .jr-cart-item-right {
-  min-width: clamp(2.25rem, 11vw, 3rem);
+  min-width:
+    clamp(2.75rem, 12vw, 3.5rem);
 
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: space-between;
+
   align-self: stretch;
-  gap: clamp(0.375rem, 2vw, 0.625rem);
+
+  gap:
+    clamp(0.4375rem, 2vw, 0.6875rem);
 }
 
 .jr-cart-item-right > strong {
   color: #222222;
-  font-size: clamp(0.5625rem, 2.3vw, 0.6875rem);
+
+  font-size:
+    clamp(0.6875rem, 2.7vw, 0.8125rem);
+
   line-height: 1;
+
   font-weight: 950;
+
   white-space: nowrap;
 }
 
@@ -508,13 +697,16 @@
    ========================================================= */
 
 .jr-cart-remove {
-  width: clamp(1.125rem, 5.5vw, 1.375rem);
+  width:
+    clamp(1.375rem, 6vw, 1.625rem);
+
   aspect-ratio: 1;
 
   display: grid;
   place-items: center;
 
   padding: 0;
+
   border: 0;
   border-radius: 50%;
 
@@ -522,7 +714,10 @@
   color: #a1a19c;
 
   font-family: inherit;
-  font-size: clamp(0.875rem, 4.5vw, 1.125rem);
+
+  font-size:
+    clamp(1rem, 4.5vw, 1.25rem);
+
   line-height: 1;
 
   cursor: pointer;
@@ -539,25 +734,39 @@
 
 .jr-cart-continue {
   width: 100%;
-  min-height: clamp(2rem, 8vw, 2.375rem);
+
+  min-height:
+    clamp(2.125rem, 8vw, 2.5rem);
+
   box-sizing: border-box;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  margin: clamp(0.375rem, 2vw, 0.625rem) 0 0;
-  padding: 0 0.625rem;
+  margin:
+    clamp(0.5rem, 2vw, 0.75rem)
+    0
+    0;
+
+  padding:
+    0
+    0.75rem;
 
   border: 0;
-  border-radius: 0.5rem;
+
+  border-radius: 0.5625rem;
 
   background: transparent;
   color: #287f46;
 
   font-family: inherit;
-  font-size: clamp(0.4375rem, 1.9vw, 0.5625rem);
+
+  font-size:
+    clamp(0.5625rem, 2.2vw, 0.6875rem);
+
   line-height: 1;
+
   font-weight: 900;
 
   cursor: pointer;
@@ -574,111 +783,190 @@
 .jr-cart-summary {
   width: 100%;
   min-width: 0;
+
   box-sizing: border-box;
 
-  margin: clamp(0.375rem, 2vw, 0.625rem) 0 0;
-  padding: clamp(0.5625rem, 2.5vw, 0.75rem);
+  margin:
+    clamp(0.5rem, 2vw, 0.75rem)
+    0
+    0;
 
-  border: 1px solid #e5e5df;
-  border-radius: clamp(0.625rem, 3vw, 0.875rem);
+  padding:
+    clamp(0.6875rem, 2.7vw, 0.875rem);
+
+  border:
+    1px
+    solid
+    #e5e5df;
+
+  border-radius:
+    clamp(0.75rem, 3vw, 0.9375rem);
 
   background: #ffffff;
-  box-shadow: 0 0.125rem 0.4375rem rgba(20, 45, 26, 0.02);
+
+  box-shadow:
+    0
+    0.125rem
+    0.4375rem
+    rgba(20, 45, 26, 0.02);
 }
 
 .jr-cart-summary-heading {
   display: flex;
+
   align-items: center;
   justify-content: space-between;
-  gap: 0.625rem;
-  margin: 0 0 clamp(0.3125rem, 1.5vw, 0.4375rem);
+
+  gap: 0.75rem;
+
+  margin:
+    0
+    0
+    clamp(0.375rem, 1.5vw, 0.5rem);
 }
 
 .jr-cart-summary-heading > strong {
   color: #777772;
-  font-size: clamp(0.4375rem, 1.7vw, 0.5rem);
+
+  font-size:
+    clamp(0.5rem, 2vw, 0.625rem);
+
   line-height: 1;
-  font-weight: 800;
+
+  font-weight: 850;
 }
+
+/* =========================================================
+   SUMMARY ROWS
+   ========================================================= */
 
 .jr-summary-row {
   width: 100%;
-  min-height: clamp(1.125rem, 5vw, 1.375rem);
+
+  min-height:
+    clamp(1.375rem, 5.5vw, 1.625rem);
+
   box-sizing: border-box;
 
   display: flex;
+
   align-items: center;
   justify-content: space-between;
-  gap: 0.625rem;
 
-  padding: 0.1875rem 0;
+  gap: 0.75rem;
+
+  padding:
+    0.25rem
+    0;
 }
 
 .jr-summary-row > span {
   color: #858580;
-  font-size: clamp(0.4375rem, 1.8vw, 0.5625rem);
-  line-height: 1;
-  font-weight: 700;
+
+  font-size:
+    clamp(0.5625rem, 2.2vw, 0.6875rem);
+
+  line-height: 1.15;
+
+  font-weight: 750;
 }
 
 .jr-summary-row > span small {
   color: #a2a29d;
-  font-size: 0.85em;
+
+  font-size: 0.82em;
+
   font-weight: 700;
 }
 
 .jr-summary-row > strong {
   color: #222222;
-  font-size: clamp(0.5rem, 2vw, 0.625rem);
+
+  font-size:
+    clamp(0.625rem, 2.5vw, 0.75rem);
+
   line-height: 1;
+
   font-weight: 900;
+
   white-space: nowrap;
 }
 
 .jr-summary-divider {
   width: 100%;
+
   height: 1px;
-  margin: 0.3125rem 0;
+
+  margin:
+    0.375rem
+    0;
+
   background: #eeeeea;
 }
 
+/* =========================================================
+   TOTAL
+   ========================================================= */
+
 .jr-summary-total {
   width: 100%;
+
   box-sizing: border-box;
 
   display: flex;
+
   align-items: center;
   justify-content: space-between;
-  gap: 0.625rem;
 
-  padding: 0.1875rem 0 0.3125rem;
+  gap: 0.75rem;
+
+  padding:
+    0.25rem
+    0
+    0.375rem;
 }
 
 .jr-summary-total > div {
   min-width: 0;
+
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+
+  gap: 0.1875rem;
 }
 
 .jr-summary-total > div > span {
   color: #222222;
-  font-size: clamp(0.5rem, 2vw, 0.625rem);
+
+  font-size:
+    clamp(0.625rem, 2.5vw, 0.75rem);
+
   line-height: 1;
+
   font-weight: 950;
 }
 
 .jr-summary-total > div > small {
   color: #999994;
-  font-size: clamp(0.3125rem, 1.35vw, 0.4375rem);
-  line-height: 1;
+
+  font-size:
+    clamp(0.4375rem, 1.7vw, 0.5625rem);
+
+  line-height: 1.1;
+
+  font-weight: 600;
 }
 
 .jr-summary-total > strong {
   color: #287f46;
-  font-size: clamp(0.9375rem, 4vw, 1.1875rem);
+
+  font-size:
+    clamp(1.125rem, 4.8vw, 1.375rem);
+
   line-height: 1;
+
   font-weight: 950;
+
   white-space: nowrap;
 }
 
@@ -688,32 +976,54 @@
 
 .jr-cart-checkout {
   width: 100%;
-  min-height: clamp(2.375rem, 10vw, 2.75rem);
+
+  min-height:
+    clamp(2.625rem, 10vw, 3rem);
+
   box-sizing: border-box;
 
   display: flex;
+
   align-items: center;
   justify-content: space-between;
-  gap: 0.625rem;
 
-  margin: 0.4375rem 0 0;
-  padding: 0 0.8125rem;
+  gap: 0.75rem;
+
+  margin:
+    0.5rem
+    0
+    0;
+
+  padding:
+    0
+    1rem;
 
   border: 0;
-  border-radius: 0.5625rem;
+
+  border-radius: 0.625rem;
 
   background: #287f46;
   color: #ffffff;
 
   font-family: inherit;
-  font-size: clamp(0.4375rem, 2vw, 0.625rem);
+
+  font-size:
+    clamp(0.5625rem, 2.4vw, 0.6875rem);
+
   line-height: 1;
+
   font-weight: 900;
+
   letter-spacing: 0.03em;
 
-  box-shadow: 0 0.4375rem 1rem rgba(40, 127, 70, 0.18);
+  box-shadow:
+    0
+    0.4375rem
+    1rem
+    rgba(40, 127, 70, 0.18);
 
   cursor: pointer;
+
   -webkit-tap-highlight-color: transparent;
 
   transition:
@@ -724,7 +1034,12 @@
 
 .jr-cart-checkout:hover {
   background: #236e3d;
-  box-shadow: 0 0.5rem 1.125rem rgba(40, 127, 70, 0.22);
+
+  box-shadow:
+    0
+    0.5rem
+    1.125rem
+    rgba(40, 127, 70, 0.22);
 }
 
 .jr-cart-checkout:active {
@@ -733,15 +1048,21 @@
 
 .jr-cart-checkout > span {
   min-width: 0;
+
   overflow: hidden;
+
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .jr-cart-checkout b {
   flex: 0 0 auto;
-  font-size: clamp(0.8125rem, 3.5vw, 0.9375rem);
+
+  font-size:
+    clamp(0.9375rem, 3.8vw, 1.125rem);
+
   line-height: 1;
+
   font-weight: 500;
 }
 
@@ -753,45 +1074,71 @@
   width: 100%;
   min-width: 0;
 
-  min-height: calc(100dvh - 10rem);
+  min-height:
+    calc(100dvh - 10rem);
+
   box-sizing: border-box;
 
   display: flex;
+
   flex-direction: column;
+
   align-items: center;
   justify-content: center;
 
   padding:
-    1.25rem
-    0.75rem
+    1.5rem
+    0.875rem
     5rem;
 
   text-align: center;
 }
 
 .jr-cart-empty-icon {
-  width: clamp(3.25rem, 15vw, 4rem);
+  width:
+    clamp(3.5rem, 15vw, 4.25rem);
+
   aspect-ratio: 1;
 
   display: grid;
   place-items: center;
 
-  margin: 0 0 0.75rem;
-  border-radius: clamp(1rem, 4vw, 1.25rem);
+  margin:
+    0
+    0
+    0.875rem;
+
+  border-radius:
+    clamp(1rem, 4vw, 1.25rem);
 
   background: #edf7ed;
   color: #287f46;
-  font-size: clamp(1.375rem, 6.5vw, 1.75rem);
 
-  box-shadow: 0 0.3125rem 0.875rem rgba(40, 127, 70, 0.07);
+  font-size:
+    clamp(1.5rem, 6.5vw, 1.875rem);
+
+  box-shadow:
+    0
+    0.3125rem
+    0.875rem
+    rgba(40, 127, 70, 0.07);
 }
 
 .jr-cart-empty h1 {
-  margin: 0.25rem 0 0;
+  margin:
+    0.25rem
+    0
+    0;
+
   color: #111111;
-  font-size: clamp(1.5rem, 6vw, 2rem);
-  line-height: 0.95;
+
+  font-size:
+    clamp(1.75rem, 7vw, 2.25rem);
+
+  line-height: 0.96;
+
   font-weight: 950;
+
   letter-spacing: -0.045em;
 }
 
@@ -802,45 +1149,75 @@
 
 .jr-cart-empty p {
   max-width: 32ch;
-  margin: 0.5rem auto 1rem;
+
+  margin:
+    0.625rem
+    auto
+    1.125rem;
 
   color: #777773;
-  font-size: clamp(0.4375rem, 1.9vw, 0.5625rem);
-  line-height: 1.45;
-  font-weight: 500;
+
+  font-size:
+    clamp(0.5625rem, 2.2vw, 0.6875rem);
+
+  line-height: 1.5;
+
+  font-weight: 550;
 }
 
 .jr-cart-primary-button {
   width: auto;
-  min-width: clamp(8.5rem, 42vw, 10rem);
-  min-height: clamp(2.375rem, 9vw, 2.75rem);
+
+  min-width:
+    clamp(9rem, 42vw, 11rem);
+
+  min-height:
+    clamp(2.5rem, 9vw, 2.875rem);
 
   box-sizing: border-box;
 
   display: inline-flex;
+
   align-items: center;
   justify-content: center;
-  gap: clamp(0.75rem, 4vw, 1rem);
+
+  gap:
+    clamp(0.75rem, 4vw, 1rem);
 
   margin: 0;
-  padding: 0 0.875rem;
+
+  padding:
+    0
+    1rem;
 
   border: 0;
-  border-radius: 0.5625rem;
+
+  border-radius: 0.625rem;
 
   background: #f07800;
   color: #ffffff;
 
   font-family: inherit;
-  font-size: clamp(0.4375rem, 1.9vw, 0.5625rem);
+
+  font-size:
+    clamp(0.5625rem, 2.2vw, 0.6875rem);
+
   line-height: 1;
+
   font-weight: 950;
+
   letter-spacing: 0.025em;
+
   text-transform: uppercase;
 
-  box-shadow: 0 0.4375rem 0.9375rem rgba(240, 120, 0, 0.16);
+  box-shadow:
+    0
+    0.4375rem
+    0.9375rem
+    rgba(240, 120, 0, 0.16);
 
   cursor: pointer;
+
   appearance: none;
   -webkit-appearance: none;
 
@@ -852,7 +1229,12 @@
 
 .jr-cart-primary-button:hover {
   background: #df6f00;
-  box-shadow: 0 0.5rem 1.0625rem rgba(240, 120, 0, 0.2);
+
+  box-shadow:
+    0
+    0.5rem
+    1.0625rem
+    rgba(240, 120, 0, 0.2);
 }
 
 .jr-cart-primary-button:active {
@@ -861,10 +1243,15 @@
 
 .jr-cart-primary-button span {
   display: inline-flex;
+
   align-items: center;
   justify-content: center;
-  font-size: clamp(0.75rem, 3.5vw, 0.875rem);
+
+  font-size:
+    clamp(0.875rem, 3.5vw, 1rem);
+
   line-height: 1;
+
   font-weight: 500;
 }
 
@@ -875,32 +1262,36 @@
 
 @media (orientation: portrait) and (max-height: 43.75rem) {
   .jr-cart-page {
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom:
+      calc(
+        5rem +
+        env(safe-area-inset-bottom, 0px)
+      );
   }
 
   .jr-cart-heading {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.5625rem;
   }
 
   .jr-cart-location-card {
-    margin-bottom: 0.4375rem;
+    margin-bottom: 0.5rem;
   }
 
   .jr-cart-items {
-    gap: 0.3125rem;
+    gap: 0.375rem;
   }
 
   .jr-cart-item {
-    padding: 0.375rem;
+    padding: 0.4375rem;
   }
 
   .jr-cart-summary {
-    margin-top: 0.375rem;
-    padding: 0.5rem;
+    margin-top: 0.4375rem;
+    padding: 0.5625rem;
   }
 
   .jr-cart-checkout {
-    min-height: 2.25rem;
+    min-height: 2.375rem;
   }
 }
 
@@ -911,61 +1302,85 @@
 @media (orientation: landscape) {
   .jr-cart-page {
     padding:
-      clamp(0.375rem, 1.8vh, 0.625rem)
-      clamp(0.75rem, 3vw, 2.25rem)
-      calc(3.875rem + env(safe-area-inset-bottom, 0px));
+      clamp(0.4375rem, 1.8vh, 0.6875rem)
+      clamp(0.875rem, 3vw, 2.25rem)
+      calc(
+        3.875rem +
+        env(safe-area-inset-bottom, 0px)
+      );
   }
 
   .jr-cart-back {
-    min-height: clamp(1.625rem, 6vh, 2rem);
-    margin-bottom: 0.1875rem;
+    min-height:
+      clamp(1.75rem, 6vh, 2.125rem);
+
+    margin-bottom: 0.25rem;
+
     padding-left: 0.125rem;
-    font-size: clamp(0.5rem, 1.8vh, 0.6875rem);
+
+    font-size:
+      clamp(0.5625rem, 1.8vh, 0.75rem);
   }
 
   .jr-cart-heading {
-    margin-bottom: 0.375rem;
+    margin-bottom: 0.4375rem;
   }
 
   .jr-cart-page .jr-eyebrow {
-    font-size: clamp(0.3125rem, 1.5vh, 0.4375rem);
+    font-size:
+      clamp(0.375rem, 1.5vh, 0.5rem);
   }
 
   .jr-cart-heading h1 {
-    font-size: clamp(1.125rem, 4vh, 1.5625rem);
+    font-size:
+      clamp(1.25rem, 4vh, 1.75rem);
   }
 
   .jr-cart-location-card {
-    min-height: clamp(2.5rem, 9vh, 3.125rem);
-    margin-bottom: 0.375rem;
-    padding-block: 0.3125rem;
+    min-height:
+      clamp(2.75rem, 9vh, 3.375rem);
+
+    margin-bottom: 0.4375rem;
+
+    padding-block: 0.375rem;
   }
 
   .jr-cart-location-icon {
-    width: clamp(1.4375rem, 6vh, 1.875rem);
-    min-width: clamp(1.4375rem, 6vh, 1.875rem);
+    width:
+      clamp(1.625rem, 6vh, 2rem);
+
+    min-width:
+      clamp(1.625rem, 6vh, 2rem);
   }
 
   .jr-cart-items-header {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.3125rem;
   }
 
   .jr-cart-items {
     display: grid;
-    grid-template-columns: repeat(
-      auto-fit,
-      minmax(min(100%, 13rem), 1fr)
-    );
-    gap: 0.375rem;
+
+    grid-template-columns:
+      repeat(
+        auto-fit,
+        minmax(
+          min(100%, 13rem),
+          1fr
+        )
+      );
+
+    gap: 0.4375rem;
   }
 
   .jr-cart-item {
     grid-template-columns:
-      clamp(3.25rem, 12vh, 4.25rem)
+      clamp(3.5rem, 12vh, 4.5rem)
       minmax(0, 1fr)
       auto;
-    gap: 0.375rem;
-    padding: 0.3125rem;
+
+    gap: 0.4375rem;
+
+    padding: 0.375rem;
   }
 
   .jr-cart-item-info {
@@ -973,50 +1388,68 @@
   }
 
   .jr-cart-item-bottom {
-    gap: 0.3125rem;
+    gap: 0.375rem;
   }
 
   .jr-cart-quantity {
-    width: clamp(3.5rem, 15vh, 4.5rem);
-    min-width: clamp(3.5rem, 15vh, 4.5rem);
-    height: clamp(1.25rem, 6vh, 1.5rem);
+    width:
+      clamp(3.75rem, 15vh, 4.75rem);
+
+    min-width:
+      clamp(3.75rem, 15vh, 4.75rem);
+
+    height:
+      clamp(1.375rem, 6vh, 1.625rem);
   }
 
   .jr-cart-item-right {
-    min-width: clamp(2rem, 9vh, 2.625rem);
-    gap: 0.3125rem;
+    min-width:
+      clamp(2.25rem, 9vh, 2.875rem);
+
+    gap: 0.375rem;
   }
 
   .jr-cart-summary {
-    margin-top: 0.3125rem;
-    padding: 0.4375rem;
+    margin-top: 0.375rem;
+    padding: 0.5rem;
   }
 
   .jr-summary-row {
-    min-height: 1rem;
-    padding: 0.125rem 0;
+    min-height: 1.125rem;
+    padding: 0.1875rem 0;
   }
 
   .jr-summary-divider {
-    margin: 0.1875rem 0;
+    margin: 0.25rem 0;
   }
 
   .jr-summary-total {
-    padding: 0.125rem 0 0.1875rem;
+    padding:
+      0.1875rem
+      0
+      0.25rem;
   }
 
   .jr-summary-total > strong {
-    font-size: clamp(0.75rem, 3vh, 1rem);
+    font-size:
+      clamp(0.875rem, 3vh, 1.125rem);
   }
 
   .jr-cart-checkout {
-    min-height: clamp(1.8125rem, 7vh, 2.125rem);
-    margin-top: 0.25rem;
+    min-height:
+      clamp(2rem, 7vh, 2.25rem);
+
+    margin-top: 0.3125rem;
   }
 
   .jr-cart-empty {
-    min-height: calc(100dvh - 6rem);
-    padding: 0.625rem 1.25rem 3.5rem;
+    min-height:
+      calc(100dvh - 6rem);
+
+    padding:
+      0.75rem
+      1.25rem
+      3.5rem;
   }
 }
 
@@ -1040,19 +1473,25 @@
 
 @supports (padding: max(0px)) {
   .jr-cart-page {
-    padding-left: max(
-      var(--jr-cart-x),
-      env(safe-area-inset-left, 0px)
-    );
+    padding-left:
+      max(
+        var(--jr-cart-x),
+        env(safe-area-inset-left, 0px)
+      );
 
-    padding-right: max(
-      var(--jr-cart-x),
-      env(safe-area-inset-right, 0px)
-    );
+    padding-right:
+      max(
+        var(--jr-cart-x),
+        env(safe-area-inset-right, 0px)
+      );
 
-    padding-bottom: max(
-      5.5rem,
-      calc(5.5rem + env(safe-area-inset-bottom, 0px))
-    );
+    padding-bottom:
+      max(
+        5.5rem,
+        calc(
+          5.5rem +
+          env(safe-area-inset-bottom, 0px)
+        )
+      );
   }
 }

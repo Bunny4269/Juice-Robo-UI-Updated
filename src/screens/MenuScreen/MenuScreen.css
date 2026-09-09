@@ -334,7 +334,7 @@
   font-family: inherit;
   text-align: left;
 
-  cursor: pointer;
+  cursor: default;
   outline: none;
   overflow: hidden;
 
@@ -474,6 +474,23 @@
 .jr-product-main {
   min-width: 0;
   flex: 1;
+  cursor: pointer;
+}
+
+.jr-product-image-wrap {
+  cursor: pointer;
+}
+
+.jr-product-footer,
+.jr-quantity-control,
+.jr-quantity-button {
+  position: relative;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.jr-product-footer {
+  cursor: default;
 }
 
 .jr-product-info h3 {

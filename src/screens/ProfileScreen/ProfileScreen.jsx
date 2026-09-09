@@ -15,165 +15,95 @@ export default function ProfileScreen({
   onOrders,
 }) {
   /* =======================================================
-     SAFE DATA NORMALIZATION
+     USER DISPLAY DATA
      ======================================================= */
-
-  const safeOrders = Array.isArray(orders) ? orders : [];
-
-  /* =======================================================
-     USER NAME
-     ======================================================= */
-
-  const rawName =
-    user?.name ??
-    user?.firstname ??
-    customer?.name ??
-    "";
 
   const name =
-    String(rawName).trim() || "Juice Lover";
-
-  /* =======================================================
-     FIRST NAME
-     ======================================================= */
+    user?.name ||
+    user?.firstname ||
+    customer?.name ||
+    "Juice Lover";
 
   const firstName =
-    name
+    String(name)
+      .trim()
+      .split(/\s+/)[0] || "Juice";
+
+  const initial =
+    String(name)
       .trim()
       .split(/\s+/)
-      .filter(Boolean)[0] || "Juice";
-
-  /* =======================================================
-     INITIALS
-     ======================================================= */
-
-  const initial = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0))
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "JL";
-
-  /* =======================================================
-     CONTACT / ACCOUNT DETAIL
-     ======================================================= */
-
-  const contact =
-    user?.email ??
-    user?.phone ??
-    customer?.email ??
-    customer?.phone ??
-    "";
-
-  const contactText =
-    String(contact).trim() || "Juice Robo member";
-
-  /* =======================================================
-     ORDER COUNT
-     ======================================================= */
-
-  const orderCount = safeOrders.length;
-
-  const orderLabel =
-    `${orderCount} saved order${orderCount === 1 ? "" : "s"}`;
-
-
-  /* =======================================================
-     RENDER
-     ======================================================= */
+      .map((part) => part?.[0] || "")
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
 
   return (
     <main
       className="jr-content jr-page jr-profile-page"
       data-theme="light"
-      aria-label="Profile"
+      style={{
+        background: "#fbfaf3",
+        color: "#151515",
+        colorScheme: "light",
+      }}
     >
-
       {/* ===================================================
-          BACK TO MENU
+          BACK
          =================================================== */}
 
       <button
         className="jr-back-link"
-        type="button"
         onClick={onBack}
+        type="button"
         disabled={busy}
-        aria-label="Back to menu"
       >
-        <span aria-hidden="true">←</span>
-        <span>&nbsp;Back to menu</span>
+        ← Back to menu
       </button>
 
-
       {/* ===================================================
-          PAGE INTRO
+          ACCOUNT HEADING
          =================================================== */}
 
-      <div className="jr-profile-heading">
+      <span className="jr-eyebrow">
+        YOUR ACCOUNT
+      </span>
 
-        <span className="jr-eyebrow">
-          Your account
-        </span>
-
-        <h1 className="jr-page-title">
-          Hello,
-          <br />
-          <em>{firstName}.</em>
-        </h1>
-
-      </div>
-
+      <h1 className="jr-page-title">
+        Hello,
+        <br />
+        <em>{firstName}.</em>
+      </h1>
 
       {/* ===================================================
-          PROFILE IDENTITY
+          PROFILE HERO
          =================================================== */}
 
-      <section
-        className="jr-profile-hero"
-        aria-label="Account information"
-      >
-
-        <div
-          className="jr-profile-avatar"
-          aria-hidden="true"
-        >
+      <section className="jr-profile-hero">
+        <div className="jr-profile-avatar">
           {initial}
         </div>
 
-        <div className="jr-profile-identity">
+        <div>
+          <strong>{name}</strong>
 
-          <strong
-            className="jr-profile-name"
-            title={name}
-          >
-            {name}
-          </strong>
-
-          <small
-            className="jr-profile-contact"
-            title={contactText}
-          >
-            {contactText}
+          <small>
+            {user?.email ||
+              user?.phone ||
+              customer?.email ||
+              customer?.phone ||
+              "Juice Robo member"}
           </small>
-
         </div>
-
       </section>
 
-
       {/* ===================================================
-          ACCOUNT ACTIONS
+          PROFILE ACTIONS
          =================================================== */}
 
-      <section
-        className="jr-profile-actions"
-        aria-label="Account actions"
-      >
-
+      <section className="jr-profile-actions">
         {/* =================================================
-            MY ORDERS
+            RECENT ORDERS
            ================================================= */}
 
         <button
@@ -181,72 +111,44 @@ export default function ProfileScreen({
           type="button"
           onClick={onOrders}
           disabled={busy}
-          aria-label={`My orders. ${orderLabel}`}
+          aria-label="Recent orders"
         >
+          <span aria-hidden="true">▣</span>
 
-          <span
-            className="jr-account-action-icon"
-            aria-hidden="true"
-          >
-            ▣
-          </span>
-
-          <div className="jr-account-action-content">
-
-            <strong>
-              My orders
-            </strong>
-
-            <small>
-              {orderLabel}
-            </small>
-
+          <div>
+            <strong>Recent orders</strong>
+            <small>View your previous orders</small>
           </div>
 
-          <b
-            className="jr-account-action-arrow"
-            aria-hidden="true"
-          >
-            →
-          </b>
-
+          <b aria-hidden="true">→</b>
         </button>
-
 
         {/* =================================================
             LOGOUT
            ================================================= */}
 
         <button
-          className="
-            jr-account-action
-            jr-account-action-danger
-          "
+          className="jr-account-action jr-account-action-danger"
           type="button"
           onClick={onLogout}
           disabled={busy}
           aria-label="Logout"
         >
-
           <span
-            className="jr-account-action-icon"
+            className="jr-logout-action-icon"
             aria-hidden="true"
           >
             ↪
           </span>
 
-          <div className="jr-account-action-content">
-
-            <strong>
-              Logout
-            </strong>
-
+          <div>
+            <strong>Logout</strong>
+            <small>Sign out of your Juice Robo account</small>
           </div>
 
+          <b aria-hidden="true">→</b>
         </button>
-
       </section>
-
     </main>
   );
 }
