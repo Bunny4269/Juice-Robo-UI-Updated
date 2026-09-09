@@ -8,6 +8,13 @@ const API_BASE =
 const ORDER_API_BASE =
   "https://tptest.juicerobo.com/tpordermaster/api";
 
+/* ============================================================
+   TAX CONFIGURATION
+   ============================================================ */
+
+const GST_RATE = 0.05;
+const GST_PERCENT = 5;
+
 
 /* ============================================================
    DEFAULT ORGANIZATION
@@ -676,6 +683,101 @@ async function request(
   return data;
 }
 
+
+
+function findQrString(value, depth = 0) {
+  if (depth > 12 || value == null) return "";
+
+  /*
+   * The existing OrderResp field is qrString. When it is present,
+   * preserve that exact backend value. Do not manufacture or alter
+   * provider payment parameters in the frontend.
+   */
+  if (typeof value === "object" && !Array.isArray(value)) {
+    const directKeys = ["qrString", "qr_string"];
+
+    for (const key of directKeys) {
+      const candidate = value[key];
+      if (typeof candidate === "string" && candidate.trim()) {
+        let exact = candidate.trim();
+
+        try {
+          if (/^%[0-9a-f]{2}/i.test(exact) || /%3A|%2F|%3F|%3D|%26/i.test(exact)) {
+            const decoded = decodeURIComponent(exact);
+            if (decoded.trim()) exact = decoded.trim();
+          }
+        } catch {}
+
+        return exact;
+      }
+    }
+  }
+
+  if (depth > 12) return "";
+
+  if (typeof value === "string") {
+    let text = value.trim();
+
+    try {
+      if (
+        !/^upi:\/\//i.test(text) &&
+        /%3A|%2F|%3F|%3D|%26/i.test(text)
+      ) {
+        const decoded = decodeURIComponent(text);
+        if (decoded) text = decoded.trim();
+      }
+    } catch {}
+
+    if (/^upi:\/\/(pay|collect)\?/i.test(text)) return text;
+
+    if (text.startsWith("{") || text.startsWith("[")) {
+      try {
+        return findQrString(JSON.parse(text), depth + 1);
+      } catch {}
+    }
+
+    return "";
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findQrString(item, depth + 1);
+      if (found) return found;
+    }
+    return "";
+  }
+
+  if (typeof value !== "object") return "";
+
+  const qrKeys = [
+    "qrCode",
+    "qr_code",
+    "qrcode",
+    "qr",
+    "paymentQr",
+    "payment_qr",
+    "paymentQrString",
+    "payment_qr_string",
+  ];
+
+  for (const key of qrKeys) {
+    const candidate = value[key];
+    if (candidate == null) continue;
+    const found = findQrString(candidate, depth + 1);
+    if (found) return found;
+  }
+
+  /* Existing wrappers: ServerResponse -> data -> OrderResp. */
+  for (const [key, child] of Object.entries(value)) {
+    if (key === "qrString" || key === "qr_string" || qrKeys.includes(key)) continue;
+    if (child && (typeof child === "object" || typeof child === "string")) {
+      const found = findQrString(child, depth + 1);
+      if (found) return found;
+    }
+  }
+
+  return "";
+}
 
 /* ============================================================
    PRODUCT HELPERS
@@ -1391,6 +1493,166 @@ function buildLegacyCartItems(
 
 
 /* ============================================================
+   UUID V4
+   ------------------------------------------------------------
+   Order Master expects cartId to be a valid UUID.
+   Do not use values such as "JR-<timestamp>".
+   ============================================================ */
+
+function generateUuidV4() {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.getRandomValues === "function"
+  ) {
+    const bytes = new Uint8Array(16);
+
+    crypto.getRandomValues(bytes);
+
+    bytes[6] =
+      (bytes[6] & 0x0f) |
+      0x40;
+
+    bytes[8] =
+      (bytes[8] & 0x3f) |
+      0x80;
+
+    const hex = Array.from(bytes)
+      .map((byte) =>
+        byte.toString(16).padStart(2, "0")
+      )
+      .join("");
+
+    return (
+      `${hex.slice(0, 8)}-` +
+      `${hex.slice(8, 12)}-` +
+      `${hex.slice(12, 16)}-` +
+      `${hex.slice(16, 20)}-` +
+      `${hex.slice(20, 32)}`
+    );
+  }
+
+  const hex = "0123456789abcdef";
+
+  const randomHex = (length) =>
+    Array.from(
+      { length },
+      () =>
+        hex[
+          Math.floor(
+            Math.random() * hex.length
+          )
+        ]
+    ).join("");
+
+  const variant =
+    ["8", "9", "a", "b"][
+      Math.floor(
+        Math.random() * 4
+      )
+    ];
+
+  return (
+    `${randomHex(8)}-` +
+    `${randomHex(4)}-` +
+    `4${randomHex(3)}-` +
+    `${variant}${randomHex(3)}-` +
+    `${randomHex(12)}`
+  );
+}
+
+
+/* ============================================================
+   UPI PAYMENT URL
+   ------------------------------------------------------------
+   Creates a standard UPI deep link. The browser can hand
+   this URL to Android, which then presents an installed UPI
+   application. Payment is NOT considered successful merely
+   because this URL was opened.
+   ============================================================ */
+
+function buildUpiTransactionReference(transactionReference = "") {
+  const supplied = clean(transactionReference)
+    .replace(/[^A-Za-z0-9]/g, "")
+    .toUpperCase();
+
+  if (supplied && supplied.length <= 20) {
+    return supplied;
+  }
+
+  const now = new Date();
+
+  const stamp = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+    String(now.getHours()).padStart(2, "0"),
+    String(now.getMinutes()).padStart(2, "0"),
+    String(now.getSeconds()).padStart(2, "0"),
+  ].join("");
+
+  const randomPart = Math.random()
+    .toString(36)
+    .slice(2, 6)
+    .toUpperCase();
+
+  return `JR${stamp}${randomPart}`;
+}
+
+function buildUpiPaymentUrl({
+  upiId,
+  payeeName = "Juice Robo",
+  amount,
+} = {}) {
+  const pa = clean(upiId);
+
+  if (!pa) {
+    throw new Error(
+      "Juice Robo UPI ID is not configured."
+    );
+  }
+
+  const numericAmount = Number(amount);
+
+  if (
+    !Number.isFinite(numericAmount) ||
+    numericAmount <= 0
+  ) {
+    throw new Error(
+      "Invalid UPI payment amount."
+    );
+  }
+
+  /*
+   * Keep the UPI URI intentionally minimal.
+   *
+   * Some Android/UPI scanners are stricter about optional fields
+   * such as tr (transaction reference) and tn (transaction note).
+   * The required payment fields are enough for both:
+   *   - direct UPI-app launch
+   *   - QR scanning
+   *
+   * This does NOT confirm payment success. The backend remains the
+   * source of truth for payment/order status.
+   */
+  const params = new URLSearchParams({
+    pa,
+    pn: String(payeeName || "Juice Robo"),
+    am: numericAmount.toFixed(2),
+    cu: "INR",
+  });
+
+  return `upi://pay?${params.toString()}`;
+}
+
+
+/* ============================================================
    LEGACY ORDER PAYLOAD
    ============================================================ */
 
@@ -1445,18 +1707,21 @@ function buildLegacyOrderPayload(
     getUserSnapshot();
 
 
-  const cartId =
+  /*
+   * cartId MUST be a UUID because Order Master deserializes
+   * it as java.util.UUID.
+   *
+   * If the caller already supplied a UUID, preserve it.
+   * Otherwise generate a valid UUID v4.
+   */
+  const suppliedCartId =
     clean(
       payload?.cartId
-    ) ||
-    (
-      typeof crypto !==
-        "undefined" &&
-      typeof crypto.randomUUID ===
-        "function"
-        ? crypto.randomUUID()
-        : `JR-${Date.now()}`
     );
+
+  const cartId =
+    suppliedCartId ||
+    generateUuidV4();
 
 
   const updatedBy =
@@ -1566,7 +1831,7 @@ function buildLegacyOrderPayload(
               firstDefined(
                 item?.taxRate,
                 variant?.taxRate,
-                12
+                GST_PERCENT
               )
             ),
 
@@ -1781,6 +2046,107 @@ function normalizeAuth(response) {
       data,
   };
 }
+/* ============================================================
+   ORDER MASTER RESPONSE HELPERS
+   ============================================================ */
+
+function extractCartId(response) {
+  const value = unwrap(response);
+
+  /*
+   * EXISTING /v1/addcart response can return the authoritative
+   * cart UUID directly as:
+   *
+   * {
+   *   status: 200,
+   *   message: "Loaded successfully",
+   *   data: "3605cd19-7d3d-4c56-9b56-..."
+   * }
+   *
+   * unwrap() intentionally returns response.data, so in that
+   * case `value` is a string. The previous implementation only
+   * accepted objects, causing createOrder() to fall back to the
+   * locally generated cart ID. That cart ID is then rejected by
+   * /v1/order/submit as "Invalid Cart Details".
+   */
+  if (typeof value === "string") {
+    return clean(value);
+  }
+
+  if (!value || typeof value !== "object") {
+    return "";
+  }
+
+  const direct = clean(
+    firstDefined(
+      value?.cartId,
+      value?.cart_id,
+      value?.data?.cartId,
+      value?.data?.cart_id,
+      value?.result?.cartId,
+      value?.result?.cart_id,
+      value?.eCommCartMasterData?.cartId,
+      value?.eCommCartMasterData?.cart_id,
+      value?.data?.eCommCartMasterData?.cartId,
+      value?.data?.eCommCartMasterData?.cart_id,
+      value?.result?.eCommCartMasterData?.cartId,
+      value?.result?.eCommCartMasterData?.cart_id
+    )
+  );
+
+  if (direct) return direct;
+
+  // Existing /v1/cart may wrap the cart master several levels deep.
+  // Find only an explicitly named cartId/cart_id field; never use an
+  // unrelated UUID such as orderId or transactionId.
+  const findNamedCartId = (node, depth = 0) => {
+    if (!node || typeof node !== "object" || depth > 8) return "";
+    if (Array.isArray(node)) {
+      for (const item of node) {
+        const found = findNamedCartId(item, depth + 1);
+        if (found) return found;
+      }
+      return "";
+    }
+    for (const [key, child] of Object.entries(node)) {
+      if ((key === "cartId" || key === "cart_id") && typeof child === "string") {
+        const candidate = clean(child);
+        if (candidate) return candidate;
+      }
+      if (child && typeof child === "object") {
+        const found = findNamedCartId(child, depth + 1);
+        if (found) return found;
+      }
+    }
+    return "";
+  };
+
+  return findNamedCartId(value);
+}
+
+function extractOrderId(response) {
+  const value = unwrap(response);
+
+  if (!value || typeof value !== "object") {
+    return "";
+  }
+
+  return clean(
+    firstDefined(
+      value?.orderId,
+      value?.order_id,
+      value?.orderNumber,
+      value?.order_number,
+      value?.id,
+      value?.data?.orderId,
+      value?.data?.order_id,
+      value?.result?.orderId,
+      value?.result?.order_id
+    )
+  );
+}
+
+
 /* ============================================================
    API
    ============================================================ */
@@ -2524,6 +2890,66 @@ export const api = {
       api.orders(),
 
 
+
+
+  /* ==========================================================
+     ORDER MASTER — PAYMENT STATUS
+     ----------------------------------------------------------
+     Uses the EXISTING backend endpoint:
+       GET /v1/order/status/{cartId}/{orderId}
+     No new backend endpoint is required.
+     ========================================================== */
+
+  orderStatus:
+    async (
+      cartId,
+      orderId
+    ) => {
+      const safeCartId =
+        String(cartId || "").trim();
+
+      const safeOrderId =
+        String(orderId || "").trim();
+
+      if (!safeCartId) {
+        throw new Error("Cart ID is required to check payment status.");
+      }
+
+      if (!safeOrderId) {
+        throw new Error("Order ID is required to check payment status.");
+      }
+
+      console.log(
+        "[Juice Robo] ORDER STATUS URL:",
+        `${ORDER_API_BASE}/v1/order/status/${safeCartId}/${safeOrderId}`
+      );
+
+      const response =
+        await request(
+          `/v1/order/status/${encodeURIComponent(
+            safeCartId
+          )}/${encodeURIComponent(
+            safeOrderId
+          )}`,
+          {},
+          ORDER_API_BASE
+        );
+
+      return normalizeOrder(
+        unwrap(response)
+      );
+    },
+
+  getOrderStatus:
+    async (
+      cartId,
+      orderId
+    ) =>
+      api.orderStatus(
+        cartId,
+        orderId
+      ),
+
   /* ==========================================================
      SINGLE ORDER
      ========================================================== */
@@ -2754,7 +3180,23 @@ export const api = {
       const cartId =
         String(
           legacyPayload.cartId
+        ).trim();
+
+      /*
+       * Defensive validation before sending the request.
+       * This prevents the backend from receiving values such
+       * as "JR-123456789".
+       */
+      const uuidV4Pattern =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+      if (
+        !uuidV4Pattern.test(cartId)
+      ) {
+        throw new Error(
+          "Juice Robo generated an invalid cart ID."
         );
+      }
 
 
       const addCartPayload = {
@@ -2821,11 +3263,74 @@ export const api = {
 
 
       /*
+       * The Order Master API may return the authoritative cart ID
+       * from /v1/addcart. Use it when available instead of blindly
+       * submitting the locally generated UUID.
+       */
+      const returnedCartId =
+        extractCartId(
+          addCartResponse
+        );
+
+      /*
+       * The existing cart endpoint is the final source of truth for the
+       * cart currently stored against the logged-in user. This matters
+       * because the legacy /v1/addcart implementation derives the cart
+       * from the server-side user session and may wrap its response.
+       * Re-read that existing cart before submitting instead of trusting
+       * a frontend-generated UUID.
+       */
+      let verifiedCartId = "";
+      try {
+        const currentCartResponse =
+          await request(
+            "/v1/cart",
+            {},
+            ORDER_API_BASE
+          );
+
+        console.log(
+          "[Juice Robo] CURRENT CART response:",
+          currentCartResponse
+        );
+
+        verifiedCartId =
+          extractCartId(
+            currentCartResponse
+          );
+      } catch (cartReadError) {
+        console.warn(
+          "[Juice Robo] Existing cart verification failed; using addcart response:",
+          cartReadError
+        );
+      }
+
+      const submitCartId =
+        verifiedCartId ||
+        returnedCartId ||
+        cartId;
+
+      console.log(
+        "[Juice Robo] AUTHORITATIVE CART ID:",
+        returnedCartId || "[not returned]",
+        "SUBMIT CART ID:",
+        submitCartId
+      );
+
+      if (!submitCartId) {
+        throw new Error(
+          "Juice Robo did not return a valid cart ID."
+        );
+      }
+
+
+      /*
        * SUBMIT CART
        */
 
       const submitPayload = {
-        cartId,
+        cartId:
+          String(submitCartId),
       };
 
 
@@ -2862,21 +3367,154 @@ export const api = {
         submitResponse
       );
 
+      /*
+       * The legacy backend can return HTTP 200 while the ServerResponse
+       * itself contains status -1. Treat that as a failed business
+       * operation and expose the real backend message instead of
+       * misleading the UI with "payment QR missing".
+       */
+      const submitBusinessStatus =
+        submitResponse?.status;
+
+      if (
+        submitBusinessStatus !== undefined &&
+        submitBusinessStatus !== null &&
+        Number(submitBusinessStatus) !== 200
+      ) {
+        const backendMessage =
+          clean(
+            firstDefined(
+              submitResponse?.message,
+              submitResponse?.error,
+              submitResponse?.data?.message,
+              "Unable to submit the Juice Robo order."
+            )
+          );
+
+        const submitError =
+          new Error(
+            backendMessage ||
+            "Unable to submit the Juice Robo order."
+          );
+
+        submitError.backendResponse =
+          submitResponse;
+
+        throw submitError;
+      }
+
 
       const normalized =
         normalizeOrder(
           submitResponse
         );
 
+      let returnedOrderId =
+        extractOrderId(
+          submitResponse
+        );
+
+      /*
+       * The existing Order Master submit response is not guaranteed
+       * to expose orderId at the top level. The backend already
+       * exposes /v1/order/recent, so use that existing endpoint to
+       * recover the actual OrderInfo/orderId instead of inventing
+       * an order ID or using cartId as a substitute.
+       */
+      let recentOrder = null;
+
+      if (!returnedOrderId) {
+        try {
+          const recentOrders =
+            await api.orders();
+
+          const candidates =
+            Array.isArray(recentOrders)
+              ? recentOrders
+              : [];
+
+          recentOrder =
+            candidates.find(
+              (item) =>
+                String(
+                  item?.cartId ||
+                    item?.cart_id ||
+                    ""
+                ) ===
+                String(submitCartId)
+            ) ||
+            candidates.find(
+              (item) =>
+                String(
+                  item?.transactionId ||
+                    item?.transaction_id ||
+                    ""
+                ) ===
+                String(
+                  normalized?.transactionId ||
+                    normalized?.transaction_id ||
+                    ""
+                )
+            ) ||
+            null;
+
+          returnedOrderId =
+            extractOrderId(
+              recentOrder
+            );
+        } catch (recentError) {
+          console.warn(
+            "[Juice Robo] Existing recent-orders endpoint could not resolve orderId:",
+            recentError
+          );
+        }
+      }
+
+      const submitData =
+        unwrap(submitResponse) || {};
+
+      const qrString =
+        findQrString(submitResponse) ||
+        findQrString(submitData) ||
+        findQrString(normalized) ||
+        "";
+
+      const mergedOrder =
+        normalizeOrder({
+          ...(normalized || {}),
+          ...(recentOrder || {}),
+        });
+
+      if (
+        mergedOrder &&
+        returnedOrderId
+      ) {
+        mergedOrder.orderId =
+          returnedOrderId;
+
+        mergedOrder.order_id =
+          returnedOrderId;
+
+        mergedOrder.id =
+          returnedOrderId;
+      }
+
 
       return {
-        ...normalized,
+        ...(mergedOrder || {}),
 
-        cartId,
+        cartId:
+          String(submitCartId),
 
         addCartResponse,
 
         submitResponse,
+
+        recentOrder,
+
+        qrString:
+          qrString ||
+          "",
 
         items:
           payload?.cartItems ||
@@ -2904,6 +3542,97 @@ export const api = {
         "The existing Juice Robo legacy API does not expose the newer Razorpay verification API."
       );
     },
+
+
+  /* ==========================================================
+     UPI PAYMENT
+     ========================================================== */
+
+  createUpiPaymentUrl:
+    ({
+      upiId = import.meta.env.VITE_JR_UPI_ID || "",
+      payeeName = "Juice Robo",
+      amount,
+    } = {}) =>
+      buildUpiPaymentUrl({
+        upiId,
+        payeeName,
+        amount,
+      }),
+
+
+  /* ==========================================================
+     UPI APP DEEP LINK
+     ========================================================== */
+
+  createUpiAppLink:
+    ({
+      upiUrl = "",
+      app = "phonepe",
+      transactionId = "",
+    } = {}) => {
+      /*
+       * IMPORTANT:
+       * Do not modify the backend-generated UPI payment payload.
+       *
+       * PhonePe can reject a valid merchant payment when extra/changed
+       * transaction parameters are injected by the frontend. The existing
+       * backend QR/UPI payload is the source of truth, so this function only
+       * changes the iOS application scheme and preserves every query
+       * parameter exactly as supplied.
+       */
+      const raw = String(upiUrl || "").trim();
+
+      if (!raw) {
+        throw new Error("UPI payment link is unavailable.");
+      }
+
+      const questionMark = raw.indexOf("?");
+      if (questionMark < 0) {
+        throw new Error("Invalid UPI payment link.");
+      }
+
+      const query = raw.slice(questionMark + 1).trim();
+
+      if (!query) {
+        throw new Error("Invalid UPI payment link.");
+      }
+
+      const schemes = {
+        phonepe: "phonepe://upi/pay?",
+        gpay: "gpay://upi/pay?",
+        paytm: "paytm://upi/pay?",
+        bhim: "bhim://upi/pay?",
+        cred: "credpay://upi/pay?",
+      };
+
+      const scheme =
+        schemes[
+          String(app || "")
+            .trim()
+            .toLowerCase()
+        ];
+
+      if (!scheme) {
+        throw new Error("This UPI app is not supported.");
+      }
+
+      /*
+       * transactionId is intentionally NOT injected here.
+       * The backend/provider-generated payload must remain byte-for-byte
+       * equivalent at the parameter level for app-side verification.
+       */
+      void transactionId;
+
+      return `${scheme}${query}`;
+    },
+
+  getConfiguredUpiId:
+    () =>
+      clean(
+        import.meta.env.VITE_JR_UPI_ID ||
+        ""
+      ),
 
 
   /* ==========================================================
@@ -2935,6 +3664,14 @@ export const api = {
 
     hasAuthorization:
       false,
+
+    hasUpiId:
+      Boolean(
+        clean(
+          import.meta.env.VITE_JR_UPI_ID ||
+          ""
+        )
+      ),
   },
 };
 
@@ -2947,6 +3684,8 @@ export {
   API_BASE,
   ORDER_API_BASE,
   DEFAULT_ORG_ID,
+  GST_RATE,
+  GST_PERCENT,
 };
 
 
@@ -2985,6 +3724,16 @@ console.log(
 console.log(
   "[Juice Robo] JR API SECRET:",
   JR_API_KEY_SECRET
+    ? "[SET]"
+    : "[MISSING]"
+);
+
+console.log(
+  "[Juice Robo] UPI ID:",
+  clean(
+    import.meta.env.VITE_JR_UPI_ID ||
+    ""
+  )
     ? "[SET]"
     : "[MISSING]"
 );

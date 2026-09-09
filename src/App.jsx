@@ -40,7 +40,7 @@ const STORAGE = {
   screen: "juice_robo_current_screen",
 };
 
-const GST_RATE = 0.12;
+const GST_RATE = 0.05;
 
 const EMPTY_CUSTOMER = {
   name: "",
@@ -428,9 +428,19 @@ function getVariantId(
 }
 
 function money(value) {
-  return `₹${Number(
-    value || 0
-  ).toFixed(0)}`;
+  const amount = Number(value || 0);
+
+  /*
+   * Item prices are GST-inclusive.
+   * Keep whole-rupee product prices compact, but retain paise
+   * for extracted GST amounts such as ₹0.0476 from a ₹1 item.
+   */
+  const decimals =
+    Math.abs(amount - Math.round(amount)) > 0.000001
+      ? 2
+      : 0;
+
+  return `₹${amount.toFixed(decimals)}`;
 }
 
 function errorText(error) {
@@ -536,6 +546,160 @@ function makeCartItem(
 /* =========================================================
    APP
    ========================================================= */
+
+
+function StaticPaymentSuccessScreen({
+  order = {},
+  location,
+  machine,
+  onHome,
+  onHistory,
+  money,
+}) {
+  const code = String(
+    order?.orderPin ||
+    order?.order_pin ||
+    order?.collection_code ||
+    order?.collectionCode ||
+    "----"
+  ).replace(/\D/g, "").slice(-4).padStart(4, "0");
+
+  const orderNo =
+    order?.orderNumber ||
+    order?.order_number ||
+    order?.orderId ||
+    order?.order_id ||
+    "—";
+
+  const total = Number(
+    order?.totalAmount ??
+    order?.total_amount ??
+    order?.netBill ??
+    order?.grossBill ??
+    0
+  );
+
+  const locationName =
+    location?.name ||
+    location?.locationName ||
+    order?.locName ||
+    order?.locationName ||
+    "Juice Robo";
+
+  const machineName =
+    machine?.name ||
+    machine?.machineName ||
+    order?.machineName ||
+    "Juice Robo Machine";
+
+  return (
+    <main className="jr-content jr-page jr-payment-success-page">
+      <section className="jr-payment-success-heading">
+        <div className="jr-payment-success-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" strokeWidth="2" />
+            <path d="m9 16 4.5 4.5L23 11" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        <span className="jr-payment-success-eyebrow">
+          PAYMENT SUCCESSFUL
+        </span>
+
+        <h1>
+          Your juice is
+          <br />
+          <em>booked!</em>
+        </h1>
+
+        <p>
+          Your payment was completed and your order is ready for collection.
+        </p>
+      </section>
+
+      <section className="jr-payment-success-code-card">
+        <div className="jr-payment-success-code-header">
+          <div>
+            <span>YOUR COLLECTION CODE</span>
+            <strong>Enter this 4-digit code on your Juice Robo machine</strong>
+          </div>
+          <small>4 DIGITS</small>
+        </div>
+
+        <div className="jr-payment-success-code-digits">
+          {code.split("").map((digit, index) => (
+            <span className="jr-payment-success-digit" key={`${digit}-${index}`}>
+              {digit}
+            </span>
+          ))}
+        </div>
+
+        <p>
+          Enter this 4-digit code on {machineName} to begin preparation.
+        </p>
+      </section>
+
+      <section className="jr-payment-success-details">
+        <div className="jr-payment-success-detail">
+          <div className="jr-payment-success-detail-icon">📍</div>
+          <div className="jr-payment-success-detail-copy">
+            <span>COLLECT FROM</span>
+            <strong>{locationName}</strong>
+            <p>{location?.address || location?.locationAddress || "Selected collection point"}</p>
+          </div>
+        </div>
+
+        <div className="jr-payment-success-divider" />
+
+        <div className="jr-payment-success-detail">
+          <div className="jr-payment-success-detail-icon">▣</div>
+          <div className="jr-payment-success-detail-copy">
+            <span>MACHINE</span>
+            <strong>{machineName}</strong>
+            <p>{machine?.machineCode || machine?.machine_code || "Collection machine"}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="jr-payment-success-payment-card">
+        <div>
+          <span>ORDER</span>
+          <strong>{orderNo}</strong>
+        </div>
+        <div>
+          <span>TOTAL</span>
+          <strong>{typeof money === "function" ? money(total) : `₹${total}`}</strong>
+        </div>
+        <div>
+          <span>PAYMENT</span>
+          <strong className="jr-payment-success-paid">PAID</strong>
+          <small>UPI</small>
+        </div>
+      </section>
+
+      <button
+        className="jr-payment-success-primary"
+        type="button"
+        onClick={onHistory}
+      >
+        <span>VIEW ORDER HISTORY</span>
+        <strong>→</strong>
+      </button>
+
+      <button
+        className="jr-payment-success-secondary"
+        type="button"
+        onClick={onHome}
+      >
+        BACK TO MENU
+      </button>
+
+      <p className="jr-payment-success-note">
+        Keep your collection code safe until you collect your juice.
+      </p>
+    </main>
+  );
+}
 
 export default function App() {
   const loggedIn =
@@ -690,6 +854,9 @@ export default function App() {
   const [busy, setBusy] =
     useState(false);
 
+  const [paymentChecking, setPaymentChecking] =
+    useState(false);
+
   const [error, setError] =
     useState("");
 
@@ -698,6 +865,33 @@ export default function App() {
 
   const [order, setOrder] =
     useState(null);
+
+  const [upiPaymentUrl, setUpiPaymentUrl] =
+    useState(() => {
+      try {
+        return sessionStorage.getItem(
+          "juice_robo_pending_upi_url"
+        ) || "";
+      } catch {
+        return "";
+      }
+    });
+
+  const [upiMerchantId, setUpiMerchantId] =
+    useState(() => {
+      try {
+        return (
+          sessionStorage.getItem(
+            "juice_robo_pending_upi_id"
+          ) ||
+          (typeof api.getConfiguredUpiId === "function"
+            ? api.getConfiguredUpiId()
+            : "")
+        );
+      } catch {
+        return "";
+      }
+    });
 
   /* =======================================================
      SELECTED LOCATION / MACHINE
@@ -800,7 +994,12 @@ export default function App() {
       [safeCart]
     );
 
-  const subtotal =
+  /*
+   * Product prices are GST-inclusive. Keep the customer-facing
+   * total equal to the sum of API prices and extract the 5% GST
+   * portion from that gross amount.
+   */
+  const grossTotal =
     useMemo(
       () =>
         safeCart.reduce(
@@ -819,12 +1018,14 @@ export default function App() {
       [safeCart]
     );
 
+  const subtotal =
+    grossTotal / (1 + GST_RATE);
+
   const gst =
-    subtotal *
-    GST_RATE;
+    grossTotal - subtotal;
 
   const finalTotal =
-    subtotal + gst;
+    grossTotal;
 
   const cartTotal =
     finalTotal;
@@ -2080,8 +2281,78 @@ export default function App() {
     );
   }
 
-  /* =======================================================
+  
+function findPaymentQr(value, depth = 0) {
+  if (depth > 12 || value == null) return "";
+
+  /* Preserve the exact existing backend qrString value first. */
+  if (typeof value === "object" && !Array.isArray(value)) {
+    for (const key of ["qrString", "qr_string"]) {
+      const candidate = value[key];
+      if (typeof candidate === "string" && candidate.trim()) {
+        let exact = candidate.trim();
+        try {
+          if (/%3A|%2F|%3F|%3D|%26/i.test(exact)) {
+            const decoded = decodeURIComponent(exact);
+            if (decoded.trim()) exact = decoded.trim();
+          }
+        } catch {}
+        return exact;
+      }
+    }
+  }
+
+  if (typeof value === "string") {
+    let text = value.trim();
+    try {
+      if (!/^upi:\/\//i.test(text) && /%3A|%2F|%3F|%3D|%26/i.test(text)) {
+        const decoded = decodeURIComponent(text);
+        if (decoded) text = decoded.trim();
+      }
+    } catch {}
+    if (/^upi:\/\/(pay|collect)\?/i.test(text)) return text;
+    if (text.startsWith("{") || text.startsWith("[")) {
+      try { return findPaymentQr(JSON.parse(text), depth + 1); } catch {}
+    }
+    return "";
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findPaymentQr(item, depth + 1);
+      if (found) return found;
+    }
+    return "";
+  }
+
+  if (typeof value !== "object") return "";
+
+  const qrKeys = [
+    "qrCode", "qr_code", "qrcode", "qr",
+    "paymentQr", "payment_qr", "paymentQrString", "payment_qr_string",
+  ];
+
+  for (const key of qrKeys) {
+    const found = findPaymentQr(value[key], depth + 1);
+    if (found) return found;
+  }
+
+  for (const [key, child] of Object.entries(value)) {
+    if (["qrString", "qr_string", ...qrKeys].includes(key)) continue;
+    const found = findPaymentQr(child, depth + 1);
+    if (found) return found;
+  }
+
+  return "";
+}
+
+/* =======================================================
      PAYMENT / ORDER
+     -------------------------------------------------------
+     Creates the Juice Robo order first, then hands a UPI
+     deep-link to the device. Opening the UPI app does NOT
+     mean that payment succeeded; the order remains PENDING
+     until the backend confirms payment.
      ======================================================= */
 
   async function handlePayment() {
@@ -2123,26 +2394,116 @@ export default function App() {
 
     try {
       setBusy(true);
-      setError("");
+      setError(
+        ""
+      );
+
+      try {
+        sessionStorage.removeItem("juice_robo_payment_confirmed");
+      } catch {}
+
+      /* =====================================================
+         1. CREATE JUICE ROBO ORDER
+         ===================================================== */
 
       const created =
         await api.createOrder({
           storeId:
             selectedLocation?.storeId ||
+            selectedLocation?.store_id ||
+            selectedLocation?.locId ||
             selectedLocation?.id,
 
           locationId:
             selectedLocation?.id,
 
           machineId:
-            selectedMachine?.id,
+            selectedMachine?.id ||
+            selectedMachine?.machineId ||
+            selectedMachine?.machine_id,
 
           cartItems:
             safeCart,
+
+          customer: {
+            name:
+              customer?.name ||
+              user?.name ||
+              "",
+
+            phone:
+              customer?.phone ||
+              user?.phone ||
+              "",
+
+            email:
+              customer?.email ||
+              user?.email ||
+              "",
+          },
+
+          updatedBy:
+            customer?.name ||
+            user?.name ||
+            user?.email ||
+            "Juice Robo Customer",
         });
+
+      if (!created) {
+        throw new Error(
+          "Unable to create the Juice Robo order."
+        );
+      }
+
+      /* =====================================================
+         2. NORMALIZE LOCAL ORDER STATE
+         ===================================================== */
+
+      const cartId =
+        String(
+          created?.cartId ||
+          created?.cart_id ||
+          ""
+        ).trim();
+
+      const orderId =
+        String(
+          created?.orderId ||
+          created?.order_id ||
+          created?.orderNumber ||
+          created?.order_number ||
+          created?.id ||
+          ""
+        ).trim();
+
+      const transactionId = String(
+        created?.transactionId ||
+        created?.transaction_id ||
+        ""
+      ).trim();
 
       const normalizedOrder = {
         ...created,
+
+        id:
+          created?.id ||
+          orderId,
+
+        orderId,
+
+        order_id:
+          created?.order_id ||
+          orderId,
+
+        orderNumber:
+          created?.orderNumber ||
+          orderId,
+
+        order_number:
+          created?.order_number ||
+          orderId,
+
+        cartId,
 
         items:
           safeCart,
@@ -2152,6 +2513,9 @@ export default function App() {
         gst,
 
         total_amount:
+          finalTotal,
+
+        totalAmount:
           finalTotal,
 
         location:
@@ -2166,6 +2530,12 @@ export default function App() {
           new Date().toISOString(),
 
         payment_status:
+          created?.payment_status ||
+          created?.paymentStatus ||
+          "PENDING",
+
+        paymentStatus:
+          created?.paymentStatus ||
           created?.payment_status ||
           "PENDING",
 
@@ -2184,44 +2554,601 @@ export default function App() {
           ...current.filter(
             (item) =>
               String(
-                item?.id
+                item?.id ||
+                item?.orderId ||
+                item?.order_id ||
+                item?.orderNumber ||
+                item?.order_number ||
+                ""
               ) !==
               String(
-                normalizedOrder?.id
+                normalizedOrder?.id ||
+                normalizedOrder?.orderId ||
+                normalizedOrder?.orderNumber ||
+                ""
               )
           ),
         ]
       );
 
-      setScreen(
-        "confirmation"
+      /* =====================================================
+         3. SAVE PENDING PAYMENT CONTEXT
+         ===================================================== */
+
+      try {
+        sessionStorage.setItem(
+          "juice_robo_pending_order",
+          JSON.stringify(
+            normalizedOrder
+          )
+        );
+
+        sessionStorage.setItem(
+          "juice_robo_pending_cart_id",
+          cartId
+        );
+
+        sessionStorage.setItem(
+          "juice_robo_pending_order_id",
+          orderId
+        );
+
+        const pendingTransactionId =
+          transactionId ||
+          String(
+            normalizedOrder?.transactionId ||
+            normalizedOrder?.transaction_id ||
+            ""
+          ).trim();
+
+        if (pendingTransactionId) {
+          sessionStorage.setItem(
+            "juice_robo_pending_transaction_id",
+            pendingTransactionId
+          );
+        } else {
+          sessionStorage.removeItem(
+            "juice_robo_pending_transaction_id"
+          );
+        }
+      } catch (storageError) {
+        console.warn(
+          "[Juice Robo] Unable to save pending payment context:",
+          storageError
+        );
+      }
+
+      /* =====================================================
+         4. USE THE BACKEND-GENERATED UPI PAYMENT STRING
+         -----------------------------------------------------
+         The Order Master / PhonePe backend returns qrString.
+         That value is the payment source of truth.
+         Do NOT manufacture a separate frontend UPI payload.
+         ===================================================== */
+
+      /*
+       * Use ONLY the QR string returned by the existing backend.
+       * OrderResp exposes this as qrString inside ServerResponse.data.
+       */
+      const backendQrString = String(
+        created?.qrString ||
+        created?.qr_string ||
+        findPaymentQr(created?.submitResponse) ||
+        findPaymentQr(created) ||
+        ""
+      ).trim();
+
+      /*
+       * Payment must come from the existing backend order/payment flow.
+       * Never manufacture a separate UPI request from a frontend UPI ID:
+       * that request would not be tied to the backend transaction.
+       */
+      const upiUrl = backendQrString;
+
+      if (!upiUrl) {
+        const submitResponse = created?.submitResponse;
+        const backendStatus = submitResponse?.status;
+        const backendMessage = String(
+          submitResponse?.message ||
+          ""
+        ).trim();
+
+        if (backendStatus !== undefined && Number(backendStatus) !== 200 && backendMessage) {
+          throw new Error(backendMessage);
+        }
+
+        throw new Error(
+          "Juice Robo backend did not return a payment QR/link."
+        );
+      }
+
+      console.log(
+        "[Juice Robo] Payment source:",
+        "EXISTING BACKEND QR"
       );
 
-      showToast(
-        "Order created successfully"
+      const upiId = (() => {
+        try {
+          const questionMark = upiUrl.indexOf("?");
+
+          if (questionMark < 0) return "";
+
+          return String(
+            new URLSearchParams(
+              upiUrl.slice(questionMark + 1)
+            ).get("pa") || ""
+          ).trim();
+        } catch {
+          return "";
+        }
+      })();
+
+      console.log(
+        "[Juice Robo] Payment amount:",
+        Number(
+          finalTotal
+        ).toFixed(2)
       );
+
+      console.log(
+        "[Juice Robo] Payment reference:",
+        transactionId
+      );
+
+      /* =====================================================
+         5. OPEN THE DEVICE'S UPI APP
+         -----------------------------------------------------
+         Use the standard UPI URI directly from the user's tap.
+         Do NOT construct an Android intent wrapper: different Android
+         browsers/UPI apps handle such wrappers differently, and an
+         invalid intent wrapper can produce a generic "Something
+         went wrong" screen inside the UPI application.
+
+         The UPI URI remains the source of truth. Opening the URI
+         does NOT mean that payment succeeded.
+         ===================================================== */
+
+      setBusy(false);
+
+      try {
+        sessionStorage.setItem(
+          "juice_robo_pending_upi_url",
+          upiUrl
+        );
+
+      } catch (storageError) {
+        console.warn(
+          "[Juice Robo] Unable to save pending UPI context:",
+          storageError
+        );
+      }
+
+      const derivedUpiId = (() => {
+        try {
+          const raw = String(upiUrl || "").trim();
+          const questionMark = raw.indexOf("?");
+
+          if (questionMark < 0) return "";
+
+          const params = new URLSearchParams(
+            raw.slice(questionMark + 1)
+          );
+
+          return String(
+            params.get("pa") || ""
+          ).trim();
+        } catch {
+          return "";
+        }
+      })();
+
+      setUpiPaymentUrl(upiUrl);
+      setUpiMerchantId(derivedUpiId);
+
+      /*
+       * iOS: hand the backend-generated UPI URI to the device so
+       * iOS can open the customer's registered/preferred UPI app.
+       *
+       * We never manufacture a PhonePe/Google Pay/etc. payload here.
+       * The backend-provided UPI URI remains the payment source of truth.
+       */
+      setScreen("upi-qr");
+
     } catch (paymentError) {
       console.error(
-        "[Juice Robo] Order/payment error:",
+        "[Juice Robo] Payment initiation failed:",
         paymentError
       );
 
-      showToast(
+      const message =
         errorText(
           paymentError
         ) ||
-          "Unable to place the order."
-      );
+        "Unable to start payment.";
 
       setError(
-        errorText(
-          paymentError
-        )
+        message
       );
-    } finally {
+
+      showToast(
+        message
+      );
+
       setBusy(false);
     }
   }
+
+
+  /* =======================================================
+     PAYMENT CONFIRMATION
+     -------------------------------------------------------
+     Payment success is accepted ONLY when the existing
+     backend Order Master status endpoint reports
+     PAYMENT-SUCCESS. Opening a UPI app or returning to this
+     page never clears the cart by itself.
+     ======================================================= */
+
+  async function checkExistingOrderPaymentStatus() {
+    const pendingCartId = String(
+      sessionStorage.getItem("juice_robo_pending_cart_id") ||
+        order?.cartId ||
+        ""
+    ).trim();
+
+    const pendingTransactionId = String(
+      sessionStorage.getItem("juice_robo_pending_transaction_id") ||
+        order?.transactionId ||
+        order?.transaction_id ||
+        ""
+    ).trim();
+
+    let pendingOrderId = String(
+      sessionStorage.getItem("juice_robo_pending_order_id") ||
+        order?.orderId ||
+        order?.order_id ||
+        ""
+    ).trim();
+
+    try {
+      setPaymentChecking(true);
+
+      /*
+       * FIRST: ask the existing recent-orders endpoint.
+       * This is the backend source that already exposes the final
+       * OrderMaster payment status and does not require us to guess
+       * or manufacture an order ID.
+       */
+      let recentOrders = [];
+      try {
+        const recent = await api.orders();
+        recentOrders = Array.isArray(recent) ? recent : [];
+      } catch (recentError) {
+        console.warn(
+          "[Juice Robo] Existing recent-orders check failed:",
+          recentError
+        );
+      }
+
+      const matchingOrder = recentOrders.find((item) => {
+        const itemCartId = String(
+          item?.cartId || item?.cart_id || ""
+        ).trim();
+        const itemOrderId = String(
+          item?.orderId || item?.order_id || item?.id || ""
+        ).trim();
+        const itemTransactionId = String(
+          item?.transactionId || item?.transaction_id || ""
+        ).trim();
+
+        if (pendingTransactionId && itemTransactionId === pendingTransactionId) {
+          return true;
+        }
+        if (pendingOrderId && itemOrderId === pendingOrderId) {
+          return true;
+        }
+        if (pendingCartId && itemCartId === pendingCartId) {
+          return true;
+        }
+        return false;
+      }) || null;
+
+      if (matchingOrder) {
+        const recentStatus = String(
+          matchingOrder?.orderStatus ||
+            matchingOrder?.order_status ||
+            matchingOrder?.status ||
+            ""
+        ).trim().toUpperCase();
+
+        console.log(
+          "[Juice Robo] Existing recent-order payment status:",
+          recentStatus || "UNKNOWN",
+          matchingOrder
+        );
+
+        const resolvedOrderId = String(
+          matchingOrder?.orderId ||
+            matchingOrder?.order_id ||
+            matchingOrder?.id ||
+            pendingOrderId ||
+            ""
+        ).trim();
+
+        if (resolvedOrderId) {
+          pendingOrderId = resolvedOrderId;
+          try {
+            sessionStorage.setItem(
+              "juice_robo_pending_order_id",
+              resolvedOrderId
+            );
+          } catch {}
+        }
+
+        setOrder((current) => ({
+          ...(current || {}),
+          ...(matchingOrder || {}),
+          orderId: resolvedOrderId || current?.orderId,
+          order_id: resolvedOrderId || current?.order_id,
+          id: resolvedOrderId || current?.id,
+          cartId:
+            matchingOrder?.cartId ||
+            matchingOrder?.cart_id ||
+            current?.cartId ||
+            pendingCartId,
+          transactionId:
+            matchingOrder?.transactionId ||
+            matchingOrder?.transaction_id ||
+            current?.transactionId ||
+            pendingTransactionId,
+        }));
+
+        if (recentStatus === "PAYMENT-SUCCESS") {
+          return completeSuccessfulPayment(
+            matchingOrder,
+            pendingCartId,
+            resolvedOrderId || pendingOrderId
+          );
+        }
+      }
+
+      /*
+       * SECOND: use the existing order-status endpoint only when
+       * recent orders did not already confirm PAYMENT-SUCCESS.
+       */
+      if (!pendingOrderId && matchingOrder) {
+        pendingOrderId = String(
+          matchingOrder?.orderId ||
+            matchingOrder?.order_id ||
+            matchingOrder?.id ||
+            ""
+        ).trim();
+      }
+
+      if (!pendingCartId || !pendingOrderId) {
+        console.warn(
+          "[Juice Robo] Payment status check skipped: missing cartId/orderId.",
+          { pendingCartId, pendingOrderId, pendingTransactionId }
+        );
+        return false;
+      }
+
+      const statusOrder = await api.orderStatus(
+        pendingCartId,
+        pendingOrderId
+      );
+
+      if (!statusOrder) return false;
+
+      const backendStatus = String(
+        statusOrder?.orderStatus ||
+          statusOrder?.order_status ||
+          statusOrder?.status ||
+          ""
+      ).trim().toUpperCase();
+
+      console.log(
+        "[Juice Robo] Existing backend order-status payment status:",
+        backendStatus || "UNKNOWN"
+      );
+
+      if (backendStatus === "PAYMENT-SUCCESS") {
+        return completeSuccessfulPayment(
+          statusOrder,
+          pendingCartId,
+          pendingOrderId
+        );
+      }
+
+      setOrder((current) => ({
+        ...(current || {}),
+        ...statusOrder,
+        orderStatus:
+          statusOrder?.orderStatus ||
+          statusOrder?.order_status ||
+          current?.orderStatus ||
+          "QR-INIT",
+        status:
+          statusOrder?.status ||
+          statusOrder?.orderStatus ||
+          statusOrder?.order_status ||
+          current?.status ||
+          "QR-INIT",
+      }));
+
+      return false;
+    } catch (statusError) {
+      console.warn(
+        "[Juice Robo] Payment confirmation check failed; payment remains pending.",
+        statusError
+      );
+      return false;
+    } finally {
+      setPaymentChecking(false);
+    }
+  }
+
+  async function completeSuccessfulPayment(
+    confirmedOrder,
+    pendingCartId,
+    pendingOrderId
+  ) {
+    const alreadyConfirmed =
+      sessionStorage.getItem("juice_robo_payment_confirmed") === "1";
+
+    if (alreadyConfirmed || screen === "payment-success") {
+      return true;
+    }
+
+    const completedOrder = {
+      ...(order || {}),
+      ...(confirmedOrder || {}),
+      id:
+        confirmedOrder?.orderId ||
+        confirmedOrder?.order_id ||
+        confirmedOrder?.id ||
+        pendingOrderId,
+      orderId:
+        confirmedOrder?.orderId ||
+        confirmedOrder?.order_id ||
+        confirmedOrder?.id ||
+        pendingOrderId,
+      order_id:
+        confirmedOrder?.order_id ||
+        confirmedOrder?.orderId ||
+        confirmedOrder?.id ||
+        pendingOrderId,
+      cartId:
+        confirmedOrder?.cartId ||
+        confirmedOrder?.cart_id ||
+        order?.cartId ||
+        pendingCartId,
+      orderStatus: "PAYMENT-SUCCESS",
+      status: "PAYMENT-SUCCESS",
+      paymentStatus: "PAID",
+      payment_status: "PAID",
+      paymentConfirmed: true,
+      items: order?.items || safeCart,
+    };
+
+    try {
+      sessionStorage.setItem("juice_robo_payment_confirmed", "1");
+    } catch {}
+
+    setOrder(completedOrder);
+
+    setHistoryOrders((current) => [
+      completedOrder,
+      ...current.filter(
+        (item) =>
+          String(
+            item?.id ||
+              item?.orderId ||
+              item?.order_id ||
+              item?.orderNumber ||
+              item?.order_number ||
+              ""
+          ) !==
+          String(
+            completedOrder?.id ||
+              completedOrder?.orderId ||
+              pendingOrderId
+          )
+      ),
+    ]);
+
+    /* Cart is cleared ONLY after the existing backend confirms success. */
+    setCart([]);
+
+    try {
+      sessionStorage.removeItem("juice_robo_pending_order");
+      sessionStorage.removeItem("juice_robo_pending_cart_id");
+      sessionStorage.removeItem("juice_robo_pending_order_id");
+      sessionStorage.removeItem("juice_robo_pending_transaction_id");
+      sessionStorage.removeItem("juice_robo_pending_upi_url");
+      sessionStorage.removeItem("juice_robo_pending_upi_id");
+    } catch (storageError) {
+      console.warn(
+        "[Juice Robo] Unable to clear pending payment context:",
+        storageError
+      );
+    }
+
+    setPaymentChecking(false);
+    setBusy(false);
+    setScreen("payment-success");
+    showToast("Payment confirmed successfully");
+    return true;
+  }
+
+  /*
+   * Poll the existing Order Master status endpoint while the
+   * customer is on the UPI screen. Also check immediately when
+   * the browser becomes visible again after returning from the
+   * UPI application.
+   */
+  useEffect(() => {
+    if (screen !== "upi-qr") {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const check = async () => {
+      if (cancelled) return;
+
+      await checkExistingOrderPaymentStatus();
+    };
+
+    check();
+
+    const intervalId =
+      window.setInterval(
+        check,
+        2500
+      );
+
+    const handleVisibilityChange = () => {
+      if (
+        document.visibilityState ===
+        "visible"
+      ) {
+        check();
+      }
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    window.addEventListener(
+      "focus",
+      check
+    );
+
+    return () => {
+      cancelled = true;
+
+      window.clearInterval(
+        intervalId
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+
+      window.removeEventListener(
+        "focus",
+        check
+      );
+    };
+  }, [
+    screen,
+    order?.cartId,
+    order?.orderId,
+    order?.order_id,
+  ]);
 
   /* =======================================================
      HISTORY
@@ -2284,127 +3211,198 @@ export default function App() {
   }
 
   /* =======================================================
-     MOBILE VIEWPORT
+     DEVICE IDENTIFICATION
+     -------------------------------------------------------
+     Device class is determined from navigator.userAgent.
+
+     We intentionally do NOT use viewport width to decide
+     whether the user is on a phone. A desktop browser can
+     emulate a 440px phone viewport, which must not be treated
+     as an actual mobile device.
      ======================================================= */
 
-  const MOBILE_BREAKPOINT = 1024;
+  const isMobileDevice =
+    useMemo(() => {
+      if (typeof navigator === "undefined") {
+        return false;
+      }
 
-  const getMobileViewport = () => {
-    if (typeof window === "undefined") {
-      return true;
-    }
+      const userAgent =
+        String(
+          navigator.userAgent ||
+          ""
+        ).toLowerCase();
 
-    return window.matchMedia(
-      `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
-    ).matches;
-  };
-
-  const [
-    isMobileViewport,
-    setIsMobileViewport,
-  ] = useState(
-    getMobileViewport
-  );
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return undefined;
-    }
-
-    const mediaQuery =
-      window.matchMedia(
-        `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
+      return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|opera mobi|mobile/i.test(
+        userAgent
       );
+    }, []);
 
-    const handleViewportChange = (event) => {
-      setIsMobileViewport(
-        event.matches
+  const isIOSDevice =
+    useMemo(() => {
+      if (typeof navigator === "undefined") {
+        return false;
+      }
+
+      const userAgent =
+        String(
+          navigator.userAgent ||
+          ""
+        ).toLowerCase();
+
+      return /iphone|ipad|ipod/.test(
+        userAgent
       );
-    };
-
-    if (
-      typeof mediaQuery.addEventListener ===
-      "function"
-    ) {
-      mediaQuery.addEventListener(
-        "change",
-        handleViewportChange
-      );
-
-      return () => {
-        mediaQuery.removeEventListener(
-          "change",
-          handleViewportChange
-        );
-      };
-    }
-
-    mediaQuery.addListener(
-      handleViewportChange
-    );
-
-    return () => {
-      mediaQuery.removeListener(
-        handleViewportChange
-      );
-    };
-  }, []);
+    }, []);
 
 /* =======================================================
    DESKTOP BLOCK
    ======================================================= */
 
-if (!isMobileViewport) {
+if (!isMobileDevice) {
   return (
-    <div className="jr-desktop-block" role="status" aria-live="polite">
-      <div className="jr-desktop-block-content">
-        <div className="jr-desktop-device-icon" aria-hidden="true">
+    <div
+      className="jr-desktop-block"
+      role="status"
+      aria-live="polite"
+      style={{
+        minHeight: "100vh",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxSizing: "border-box",
+        padding: "40px 24px",
+        background: "#f7f7f3",
+        fontFamily:
+          "Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}
+    >
+      <div
+        className="jr-desktop-block-content"
+        style={{
+          width: "100%",
+          maxWidth: "460px",
+          textAlign: "center",
+          padding: "48px 32px",
+          boxSizing: "border-box",
+          background: "#ffffff",
+          borderRadius: "28px",
+          boxShadow:
+            "0 18px 50px rgba(0, 0, 0, 0.08)",
+        }}
+      >
+        {/* PHONE ICON */}
+        <div
+          aria-hidden="true"
+          style={{
+            width: "76px",
+            height: "76px",
+            margin: "0 auto 24px",
+            borderRadius: "24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#edf8f0",
+            color: "#2f8050",
+          }}
+        >
           <svg
             viewBox="0 0 64 64"
+            width="42"
+            height="42"
+            fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            focusable="false"
           >
             <rect
-              x="17"
+              x="18"
               y="7"
-              width="30"
+              width="28"
               height="50"
-              rx="7"
-              fill="none"
+              rx="6"
               stroke="currentColor"
               strokeWidth="3"
             />
 
             <rect
-              x="22"
+              x="23"
               y="13"
-              width="20"
-              height="34"
+              width="18"
+              height="35"
               rx="2"
               fill="currentColor"
-              opacity="0.08"
+              opacity="0.10"
             />
 
             <circle
               cx="32"
-              cy="51"
+              cy="52"
               r="2"
               fill="currentColor"
             />
           </svg>
         </div>
 
-        <span className="jr-desktop-block-eyebrow">
+        {/* BRAND */}
+        <div
+          style={{
+            fontSize: "12px",
+            fontWeight: 800,
+            letterSpacing: "2px",
+            color: "#f28a00",
+            marginBottom: "10px",
+          }}
+        >
           JUICE ROBO
-        </span>
+        </div>
 
-        <h1>Mobile Only</h1>
+        {/* TITLE */}
+        <h1
+          style={{
+            margin: "0 0 14px",
+            fontSize: "32px",
+            lineHeight: "1.15",
+            fontWeight: 800,
+            color: "#1c1c1c",
+          }}
+        >
+          Mobile Only
+        </h1>
 
-        <p>
-          This site is optimised for mobile devices.
+        {/* DESCRIPTION */}
+        <p
+          style={{
+            margin: "0 auto",
+            maxWidth: "360px",
+            fontSize: "15px",
+            lineHeight: "1.7",
+            fontWeight: 500,
+            color: "#777777",
+          }}
+        >
+          Juice Robo is designed for mobile devices.
           <br />
-          Please access Juice Robo using your mobile phone.
+          Please open this website on your mobile phone
+          to continue.
         </p>
+
+        {/* SMALL HINT */}
+        <div
+          style={{
+            marginTop: "28px",
+            padding: "12px 18px",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "999px",
+            background: "#f7f7f7",
+            color: "#666666",
+            fontSize: "12px",
+            fontWeight: 700,
+          }}
+        >
+          Best experience on mobile
+        </div>
       </div>
     </div>
   );
@@ -2792,6 +3790,10 @@ if (!isMobileViewport) {
                 updateQuantity
               }
 
+              onAddToCart={
+                handleAddToCart
+              }
+
               productImage={
                 resolveProductImage
               }
@@ -3047,6 +4049,271 @@ if (!isMobileViewport) {
           )}
 
           {/* =================================================
+              UPI QR PAYMENT
+             ================================================= */}
+
+          {screen === "upi-qr" && (
+            <div
+              className="jr-upi-qr-page"
+              style={{
+                width: "100%",
+                height: "100%",
+                minHeight: 0,
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                overflowY: "auto",
+                overflowX: "hidden",
+                WebkitOverflowScrolling: "touch",
+                padding:
+                  "10px 12px calc(28px + env(safe-area-inset-bottom, 0px))",
+                textAlign: "center",
+                background: "#fbfaf4",
+              }}
+            >
+              <div
+                className="jr-upi-qr-card"
+                style={{
+                  width: "min(100%, 390px)",
+                  boxSizing: "border-box",
+                  padding: "18px 12px 26px",
+                  borderRadius: "22px",
+                  background: "#ffffff",
+                  boxShadow: "0 8px 28px rgba(0,0,0,0.08)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "28px",
+                    fontWeight: 800,
+                    lineHeight: 1.15,
+                    marginBottom: "10px",
+                  }}
+                >
+                  Scan to Pay
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "16px",
+                    lineHeight: 1.45,
+                    opacity: 0.72,
+                    marginBottom: "16px",
+                  }}
+                >
+                  Scan this QR code with any UPI app to complete your payment.
+                </div>
+
+                {upiPaymentUrl ? (
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=420x420&margin=18&qzone=2&ecc=H&data=${encodeURIComponent(
+                      upiPaymentUrl
+                    )}`}
+                    alt="Juice Robo UPI payment QR code"
+                    style={{
+                      display: "block",
+                      width: "min(76vw, 330px)",
+                      height: "min(76vw, 330px)",
+                      maxWidth: "330px",
+                      maxHeight: "330px",
+                      margin: "6px auto 16px",
+                      borderRadius: "10px",
+                      background: "#ffffff",
+                    }}
+                  />
+                ) : (
+                  <div style={{ padding: "28px 10px", fontSize: "14px" }}>
+                    Payment QR is unavailable.
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    fontSize: "30px",
+                    fontWeight: 800,
+                    marginBottom: "4px",
+                  }}
+                >
+                  {money(finalTotal)}
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "14px",
+                    opacity: 0.68,
+                    marginBottom: "16px",
+                    wordBreak: "break-all",
+                  }}
+                >
+                  {upiMerchantId || "UPI ID unavailable"}
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "10px",
+                    marginBottom: "12px",
+                  }}
+                >
+                  {[
+                    ["phonepe", "PhonePe"],
+                    ["gpay", "Google Pay"],
+                    ["paytm", "Paytm"],
+                    ["bhim", "BHIM"],
+                    ["cred", "CRED"],
+                  ].map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        try {
+                          let pendingTransactionId = "";
+                          try {
+                            pendingTransactionId = String(
+                              sessionStorage.getItem(
+                                "juice_robo_pending_transaction_id"
+                              ) || ""
+                            ).trim();
+                          } catch {
+                            pendingTransactionId = "";
+                          }
+
+                          const appLink =
+                            api.createUpiAppLink({
+                              upiUrl: upiPaymentUrl,
+                              app: key,
+                              transactionId: pendingTransactionId,
+                            });
+
+                          try {
+                            sessionStorage.setItem(
+                              "juice_robo_ios_upi_attempted",
+                              "1"
+                            );
+                          } catch {
+                            // Ignore storage errors.
+                          }
+
+                          /*
+                           * Must happen directly inside the user's tap
+                           * handler so Safari can hand the URL to the
+                           * installed UPI application.
+                           */
+                          window.location.href = appLink;
+                        } catch (linkError) {
+                          showToast(
+                            errorText(linkError) ||
+                              `${label} is not available for this payment.`
+                          );
+                        }
+                      }}
+                      style={{
+                        minHeight: "58px",
+                        border: "none",
+                        borderRadius: "14px",
+                        background: "#111111",
+                        color: "#ffffff",
+                        fontSize: "15px",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "12px",
+                    lineHeight: 1.4,
+                    opacity: 0.62,
+                    marginBottom: "8px",
+                  }}
+                >
+                  Select an app installed on your phone.
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "13px",
+                    lineHeight: 1.4,
+                    opacity: 0.68,
+                    marginBottom: "12px",
+                  }}
+                >
+                  Opening your preferred UPI app...
+                </div>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!upiMerchantId) {
+                      showToast("UPI ID is unavailable.");
+                      return;
+                    }
+
+                    try {
+                      await navigator.clipboard.writeText(upiMerchantId);
+                      showToast("UPI ID copied");
+                    } catch {
+                      showToast("Copy is unavailable on this device");
+                    }
+                  }}
+                  style={{
+                    width: "100%",
+                    minHeight: "54px",
+                    border: "1px solid rgba(0,0,0,0.12)",
+                    borderRadius: "15px",
+                    background: "#ffffff",
+                    color: "#1685d9",
+                    fontSize: "16px",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Copy UPI ID
+                </button>
+
+
+                <div
+                  style={{
+                    fontSize: "11px",
+                    lineHeight: 1.45,
+                    opacity: 0.6,
+                    marginBottom: "10px",
+                  }}
+                >
+                  Payment confirmation comes from the Juice Robo backend.
+                  Your cart is cleared only after the backend reports
+                  PAYMENT-SUCCESS.
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setScreen("payment")}
+                  style={{
+                    width: "100%",
+                    minHeight: "44px",
+                    border: "none",
+                    borderRadius: "12px",
+                    background: "#111111",
+                    color: "#ffffff",
+                    fontSize: "14px",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                  }}
+                >
+                  Back to Payment
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* =================================================
               CONFIRMATION
              ================================================= */}
 
@@ -3085,7 +4352,7 @@ if (!isMobileViewport) {
              ================================================= */}
 
           {screen === "payment-success" && (
-            <PaymentSuccessScreen
+            <StaticPaymentSuccessScreen
               order={
                 order
               }
@@ -3133,6 +4400,7 @@ if (!isMobileViewport) {
           screen !== "history" &&
           screen !== "product" &&
           screen !== "confirmation" &&
+          screen !== "payment" &&
           screen !== "payment-success" && (
             <BottomNav
               screen={
