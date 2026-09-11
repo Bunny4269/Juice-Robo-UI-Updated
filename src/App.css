@@ -1,25 +1,6 @@
 /* =========================================================
-   JUICE ROBO — APP SHELL / TOP + BOTTOM NAV
-   Responsive, fluid, no device-specific sizing
+   01. GLOBAL RESET
    ========================================================= */
-
-:root {
-  --jr-green: #2f8050;
-  --jr-green-dark: #23683f;
-  --jr-green-soft: #eef8ef;
-  --jr-orange: #ef7d24;
-  --jr-orange-soft: #fff3e8;
-  --jr-text: #151515;
-  --jr-muted: #7d7d7d;
-  --jr-light-muted: #9a9a9a;
-  --jr-white: #fff;
-  --jr-page: #fbfaf3;
-  --jr-border: #eeeeea;
-  --jr-border-dark: #e1e1da;
-
-  --jr-header-height: clamp(56px, 12vw, 68px);
-  --jr-bottom-height: clamp(58px, 13vw, 70px);
-}
 
 *,
 *::before,
@@ -27,28 +8,33 @@
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
+html {
   width: 100%;
   min-width: 0;
-  min-height: 100%;
+  height: 100%;
   margin: 0;
   padding: 0;
-}
 
-html {
-  background: #ecece7;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
-  min-height: 100vh;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
   min-height: 100dvh;
-  background: #ecece7;
-  color: var(--jr-text);
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  background: #f7f7f1;
+  color: #172019;
+
   font-family:
     Inter,
-    Poppins,
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
@@ -56,9 +42,9 @@ body {
     Helvetica,
     Arial,
     sans-serif;
+
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow: hidden;
 }
 
 button,
@@ -72,856 +58,1745 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-img,
-svg {
+img {
+  display: block;
   max-width: 100%;
 }
 
-img {
+svg {
   display: block;
 }
 
-a {
-  color: inherit;
-}
 
 /* =========================================================
-   APP SHELL
+   02. ROOT / APP
    ========================================================= */
+
+#root {
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+}
 
 .jr-app {
   position: relative;
+
   width: 100%;
-  height: 100vh;
   height: 100dvh;
-  min-height: 0;
+  min-height: 100dvh;
+
+  margin: 0;
+  padding: 0;
 
   display: flex;
-  align-items: stretch;
   justify-content: center;
 
-  background: #ecece7;
   overflow: hidden;
 }
+
+
+/* =========================================================
+   03. MOBILE APP FRAME
+   ========================================================= */
 
 .jr-mobile-frame {
   position: relative;
 
   width: 100%;
-  height: 100%;
-  min-width: 0;
+  max-width: 720px;
+
+  height: 100dvh;
   min-height: 0;
+
+  margin: 0 auto;
 
   display: flex;
   flex-direction: column;
 
-  background: var(--jr-page);
   overflow: hidden;
+
+  background: #faf9f1;
 }
 
+
 /* =========================================================
-   TOP NAVBAR
+   04. HEADER
    ========================================================= */
 
 .jr-header {
   position: relative;
+
   z-index: 1000;
 
   width: 100%;
-  min-width: 0;
-  height: var(--jr-header-height);
-  min-height: var(--jr-header-height);
-  flex: 0 0 var(--jr-header-height);
+  height: 56px;
+  min-height: 56px;
+  max-height: 56px;
+
+  flex: 0 0 56px;
 
   display: flex;
   align-items: center;
-  justify-content: space-between;
 
-  gap: clamp(6px, 2vw, 10px);
-  padding:
-    clamp(6px, 1.8vw, 9px)
-    clamp(8px, 2.8vw, 14px);
+  gap: 6px;
 
-  background: var(--jr-white);
-  border-bottom: 1px solid var(--jr-border);
-  box-shadow: 0 2px 10px rgba(25, 50, 30, .045);
+  padding: 6px 8px;
 
-  overflow: visible;
+  margin: 0;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #eeeeea;
+
+  overflow: hidden;
+
   isolation: isolate;
 }
 
-.jr-header-selection {
+
+/* =========================================================
+   05. JUICE ROBO LOGO
+   ========================================================= */
+
+.jr-header-logo-button {
   position: relative;
-  min-width: 0;
-  flex: 1 1 auto;
+
+  z-index: 1002;
+
+  flex: 0 0 38px;
+
+  width: 38px;
+  height: 38px;
+
+  min-width: 38px;
+  min-height: 38px;
+
+  max-width: 38px;
+  max-height: 38px;
 
   display: flex;
   align-items: center;
+  justify-content: center;
 
-  gap: clamp(6px, 2vw, 9px);
-  overflow: visible;
-}
-
-/* =========================================================
-   LOCATION PIN
-   ========================================================= */
-
-.jr-header-location-icon {
-  flex: 0 0 auto;
-
-  width: clamp(29px, 8vw, 38px);
-  height: clamp(29px, 8vw, 38px);
-  min-width: clamp(29px, 8vw, 38px);
-
-  display: grid;
-  place-items: center;
-
-  border: 1px solid #dcebdd;
-  border-radius: 50%;
-
-  background: #f0f8ed;
-  color: var(--jr-green);
-
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.7);
-
-  overflow: hidden;
-}
-
-.jr-header-location-icon .jr-location-pin,
-.jr-location-pin {
-  display: block;
-  width: auto;
-  height: auto;
-
-  font-family:
-    "Apple Color Emoji",
-    "Segoe UI Emoji",
-    "Noto Color Emoji",
-    sans-serif;
-
-  font-size: clamp(17px, 5vw, 25px);
-  line-height: 1;
-  transform: translateY(-1px);
-}
-
-/* Never reserve SVG dimensions for the new emoji pin. */
-.jr-header-location-icon svg {
-  display: none;
-}
-
-/* =========================================================
-   COMBINED LOCATION / MACHINE PICKER
-   ========================================================= */
-
-.jr-combined-picker {
-  position: relative;
-  min-width: 0;
-  flex: 1 1 auto;
-  overflow: visible;
-}
-
-.jr-combined-picker-trigger {
-  position: relative;
-  z-index: 1001;
-
-  width: 100%;
-  min-width: 0;
-  min-height: clamp(36px, 9vw, 44px);
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 7px;
+  padding: 0;
   margin: 0;
-  padding:
-    clamp(3px, 1vw, 5px)
-    clamp(4px, 1.5vw, 8px);
 
-  border: 1px solid transparent;
+  border: 0;
   border-radius: 9px;
 
-  background: transparent;
-  color: var(--jr-text);
+  background: #ffffff;
 
-  font-family: inherit;
-  text-align: left;
+  overflow: hidden;
 
   cursor: pointer;
+
   appearance: none;
   -webkit-appearance: none;
-  touch-action: manipulation;
-
-  transition:
-    background 140ms ease,
-    border-color 140ms ease;
 }
 
-.jr-combined-picker-trigger:hover,
-.jr-combined-picker-trigger.open {
-  background: #f4f9f2;
-  border-color: #dce9da;
+.jr-header-logo {
+  display: block;
+
+  width: 38px;
+  height: 38px;
+
+  min-width: 38px;
+  min-height: 38px;
+
+  max-width: 38px;
+  max-height: 38px;
+
+  object-fit: contain;
+
+  border-radius: 9px;
 }
 
-.jr-combined-picker-trigger:active {
-  background: #ebf5e9;
-}
-
-.jr-combined-picker-trigger:focus-visible {
-  outline: 2px solid var(--jr-orange);
-  outline-offset: 1px;
-}
-
-.jr-combined-picker-copy {
-  min-width: 0;
-  flex: 1 1 auto;
-
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.jr-combined-picker-line {
-  min-width: 0;
-
-  display: flex;
-  align-items: baseline;
-
-  gap: clamp(4px, 1.4vw, 7px);
-  overflow: hidden;
-}
-
-.jr-combined-picker-line small {
-  flex: 0 0 auto;
-
-  min-width: clamp(36px, 10vw, 48px);
-
-  color: #9a9f9a;
-  font-size: clamp(6px, 1.65vw, 8px);
-  line-height: 1;
-  font-weight: 900;
-  letter-spacing: .08em;
-}
-
-.jr-combined-picker-line strong {
-  min-width: 0;
-  overflow: hidden;
-
-  color: #1c241e;
-  font-size: clamp(10px, 3vw, 15px);
-  line-height: 1.05;
-  font-weight: 900;
-
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.jr-combined-picker-line.machine-line strong {
-  color: #737973;
-  font-size: clamp(7px, 2vw, 10px);
-  font-weight: 700;
-}
-
-.jr-combined-picker-chevron {
-  flex: 0 0 auto;
-
-  width: clamp(10px, 3.2vw, 14px);
-  height: clamp(10px, 3.2vw, 14px);
-
-  color: #686e69;
-  transition: transform 160ms ease;
-}
-
-.jr-combined-picker-trigger.open .jr-combined-picker-chevron {
-  transform: rotate(180deg);
-}
 
 /* =========================================================
-   DROPDOWN
+   06. HEADER LOCATION BUTTON
    ========================================================= */
 
-.jr-combined-picker-menu {
-  position: absolute;
-  z-index: 20000;
+.jr-header-location {
+  position: relative;
 
-  top: calc(100% + 4px);
-  left: 0;
+  z-index: 1001;
 
-  width: min(100%, 310px);
-  min-width: min(210px, calc(100vw - 90px));
-  max-width: calc(100vw - 80px);
-  max-height: min(320px, 55vh);
+  flex: 1 1 auto;
 
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  padding: 6px;
-
-  border: 1px solid #dce7dc;
-  border-radius: 13px;
-
-  background: rgba(255,255,255,.99);
-
-  box-shadow:
-    0 16px 36px rgba(27,54,31,.17),
-    0 3px 10px rgba(27,54,31,.08);
-
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-
-  scrollbar-width: thin;
-  animation: jr-dropdown-in 140ms ease-out;
-}
-
-.jr-combined-picker-section-title {
-  padding: 5px 8px 4px;
-
-  color: #9a9f9a;
-  font-size: clamp(6px, 1.7vw, 8px);
-  line-height: 1;
-  font-weight: 950;
-  letter-spacing: .1em;
-}
-
-.jr-combined-picker-option {
-  width: 100%;
+  width: 0;
   min-width: 0;
-  min-height: clamp(36px, 9vw, 44px);
+  max-width: 100%;
+
+  height: 42px;
+  min-height: 42px;
+  max-height: 42px;
 
   display: flex;
   align-items: center;
-  justify-content: space-between;
 
-  gap: 8px;
+  gap: 6px;
+
+  padding: 2px 3px;
   margin: 0;
-  padding: 7px 8px;
 
   border: 0;
   border-radius: 8px;
 
   background: transparent;
-  color: #282d28;
 
-  font-family: inherit;
-  font-size: clamp(9px, 2.7vw, 12px);
-  line-height: 1.15;
-  font-weight: 750;
+  color: #172019;
 
   text-align: left;
+
+  overflow: hidden;
+
   cursor: pointer;
 
   appearance: none;
   -webkit-appearance: none;
+
+  touch-action: manipulation;
 }
 
-.jr-combined-picker-option:hover {
-  background: #f1f8ef;
+.jr-header-location:active {
+  background: #f4f8f1;
 }
 
-.jr-combined-picker-option:active,
-.jr-combined-picker-option.active {
-  background: #eaf5e8;
-  color: var(--jr-green-dark);
+.jr-header-location:focus {
+  outline: none;
 }
 
-.jr-combined-picker-option > span:first-child {
+.jr-header-location:focus-visible {
+  outline: 2px solid #f07800;
+  outline-offset: -1px;
+}
+
+
+/* =========================================================
+   07. HEADER LOCATION ICON
+   ========================================================= */
+
+.jr-header-location-icon {
+  flex: 0 0 28px;
+
+  width: 28px;
+  height: 28px;
+
+  min-width: 28px;
+  min-height: 28px;
+
+  max-width: 28px;
+  max-height: 28px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #eef8ef;
+
+  color: #287f46;
+
+  overflow: hidden;
+}
+
+.jr-header-location-icon svg {
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+}
+
+
+/* =========================================================
+   08. HEADER LOCATION TEXT
+   ========================================================= */
+
+.jr-header-location-copy {
+  flex: 1 1 auto;
+
   min-width: 0;
+  max-width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+
+  gap: 1px;
+
+  overflow: hidden;
+}
+
+.jr-header-location-copy small,
+.jr-header-location-copy strong,
+.jr-header-location-copy > span {
+  display: block;
+
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+
+  margin: 0;
+  padding: 0;
+
   overflow: hidden;
 
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.jr-combined-picker-check {
-  flex: 0 0 auto;
+.jr-header-location-copy small {
+  color: #969b96;
 
-  width: 21px;
-  height: 21px;
+  font-size: 6px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+}
+
+.jr-header-location-copy strong {
+  color: #151b17;
+
+  font-size: 10px;
+  line-height: 1.1;
+
+  font-weight: 900;
+}
+
+.jr-header-location-copy > span {
+  color: #7b817b;
+
+  font-size: 7px;
+  line-height: 1.05;
+
+  font-weight: 650;
+}
+
+
+/* =========================================================
+   09. HEADER CHEVRON
+   ========================================================= */
+
+.jr-header-chevron {
+  flex: 0 0 16px;
+
+  width: 16px;
+  height: 16px;
+
+  min-width: 16px;
+  min-height: 16px;
+
+  max-width: 16px;
+  max-height: 16px;
 
   display: grid;
   place-items: center;
 
-  border-radius: 50%;
-  background: var(--jr-green);
-  color: #fff;
+  color: #707670;
 
-  font-size: 11px;
-  line-height: 1;
-  font-weight: 950;
+  font-size: 0;
+  line-height: 0;
+
+  overflow: hidden;
 }
 
-.jr-combined-picker-empty {
-  padding: 12px 8px;
+.jr-header-chevron svg {
+  display: block;
 
-  color: #858b85;
-  font-size: 9px;
-  line-height: 1.3;
-  text-align: center;
+  width: 14px !important;
+  height: 14px !important;
+
+  min-width: 14px !important;
+  min-height: 14px !important;
+
+  max-width: 14px !important;
+  max-height: 14px !important;
 }
 
-.jr-combined-picker-divider {
-  height: 1px;
-  margin: 5px 6px;
-  background: #e9eee9;
-}
-
-@keyframes jr-dropdown-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px) scale(.985);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
 
 /* =========================================================
-   HEADER ACTIONS
+   10. HEADER ACTIONS
    ========================================================= */
 
 .jr-header-actions {
-  position: relative;
-  z-index: 21000;
-
   flex: 0 0 auto;
 
   display: flex;
   align-items: center;
-  gap: clamp(5px, 1.7vw, 8px);
+
+  gap: 5px;
+
+  min-width: 0;
 }
 
 .jr-profile-button,
 .jr-cart-button {
   position: relative;
-  z-index: 21001;
 
-  width: clamp(32px, 9vw, 40px);
-  height: clamp(32px, 9vw, 40px);
-  min-width: clamp(32px, 9vw, 40px);
-  min-height: clamp(32px, 9vw, 40px);
+  flex: 0 0 34px;
+
+  width: 34px;
+  height: 34px;
+
+  min-width: 34px;
+  min-height: 34px;
+
+  max-width: 34px;
+  max-height: 34px;
+
+  padding: 0;
+  margin: 0;
 
   display: grid;
   place-items: center;
 
-  padding: 0;
+  border: 1px solid #e9e9e4;
+  border-radius: 9px;
 
-  border: 1px solid #dfe8df;
-  border-radius: clamp(8px, 2.5vw, 12px);
+  background: #ffffff;
 
-  background: #fff;
-  color: var(--jr-green);
+  color: #287f46;
 
-  box-shadow: 0 2px 7px rgba(30,50,35,.055);
+  box-shadow:
+    0 2px 8px rgba(25, 35, 25, 0.06);
 
   cursor: pointer;
+
   appearance: none;
   -webkit-appearance: none;
-}
 
-.jr-profile-button:hover,
-.jr-cart-button:hover {
-  background: #f5faf3;
-  border-color: #cfe1cf;
+  touch-action: manipulation;
 }
 
 .jr-profile-button:active,
 .jr-cart-button:active {
-  transform: translateY(1px);
+  transform: scale(0.96);
+}
+
+.jr-profile-button:focus,
+.jr-cart-button:focus {
+  outline: none;
+}
+
+.jr-profile-button:focus-visible,
+.jr-cart-button:focus-visible {
+  outline: 2px solid #f07800;
+  outline-offset: 1px;
 }
 
 .jr-header-action-icon {
-  width: clamp(15px, 4.5vw, 19px);
-  height: clamp(15px, 4.5vw, 19px);
   display: block;
+
+  width: 18px !important;
+  height: 18px !important;
+
+  min-width: 18px !important;
+  min-height: 18px !important;
+
+  max-width: 18px !important;
+  max-height: 18px !important;
 }
 
-.jr-cart-badge,
-.jr-nav-cart-badge {
-  position: absolute;
-
-  display: grid;
-  place-items: center;
-
-  min-width: clamp(15px, 4.5vw, 20px);
-  height: clamp(15px, 4.5vw, 20px);
-  padding: 0 4px;
-
-  border-radius: 999px;
-
-  background: var(--jr-orange);
-  color: #fff;
-
-  font-size: clamp(7px, 2vw, 10px);
-  line-height: 1;
-  font-weight: 900;
-}
-
-.jr-cart-badge {
-  top: clamp(-5px, -1vw, -2px);
-  right: clamp(-5px, -1vw, -2px);
-}
 
 /* =========================================================
-   SCREEN CONTAINER
+   11. CART BADGE
+   ========================================================= */
+
+.jr-cart-badge {
+  position: absolute;
+
+  top: -4px;
+  right: -4px;
+
+  min-width: 15px;
+  height: 15px;
+
+  padding: 0 3px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+
+  background: #ef7d24;
+
+  color: #ffffff;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   12. IMPORTANT — REMOVE OLD NATIVE HEADER SELECTS
+   ========================================================= */
+
+/*
+   The previous Header implementation used native <select>
+   elements for location and machine.
+
+   Those native controls were responsible for the huge
+   grey popup / giant V seen in Chrome mobile emulation
+   and can behave differently on iOS Safari.
+
+   The new Header uses a button and opens the existing
+   LocationMachineScreen instead.
+*/
+
+.jr-header select,
+.jr-header .jr-header-select,
+.jr-header .jr-header-machine-select,
+.jr-header .jr-header-dropdown,
+.jr-header .jr-header-machine-dropdown {
+  display: none !important;
+
+  width: 0 !important;
+  height: 0 !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  max-width: 0 !important;
+  max-height: 0 !important;
+
+  opacity: 0 !important;
+  visibility: hidden !important;
+
+  pointer-events: none !important;
+}
+
+
+/* =========================================================
+   13. MAIN SCREEN AREA
    ========================================================= */
 
 .jr-screen-container {
   position: relative;
 
   width: 100%;
-  flex: 1 1 auto;
-
   min-width: 0;
   min-height: 0;
 
+  flex: 1 1 auto;
+
   display: flex;
   flex-direction: column;
-
-  background: var(--jr-page);
 
   overflow: hidden;
 }
 
-.jr-screen-container > * {
-  min-width: 0;
-  max-width: 100%;
-}
 
-.jr-screen-container > .jr-content {
+/* =========================================================
+   14. PAGE / CONTENT SCROLLING
+   ========================================================= */
+
+.jr-screen-container > .jr-content,
+.jr-screen-container > .jr-page {
+  position: relative;
+
   width: 100%;
-  max-width: 100%;
-  flex: 1 1 auto;
-
   min-width: 0;
   min-height: 0;
 
+  flex: 1 1 auto;
+
   overflow-x: hidden;
-}
-
-/* =========================================================
-   BOTTOM NAVIGATION
-   ========================================================= */
-
-.jr-bottom-nav {
-  position: relative;
-  z-index: 30000;
-
-  width: 100%;
-  height: var(--jr-bottom-height);
-  min-height: var(--jr-bottom-height);
-  flex: 0 0 var(--jr-bottom-height);
-
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: stretch;
+  overflow-y: auto;
 
   padding:
-    clamp(4px, 1.5vw, 8px)
-    clamp(8px, 3vw, 18px);
+    14px
+    12px
+    calc(84px + env(safe-area-inset-bottom, 0px));
 
-  background: rgba(255,255,255,.98);
-  border-top: 1px solid var(--jr-border);
+  -webkit-overflow-scrolling: touch;
 
-  box-shadow: 0 -3px 12px rgba(25,50,30,.05);
+  overscroll-behavior-y: contain;
 
-  overflow: visible;
+  scrollbar-width: none;
 }
 
-.jr-bottom-nav > button {
-  position: relative;
+.jr-screen-container > .jr-content::-webkit-scrollbar,
+.jr-screen-container > .jr-page::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* =========================================================
+   15. PAGE TITLES
+   ========================================================= */
+
+.jr-page-title {
+  margin: 7px 0 9px;
+
+  color: #141b16;
+
+  font-size: 29px;
+  line-height: 1.02;
+
+  font-weight: 900;
+
+  letter-spacing: -1px;
+}
+
+
+/* =========================================================
+   16. CART LIST
+   ========================================================= */
+
+.jr-cart-list {
   width: 100%;
-  height: 100%;
   min-width: 0;
 
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
 
-  gap: clamp(2px, .8vw, 5px);
+  gap: 8px;
+
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+
+/* =========================================================
+   17. CART ITEM
+   ========================================================= */
+
+.jr-cart-item {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 84px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 8px;
+
+  margin: 0;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   18. CART IMAGE
+   ========================================================= */
+
+.jr-cart-item > img {
+  flex: 0 0 64px;
+
+  width: 64px;
+  height: 64px;
+
+  min-width: 64px;
+  min-height: 64px;
+
+  max-width: 64px;
+  max-height: 64px;
+
+  object-fit: cover;
+
+  border-radius: 11px;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   19. CART INFORMATION
+   ========================================================= */
+
+.jr-cart-info {
+  flex: 1 1 auto;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  padding-right: 26px;
+
+  overflow: hidden;
+}
+
+.jr-cart-info > span {
+  display: block;
+
+  min-width: 0;
+  max-width: 100%;
+
+  overflow: hidden;
+
+  font-size: 10px;
+  line-height: 1.2;
+
+  font-weight: 850;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.jr-cart-info > strong {
+  font-size: 11px;
+  line-height: 1.1;
+
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   20. CART QUANTITY CONTROL
+   ========================================================= */
+
+.jr-cart-info .jr-quantity-control,
+.jr-cart-info .jr-cart-quantity {
+  align-self: flex-start;
+
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  padding: 2px;
+
+  border-radius: 999px;
+
+  flex-shrink: 0;
+}
+
+.jr-cart-info .jr-quantity-control button,
+.jr-cart-info .jr-cart-quantity button {
+  flex: 0 0 22px;
+
+  width: 22px;
+  height: 22px;
+
+  min-width: 22px;
+  min-height: 22px;
+
+  max-width: 22px;
+  max-height: 22px;
+
+  padding: 0;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  font-size: 13px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  touch-action: manipulation;
+}
+
+
+/* =========================================================
+   21. CART REMOVE BUTTON
+   ========================================================= */
+
+.jr-remove {
+  position: absolute;
+
+  top: 7px;
+  right: 7px;
+
+  width: 22px;
+  height: 22px;
+
+  min-width: 22px;
+  min-height: 22px;
+
+  max-width: 22px;
+  max-height: 22px;
 
   padding: 0;
   margin: 0;
 
+  display: grid;
+  place-items: center;
+
   border: 0;
-  outline: 0;
+
   background: transparent;
+
+  font-size: 14px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  touch-action: manipulation;
+}
+
+
+/* =========================================================
+   22. COLLECTION / VENUE CARD
+   ========================================================= */
+
+.jr-venue-selected {
+  width: 100%;
+  min-width: 0;
+
+  margin: 8px 0 10px;
+  padding: 9px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+}
+
+.jr-venue-selected-icon {
+  flex: 0 0 32px;
+
+  width: 32px;
+  height: 32px;
+
+  min-width: 32px;
+  min-height: 32px;
+
+  max-width: 32px;
+  max-height: 32px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+
+  overflow: hidden;
+}
+
+.jr-venue-selected > span:nth-child(2) {
+  flex: 1 1 auto;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  overflow: hidden;
+}
+
+.jr-venue-selected small,
+.jr-venue-selected strong {
+  display: block;
+
+  min-width: 0;
+  max-width: 100%;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.jr-venue-selected small {
+  font-size: 6px;
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+.jr-venue-selected strong {
+  font-size: 10px;
+  line-height: 1.15;
+
+  font-weight: 900;
+}
+
+.jr-venue-selected > b {
+  flex: 0 0 auto;
+
+  font-size: 14px;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   23. ORDER SUMMARY
+   ========================================================= */
+
+.jr-order-summary {
+  width: 100%;
+  min-width: 0;
+
+  margin: 6px 0 10px;
+  padding: 11px;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+}
+
+.jr-order-summary > div {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 4px 0;
+}
+
+.jr-order-summary span {
+  min-width: 0;
+
+  font-size: 8px;
+  line-height: 1.2;
+
+  font-weight: 650;
+}
+
+.jr-order-summary strong {
+  flex: 0 0 auto;
+
+  font-size: 11px;
+  line-height: 1.1;
+
+  font-weight: 900;
+}
+
+.jr-summary-total {
+  margin-top: 6px;
+  padding-top: 9px;
+}
+
+.jr-summary-total strong {
+  font-size: 19px;
+}
+
+
+/* =========================================================
+   24. PRIMARY CHECKOUT BUTTON
+   ========================================================= */
+
+.jr-button-primary.jr-full {
+  position: relative;
+
+  width: 100%;
+  min-height: 42px;
+
+  margin: 0 0 8px;
+  padding: 0 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-radius: 11px;
+
+  cursor: pointer;
+
+  touch-action: manipulation;
+}
+
+
+/* =========================================================
+   25. CONTINUE SHOPPING
+   ========================================================= */
+
+.jr-continue-shopping {
+  position: relative;
+
+  width: 100%;
+
+  margin: 8px 0 10px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 8px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  text-transform: uppercase;
 
   cursor: pointer;
 }
 
-.jr-bottom-nav > button:focus-visible {
-  outline: 2px solid var(--jr-orange);
-  outline-offset: -2px;
-  border-radius: 10px;
-}
-
-.jr-nav-cart-icon {
-  position: relative;
-}
-
-.jr-nav-cart-badge {
-  top: clamp(-6px, -1.5vw, -2px);
-  right: clamp(-8px, -1.8vw, -3px);
-}
-
-.jr-bottom-nav small {
-  font-size: clamp(8px, 2.3vw, 10px);
-  line-height: 1.1;
-  font-weight: 800;
-}
 
 /* =========================================================
-   LOADING
+   26. GLOBAL ARROW PROTECTION
    ========================================================= */
 
-.jr-loading {
+/*
+   This is deliberately strict.
+
+   No arrow/chevron should ever become a giant V.
+*/
+
+.jr-continue-arrow,
+.jr-location-continue-arrow,
+.jr-header-chevron,
+.jr-chevron,
+.jr-arrow {
+  box-sizing: border-box !important;
+
+  flex: 0 0 16px !important;
+
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  font-size: 0 !important;
+  line-height: 0 !important;
+
+  overflow: hidden !important;
+
+  transform: none !important;
+}
+
+.jr-continue-arrow svg,
+.jr-location-continue-arrow svg,
+.jr-header-chevron svg,
+.jr-chevron svg,
+.jr-arrow svg {
+  display: block !important;
+
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: visible !important;
+
+  transform: none !important;
+}
+
+
+/* =========================================================
+   27. LOCATION MACHINE SCREEN
+   ========================================================= */
+
+.jr-location-machine-page,
+.jr-location-page,
+.jr-location-machine-screen {
+  position: relative;
+
   width: 100%;
-  min-height: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  flex: 1 1 auto;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.jr-location-machine-page *,
+.jr-location-page *,
+.jr-location-machine-screen * {
+  max-width: 100%;
+}
+
+
+/* =========================================================
+   28. LOCATION MACHINE SVG PROTECTION
+   ========================================================= */
+
+.jr-location-machine-page svg,
+.jr-location-page svg,
+.jr-location-machine-screen svg {
+  max-width: 100%;
+}
+
+.jr-location-machine-page
+.jr-continue-arrow,
+.jr-location-page
+.jr-continue-arrow,
+.jr-location-machine-screen
+.jr-continue-arrow {
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+
+  font-size: 0 !important;
+  line-height: 0 !important;
+
+  overflow: hidden !important;
+}
+
+.jr-location-machine-page
+.jr-continue-arrow
+svg,
+.jr-location-page
+.jr-continue-arrow
+svg,
+.jr-location-machine-screen
+.jr-continue-arrow
+svg {
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+}
+
+
+/* =========================================================
+   29. PRODUCT GRID
+   ========================================================= */
+
+.jr-product-grid {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin: 0;
+  padding: 0;
+}
+
+.jr-product-grid > * {
+  min-width: 0;
+}
+
+
+/* =========================================================
+   30. PRODUCT CARD
+   ========================================================= */
+
+.jr-product-card {
+  position: relative;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  border-radius: 14px;
+}
+
+.jr-product-card img {
+  width: 100%;
+
+  aspect-ratio: 1 / 1;
+
+  object-fit: cover;
+}
+
+
+/* =========================================================
+   31. BOTTOM NAVIGATION
+   ========================================================= */
+
+.jr-bottom-nav {
+  position: absolute;
+
+  z-index: 5000;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  width: 100%;
+
+  height:
+    calc(64px + env(safe-area-inset-bottom, 0px));
+
+  min-height:
+    calc(64px + env(safe-area-inset-bottom, 0px));
+
+  max-height:
+    calc(64px + env(safe-area-inset-bottom, 0px));
+
+  padding:
+    4px
+    8px
+    calc(4px + env(safe-area-inset-bottom, 0px));
+
+  display: flex;
+  align-items: stretch;
+
+  overflow: hidden;
+
+  background: rgba(255, 255, 255, 0.98);
+
+  border-top: 1px solid #eeeeea;
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.jr-bottom-nav > button {
+  flex: 1 1 0;
+
+  min-width: 0;
+  min-height: 0;
+
+  height: 100%;
+
+  padding: 0;
+  margin: 0;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  gap: 10px;
-  padding: 24px;
+  gap: 2px;
 
-  background: rgba(251,250,243,.96);
+  border: 0;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  touch-action: manipulation;
+}
+
+.jr-bottom-nav > button > span,
+.jr-bottom-nav svg {
+  width: 21px !important;
+  height: 21px !important;
+
+  min-width: 21px !important;
+  min-height: 21px !important;
+
+  max-width: 21px !important;
+  max-height: 21px !important;
+}
+
+.jr-bottom-nav small {
+  font-size: 8px;
+  line-height: 1;
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   32. EMPTY CART
+   ========================================================= */
+
+.jr-empty-cart {
+  width: 100%;
+
+  min-height: 260px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
   text-align: center;
 }
 
-.jr-loader {
-  width: 28px;
-  height: 28px;
+.jr-empty-cart svg {
+  width: 42px;
+  height: 42px;
 
-  border: 3px solid #dfeadf;
-  border-top-color: var(--jr-green);
-  border-radius: 50%;
+  min-width: 42px;
+  min-height: 42px;
 
-  animation: jr-spin .8s linear infinite;
+  max-width: 42px;
+  max-height: 42px;
 }
 
-.jr-loading-image {
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
-  border-radius: 12px;
-}
-
-.jr-loading p {
+.jr-empty-cart h2 {
   margin: 0;
-  color: var(--jr-muted);
-  font-size: 11px;
-  line-height: 1.4;
-  font-weight: 600;
+
+  font-size: 19px;
+  line-height: 1.1;
+
+  font-weight: 900;
 }
 
-@keyframes jr-spin {
-  to { transform: rotate(360deg); }
-}
+.jr-empty-cart p {
+  max-width: 240px;
 
-/* =========================================================
-   ERROR ALERT
-   ========================================================= */
-
-.jr-global-error {
-  position: fixed;
-  left: clamp(10px, 3vw, 18px);
-  right: clamp(10px, 3vw, 18px);
-  bottom: calc(var(--jr-bottom-height) + 10px);
-  z-index: 50000;
-
-  width: auto;
-  max-width: 620px;
-  margin-inline: auto;
-
-  padding: 10px 12px;
-
-  border: 1px solid #f0d7d7;
-  border-radius: 12px;
-
-  background: #fff;
-  color: #6b3030;
-
-  box-shadow: 0 10px 28px rgba(50,20,20,.14);
+  margin: 0;
 
   font-size: 10px;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
-.jr-global-error strong {
-  display: block;
-  margin-bottom: 3px;
-  color: #9d3f3f;
-  font-size: 11px;
-}
 
 /* =========================================================
-   TOAST
+   33. GENERAL FORM SAFETY
    ========================================================= */
 
-.jr-toast {
-  position: fixed;
-  left: 50%;
-  bottom: calc(var(--jr-bottom-height) + 12px);
-  z-index: 60000;
+.jr-app input,
+.jr-app textarea {
+  max-width: 100%;
 
-  width: max-content;
-  max-width: min(calc(100vw - 24px), 380px);
-
-  padding: 9px 13px;
-
-  transform: translateX(-50%);
-
-  border-radius: 999px;
-  background: rgba(24,32,26,.94);
-  color: #fff;
-
-  box-shadow: 0 8px 25px rgba(0,0,0,.18);
-
-  font-size: clamp(8px, 2.3vw, 11px);
-  line-height: 1.3;
-  font-weight: 700;
-
-  text-align: center;
-  pointer-events: none;
-
-  animation: jr-toast-in 160ms ease-out;
+  box-sizing: border-box;
 }
 
-@keyframes jr-toast-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 7px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
+.jr-app input {
+  font-size: 16px;
 }
+
 
 /* =========================================================
-   RESPONSIVE SAFETY
+   34. PREVENT HORIZONTAL OVERFLOW
    ========================================================= */
 
-@media (max-width: 360px) {
-  :root {
-    --jr-header-height: 54px;
-    --jr-bottom-height: 58px;
-  }
+.jr-app,
+.jr-mobile-frame,
+.jr-screen-container,
+.jr-screen-container > .jr-content,
+.jr-screen-container > .jr-page,
+.jr-location-machine-page,
+.jr-location-page,
+.jr-location-machine-screen {
+  overflow-x: hidden;
+}
+
+
+/* =========================================================
+   35. SMALL PHONES — <= 375px
+   ========================================================= */
+
+@media screen and (max-width: 375px) {
 
   .jr-header {
-    padding-inline: 7px;
-    gap: 5px;
+    height: 54px;
+    min-height: 54px;
+    max-height: 54px;
+
+    flex-basis: 54px;
+
+    padding:
+      5px
+      6px;
   }
 
-  .jr-header-selection {
+  .jr-header-logo-button {
+    flex-basis: 34px;
+
+    width: 34px;
+    height: 34px;
+
+    min-width: 34px;
+    min-height: 34px;
+
+    max-width: 34px;
+    max-height: 34px;
+  }
+
+  .jr-header-logo {
+    width: 34px;
+    height: 34px;
+
+    min-width: 34px;
+    min-height: 34px;
+
+    max-width: 34px;
+    max-height: 34px;
+  }
+
+  .jr-header-location {
+    height: 38px;
+    min-height: 38px;
+    max-height: 38px;
+
     gap: 5px;
   }
 
   .jr-header-location-icon {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
+    flex-basis: 25px;
+
+    width: 25px;
+    height: 25px;
+
+    min-width: 25px;
+    min-height: 25px;
+
+    max-width: 25px;
+    max-height: 25px;
   }
 
-  .jr-location-pin {
-    font-size: 16px;
+  .jr-header-location-icon svg {
+    width: 14px !important;
+    height: 14px !important;
+
+    min-width: 14px !important;
+    min-height: 14px !important;
+
+    max-width: 14px !important;
+    max-height: 14px !important;
   }
 
-  .jr-combined-picker-line small {
-    min-width: 34px;
-    font-size: 5.5px;
+  .jr-header-location-copy small {
+    font-size: 5px;
   }
 
-  .jr-combined-picker-line strong {
+  .jr-header-location-copy strong {
     font-size: 9px;
   }
 
-  .jr-combined-picker-line.machine-line strong {
-    font-size: 6.8px;
+  .jr-header-location-copy > span {
+    font-size: 6px;
+  }
+
+  .jr-header-chevron {
+    flex-basis: 14px;
+
+    width: 14px;
+    height: 14px;
+
+    min-width: 14px;
+    min-height: 14px;
+
+    max-width: 14px;
+    max-height: 14px;
+  }
+
+  .jr-header-chevron svg {
+    width: 12px !important;
+    height: 12px !important;
+
+    min-width: 12px !important;
+    min-height: 12px !important;
+
+    max-width: 12px !important;
+    max-height: 12px !important;
+  }
+
+  .jr-profile-button,
+  .jr-cart-button {
+    flex-basis: 30px;
+
+    width: 30px;
+    height: 30px;
+
+    min-width: 30px;
+    min-height: 30px;
+
+    max-width: 30px;
+    max-height: 30px;
+
+    border-radius: 8px;
+  }
+
+  .jr-header-action-icon {
+    width: 15px !important;
+    height: 15px !important;
+
+    min-width: 15px !important;
+    min-height: 15px !important;
+
+    max-width: 15px !important;
+    max-height: 15px !important;
+  }
+
+  .jr-cart-item > img {
+    flex-basis: 60px;
+
+    width: 60px;
+    height: 60px;
+
+    min-width: 60px;
+    min-height: 60px;
+
+    max-width: 60px;
+    max-height: 60px;
+  }
+
+  .jr-page-title {
+    font-size: 27px;
+  }
+
+  .jr-product-grid {
+    gap: 8px;
+  }
+}
+
+
+/* =========================================================
+   36. VERY SMALL PHONES — <= 360px
+   ========================================================= */
+
+@media screen and (max-width: 360px) {
+
+  .jr-header {
+    padding-left: 5px;
+    padding-right: 5px;
+
+    gap: 4px;
+  }
+
+  .jr-header-location {
+    gap: 4px;
+  }
+
+  .jr-header-location-copy strong {
+    font-size: 8px;
+  }
+
+  .jr-header-location-copy > span {
+    font-size: 5.5px;
+  }
+
+  .jr-header-actions {
+    gap: 3px;
+  }
+
+  .jr-profile-button,
+  .jr-cart-button {
+    flex-basis: 29px;
+
+    width: 29px;
+    height: 29px;
+
+    min-width: 29px;
+    min-height: 29px;
+
+    max-width: 29px;
+    max-height: 29px;
+  }
+}
+
+
+/* =========================================================
+   37. LANDSCAPE MOBILE
+   ========================================================= */
+
+@media screen and (orientation: landscape)
+and (max-height: 500px) {
+
+  .jr-header {
+    height: 50px;
+    min-height: 50px;
+    max-height: 50px;
+
+    flex-basis: 50px;
+
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .jr-header-logo-button {
+    width: 32px;
+    height: 32px;
+
+    min-width: 32px;
+    min-height: 32px;
+
+    max-width: 32px;
+    max-height: 32px;
+
+    flex-basis: 32px;
+  }
+
+  .jr-header-logo {
+    width: 32px;
+    height: 32px;
+
+    min-width: 32px;
+    min-height: 32px;
   }
 
   .jr-profile-button,
   .jr-cart-button {
     width: 30px;
     height: 30px;
+
     min-width: 30px;
     min-height: 30px;
+
+    max-width: 30px;
+    max-height: 30px;
+
+    flex-basis: 30px;
   }
 
-  .jr-header-action-icon {
-    width: 14px;
-    height: 14px;
-  }
-}
-
-@media (min-width: 700px) {
-  .jr-mobile-frame {
-    max-width: 720px;
-  }
-
-  .jr-header,
-  .jr-bottom-nav {
-    padding-inline: clamp(14px, 3vw, 28px);
-  }
-}
-
-@media (orientation: landscape) {
-  :root {
-    --jr-header-height: clamp(48px, 13vh, 58px);
-    --jr-bottom-height: clamp(52px, 14vh, 62px);
-  }
-
-  .jr-header {
-    padding-block: 4px;
-  }
-
-  .jr-header-location-icon {
-    width: clamp(28px, 7vh, 34px);
-    height: clamp(28px, 7vh, 34px);
-    min-width: clamp(28px, 7vh, 34px);
-  }
-
-  .jr-location-pin {
-    font-size: clamp(16px, 4.5vh, 22px);
-  }
-}
-
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
   .jr-bottom-nav {
     height:
-      calc(
-        var(--jr-bottom-height) +
-        env(safe-area-inset-bottom)
-      );
+      calc(54px + env(safe-area-inset-bottom, 0px));
 
     min-height:
-      calc(
-        var(--jr-bottom-height) +
-        env(safe-area-inset-bottom)
-      );
+      calc(54px + env(safe-area-inset-bottom, 0px));
 
-    padding-bottom:
-      calc(
-        clamp(4px, 1.5vw, 8px) +
-        env(safe-area-inset-bottom)
-      );
+    max-height:
+      calc(54px + env(safe-area-inset-bottom, 0px));
   }
 }
 
+
+/* =========================================================
+   38. SAFE AREA
+   ========================================================= */
+
+@supports (padding: env(safe-area-inset-bottom)) {
+
+  .jr-mobile-frame {
+    padding-top: 0;
+  }
+
+  .jr-screen-container > .jr-content,
+  .jr-screen-container > .jr-page {
+    padding-bottom:
+      calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .jr-bottom-nav {
+    padding-bottom:
+      calc(4px + env(safe-area-inset-bottom));
+  }
+}
+
+
+/* =========================================================
+   39. ACCESSIBILITY
+   ========================================================= */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #f07800;
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   40. REDUCED MOTION
+   ========================================================= */
+
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
-    animation-duration: .001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .001ms !important;
+    animation: none !important;
+
+    transition: none !important;
+
     scroll-behavior: auto !important;
   }
+}
+
+
+/* =========================================================
+   41. FINAL SVG SAFETY
+   ========================================================= */
+
+/*
+   Do not allow an SVG to become a full-screen element.
+*/
+
+.jr-app svg:not([class*="product"]) {
+  max-width: 100%;
+}
+
+
+/* =========================================================
+   42. FINAL LEGACY V / CHEVRON SAFETY
+   ========================================================= */
+
+.jr-app .jr-chevron,
+.jr-app .jr-arrow,
+.jr-app .jr-continue-arrow,
+.jr-app .jr-location-continue-arrow,
+.jr-app [class*="continue-arrow"],
+.jr-app [class*="ContinueArrow"] {
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+
+  flex: 0 0 16px !important;
+
+  font-size: 0 !important;
+  line-height: 0 !important;
+
+  overflow: hidden !important;
+
+  transform: none !important;
+}
+
+.jr-app .jr-chevron svg,
+.jr-app .jr-arrow svg,
+.jr-app .jr-continue-arrow svg,
+.jr-app .jr-location-continue-arrow svg,
+.jr-app [class*="continue-arrow"] svg,
+.jr-app [class*="ContinueArrow"] svg {
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+
+  overflow: visible !important;
+
+  transform: none !important;
 }

@@ -181,7 +181,7 @@ export default function LoginScreen({
         <div className="jr-login-logo-container">
           <img
             className="jr-login-logo-image"
-            src={`${ASSET_BASE}juice-robo-logo.jpg`}
+            src={`${ASSET_BASE}app_logo.jpg`}
             alt="Juice Robo"
           />
         </div>

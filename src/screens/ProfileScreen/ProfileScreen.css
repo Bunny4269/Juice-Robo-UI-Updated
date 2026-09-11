@@ -1,24 +1,28 @@
 /* =========================================================
    JUICE ROBO — PROFILE SCREEN
+   FULL UPDATED STYLESHEET
+   Phone number field removed.
    ========================================================= */
 
 .jr-profile-page {
-  width: 100%;
-  min-height: 0;
-  flex: 1;
+  position: relative !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
 
-  box-sizing: border-box;
+  display: flex !important;
+  flex-direction: column !important;
 
-  overflow-x: hidden;
-  overflow-y: auto;
+  box-sizing: border-box !important;
 
-  padding:
-    clamp(10px, 2.8vw, 14px)
-    clamp(8px, 2.5vw, 12px)
-    clamp(22px, 5vw, 30px);
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
 
-  background: #fbfaf4;
-  color: #171717;
+  padding: 12px 10px 54px !important;
+
+  background: #fbfaf3 !important;
+  color: #151515 !important;
 
   font-family:
     Inter,
@@ -26,595 +30,872 @@
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
-    sans-serif;
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif !important;
 
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  color-scheme: light !important;
 
-  color-scheme: light;
-
-  display: flex;
-  flex-direction: column;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 .jr-profile-page::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+}
+
+.jr-profile-main {
+  width: 100% !important;
+  min-width: 0 !important;
+
+  flex: 0 0 auto !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  box-sizing: border-box !important;
 }
 
 /* =========================================================
-   GLOBAL PROFILE RULES
+   BACK
    ========================================================= */
 
-.jr-profile-page,
-.jr-profile-page * {
-  box-sizing: border-box;
-  color-scheme: light;
+.jr-profile-back {
+  width: fit-content !important;
+  max-width: 100% !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+
+  margin: 0 0 18px !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  background: transparent !important;
+  color: #26804f !important;
+
+  font-family: inherit !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  font-weight: 800 !important;
+
+  white-space: nowrap !important;
+
+  cursor: pointer !important;
+
+  appearance: none !important;
+  -webkit-appearance: none !important;
 }
 
-.jr-profile-page input,
-.jr-profile-page button {
-  -webkit-tap-highlight-color: transparent;
+.jr-profile-back:disabled {
+  opacity: .55 !important;
+  cursor: default !important;
 }
 
 /* =========================================================
-   BACK TO MENU
+   HEADING
    ========================================================= */
 
-.jr-profile-page .jr-back-link {
-  width: fit-content;
+.jr-profile-heading {
+  width: 100% !important;
+  min-width: 0 !important;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-
-  min-height: clamp(32px, 8vw, 40px);
-
-  margin: 0 0 clamp(7px, 2vw, 10px);
-  padding: 0 clamp(5px, 1.5vw, 8px);
-
-  border: 0;
-  border-radius: clamp(6px, 1.8vw, 9px);
-
-  background: transparent;
-  color: #2d8050;
-
-  font-family: inherit;
-  font-size: clamp(11px, 3vw, 14px);
-  line-height: 1;
-  font-weight: 900;
-
-  cursor: pointer;
-
-  appearance: none;
-  -webkit-appearance: none;
-
-  transition:
-    opacity 0.15s ease,
-    background 0.15s ease,
-    transform 0.15s ease;
+  margin: 0 0 14px !important;
 }
 
-.jr-profile-page .jr-back-link:hover {
-  opacity: 0.8;
-  background: rgba(45, 128, 80, 0.06);
+.jr-profile-eyebrow {
+  display: block !important;
+
+  margin: 0 0 5px !important;
+
+  color: #ed7900 !important;
+
+  font-size: 8px !important;
+  line-height: 1 !important;
+
+  font-weight: 900 !important;
+  letter-spacing: .08em !important;
+
+  text-transform: uppercase !important;
 }
 
-.jr-profile-page .jr-back-link:active {
-  transform: translateX(-2px);
+.jr-profile-title {
+  display: flex !important;
+  flex-direction: column !important;
+
+  width: 100% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  color: #111111 !important;
+
+  font-size: 29px !important;
+  line-height: .92 !important;
+
+  font-weight: 950 !important;
+  letter-spacing: -.055em !important;
 }
 
-.jr-profile-page .jr-back-link:disabled {
-  opacity: 0.5;
-  cursor: default;
+.jr-profile-title span,
+.jr-profile-title em {
+  display: block !important;
+}
+
+.jr-profile-title em {
+  color: #25804f !important;
+  font-style: normal !important;
 }
 
 /* =========================================================
-   EYEBROW
+   USER CARD
    ========================================================= */
 
-.jr-profile-page .jr-eyebrow {
-  display: block;
+.jr-profile-user-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 54px !important;
 
-  margin: 0 0 clamp(4px, 1.2vw, 6px);
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
 
-  color: #ed7900;
+  margin: 0 0 9px !important;
+  padding: 7px 9px !important;
 
-  font-size: clamp(8px, 2.2vw, 11px);
-  line-height: 1.1;
-  font-weight: 950;
+  box-sizing: border-box !important;
 
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
+  border: 1px solid #e8e5db !important;
+  border-radius: 10px !important;
 
-/* =========================================================
-   PAGE TITLE
-   ========================================================= */
-
-.jr-profile-page .jr-page-title {
-  margin: 0 0 clamp(13px, 3.5vw, 18px);
-
-  color: #121212;
-
-  font-size: clamp(27px, 8vw, 38px);
-  line-height: 0.94;
-  font-weight: 950;
-
-  letter-spacing: -0.065em;
-}
-
-.jr-profile-page .jr-page-title em {
-  color: #2d8050;
-  font-style: normal;
-}
-
-/* =========================================================
-   PROFILE HERO
-   ========================================================= */
-
-.jr-profile-hero {
-  width: 100%;
-  min-height: clamp(60px, 15vw, 70px);
-
-  display: flex;
-  align-items: center;
-
-  gap: clamp(9px, 2.7vw, 13px);
-
-  margin: 0 0 clamp(12px, 3.2vw, 16px);
-
-  padding:
-    clamp(7px, 2vw, 10px)
-    clamp(8px, 2.5vw, 12px);
-
-  border: 1px solid #eeeade;
-  border-radius: clamp(11px, 3vw, 15px);
-
-  background: #fffdf8;
+  background: #fffefa !important;
 
   box-shadow:
-    0 4px 12px rgba(36, 62, 39, 0.035);
+    0 2px 8px rgba(40, 45, 35, .035) !important;
 }
-
-/* =========================================================
-   AVATAR
-   ========================================================= */
 
 .jr-profile-avatar {
-  width: clamp(40px, 11vw, 48px);
-  height: clamp(40px, 11vw, 48px);
-  min-width: clamp(40px, 11vw, 48px);
+  width: 37px !important;
+  height: 37px !important;
 
-  display: grid;
-  place-items: center;
+  min-width: 37px !important;
+  min-height: 37px !important;
+  max-width: 37px !important;
+  max-height: 37px !important;
 
-  border: 1px solid #f5dfbb;
-  border-radius: 50%;
+  flex: 0 0 37px !important;
 
-  background:
-    linear-gradient(
-      145deg,
-      #fff3df,
-      #ffebc9
-    );
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 
-  color: #ed7900;
+  box-sizing: border-box !important;
 
-  font-size: clamp(13px, 3.8vw, 17px);
-  line-height: 1;
-  font-weight: 950;
+  border: 1px solid #f2dcae !important;
+  border-radius: 50% !important;
+
+  background: #fff3d9 !important;
+  color: #ee8200 !important;
+
+  font-size: 15px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+}
+
+.jr-profile-user-copy {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+
+  overflow: hidden !important;
+}
+
+.jr-profile-user-copy strong,
+.jr-profile-user-copy small {
+  display: block !important;
+  min-width: 0 !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+.jr-profile-user-copy strong {
+  color: #1c1c1c !important;
+
+  font-size: 11px !important;
+  line-height: 1.1 !important;
+  font-weight: 900 !important;
+}
+
+.jr-profile-user-copy small {
+  color: #898983 !important;
+
+  font-size: 7px !important;
+  line-height: 1.1 !important;
+  font-weight: 600 !important;
+}
+
+/* =========================================================
+   PROFILE FORM CARD
+   ========================================================= */
+
+.jr-profile-form-card {
+  width: 100% !important;
+  min-width: 0 !important;
+
+  margin: 0 0 9px !important;
+  padding: 10px !important;
+
+  box-sizing: border-box !important;
+
+  border: 1px solid #e5e5df !important;
+  border-radius: 10px !important;
+
+  background: #ffffff !important;
 
   box-shadow:
-    inset 0 0 0 3px rgba(255, 255, 255, 0.6);
+    0 2px 8px rgba(40, 45, 35, .035) !important;
+}
+
+.jr-profile-form-heading {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+
+  margin: 0 0 9px !important;
+}
+
+.jr-profile-form-heading .jr-profile-eyebrow {
+  margin-bottom: 0 !important;
+}
+
+.jr-profile-form-heading strong {
+  display: block !important;
+
+  color: #222222 !important;
+
+  font-size: 11px !important;
+  line-height: 1.15 !important;
+  font-weight: 900 !important;
 }
 
 /* =========================================================
-   PROFILE NAME / EMAIL
+   FORM
    ========================================================= */
 
-.jr-profile-hero > div:last-child {
-  min-width: 0;
-  flex: 1;
+.jr-profile-form {
+  width: 100% !important;
 
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
 
-  gap: clamp(3px, 1vw, 5px);
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-.jr-profile-hero strong {
-  display: block;
-  min-width: 0;
-  overflow: hidden;
+.jr-profile-field {
+  width: 100% !important;
+  min-width: 0 !important;
 
-  color: #1e1e1e;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
 
-  font-size: clamp(12px, 3.4vw, 16px);
-  line-height: 1.1;
-  font-weight: 900;
+  margin: 0 !important;
+  padding: 0 !important;
 
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  color: #666860 !important;
+
+  font-size: 7px !important;
+  line-height: 1 !important;
+
+  font-weight: 900 !important;
+  letter-spacing: .05em !important;
+
+  text-transform: uppercase !important;
 }
 
-.jr-profile-hero small {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
+.jr-profile-field input {
+  width: 100% !important;
+  height: 34px !important;
+  min-height: 34px !important;
 
-  color: #898983;
+  box-sizing: border-box !important;
 
-  font-size: clamp(8px, 2.2vw, 11px);
-  line-height: 1.2;
-  font-weight: 600;
+  margin: 0 !important;
+  padding: 0 10px !important;
 
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  border: 1px solid #e0e3dc !important;
+  border-radius: 8px !important;
+
+  background: #fffefa !important;
+  color: #222222 !important;
+
+  font-family: inherit !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+
+  outline: none !important;
+
+  appearance: none !important;
+  -webkit-appearance: none !important;
 }
 
-/* =========================================================
-   PROFILE ACTION AREA
-   ========================================================= */
-
-.jr-profile-page .jr-profile-actions {
-  width: 100%;
-
-  flex: 1 1 auto;
-  min-height: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 0;
+.jr-profile-field input::placeholder {
+  color: #b2b5ae !important;
+  opacity: 1 !important;
 }
 
-/* =========================================================
-   ACCOUNT ACTION CARDS
-   ========================================================= */
-
-.jr-profile-page .jr-account-action {
-  width: 100%;
-
-  min-height: clamp(60px, 16vw, 70px);
-  flex: 0 0 auto;
-
-  display: grid;
-
-  grid-template-columns:
-    clamp(36px, 10vw, 42px)
-    minmax(0, 1fr)
-    clamp(18px, 5vw, 22px);
-
-  align-items: center;
-
-  column-gap: clamp(8px, 2.5vw, 11px);
-
-  margin: 0 0 clamp(8px, 2.5vw, 11px);
-
-  padding:
-    clamp(8px, 2.5vw, 11px)
-    clamp(9px, 2.8vw, 12px);
-
-  border: 1px solid #e4e4dd;
-  border-radius: clamp(12px, 3vw, 16px);
-
-  background: #ffffff;
-  color: #222222;
-
-  font-family: inherit;
-  text-align: left;
-
-  cursor: pointer;
-
-  appearance: none;
-  -webkit-appearance: none;
+.jr-profile-field input:focus {
+  border-color: #79ad87 !important;
 
   box-shadow:
-    0 4px 12px rgba(29, 52, 33, 0.035);
+    0 0 0 2px rgba(47, 128, 80, .10) !important;
+}
+
+.jr-profile-form-error {
+  width: 100% !important;
+
+  box-sizing: border-box !important;
+
+  padding: 7px 8px !important;
+
+  border: 1px solid #f0cccc !important;
+  border-radius: 7px !important;
+
+  background: #fff7f7 !important;
+  color: #c72d2d !important;
+
+  font-size: 8px !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+}
+
+/* =========================================================
+   SAVE
+   ========================================================= */
+
+.jr-profile-save {
+  width: 100% !important;
+  height: 38px !important;
+  min-height: 38px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+
+  margin: 1px 0 0 !important;
+  padding: 0 12px !important;
+
+  box-sizing: border-box !important;
+
+  border: 0 !important;
+  border-radius: 8px !important;
+
+  background: #2d8b52 !important;
+  color: #ffffff !important;
+
+  font-family: inherit !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  letter-spacing: .04em !important;
+
+  cursor: pointer !important;
+
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  box-shadow:
+    0 3px 8px rgba(45, 139, 82, .12) !important;
 
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.12s ease,
-    background 0.15s ease;
+    transform .12s ease,
+    background .14s ease,
+    opacity .14s ease !important;
 }
 
-.jr-profile-page .jr-account-action:hover {
-  border-color: #d7ded5;
+.jr-profile-save:hover:not(:disabled) {
+  background: #277b49 !important;
+}
+
+.jr-profile-save:active:not(:disabled) {
+  transform: translateY(1px) !important;
+}
+
+.jr-profile-save:disabled {
+  opacity: .55 !important;
+  cursor: default !important;
+}
+
+/* =========================================================
+   ORDERS
+   ========================================================= */
+
+.jr-profile-orders-button {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 54px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+
+  margin: 0 !important;
+  padding: 7px 9px !important;
+
+  box-sizing: border-box !important;
+
+  border: 1px solid #e5e5df !important;
+  border-radius: 10px !important;
+
+  background: #ffffff !important;
+  color: #222222 !important;
+
+  font-family: inherit !important;
+  text-align: left !important;
+
+  cursor: pointer !important;
+
+  appearance: none !important;
+  -webkit-appearance: none !important;
 
   box-shadow:
-    0 6px 15px rgba(29, 52, 33, 0.055);
+    0 2px 8px rgba(40, 45, 35, .035) !important;
+
+  transition:
+    background .14s ease,
+    border-color .14s ease,
+    transform .12s ease !important;
 }
 
-.jr-profile-page .jr-account-action:active {
-  transform: translateY(1px);
+.jr-profile-orders-button:hover {
+  border-color: #d7dfd4 !important;
+  background: #fcfdfb !important;
 }
 
-.jr-profile-page .jr-account-action:disabled {
-  opacity: 0.6;
-  cursor: default;
+.jr-profile-orders-button:active {
+  transform: scale(.995) !important;
+}
+
+.jr-profile-orders-button:disabled {
+  opacity: .55 !important;
+  cursor: default !important;
+}
+
+.jr-profile-orders-icon {
+  width: 34px !important;
+  height: 34px !important;
+
+  min-width: 34px !important;
+  min-height: 34px !important;
+
+  max-width: 34px !important;
+  max-height: 34px !important;
+
+  flex: 0 0 34px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border-radius: 8px !important;
+
+  background: #edf7ec !important;
+  color: #2c8050 !important;
+
+  overflow: hidden !important;
+}
+
+.jr-profile-orders-svg {
+  display: block !important;
+
+  width: 17px !important;
+  height: 17px !important;
+
+  min-width: 17px !important;
+  min-height: 17px !important;
+
+  max-width: 17px !important;
+  max-height: 17px !important;
+}
+
+.jr-profile-orders-copy {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+
+  overflow: hidden !important;
+}
+
+.jr-profile-orders-copy strong,
+.jr-profile-orders-copy small {
+  display: block !important;
+
+  min-width: 0 !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+.jr-profile-orders-copy strong {
+  color: #222222 !important;
+
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  font-weight: 900 !important;
+}
+
+.jr-profile-orders-copy small {
+  color: #8a8a84 !important;
+
+  font-size: 7px !important;
+  line-height: 1.1 !important;
+  font-weight: 600 !important;
+}
+
+.jr-profile-orders-arrow {
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+
+  flex: 0 0 16px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  color: #747872 !important;
+
+  font-size: 14px !important;
+  line-height: 1 !important;
+  font-weight: 500 !important;
+
+  overflow: hidden !important;
 }
 
 /* =========================================================
-   NORMAL ACTION ICON
+   LOGOUT
    ========================================================= */
 
-.jr-profile-page
-.jr-account-action:not(.jr-account-action-danger)
-> span:first-child {
-  width: clamp(36px, 10vw, 42px);
-  height: clamp(36px, 10vw, 42px);
-  min-width: clamp(36px, 10vw, 42px);
+.jr-profile-logout {
+  position: absolute !important;
 
-  display: grid;
-  place-items: center;
+  right: 7px !important;
+  bottom: 7px !important;
 
-  border-radius: clamp(9px, 2.5vw, 11px);
+  z-index: 50 !important;
 
-  background: #eef7ed;
-  color: #2d8050;
+  width: 90px !important;
+  height: 34px !important;
 
-  font-size: clamp(14px, 4vw, 18px);
-  line-height: 1;
-  font-weight: 900;
-}
+  min-width: 90px !important;
+  min-height: 34px !important;
 
-/* =========================================================
-   ACTION CONTENT
-   ========================================================= */
+  max-width: 90px !important;
+  max-height: 34px !important;
 
-.jr-profile-page
-.jr-account-action
-> div {
-  min-width: 0;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 
-  display: flex;
-  flex-direction: column;
+  gap: 6px !important;
 
-  gap: clamp(3px, 1vw, 5px);
-}
+  margin: 0 !important;
+  padding: 3px 7px !important;
 
-.jr-profile-page
-.jr-account-action
-strong {
-  display: block;
-  overflow: hidden;
+  box-sizing: border-box !important;
 
-  color: #242424;
+  border: 1px solid #f1c9c9 !important;
+  border-radius: 8px !important;
 
-  font-size: clamp(11px, 3vw, 15px);
-  line-height: 1.1;
-  font-weight: 950;
+  background: #fffafa !important;
+  color: #d52b2b !important;
 
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
+  font-family: inherit !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
 
-.jr-profile-page
-.jr-account-action
-small {
-  display: block;
-  overflow: hidden;
+  white-space: nowrap !important;
 
-  color: #8b8b85;
+  cursor: pointer !important;
 
-  font-size: clamp(8px, 2.2vw, 11px);
-  line-height: 1.2;
-  font-weight: 600;
-
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* =========================================================
-   ACTION ARROW
-   ========================================================= */
-
-.jr-profile-page
-.jr-account-action
-> b {
-  color: #777771;
-
-  font-size: clamp(15px, 4vw, 19px);
-  line-height: 1;
-  font-weight: 500;
-
-  text-align: center;
-}
-
-/* =========================================================
-   LOGOUT ACTION
-   IMPORTANT:
-   The old CSS used display:none !important here, which
-   completely hid the Logout button from the screen.
-   ========================================================= */
-
-.jr-profile-page
-.jr-account-action.jr-account-action-danger {
-  display: grid !important;
-
-  margin-top: auto;
-
-  border-color: #f0cccc;
-  background: #fff8f8;
-
-  color: #c91c1c;
+  appearance: none !important;
+  -webkit-appearance: none !important;
 
   box-shadow:
-    0 4px 12px rgba(198, 40, 40, 0.045);
+    0 3px 8px rgba(198, 40, 40, .07) !important;
+
+  transition:
+    background .14s ease,
+    border-color .14s ease,
+    transform .12s ease,
+    opacity .14s ease !important;
+
+  -webkit-tap-highlight-color: transparent !important;
 }
 
-.jr-profile-page
-.jr-account-action.jr-account-action-danger:hover {
-  border-color: #e9b7b7;
-  background: #fff4f4;
-
-  box-shadow:
-    0 6px 15px rgba(198, 40, 40, 0.08);
+.jr-profile-logout:hover:not(:disabled) {
+  background: #fff5f5 !important;
+  border-color: #e8aaaa !important;
 }
 
-.jr-profile-page
-.jr-account-action.jr-account-action-danger:active {
-  background: #ffeded;
+.jr-profile-logout:active:not(:disabled) {
+  transform: translateY(1px) !important;
 }
 
-.jr-profile-page
-.jr-account-action.jr-account-action-danger
-> span:first-child {
-  width: clamp(36px, 10vw, 42px);
-  height: clamp(36px, 10vw, 42px);
-  min-width: clamp(36px, 10vw, 42px);
-
-  display: grid;
-  place-items: center;
-
-  border-radius: clamp(9px, 2.5vw, 11px);
-
-  background: #ffe5e5;
-  color: #c91c1c;
-
-  font-size: clamp(17px, 4.5vw, 21px);
-  line-height: 1;
-  font-weight: 900;
+.jr-profile-logout:disabled {
+  opacity: .55 !important;
+  cursor: default !important;
+  box-shadow: none !important;
 }
 
-.jr-profile-page
-.jr-account-action.jr-account-action-danger
-strong {
-  color: #b71919;
+.jr-profile-logout-icon {
+  width: 23px !important;
+  height: 23px !important;
+
+  min-width: 23px !important;
+  min-height: 23px !important;
+
+  max-width: 23px !important;
+  max-height: 23px !important;
+
+  flex: 0 0 23px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  box-sizing: border-box !important;
+
+  border-radius: 6px !important;
+
+  background: #fde7e7 !important;
+  color: #d52b2b !important;
+
+  overflow: hidden !important;
 }
 
-.jr-profile-page
-.jr-account-action.jr-account-action-danger
-small {
-  color: #9f6b6b;
+.jr-profile-logout-svg {
+  display: block !important;
+
+  width: 15px !important;
+  height: 15px !important;
+
+  min-width: 15px !important;
+  min-height: 15px !important;
+
+  max-width: 15px !important;
+  max-height: 15px !important;
 }
 
-.jr-profile-page
-.jr-account-action.jr-account-action-danger
-> b {
-  color: #c91c1c;
+.jr-profile-logout-text {
+  display: block !important;
+
+  flex: 0 0 auto !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  color: #d52b2b !important;
+
+  font-size: 10px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+
+  white-space: nowrap !important;
 }
 
 /* =========================================================
-   NARROW MOBILE
+   RESPONSIVE
    ========================================================= */
 
-@media (max-width: 360px) {
+@media (max-width: 390px) {
   .jr-profile-page {
-    padding:
-      9px
-      7px
-      20px;
+    padding: 10px 9px 50px !important;
   }
 
-  .jr-profile-page .jr-page-title {
-    font-size: clamp(26px, 8vw, 30px);
+  .jr-profile-back {
+    margin-bottom: 15px !important;
+    font-size: 9px !important;
   }
 
-  .jr-profile-hero {
-    gap: 8px;
+  .jr-profile-eyebrow {
+    font-size: 7px !important;
+  }
+
+  .jr-profile-title {
+    font-size: 27px !important;
+  }
+
+  .jr-profile-heading {
+    margin-bottom: 12px !important;
+  }
+
+  .jr-profile-user-card,
+  .jr-profile-orders-button {
+    min-height: 52px !important;
   }
 
   .jr-profile-avatar {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
+    width: 35px !important;
+    height: 35px !important;
+
+    min-width: 35px !important;
+    min-height: 35px !important;
+
+    max-width: 35px !important;
+    max-height: 35px !important;
+
+    flex-basis: 35px !important;
   }
 
-  .jr-profile-page
-  .jr-account-action {
-    grid-template-columns:
-      36px
-      minmax(0, 1fr)
-      18px;
+  .jr-profile-user-copy strong {
+    font-size: 10px !important;
   }
 
-  .jr-profile-page
-  .jr-account-action
-  > span:first-child {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
+  .jr-profile-user-copy small {
+    font-size: 6.5px !important;
+  }
+
+  .jr-profile-form-card {
+    padding: 9px !important;
+  }
+
+  .jr-profile-field input {
+    height: 33px !important;
+    min-height: 33px !important;
+  }
+
+  .jr-profile-save {
+    height: 37px !important;
+    min-height: 37px !important;
+  }
+
+  .jr-profile-orders-icon {
+    width: 32px !important;
+    height: 32px !important;
+
+    min-width: 32px !important;
+    min-height: 32px !important;
+
+    max-width: 32px !important;
+    max-height: 32px !important;
+
+    flex-basis: 32px !important;
+  }
+
+  .jr-profile-orders-copy strong {
+    font-size: 9px !important;
+  }
+
+  .jr-profile-orders-copy small {
+    font-size: 6.5px !important;
+  }
+
+  .jr-profile-logout {
+    right: 6px !important;
+    bottom: 6px !important;
+
+    width: 88px !important;
+    height: 33px !important;
+
+    min-width: 88px !important;
+    min-height: 33px !important;
+
+    max-width: 88px !important;
+    max-height: 33px !important;
+  }
+
+  .jr-profile-logout-icon {
+    width: 22px !important;
+    height: 22px !important;
+
+    min-width: 22px !important;
+    min-height: 22px !important;
+
+    max-width: 22px !important;
+    max-height: 22px !important;
+
+    flex-basis: 22px !important;
+  }
+
+  .jr-profile-logout-svg {
+    width: 14px !important;
+    height: 14px !important;
+
+    min-width: 14px !important;
+    min-height: 14px !important;
+
+    max-width: 14px !important;
+    max-height: 14px !important;
+  }
+
+  .jr-profile-logout-text {
+    font-size: 9px !important;
   }
 }
 
 /* =========================================================
-   SHORT MOBILE SCREENS
+   SAFE AREA
    ========================================================= */
 
-@media (max-height: 700px) {
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
   .jr-profile-page {
-    padding-top: 8px;
-    padding-bottom: 16px;
+    padding-bottom:
+      max(
+        50px,
+        calc(50px + env(safe-area-inset-bottom))
+      ) !important;
   }
 
-  .jr-profile-page .jr-page-title {
-    margin-bottom: 10px;
-  }
-
-  .jr-profile-hero {
-    min-height: 56px;
-    margin-bottom: 10px;
-  }
-
-  .jr-profile-avatar {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-  }
-
-  .jr-profile-page
-  .jr-account-action {
-    min-height: 56px;
-    margin-bottom: 7px;
+  .jr-profile-logout {
+    bottom:
+      max(
+        6px,
+        env(safe-area-inset-bottom)
+      ) !important;
   }
 }
 
 /* =========================================================
-   LARGE MOBILE HEIGHT
+   FOCUS
    ========================================================= */
 
-@media (min-height: 780px) {
-  .jr-profile-page {
-    padding-bottom: 28px;
-  }
-
-  .jr-profile-page .jr-page-title {
-    margin-bottom: 15px;
-  }
-
-  .jr-profile-hero {
-    margin-bottom: 15px;
-  }
-
-  .jr-profile-page
-  .jr-account-action {
-    min-height: 66px;
-  }
-}
-
-/* =========================================================
-   LANDSCAPE MOBILE
-   ========================================================= */
-
-@media
-  (orientation: landscape)
-  and (min-width: 560px)
-  and (max-height: 420px) {
-
-  .jr-profile-page
-  .jr-account-action {
-    min-height: 52px;
-  }
-
-  .jr-profile-page
-  .jr-account-action
-  > span:first-child {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-  }
+.jr-profile-back:focus-visible,
+.jr-profile-orders-button:focus-visible,
+.jr-profile-logout:focus-visible,
+.jr-profile-save:focus-visible,
+.jr-profile-field input:focus-visible {
+  outline: 2px solid rgba(38, 128, 79, .35) !important;
+  outline-offset: 2px !important;
 }
 
 /* =========================================================
@@ -622,8 +903,10 @@ small {
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
-  .jr-profile-page .jr-back-link,
-  .jr-profile-page .jr-account-action {
+  .jr-profile-back,
+  .jr-profile-orders-button,
+  .jr-profile-logout,
+  .jr-profile-save {
     transition: none !important;
   }
 }

@@ -1,11 +1,12 @@
 /* =========================================================
-   PAGE
+   JUICE ROBO — PAYMENT SCREEN
    ========================================================= */
 
 .jr-payment-page {
   width: 100%;
   min-width: 0;
   min-height: 0;
+
   flex: 1;
 
   display: flex;
@@ -50,61 +51,91 @@
 
 
 /* =========================================================
-   BACK BUTTON
+   BACK TO CART
    ========================================================= */
 
 .jr-payment-back {
   width: fit-content;
-  max-width: 100%;
-
-  min-height: 31px;
+  height: 30px;
+  min-height: 30px;
 
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 
-  margin: 0 0 clamp(6px, 1.8vw, 10px);
-  padding: 0 6px;
+  gap: 4px;
+
+  margin: 0 0 10px;
+  padding: 0 5px;
 
   border: 0;
-  border-radius: 8px;
+  border-radius: 7px;
 
   background: transparent;
+
   color: #2d8050;
 
   font-family: inherit;
 
-  font-size: clamp(11px, 2.6vw, 14px);
+  font-size: 13px;
   line-height: 1;
-  font-weight: 900;
+
+  font-weight: 850;
 
   cursor: pointer;
 
   appearance: none;
   -webkit-appearance: none;
 
-  -webkit-tap-highlight-color: transparent;
+  box-shadow: none;
+  outline: none;
 
   transition:
     background 0.15s ease,
-    opacity 0.15s ease,
-    transform 0.12s ease;
+    transform 0.12s ease,
+    opacity 0.15s ease;
 }
 
-.jr-payment-back:hover {
-  background: rgba(45, 128, 80, 0.06);
+
+/* =========================================================
+   HOVER
+   ========================================================= */
+
+.jr-payment-back:hover:not(:disabled) {
+  background: rgba(45, 128, 80, 0.07);
 }
 
-.jr-payment-back:active {
+
+/* =========================================================
+   ACTIVE
+   ========================================================= */
+
+.jr-payment-back:active:not(:disabled) {
   transform: translateX(-2px);
 }
 
-.jr-payment-back:disabled {
-  opacity: 0.5;
-  cursor: default;
+
+/* =========================================================
+   FOCUS
+   ========================================================= */
+
+.jr-payment-back:focus-visible {
+  outline: 2px solid rgba(45, 128, 80, 0.25);
+  outline-offset: 2px;
 }
 
 
+/* =========================================================
+   DISABLED
+   ========================================================= */
+
+.jr-payment-back:disabled {
+  opacity: 0.45;
+
+  cursor: default;
+
+  pointer-events: none;
+}
 /* =========================================================
    HEADER
    ========================================================= */
@@ -113,24 +144,23 @@
   width: 100%;
   min-width: 0;
 
-  margin: 0 0 clamp(11px, 3vw, 16px);
+  margin-bottom: 14px;
 }
 
 .jr-payment-eyebrow {
   display: block;
 
-  margin: 0 0 5px;
+  margin-bottom: 6px;
 
   color: #ed7900;
 
   font-size: clamp(9px, 2vw, 11px);
+
   line-height: 1;
 
   font-weight: 950;
 
   letter-spacing: 0.12em;
-
-  text-transform: uppercase;
 }
 
 .jr-payment-header h1 {
@@ -138,8 +168,9 @@
 
   color: #121212;
 
-  font-size: clamp(30px, 7vw, 42px);
-  line-height: 0.9;
+  font-size: clamp(31px, 7vw, 44px);
+
+  line-height: 0.91;
 
   font-weight: 950;
 
@@ -152,17 +183,15 @@
 }
 
 .jr-payment-header p {
-  max-width: 440px;
+  max-width: 470px;
 
-  margin:
-    7px
-    0
-    0;
+  margin: 8px 0 0;
 
   color: #858581;
 
-  font-size: clamp(10px, 2.3vw, 13px);
-  line-height: 1.35;
+  font-size: clamp(11px, 2.4vw, 14px);
+
+  line-height: 1.4;
 
   font-weight: 500;
 }
@@ -174,22 +203,19 @@
 
 .jr-payment-collection-card {
   width: 100%;
-  min-width: 0;
 
   display: flex;
   align-items: center;
 
-  gap: clamp(9px, 2.5vw, 13px);
+  gap: 11px;
 
-  margin: 0 0 clamp(10px, 2.5vw, 14px);
+  margin-bottom: 12px;
 
-  padding:
-    clamp(9px, 2vw, 12px)
-    clamp(10px, 2.5vw, 14px);
+  padding: 11px 12px;
 
   border: 1px solid #e3e9df;
 
-  border-radius: clamp(11px, 2.5vw, 15px);
+  border-radius: 14px;
 
   background: #f7faf3;
 
@@ -198,27 +224,29 @@
 }
 
 .jr-payment-location-icon {
-  width: clamp(38px, 9vw, 46px);
-  height: clamp(38px, 9vw, 46px);
+  width: 44px;
+  height: 44px;
 
-  min-width: clamp(38px, 9vw, 46px);
+  min-width: 44px;
 
   display: grid;
   place-items: center;
 
-  border-radius: clamp(9px, 2vw, 12px);
+  border-radius: 11px;
 
   background: #e7f3e2;
+
   color: #2d8050;
 }
 
 .jr-payment-location-icon svg {
-  width: clamp(20px, 4.5vw, 25px);
-  height: clamp(20px, 4.5vw, 25px);
+  width: 24px;
+  height: 24px;
 }
 
 .jr-payment-location-copy {
   min-width: 0;
+
   flex: 1;
 
   display: flex;
@@ -228,11 +256,10 @@
 }
 
 .jr-payment-location-copy small {
-  display: block;
-
   color: #6c856e;
 
-  font-size: clamp(7px, 1.7vw, 9px);
+  font-size: 9px;
+
   line-height: 1;
 
   font-weight: 950;
@@ -241,15 +268,14 @@
 }
 
 .jr-payment-location-copy strong {
-  display: block;
-
   min-width: 0;
 
   overflow: hidden;
 
   color: #202820;
 
-  font-size: clamp(12px, 2.9vw, 16px);
+  font-size: clamp(13px, 3vw, 17px);
+
   line-height: 1.1;
 
   font-weight: 950;
@@ -259,15 +285,14 @@
 }
 
 .jr-payment-location-copy span {
-  display: block;
-
   min-width: 0;
 
   overflow: hidden;
 
   color: #777d77;
 
-  font-size: clamp(8px, 2vw, 11px);
+  font-size: clamp(9px, 2vw, 11px);
+
   line-height: 1.15;
 
   font-weight: 550;
@@ -283,146 +308,238 @@
 
 .jr-payment-summary {
   width: 100%;
-  min-width: 0;
 
-  margin: 0 0 clamp(10px, 2.5vw, 14px);
+  margin-bottom: 12px;
 
-  padding:
-    clamp(10px, 2.5vw, 14px);
+  padding: clamp(12px, 2.8vw, 16px);
 
-  border: 1px solid #e5e5df;
+  border: 1px solid #e3e4de;
 
-  border-radius: clamp(11px, 2.5vw, 15px);
+  border-radius: 15px;
 
   background: #ffffff;
 
   box-shadow:
-    0 4px 13px rgba(35, 55, 37, 0.035);
+    0 5px 16px rgba(35, 55, 37, 0.045);
 }
 
 
 /* =========================================================
-   SECTION HEADING
+   SUMMARY HEADING
    ========================================================= */
 
 .jr-payment-section-heading {
+  width: 100%;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
 
   gap: 10px;
 
-  margin: 0 0 8px;
+  margin-bottom: 10px;
 }
 
-.jr-payment-section-heading h2 {
-  margin: 0;
-
-  color: #333833;
-
-  font-size: clamp(9px, 2vw, 11px);
-  line-height: 1;
-
-  font-weight: 950;
-
-  letter-spacing: 0.09em;
-}
-
-.jr-payment-section-heading span {
-  flex-shrink: 0;
-
-  color: #999995;
-
-  font-size: clamp(8px, 1.9vw, 10px);
-  line-height: 1;
-
-  font-weight: 700;
-}
-
-
-/* =========================================================
-   PAYMENT ITEMS
-   ========================================================= */
-
-.jr-payment-items {
-  width: 100%;
+.jr-payment-section-heading > div {
   min-width: 0;
 
   display: flex;
   flex-direction: column;
 
+  gap: 4px;
+}
+
+.jr-payment-section-heading h2 {
+  margin: 0;
+
+  color: #2d342e;
+
+  font-size: clamp(11px, 2.3vw, 14px);
+
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: 0.08em;
+}
+
+.jr-payment-section-heading span {
+  color: #999995;
+
+  font-size: clamp(8px, 1.9vw, 10px);
+
+  line-height: 1.1;
+
+  font-weight: 600;
+}
+
+.jr-payment-section-heading > strong {
+  flex-shrink: 0;
+
+  padding: 5px 8px;
+
+  border-radius: 999px;
+
+  background: #eef8ef;
+
+  color: #2d8050;
+
+  font-size: clamp(8px, 1.9vw, 10px);
+
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   ITEM TABLE HEADER
+   ========================================================= */
+
+.jr-payment-item-header {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    42px
+    70px
+    76px;
+
   gap: 5px;
+
+  padding:
+    6px
+    0;
+
+  border-bottom: 1px solid #eeeeea;
+
+  color: #a0a09b;
+
+  font-size: clamp(7px, 1.7vw, 9px);
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.06em;
+}
+
+.jr-payment-item-header span:nth-child(n + 2) {
+  text-align: right;
+}
+
+
+/* =========================================================
+   ITEMS
+   ========================================================= */
+
+.jr-payment-items {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 0;
 }
 
 .jr-payment-item {
   width: 100%;
   min-width: 0;
 
-  display: flex;
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    42px
+    70px
+    76px;
+
   align-items: center;
-  justify-content: space-between;
 
-  gap: 10px;
+  gap: 5px;
 
-  padding:
-    5px
-    0;
+  padding: 10px 0;
+
+  border-bottom: 1px solid #f0f0eb;
 }
 
-.jr-payment-item > div {
+.jr-payment-item:last-child {
+  border-bottom: 0;
+}
+
+.jr-payment-item-name {
   min-width: 0;
-  flex: 1;
-
-  display: flex;
-  align-items: baseline;
-
-  gap: 6px;
 }
 
-.jr-payment-item > div strong {
+.jr-payment-item-name strong {
+  display: block;
+
   min-width: 0;
 
   overflow: hidden;
 
-  color: #303030;
+  color: #292929;
 
-  font-size: clamp(10px, 2.4vw, 13px);
-  line-height: 1.15;
+  font-size: clamp(11px, 2.5vw, 14px);
 
-  font-weight: 800;
+  line-height: 1.25;
+
+  font-weight: 850;
 
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.jr-payment-item > div span {
-  flex-shrink: 0;
+.jr-payment-item-qty {
+  color: #666661;
 
-  color: #999995;
+  font-size: clamp(10px, 2.2vw, 12px);
 
-  font-size: clamp(8px, 1.9vw, 10px);
   line-height: 1;
 
-  font-weight: 700;
+  font-weight: 800;
+
+  text-align: right;
 }
 
-.jr-payment-item > strong {
-  flex-shrink: 0;
-
-  color: #252525;
-
-  font-size: clamp(10px, 2.4vw, 13px);
-  line-height: 1;
-
-  font-weight: 900;
-}
-
-.jr-payment-empty {
-  padding: 10px 0;
-
-  color: #999995;
+.jr-payment-item-unit {
+  color: #777772;
 
   font-size: clamp(9px, 2vw, 11px);
+
+  line-height: 1;
+
+  font-weight: 650;
+
+  text-align: right;
+}
+
+.jr-payment-item-total {
+  color: #202020;
+
+  font-size: clamp(10px, 2.3vw, 13px);
+
+  line-height: 1;
+
+  font-weight: 950;
+
+  text-align: right;
+}
+
+
+/* =========================================================
+   EMPTY
+   ========================================================= */
+
+.jr-payment-empty {
+  padding: 14px 0;
+
+  color: #999995;
+
+  font-size: 10px;
+
   line-height: 1.3;
 
   text-align: center;
@@ -437,18 +554,24 @@
   width: 100%;
   height: 1px;
 
-  margin:
-    6px
-    0
-    7px;
+  margin: 7px 0;
 
-  background: #ecece7;
+  background: #e9e9e3;
 }
 
 
 /* =========================================================
-   PRICE ROWS
+   BREAKDOWN
    ========================================================= */
+
+.jr-payment-breakdown {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
 
 .jr-payment-price-row {
   width: 100%;
@@ -457,27 +580,41 @@
   align-items: center;
   justify-content: space-between;
 
-  gap: 10px;
+  gap: 12px;
 
-  padding: 3px 0;
+  padding: 4px 0;
 }
 
 .jr-payment-price-row span {
-  color: #888884;
+  color: #777772;
 
-  font-size: clamp(9px, 2vw, 11px);
+  font-size: clamp(10px, 2.2vw, 12px);
+
   line-height: 1.2;
 
   font-weight: 600;
 }
 
-.jr-payment-price-row strong {
-  color: #444444;
+.jr-payment-price-row span small {
+  margin-left: 4px;
 
-  font-size: clamp(9px, 2vw, 11px);
+  color: #aaa9a4;
+
+  font-size: 0.85em;
+
+  font-weight: 700;
+}
+
+.jr-payment-price-row strong {
+  flex-shrink: 0;
+
+  color: #41413e;
+
+  font-size: clamp(10px, 2.2vw, 12px);
+
   line-height: 1;
 
-  font-weight: 800;
+  font-weight: 850;
 }
 
 
@@ -494,10 +631,11 @@
 
   gap: 12px;
 
-  margin-top: 6px;
-  padding-top: 8px;
+  margin-top: 7px;
 
-  border-top: 1px solid #e8e8e2;
+  padding-top: 10px;
+
+  border-top: 1px solid #deded7;
 }
 
 .jr-payment-total-row > div {
@@ -506,13 +644,14 @@
   display: flex;
   flex-direction: column;
 
-  gap: 3px;
+  gap: 4px;
 }
 
 .jr-payment-total-row > div > span {
-  color: #242424;
+  color: #232823;
 
-  font-size: clamp(10px, 2.3vw, 13px);
+  font-size: clamp(11px, 2.5vw, 14px);
+
   line-height: 1;
 
   font-weight: 950;
@@ -523,8 +662,9 @@
 .jr-payment-total-row small {
   color: #999995;
 
-  font-size: clamp(7px, 1.7vw, 9px);
-  line-height: 1.1;
+  font-size: clamp(8px, 1.8vw, 10px);
+
+  line-height: 1.15;
 
   font-weight: 600;
 }
@@ -534,7 +674,8 @@
 
   color: #2d8050;
 
-  font-size: clamp(17px, 4vw, 24px);
+  font-size: clamp(20px, 4.8vw, 27px);
+
   line-height: 1;
 
   font-weight: 950;
@@ -544,64 +685,277 @@
 
 
 /* =========================================================
-   SECURE PAYMENT CARD
+   INVOICE CARD
+   ========================================================= */
+
+.jr-payment-invoice-card {
+  width: 100%;
+
+  margin-bottom: 12px;
+
+  padding: 12px;
+
+  border: 1px solid #e4e7e1;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 4px 13px rgba(35, 55, 37, 0.035);
+}
+
+
+/* =========================================================
+   INVOICE HEADER
+   ========================================================= */
+
+.jr-payment-invoice-top {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding-bottom: 10px;
+
+  border-bottom: 1px solid #eeeeea;
+}
+
+.jr-payment-invoice-icon {
+  width: 38px;
+  height: 38px;
+
+  min-width: 38px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+
+  background: #fff3e8;
+
+  color: #ef7d24;
+}
+
+.jr-payment-invoice-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.jr-payment-invoice-title {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.jr-payment-invoice-title strong {
+  color: #292e29;
+
+  font-size: clamp(10px, 2.4vw, 13px);
+
+  line-height: 1.1;
+
+  font-weight: 900;
+}
+
+.jr-payment-invoice-title span {
+  color: #999995;
+
+  font-size: clamp(8px, 1.8vw, 10px);
+
+  line-height: 1.2;
+
+  font-weight: 550;
+}
+
+
+/* =========================================================
+   PRINT BUTTON
+   ========================================================= */
+
+.jr-payment-invoice-print {
+  flex-shrink: 0;
+
+  min-height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  padding: 0 8px;
+
+  border: 1px solid #dce5dc;
+
+  border-radius: 8px;
+
+  background: #f8fbf7;
+
+  color: #2d8050;
+
+  font-family: inherit;
+
+  font-size: clamp(8px, 1.9vw, 10px);
+
+  font-weight: 850;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.jr-payment-invoice-print svg {
+  width: 16px;
+  height: 16px;
+}
+
+.jr-payment-invoice-print:hover {
+  background: #eef8ef;
+}
+
+.jr-payment-invoice-print:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+
+/* =========================================================
+   INVOICE DETAILS
+   ========================================================= */
+
+.jr-payment-invoice-details {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 8px;
+
+  padding-top: 11px;
+}
+
+.jr-payment-invoice-details > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.jr-payment-invoice-details small {
+  color: #a0a09b;
+
+  font-size: clamp(7px, 1.7vw, 9px);
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.06em;
+}
+
+.jr-payment-invoice-details strong {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: #343834;
+
+  font-size: clamp(9px, 2vw, 11px);
+
+  line-height: 1.15;
+
+  font-weight: 850;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.jr-payment-invoice-footer {
+  margin-top: 10px;
+  padding-top: 8px;
+
+  border-top: 1px dashed #e7e7e1;
+
+  color: #9b9b96;
+
+  font-size: clamp(7px, 1.7vw, 9px);
+
+  line-height: 1.3;
+
+  font-weight: 550;
+}
+
+
+/* =========================================================
+   SECURE PAYMENT
    ========================================================= */
 
 .jr-payment-secure-card {
   width: 100%;
-  min-width: 0;
 
   display: flex;
   align-items: flex-start;
 
-  gap: clamp(8px, 2vw, 11px);
+  gap: 10px;
 
-  margin: 0 0 clamp(10px, 2.5vw, 14px);
+  margin-bottom: 11px;
 
-  padding:
-    clamp(9px, 2vw, 12px)
-    clamp(10px, 2.5vw, 13px);
+  padding: 11px 12px;
 
-  border: 1px solid #e6e8e3;
+  border: 1px solid #e5e8e2;
 
-  border-radius: clamp(10px, 2.3vw, 13px);
+  border-radius: 13px;
 
   background: #fafbf8;
 }
 
 .jr-payment-secure-icon {
-  width: clamp(32px, 7.5vw, 40px);
-  height: clamp(32px, 7.5vw, 40px);
+  width: 37px;
+  height: 37px;
 
-  min-width: clamp(32px, 7.5vw, 40px);
+  min-width: 37px;
 
   display: grid;
   place-items: center;
 
-  border-radius: clamp(8px, 1.8vw, 10px);
+  border-radius: 9px;
 
   background: #edf6e9;
+
   color: #2d8050;
 }
 
 .jr-payment-secure-icon svg {
-  width: clamp(17px, 4vw, 22px);
-  height: clamp(17px, 4vw, 22px);
+  width: 20px;
+  height: 20px;
 }
 
 .jr-payment-secure-card > div:last-child {
   min-width: 0;
-  flex: 1;
 }
 
 .jr-payment-secure-card strong {
   display: block;
 
-  margin: 0 0 4px;
+  margin-bottom: 4px;
 
   color: #303630;
 
   font-size: clamp(10px, 2.4vw, 13px);
+
   line-height: 1.1;
 
   font-weight: 900;
@@ -613,7 +967,8 @@
   color: #858985;
 
   font-size: clamp(8px, 1.9vw, 10px);
-  line-height: 1.3;
+
+  line-height: 1.35;
 
   font-weight: 500;
 }
@@ -626,7 +981,7 @@
 .jr-payment-pay-button {
   width: 100%;
 
-  min-height: clamp(48px, 11vw, 58px);
+  min-height: 54px;
 
   display: flex;
   align-items: center;
@@ -634,16 +989,14 @@
 
   gap: 10px;
 
-  margin: 0;
-
-  padding:
-    0
-    clamp(13px, 3vw, 18px);
+  padding: 0 16px;
 
   border: 0;
-  border-radius: clamp(11px, 2.5vw, 15px);
+
+  border-radius: 14px;
 
   background: #2d8050;
+
   color: #ffffff;
 
   font-family: inherit;
@@ -653,10 +1006,8 @@
   appearance: none;
   -webkit-appearance: none;
 
-  -webkit-tap-highlight-color: transparent;
-
   box-shadow:
-    0 7px 17px rgba(45, 128, 80, 0.16);
+    0 7px 18px rgba(45, 128, 80, 0.17);
 
   transition:
     transform 0.12s ease,
@@ -666,7 +1017,7 @@
 
 .jr-payment-pay-button:hover:not(:disabled) {
   box-shadow:
-    0 9px 20px rgba(45, 128, 80, 0.21);
+    0 9px 22px rgba(45, 128, 80, 0.23);
 }
 
 .jr-payment-pay-button:active:not(:disabled) {
@@ -675,7 +1026,9 @@
 
 .jr-payment-pay-button:disabled {
   opacity: 0.55;
+
   cursor: default;
+
   box-shadow: none;
 }
 
@@ -684,21 +1037,21 @@
 
   overflow: hidden;
 
-  font-size: clamp(10px, 2.5vw, 13px);
+  font-size: clamp(11px, 2.6vw, 14px);
+
   line-height: 1;
 
   font-weight: 950;
 
   white-space: nowrap;
   text-overflow: ellipsis;
-
-  letter-spacing: 0.02em;
 }
 
 .jr-payment-pay-button strong {
   flex-shrink: 0;
 
-  font-size: clamp(19px, 4.5vw, 26px);
+  font-size: 25px;
+
   line-height: 1;
 
   font-weight: 400;
@@ -710,15 +1063,15 @@
    ========================================================= */
 
 .jr-payment-security-note {
-  margin:
-    7px
-    0
-    0;
+  margin: 7px 0 0;
 
   color: #999995;
 
-  font-size: clamp(7px, 1.8vw, 9px);
-  line-height: 1.25;
+  font-size: clamp(8px, 1.8vw, 10px);
+
+  line-height: 1.3;
+
+  font-weight: 600;
 
   text-align: center;
 }
@@ -731,19 +1084,20 @@
 .jr-payment-error {
   width: 100%;
 
-  margin-top: 8px;
-  padding:
-    8px
-    10px;
+  margin-top: 9px;
+
+  padding: 9px 10px;
 
   border: 1px solid #edd6d6;
+
   border-radius: 9px;
 
   background: #fff5f5;
 
   color: #a64747;
 
-  font-size: clamp(8px, 2vw, 10px);
+  font-size: clamp(9px, 2vw, 11px);
+
   line-height: 1.3;
 
   font-weight: 700;
@@ -753,70 +1107,234 @@
 
 
 /* =========================================================
-   SMALL MOBILE
+   SMALL PHONES
    ========================================================= */
 
-@media (max-width: 360px) {
+@media (max-width: 390px) {
 
   .jr-payment-page {
     padding:
-      8px
-      8px
+      9px
+      9px
       14px;
   }
 
   .jr-payment-header h1 {
-    font-size: 28px;
+    font-size: 29px;
   }
 
-  .jr-payment-header p {
+  .jr-payment-summary,
+  .jr-payment-invoice-card {
+    padding: 10px;
+  }
+
+  .jr-payment-item-header {
+    grid-template-columns:
+      minmax(0, 1fr)
+      35px
+      58px
+      62px;
+  }
+
+  .jr-payment-item {
+    grid-template-columns:
+      minmax(0, 1fr)
+      35px
+      58px
+      62px;
+  }
+
+  .jr-payment-item-name strong {
+    font-size: 10px;
+  }
+
+  .jr-payment-item-qty,
+  .jr-payment-item-unit,
+  .jr-payment-item-total {
     font-size: 9px;
   }
 
-  .jr-payment-collection-card {
-    padding: 8px 9px;
+  .jr-payment-invoice-details {
+    gap: 6px;
   }
 
-  .jr-payment-location-icon {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-  }
-
-  .jr-payment-location-copy strong {
-    font-size: 11px;
-  }
-
-  .jr-payment-location-copy span {
+  .jr-payment-invoice-details strong {
     font-size: 8px;
   }
 
-  .jr-payment-summary {
-    padding: 9px;
-  }
-
-  .jr-payment-total-row > strong {
-    font-size: 18px;
-  }
-
-  .jr-payment-secure-card {
-    padding: 8px 9px;
-  }
-
   .jr-payment-pay-button {
-    min-height: 46px;
+    min-height: 50px;
   }
 }
 
 
 /* =========================================================
-   SHORT PORTRAIT
+   LARGE DEVICES
+   ========================================================= */
+
+@media (min-width: 600px) {
+
+  .jr-payment-page {
+    padding:
+      16px
+      18px
+      24px;
+  }
+
+  .jr-payment-header h1 {
+    font-size: 42px;
+  }
+
+  .jr-payment-header p {
+    font-size: 14px;
+  }
+
+  .jr-payment-summary,
+  .jr-payment-invoice-card,
+  .jr-payment-secure-card {
+    border-radius: 16px;
+  }
+
+  .jr-payment-item-header {
+    grid-template-columns:
+      minmax(0, 1fr)
+      52px
+      85px
+      90px;
+
+    font-size: 9px;
+  }
+
+  .jr-payment-item {
+    grid-template-columns:
+      minmax(0, 1fr)
+      52px
+      85px
+      90px;
+
+    padding: 12px 0;
+  }
+
+  .jr-payment-item-name strong {
+    font-size: 14px;
+  }
+
+  .jr-payment-item-qty {
+    font-size: 12px;
+  }
+
+  .jr-payment-item-unit {
+    font-size: 11px;
+  }
+
+  .jr-payment-item-total {
+    font-size: 13px;
+  }
+
+  .jr-payment-total-row > strong {
+    font-size: 28px;
+  }
+
+  .jr-payment-invoice-title strong {
+    font-size: 14px;
+  }
+
+  .jr-payment-invoice-title span {
+    font-size: 11px;
+  }
+
+  .jr-payment-invoice-print {
+    min-height: 36px;
+
+    padding: 0 11px;
+
+    font-size: 11px;
+  }
+
+  .jr-payment-invoice-print svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .jr-payment-invoice-details strong {
+    font-size: 11px;
+  }
+
+  .jr-payment-secure-card strong {
+    font-size: 14px;
+  }
+
+  .jr-payment-secure-card p {
+    font-size: 11px;
+  }
+
+  .jr-payment-pay-button {
+    min-height: 58px;
+
+    border-radius: 15px;
+  }
+
+  .jr-payment-pay-button span {
+    font-size: 14px;
+  }
+
+  .jr-payment-pay-button strong {
+    font-size: 28px;
+  }
+}
+
+
+/* =========================================================
+   EXTRA LARGE DEVICES
+   ========================================================= */
+
+@media (min-width: 700px) {
+
+  .jr-payment-page {
+    padding:
+      18px
+      20px
+      26px;
+  }
+
+  .jr-payment-header h1 {
+    font-size: 45px;
+  }
+
+  .jr-payment-header p {
+    font-size: 15px;
+  }
+
+  .jr-payment-item-name strong {
+    font-size: 15px;
+  }
+
+  .jr-payment-section-heading h2 {
+    font-size: 14px;
+  }
+
+  .jr-payment-total-row > strong {
+    font-size: 30px;
+  }
+
+  .jr-payment-invoice-details strong {
+    font-size: 12px;
+  }
+
+  .jr-payment-pay-button {
+    min-height: 60px;
+  }
+}
+
+
+/* =========================================================
+   SHORT HEIGHT
    ========================================================= */
 
 @media (
-  orientation: portrait
-) and (
   max-height: 700px
+) and (
+  orientation: portrait
 ) {
 
   .jr-payment-page {
@@ -826,7 +1344,7 @@
 
   .jr-payment-back {
     min-height: 27px;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
   }
 
   .jr-payment-header {
@@ -834,7 +1352,7 @@
   }
 
   .jr-payment-header h1 {
-    font-size: clamp(27px, 6.8vw, 36px);
+    font-size: clamp(27px, 6.8vw, 37px);
   }
 
   .jr-payment-header p {
@@ -848,600 +1366,110 @@
 
   .jr-payment-summary {
     margin-bottom: 8px;
-    padding: 9px 10px;
   }
 
   .jr-payment-item {
-    padding: 3px 0;
+    padding: 7px 0;
   }
 
-  .jr-payment-divider {
-    margin-top: 4px;
-    margin-bottom: 5px;
+  .jr-payment-invoice-card {
+    margin-bottom: 8px;
+    padding: 9px;
   }
 
-  .jr-payment-total-row {
-    margin-top: 4px;
-    padding-top: 6px;
+  .jr-payment-invoice-details {
+    padding-top: 8px;
   }
 
   .jr-payment-secure-card {
     margin-bottom: 8px;
-    padding: 8px 9px;
+    padding: 8px 10px;
   }
 
   .jr-payment-pay-button {
-    min-height: 45px;
-  }
-
-  .jr-payment-security-note {
-    margin-top: 5px;
+    min-height: 47px;
   }
 }
 
 
 /* =========================================================
-   LANDSCAPE
+   PRINT INVOICE
+   ---------------------------------------------------------
+   Only the invoice / order information is printed.
    ========================================================= */
 
-@media (
-  orientation: landscape
-) and (
-  min-width: 500px
-) {
+@media print {
 
-  .jr-payment-page {
-    display: grid;
+  body {
+    overflow: visible !important;
 
-    grid-template-columns:
-      minmax(0, 1fr)
-      minmax(0, 1fr);
-
-    column-gap:
-      clamp(12px, 2.5vw, 22px);
-
-    align-content: start;
-
-    padding:
-      clamp(7px, 2vh, 12px)
-      clamp(14px, 3vw, 26px)
-      clamp(8px, 2vh, 14px);
+    background: #ffffff !important;
   }
 
+  .jr-payment-page {
+    display: block !important;
 
-  /* -----------------------------------------
-     Full-width top sections
-     ----------------------------------------- */
+    width: 100% !important;
+    max-width: 760px !important;
+
+    margin: 0 auto !important;
+
+    padding: 20px !important;
+
+    overflow: visible !important;
+
+    background: #ffffff !important;
+  }
 
   .jr-payment-back,
-  .jr-payment-header {
-    grid-column: 1 / -1;
-  }
-
-
-  /* -----------------------------------------
-     Header
-     ----------------------------------------- */
-
-  .jr-payment-back {
-    min-height: 26px;
-
-    margin-bottom: 2px;
-
-    font-size: clamp(10px, 1.9vw, 13px);
-  }
-
-  .jr-payment-header {
-    margin-bottom: 7px;
-  }
-
-  .jr-payment-eyebrow {
-    margin-bottom: 3px;
-    font-size: clamp(8px, 1.6vw, 10px);
-  }
-
-  .jr-payment-header h1 {
-    font-size: clamp(25px, 5.5vw, 35px);
-    line-height: 0.88;
-  }
-
-  .jr-payment-header p {
-    margin-top: 4px;
-
-    font-size: clamp(8px, 1.7vw, 10px);
-  }
-
-
-  /* -----------------------------------------
-     Collection card
-     ----------------------------------------- */
-
-  .jr-payment-collection-card {
-    grid-column: 1;
-
-    min-height: 54px;
-
-    margin: 0;
-
-    padding: 7px 9px;
-
-    gap: 8px;
-  }
-
-  .jr-payment-location-icon {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-  }
-
-  .jr-payment-location-icon svg {
-    width: 19px;
-    height: 19px;
-  }
-
-  .jr-payment-location-copy {
-    gap: 2px;
-  }
-
-  .jr-payment-location-copy small {
-    font-size: 7px;
-  }
-
-  .jr-payment-location-copy strong {
-    font-size: clamp(11px, 2.2vw, 14px);
-  }
-
-  .jr-payment-location-copy span {
-    font-size: clamp(7px, 1.6vw, 9px);
-  }
-
-
-  /* -----------------------------------------
-     Summary
-     ----------------------------------------- */
-
-  .jr-payment-summary {
-    grid-column: 2;
-
-    margin: 0;
-
-    padding: 8px 10px;
-
-    border-radius: 11px;
-  }
-
-  .jr-payment-section-heading {
-    margin-bottom: 5px;
-  }
-
-  .jr-payment-section-heading h2 {
-    font-size: 8px;
-  }
-
-  .jr-payment-section-heading span {
-    font-size: 7px;
-  }
-
-  .jr-payment-items {
-    gap: 2px;
-  }
-
-  .jr-payment-item {
-    padding: 3px 0;
-  }
-
-  .jr-payment-item > div strong,
-  .jr-payment-item > strong {
-    font-size: clamp(8px, 1.8vw, 10px);
-  }
-
-  .jr-payment-item > div span {
-    font-size: 7px;
-  }
-
-  .jr-payment-divider {
-    margin: 4px 0 5px;
-  }
-
-  .jr-payment-price-row {
-    padding: 2px 0;
-  }
-
-  .jr-payment-price-row span,
-  .jr-payment-price-row strong {
-    font-size: 8px;
-  }
-
-  .jr-payment-total-row {
-    margin-top: 4px;
-    padding-top: 5px;
-  }
-
-  .jr-payment-total-row > div > span {
-    font-size: 9px;
-  }
-
-  .jr-payment-total-row small {
-    font-size: 6px;
-  }
-
-  .jr-payment-total-row > strong {
-    font-size: 17px;
-  }
-
-
-  /* -----------------------------------------
-     Secure card
-     ----------------------------------------- */
-
-  .jr-payment-secure-card {
-    grid-column: 1;
-
-    margin: 7px 0 0;
-
-    padding: 7px 9px;
-
-    gap: 8px;
-  }
-
-  .jr-payment-secure-icon {
-    width: 31px;
-    height: 31px;
-    min-width: 31px;
-  }
-
-  .jr-payment-secure-icon svg {
-    width: 17px;
-    height: 17px;
-  }
-
-  .jr-payment-secure-card strong {
-    margin-bottom: 2px;
-    font-size: 9px;
-  }
-
-  .jr-payment-secure-card p {
-    font-size: 7px;
-    line-height: 1.25;
-  }
-
-
-  /* -----------------------------------------
-     Pay button
-     ----------------------------------------- */
-
-  .jr-payment-pay-button {
-    grid-column: 2;
-
-    align-self: end;
-
-    min-height: 45px;
-
-    margin-top: 7px;
-
-    padding: 0 12px;
-
-    border-radius: 10px;
-  }
-
-  .jr-payment-pay-button span {
-    font-size: 9px;
-  }
-
-  .jr-payment-pay-button strong {
-    font-size: 19px;
-  }
-
-
-  /* -----------------------------------------
-     Security note
-     ----------------------------------------- */
-
-  .jr-payment-security-note {
-    grid-column: 2;
-
-    margin-top: 5px;
-
-    font-size: 6.5px;
-  }
-
-  .jr-payment-error {
-    grid-column: 1 / -1;
-
-    margin-top: 7px;
-  }
-}
-
-
-/* =========================================================
-   613 × 376 LANDSCAPE
-   ========================================================= */
-
-@media (
-  orientation: landscape
-) and (
-  min-width: 560px
-) and (
-  max-height: 420px
-) {
-
-  .jr-payment-page {
-    padding:
-      5px
-      15px
-      7px;
-
-    column-gap: 12px;
-  }
-
-
-  /* -----------------------------------------
-     Top
-     ----------------------------------------- */
-
-  .jr-payment-back {
-    min-height: 21px;
-
-    margin-bottom: 1px;
-
-    padding: 0 4px;
-
-    font-size: 9px;
-  }
-
-  .jr-payment-header {
-    margin-bottom: 5px;
-  }
-
-  .jr-payment-eyebrow {
-    margin-bottom: 2px;
-    font-size: 7px;
-  }
-
-  .jr-payment-header h1 {
-    font-size: 25px;
-    line-height: 0.84;
-  }
-
-  .jr-payment-header p {
-    margin-top: 3px;
-
-    font-size: 7px;
-  }
-
-
-  /* -----------------------------------------
-     Collection
-     ----------------------------------------- */
-
-  .jr-payment-collection-card {
-    min-height: 47px;
-
-    padding: 5px 7px;
-
-    gap: 7px;
-
-    border-radius: 9px;
-  }
-
-  .jr-payment-location-icon {
-    width: 31px;
-    height: 31px;
-    min-width: 31px;
-
-    border-radius: 7px;
-  }
-
-  .jr-payment-location-icon svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .jr-payment-location-copy {
-    gap: 2px;
-  }
-
-  .jr-payment-location-copy small {
-    font-size: 6px;
-  }
-
-  .jr-payment-location-copy strong {
-    font-size: 10px;
-  }
-
-  .jr-payment-location-copy span {
-    font-size: 6.5px;
-  }
-
-
-  /* -----------------------------------------
-     Summary
-     ----------------------------------------- */
-
-  .jr-payment-summary {
-    padding: 6px 8px;
-
-    border-radius: 9px;
-  }
-
-  .jr-payment-section-heading {
-    margin-bottom: 3px;
-  }
-
-  .jr-payment-section-heading h2 {
-    font-size: 7px;
-  }
-
-  .jr-payment-section-heading span {
-    font-size: 6px;
-  }
-
-  .jr-payment-items {
-    gap: 1px;
-  }
-
-  .jr-payment-item {
-    padding: 2px 0;
-  }
-
-  .jr-payment-item > div {
-    gap: 4px;
-  }
-
-  .jr-payment-item > div strong,
-  .jr-payment-item > strong {
-    font-size: 7.5px;
-  }
-
-  .jr-payment-item > div span {
-    font-size: 6px;
-  }
-
-  .jr-payment-divider {
-    margin:
-      3px
-      0
-      3px;
-  }
-
-  .jr-payment-price-row {
-    padding: 1.5px 0;
-  }
-
-  .jr-payment-price-row span,
-  .jr-payment-price-row strong {
-    font-size: 6.5px;
-  }
-
-  .jr-payment-total-row {
-    margin-top: 3px;
-    padding-top: 4px;
-  }
-
-  .jr-payment-total-row > div {
-    gap: 2px;
-  }
-
-  .jr-payment-total-row > div > span {
-    font-size: 7.5px;
-  }
-
-  .jr-payment-total-row small {
-    font-size: 5.5px;
-  }
-
-  .jr-payment-total-row > strong {
-    font-size: 15px;
-  }
-
-
-  /* -----------------------------------------
-     Secure payment
-     ----------------------------------------- */
-
-  .jr-payment-secure-card {
-    margin-top: 5px;
-
-    padding: 5px 7px;
-
-    gap: 6px;
-
-    border-radius: 8px;
-  }
-
-  .jr-payment-secure-icon {
-    width: 27px;
-    height: 27px;
-    min-width: 27px;
-
-    border-radius: 6px;
-  }
-
-  .jr-payment-secure-icon svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  .jr-payment-secure-card strong {
-    margin-bottom: 2px;
-
-    font-size: 7.5px;
-  }
-
-  .jr-payment-secure-card p {
-    font-size: 5.8px;
-    line-height: 1.2;
-  }
-
-
-  /* -----------------------------------------
-     Pay
-     ----------------------------------------- */
-
-  .jr-payment-pay-button {
-    min-height: 39px;
-
-    margin-top: 5px;
-
-    padding: 0 9px;
-
-    border-radius: 8px;
-  }
-
-  .jr-payment-pay-button span {
-    font-size: 7.5px;
-  }
-
-  .jr-payment-pay-button strong {
-    font-size: 17px;
-  }
-
-
-  /* -----------------------------------------
-     Security note
-     ----------------------------------------- */
-
-  .jr-payment-security-note {
-    margin-top: 3px;
-
-    font-size: 5.5px;
-  }
-
-  .jr-payment-error {
-    margin-top: 4px;
-    padding: 5px 7px;
-
-    font-size: 6px;
-  }
-}
-
-
-/* =========================================================
-   VERY WIDE LANDSCAPE
-   ========================================================= */
-
-@media (
-  orientation: landscape
-) and (
-  min-width: 900px
-) {
-
-  .jr-payment-page {
-    padding-left: clamp(20px, 4vw, 42px);
-    padding-right: clamp(20px, 4vw, 42px);
-
-    column-gap: clamp(18px, 3vw, 30px);
-  }
-
-  .jr-payment-header h1 {
-    font-size: 38px;
-  }
-
+  .jr-payment-header,
   .jr-payment-collection-card,
-  .jr-payment-summary,
   .jr-payment-secure-card,
-  .jr-payment-pay-button {
-    max-width: 900px;
+  .jr-payment-pay-button,
+  .jr-payment-security-note,
+  .jr-payment-error {
+    display: none !important;
+  }
+
+  .jr-payment-summary {
+    display: block !important;
+
+    margin-bottom: 20px !important;
+
+    border: 1px solid #dddddd !important;
+
+    box-shadow: none !important;
+  }
+
+  .jr-payment-invoice-card {
+    display: block !important;
+
+    margin: 0 !important;
+
+    border: 1px solid #dddddd !important;
+
+    box-shadow: none !important;
+  }
+
+  .jr-payment-invoice-print {
+    display: none !important;
+  }
+
+  .jr-payment-item-header,
+  .jr-payment-item {
+    grid-template-columns:
+      minmax(0, 1fr)
+      60px
+      100px
+      100px;
+  }
+
+  .jr-payment-page,
+  .jr-payment-page * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 

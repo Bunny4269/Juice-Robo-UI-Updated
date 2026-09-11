@@ -2,6 +2,7 @@ import "./PaymentScreen.css";
 
 /* =========================================================
    JUICE ROBO — PAYMENT SCREEN
+   Pre-payment review only. No invoice/receipt is shown here.
    ========================================================= */
 
 function clean(value) {
@@ -45,6 +46,40 @@ function getItemQuantity(item = {}) {
     : 1;
 }
 
+function getItemUnitPrice(item = {}) {
+  const directPrice = Number(
+    item?.unitPrice ??
+      item?.unit_price ??
+      item?.price ??
+      item?.sellingPrice ??
+      item?.selling_price
+  );
+
+  if (Number.isFinite(directPrice) && directPrice >= 0) {
+    return directPrice;
+  }
+
+  const quantity = getItemQuantity(item);
+
+  const subtotal = Number(
+    item?.subtotal ??
+      item?.subTotal ??
+      item?.total ??
+      item?.lineTotal ??
+      item?.line_total
+  );
+
+  if (
+    Number.isFinite(subtotal) &&
+    subtotal >= 0 &&
+    quantity > 0
+  ) {
+    return subtotal / quantity;
+  }
+
+  return 0;
+}
+
 function getItemSubtotal(item = {}) {
   const direct = Number(
     item?.subtotal ??
@@ -58,16 +93,10 @@ function getItemSubtotal(item = {}) {
     return direct;
   }
 
-  const price = Number(
-    item?.unitPrice ??
-      item?.unit_price ??
-      item?.price ??
-      item?.sellingPrice ??
-      item?.selling_price ??
-      0
+  return (
+    getItemUnitPrice(item) *
+    getItemQuantity(item)
   );
-
-  return price * getItemQuantity(item);
 }
 
 
@@ -77,7 +106,10 @@ function getItemSubtotal(item = {}) {
 
 function ShieldIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path
         d="M12 3 19 6v5c0 4.6-2.9 8.2-7 10-4.1-1.8-7-5.4-7-10V6l7-3Z"
         fill="none"
@@ -85,6 +117,7 @@ function ShieldIcon() {
         strokeWidth="1.7"
         strokeLinejoin="round"
       />
+
       <path
         d="m9 12 2 2 4-4"
         fill="none"
@@ -97,16 +130,19 @@ function ShieldIcon() {
   );
 }
 
-
 function LocationIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
       <path
         d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.7"
       />
+
       <circle
         cx="12"
         cy="9"
@@ -118,7 +154,6 @@ function LocationIcon() {
     </svg>
   );
 }
-
 
 /* =========================================================
    MAIN
@@ -138,6 +173,8 @@ export default function PaymentScreen({
   paymentStatus,
   busy,
   error,
+
+  paymentMethod,
 }) {
   const safeCart = Array.isArray(items)
     ? items
@@ -145,10 +182,25 @@ export default function PaymentScreen({
     ? cart
     : [];
 
-  const calculatedSubtotal = safeCart.reduce(
-    (sum, item) => sum + getItemSubtotal(item),
+  /* =======================================================
+     ITEM TOTALS
+     ======================================================= */
+
+  const itemCount = safeCart.reduce(
+    (sum, item) =>
+      sum + getItemQuantity(item),
     0
   );
+
+  const calculatedSubtotal = safeCart.reduce(
+    (sum, item) =>
+      sum + getItemSubtotal(item),
+    0
+  );
+
+  /* =======================================================
+     TOTAL
+     ======================================================= */
 
   const amount =
     Number(
@@ -162,9 +214,17 @@ export default function PaymentScreen({
   const calculatedTaxableSubtotal =
     grossSubtotal / 1.05;
 
+  const calculatedGst =
+    grossSubtotal -
+    calculatedTaxableSubtotal;
+
   const gstAmount =
     Number(gst ?? 0) ||
-    grossSubtotal - calculatedTaxableSubtotal;
+    calculatedGst;
+
+  /* =======================================================
+     LOCATION
+     ======================================================= */
 
   const locationName =
     clean(
@@ -182,6 +242,10 @@ export default function PaymentScreen({
         location?.location
     ) || "ICICI Tower, Hyderabad";
 
+  /* =======================================================
+     MACHINE
+     ======================================================= */
+
   const machineName =
     clean(
       machine?.name ||
@@ -190,10 +254,23 @@ export default function PaymentScreen({
         machine?.machine_code
     ) || "ICICI Bank";
 
+  /* =======================================================
+     PAYMENT
+     ======================================================= */
+
+  const paymentMode =
+    clean(
+      paymentMethod ||
+        location?.paymentMethod
+    ) || "UPI";
+
   const isProcessing =
     busy ||
     paymentStatus === "processing" ||
     paymentStatus === "PROCESSING";
+
+
+
 
   return (
     <main className="jr-content jr-page jr-payment-page">
@@ -229,7 +306,8 @@ export default function PaymentScreen({
         </h1>
 
         <p>
-          Review your order and complete secure payment.
+          Review your complete order before
+          making secure payment.
         </p>
 
       </header>
@@ -276,20 +354,56 @@ export default function PaymentScreen({
 
         <div className="jr-payment-section-heading">
 
-          <h2>
-            ORDER SUMMARY
-          </h2>
+          <div>
+            <h2>
+              ORDER SUMMARY
+            </h2>
 
-          <span>
-            {safeCart.reduce(
-              (sum, item) =>
-                sum + getItemQuantity(item),
-              0
-            )} items
-          </span>
+            <span>
+              Review your selected items
+            </span>
+          </div>
+
+          <strong>
+            {itemCount}{" "}
+            {itemCount === 1
+              ? "ITEM"
+              : "ITEMS"}
+          </strong>
 
         </div>
 
+
+        {/* ---------------------------------------------
+            ITEM TABLE HEADER
+           --------------------------------------------- */}
+
+        {safeCart.length > 0 && (
+          <div className="jr-payment-item-header">
+
+            <span>
+              ITEM
+            </span>
+
+            <span>
+              QTY
+            </span>
+
+            <span>
+              PRICE
+            </span>
+
+            <span>
+              TOTAL
+            </span>
+
+          </div>
+        )}
+
+
+        {/* ---------------------------------------------
+            ITEMS
+           --------------------------------------------- */}
 
         <div className="jr-payment-items">
 
@@ -301,89 +415,130 @@ export default function PaymentScreen({
 
           ) : (
 
-            safeCart.map((item, index) => (
+            safeCart.map((item, index) => {
 
-              <div
-                className="jr-payment-item"
-                key={
-                  item?.id ||
-                  item?.cartItemId ||
-                  item?.productId ||
-                  index
-                }
-              >
+              const quantity =
+                getItemQuantity(item);
 
-                <div>
-                  <strong>
-                    {getItemName(item)}
+              const unitPrice =
+                getItemUnitPrice(item);
+
+              const subtotal =
+                getItemSubtotal(item);
+
+              return (
+                <div
+                  className="jr-payment-item"
+                  key={
+                    item?.id ||
+                    item?.cartItemId ||
+                    item?.productId ||
+                    index
+                  }
+                >
+
+                  <div className="jr-payment-item-name">
+
+                    <strong>
+                      {getItemName(item)}
+                    </strong>
+
+                  </div>
+
+                  <span className="jr-payment-item-qty">
+                    × {quantity}
+                  </span>
+
+                  <span className="jr-payment-item-unit">
+                    {formatMoney(
+                      unitPrice,
+                      money
+                    )}
+                  </span>
+
+                  <strong className="jr-payment-item-total">
+                    {formatMoney(
+                      subtotal,
+                      money
+                    )}
                   </strong>
 
-                  <span>
-                    × {getItemQuantity(item)}
-                  </span>
                 </div>
-
-                <strong>
-                  {formatMoney(
-                    getItemSubtotal(item),
-                    money
-                  )}
-                </strong>
-
-              </div>
-
-            ))
-
+              );
+            })
           )}
 
         </div>
 
 
+        {/* ---------------------------------------------
+            PRICE BREAKDOWN
+           --------------------------------------------- */}
+
         <div className="jr-payment-divider" />
 
+        <div className="jr-payment-breakdown">
 
-        <div className="jr-payment-price-row">
-          <span>
-            Subtotal
-          </span>
+          <div className="jr-payment-price-row">
 
-          <strong>
-            {formatMoney(
-              calculatedSubtotal,
-              money
-            )}
-          </strong>
+            <span>
+              Item subtotal
+            </span>
+
+            <strong>
+              {formatMoney(
+                calculatedSubtotal,
+                money
+              )}
+            </strong>
+
+          </div>
+
+
+          <div className="jr-payment-price-row">
+
+            <span>
+              GST
+              <small>
+                5%
+              </small>
+            </span>
+
+            <strong>
+              {formatMoney(
+                gstAmount,
+                money
+              )}
+            </strong>
+
+          </div>
+
         </div>
 
 
-        <div className="jr-payment-price-row">
-          <span>
-            GST 5%
-          </span>
-
-          <strong>
-            {formatMoney(
-              gstAmount,
-              money
-            )}
-          </strong>
-        </div>
-
+        {/* ---------------------------------------------
+            GRAND TOTAL
+           --------------------------------------------- */}
 
         <div className="jr-payment-total-row">
 
           <div>
+
             <span>
-              TOTAL
+              TOTAL PAYABLE
             </span>
 
             <small>
-              Inclusive of 5% GST
+              Inclusive of applicable taxes
             </small>
+
           </div>
 
           <strong>
-            {formatMoney(amount, money)}
+            {formatMoney(
+              amount,
+              money
+            )}
           </strong>
 
         </div>
@@ -408,9 +563,10 @@ export default function PaymentScreen({
           </strong>
 
           <p>
-            Your payment is securely processed through UPI.
-            After successful payment, Juice Robo will generate
-            your 4-digit collection code.
+            Your payment is securely processed
+            through UPI. After successful payment,
+            Juice Robo will generate your collection
+            code.
           </p>
 
         </div>
@@ -435,10 +591,7 @@ export default function PaymentScreen({
         <span>
           {isProcessing
             ? "PROCESSING PAYMENT..."
-            : `PAY ${formatMoney(
-                amount,
-                money
-              )}`}
+            : "PROCEED TO PAY"}
         </span>
 
         <strong>
@@ -453,9 +606,13 @@ export default function PaymentScreen({
          ================================================= */}
 
       <p className="jr-payment-security-note">
-        🔒 Secure payment · Your payment details are protected
+        Secure payment · Your payment details are protected
       </p>
 
+
+      {/* =================================================
+          ERROR
+         ================================================= */}
 
       {error && (
         <div className="jr-payment-error">

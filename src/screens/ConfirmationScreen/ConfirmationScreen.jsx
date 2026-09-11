@@ -157,14 +157,29 @@ function getTotal(order, items) {
   );
 }
 
+function normalizeStatus(value) {
+  return String(value ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
+}
+
 function getPaymentStatus(order) {
-  return (
-    clean(
-      order?.paymentStatus ||
-        order?.payment_status ||
-        order?.payment?.status
-    ) || "PAID"
+  return normalizeStatus(
+    order?.paymentStatus ||
+      order?.payment_status ||
+      order?.payment_status_name ||
+      order?.paymentStatusName ||
+      order?.payment?.status ||
+      order?.payment?.paymentStatus
   );
+}
+
+function getPaymentState(order) {
+  const status = getPaymentStatus(order);
+  if (new Set(["SUCCESS","SUCCESSFUL","PAID","PAYMENT_SUCCESS","PAYMENT_SUCCESSFUL","CAPTURED","COMPLETED","COMPLETE"]).has(status)) return "success";
+  if (new Set(["FAILED","FAILURE","DECLINED","CANCELLED","CANCELED","REJECTED","PAYMENT_FAILED","PAYMENT_FAILURE","TRANSACTION_FAILED","TRANSACTION_FAILURE"]).has(status)) return "failed";
+  return "pending";
 }
 
 function getOrderStatus(order) {
@@ -198,6 +213,7 @@ export default function ConfirmationScreen({
   machine,
   onHome,
   onHistory,
+  onRetry,
   money,
 }) {
   const items = getItems(order);
@@ -219,6 +235,9 @@ export default function ConfirmationScreen({
   const paymentStatus =
     getPaymentStatus(order);
 
+  const paymentState =
+    getPaymentState(order);
+
   const orderStatus =
     getOrderStatus(order);
 
@@ -232,32 +251,34 @@ export default function ConfirmationScreen({
           SUCCESS ICON
          ================================================= */}
 
-      <div className="jr-confirmation-success-icon">
-        ✓
+      <div
+        className={`jr-confirmation-state-icon jr-confirmation-state-${paymentState}`}
+        aria-hidden="true"
+      >
+        {paymentState === "success" ? "✓" : paymentState === "failed" ? "!" : "…"}
       </div>
 
-
-      {/* =================================================
-          HEADING
-         ================================================= */}
-
       <header className="jr-confirmation-heading">
-
-        <span className="jr-confirmation-eyebrow">
-          ORDER SUCCESSFUL
+        <span className={`jr-confirmation-eyebrow jr-confirmation-eyebrow-${paymentState}`}>
+          {paymentState === "success" ? "PAYMENT VERIFIED" : paymentState === "failed" ? "PAYMENT FAILED" : "PAYMENT PENDING"}
         </span>
 
-        <h1>
-          Order
-          <br />
-          <em>confirmed!</em>
-        </h1>
-
-        <p>
-          Payment successful. Your order is ready
-          for collection at the selected Juice Robo.
-        </p>
-
+        {paymentState === "success" ? (
+          <>
+            <h1>Order<br /><em>confirmed!</em></h1>
+            <p>Your payment has been verified by the payment server. Your order is ready for collection at the selected Juice Robo.</p>
+          </>
+        ) : paymentState === "failed" ? (
+          <>
+            <h1>Payment<br /><em>failed.</em></h1>
+            <p>We couldn't confirm this payment. Please try again. Your cart has not been cleared.</p>
+          </>
+        ) : (
+          <>
+            <h1>Payment<br /><em>pending...</em></h1>
+            <p>We're verifying your payment with the payment server. Please wait. This screen will update automatically.</p>
+          </>
+        )}
       </header>
 
 
@@ -381,7 +402,7 @@ export default function ConfirmationScreen({
       <section className="jr-confirmation-total-card">
 
         <span>
-          TOTAL PAID
+          {paymentState === "success" ? "TOTAL PAID" : "ORDER TOTAL"}
         </span>
 
         <strong>
@@ -395,28 +416,20 @@ export default function ConfirmationScreen({
           STATUS
          ================================================= */}
 
-      <section className="jr-confirmation-status-card">
-
+      <section
+        className={`jr-confirmation-status-card jr-confirmation-status-${paymentState}`}
+        aria-live="polite"
+      >
         <div>
-          <span>
-            PAYMENT
-          </span>
-
-          <strong className="jr-confirmation-paid">
-            {paymentStatus}
+          <span>PAYMENT</span>
+          <strong className={paymentState === "success" ? "jr-confirmation-paid" : paymentState === "failed" ? "jr-confirmation-failed" : "jr-confirmation-pending"}>
+            {paymentState === "success" ? "VERIFIED" : paymentState === "failed" ? "FAILED" : "PENDING"}
           </strong>
         </div>
-
         <div>
-          <span>
-            ORDER
-          </span>
-
-          <strong>
-            {orderStatus}
-          </strong>
+          <span>BACKEND STATUS</span>
+          <strong>{paymentStatus || "PENDING"}</strong>
         </div>
-
       </section>
 
 
@@ -426,7 +439,7 @@ export default function ConfirmationScreen({
 
       <section
         className={
-          collectionCode
+          collectionCode && paymentState === "success"
             ? "jr-collection-code-card jr-collection-code-active"
             : "jr-collection-code-card"
         }
@@ -441,9 +454,11 @@ export default function ConfirmationScreen({
         </strong>
 
         <p>
-          {collectionCode
+          {paymentState === "success" && collectionCode
             ? "Save this code. Enter it at your selected Juice Robo machine when you arrive."
-            : "Your collection code will appear here once it is provided by the machine backend."}
+            : paymentState === "failed"
+            ? "A collection code is not available because the payment was not confirmed."
+            : "Your collection code will appear here after payment is verified by the machine backend."}
         </p>
 
       </section>
@@ -453,29 +468,23 @@ export default function ConfirmationScreen({
           ACTIONS
          ================================================= */}
 
-      <button
-        type="button"
-        className="jr-confirmation-primary-button"
-        onClick={onHome}
-      >
-        <span>
-          BACK TO MENU
-        </span>
-
-        <strong>
-          →
-        </strong>
-
-      </button>
-
-
-      <button
-        type="button"
-        className="jr-confirmation-secondary-button"
-        onClick={onHistory}
-      >
-        VIEW ORDER HISTORY
-      </button>
+      {paymentState === "failed" ? (
+        <>
+          <button type="button" className="jr-confirmation-primary-button jr-confirmation-retry-button" onClick={onRetry}>
+            <span>TRY AGAIN</span><strong>→</strong>
+          </button>
+          <button type="button" className="jr-confirmation-secondary-button" onClick={onHome}>BACK TO MENU</button>
+        </>
+      ) : paymentState === "pending" ? (
+        <button type="button" className="jr-confirmation-secondary-button jr-confirmation-secondary-disabled" disabled>VERIFYING PAYMENT...</button>
+      ) : (
+        <>
+          <button type="button" className="jr-confirmation-primary-button" onClick={onHome}>
+            <span>BACK TO MENU</span><strong>→</strong>
+          </button>
+          <button type="button" className="jr-confirmation-secondary-button" onClick={onHistory}>VIEW ORDER HISTORY</button>
+        </>
+      )}
 
     </main>
   );

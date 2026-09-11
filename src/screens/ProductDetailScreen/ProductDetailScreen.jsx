@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import "./ProductDetailScreen.css";
 
-/* =========================================================
-   JUICE ROBO — PRODUCT DETAIL BOTTOM SHEET
-   ========================================================= */
+/*
+ * JUICE ROBO — PRODUCT DETAIL
+ *
+ * Close behavior:
+ * - Uses onClose when supplied by App.jsx.
+ * - Falls back to onBack for older App.jsx versions.
+ * - The close handler is attached directly to the X button.
+ * - pointerdown + click are both handled to make the button
+ *   reliable on mouse, touch and mobile browsers.
+ */
 
 const PRODUCT_ASSETS = {
   plain: "plain-juice.jpg",
@@ -41,7 +48,10 @@ function productSearchText(product = {}) {
 function productType(product = {}) {
   const text = productSearchText(product);
 
-  if (text.includes("ginger") && text.includes("lemon")) {
+  if (
+    text.includes("ginger") &&
+    text.includes("lemon")
+  ) {
     return "ginger-lemon";
   }
 
@@ -56,7 +66,10 @@ function productType(product = {}) {
   return "plain";
 }
 
-function getProductName(product = {}, displayProductName) {
+function getProductName(
+  product = {},
+  displayProductName
+) {
   const generated =
     typeof displayProductName === "function"
       ? clean(displayProductName(product))
@@ -73,7 +86,9 @@ function getProductName(product = {}, displayProductName) {
   );
 
   const usable = (value) => {
-    if (!value) return false;
+    if (!value) {
+      return false;
+    }
 
     const lower = value.toLowerCase();
 
@@ -84,9 +99,17 @@ function getProductName(product = {}, displayProductName) {
     );
   };
 
-  if (usable(apiName)) return apiName;
-  if (usable(generated)) return generated;
-  if (usable(rawName)) return rawName;
+  if (usable(apiName)) {
+    return apiName;
+  }
+
+  if (usable(generated)) {
+    return generated;
+  }
+
+  if (usable(rawName)) {
+    return rawName;
+  }
 
   const type = productType(product);
 
@@ -105,40 +128,33 @@ function getProductName(product = {}, displayProductName) {
   return "Plain Sugarcane Juice";
 }
 
-function getProductDescription(product = {}, displayDescription) {
+function getProductDescription(
+  product = {},
+  displayDescription
+) {
   const generated =
     typeof displayDescription === "function"
       ? clean(displayDescription(product))
       : "";
 
-  if (generated) return generated;
+  if (generated) {
+    return generated;
+  }
 
-  const apiDescription = clean(
-    product?.displayDescription ||
-      product?.description ||
-      product?.desc
+  return (
+    clean(
+      product?.displayDescription ||
+        product?.description ||
+        product?.desc
+    ) ||
+    ""
   );
-
-  if (apiDescription) return apiDescription;
-
-  const type = productType(product);
-
-  if (type === "ginger-lemon") {
-    return "Sugarcane juice with Ginger & Lemon";
-  }
-
-  if (type === "ginger") {
-    return "Sugarcane juice with Ginger";
-  }
-
-  if (type === "lemon") {
-    return "Sugarcane juice with Lemon";
-  }
-
-  return "Sugarcane juice plain";
 }
 
-function getProductImage(product = {}, productImage) {
+function getProductImage(
+  product = {},
+  productImage
+) {
   const supplied =
     typeof productImage === "function"
       ? clean(productImage(product))
@@ -194,8 +210,8 @@ function getVariants(product = {}) {
   const variants = Array.isArray(product?.variants)
     ? product.variants
     : Array.isArray(product?.lstVariants)
-    ? product.lstVariants
-    : [];
+      ? product.lstVariants
+      : [];
 
   return variants.filter(
     (variant) =>
@@ -205,7 +221,10 @@ function getVariants(product = {}) {
   );
 }
 
-function getVariantName(variant = {}, index) {
+function getVariantName(
+  variant = {},
+  index
+) {
   return (
     clean(
       variant?.variantName ||
@@ -218,7 +237,10 @@ function getVariantName(variant = {}, index) {
   );
 }
 
-function getVariantDescription(variant = {}, product = {}) {
+function getVariantDescription(
+  variant = {},
+  product = {}
+) {
   return (
     clean(
       variant?.description ||
@@ -229,7 +251,10 @@ function getVariantDescription(variant = {}, product = {}) {
   );
 }
 
-function getVariantPrice(variant = {}, product = {}) {
+function getVariantPrice(
+  variant = {},
+  product = {}
+) {
   const values = [
     variant?.unitPrice,
     variant?.unit_price,
@@ -237,6 +262,7 @@ function getVariantPrice(variant = {}, product = {}) {
     variant?.sellingPrice,
     variant?.selling_price,
     variant?.amount,
+
     product?.price,
     product?.unitPrice,
     product?.unit_price,
@@ -246,12 +272,18 @@ function getVariantPrice(variant = {}, product = {}) {
   ];
 
   for (const value of values) {
-    if (value !== undefined && value !== null && value !== "") {
-      const number = Number(value);
+    if (
+      value === undefined ||
+      value === null ||
+      value === ""
+    ) {
+      continue;
+    }
 
-      if (Number.isFinite(number)) {
-        return number;
-      }
+    const number = Number(value);
+
+    if (Number.isFinite(number)) {
+      return number;
     }
   }
 
@@ -263,16 +295,18 @@ function formatMoney(value, money) {
     return money(value);
   }
 
-  return `₹${Number(value || 0).toLocaleString("en-IN")}`;
+  return `₹${Number(
+    value || 0
+  ).toLocaleString("en-IN")}`;
 }
-
-/* =========================================================
-   CLOSE ICON
-   ========================================================= */
 
 function CloseIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
       <path
         d="M6 6l12 12M18 6L6 18"
         fill="none"
@@ -284,13 +318,13 @@ function CloseIcon() {
   );
 }
 
-/* =========================================================
-   CHECK ICON
-   ========================================================= */
-
 function CheckIcon() {
   return (
-    <svg viewBox="0 0 18 18" aria-hidden="true">
+    <svg
+      viewBox="0 0 18 18"
+      aria-hidden="true"
+      focusable="false"
+    >
       <path
         d="m3.5 9 3.2 3.2L14.5 4.5"
         fill="none"
@@ -303,18 +337,25 @@ function CheckIcon() {
   );
 }
 
-/* =========================================================
-   MAIN COMPONENT
-   ========================================================= */
-
 export default function ProductDetailScreen({
   product = {},
+
+  /*
+   * New App versions use onClose.
+   * Older versions use onBack.
+   * We support both so the X never depends on one
+   * particular App.jsx revision.
+   */
   onClose,
+  onBack,
+
   onAddToCart,
+
   productImage,
   displayProductName,
   displayDescription,
   money,
+
   initialQuantity = 1,
 }) {
   const variants = useMemo(
@@ -338,20 +379,34 @@ export default function ProductDetailScreen({
   const [selectedVariantIndex, setSelectedVariantIndex] =
     useState(0);
 
-  const [quantity, setQuantity] = useState(
-    Math.max(1, Number(initialQuantity) || 1)
-  );
+  const [quantity, setQuantity] =
+    useState(
+      Math.max(
+        1,
+        Number(initialQuantity) || 1
+      )
+    );
 
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] =
+    useState(false);
 
   useEffect(() => {
     setSelectedVariantIndex(0);
-    setQuantity(Math.max(1, Number(initialQuantity) || 1));
+
+    setQuantity(
+      Math.max(
+        1,
+        Number(initialQuantity) || 1
+      )
+    );
+
     setImageError(false);
   }, [product, initialQuantity]);
 
   const selectedVariant =
-    fallbackVariants[selectedVariantIndex] ||
+    fallbackVariants[
+      selectedVariantIndex
+    ] ||
     fallbackVariants[0];
 
   const name = getProductName(
@@ -359,52 +414,105 @@ export default function ProductDetailScreen({
     displayProductName
   );
 
-  const description = getProductDescription(
-    product,
-    displayDescription
-  );
+  const description =
+    getProductDescription(
+      product,
+      displayDescription
+    );
 
   const image = getProductImage(
     product,
     productImage
   );
 
-  const selectedPrice = getVariantPrice(
-    selectedVariant,
-    product
-  );
+  const selectedPrice =
+    getVariantPrice(
+      selectedVariant,
+      product
+    );
 
-  const total = selectedPrice * quantity;
+  const total =
+    selectedPrice * quantity;
+
+  /*
+   * ONE close function for every close path.
+   *
+   * App.jsx may provide either onClose or onBack.
+   * Never rely on document-level click interception.
+   */
+  function closeScreen() {
+    if (typeof onClose === "function") {
+      onClose();
+      return;
+    }
+
+    if (typeof onBack === "function") {
+      onBack();
+    }
+  }
+
+  function handleCloseClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    closeScreen();
+  }
+
+  function handleClosePointerDown(event) {
+    /*
+     * Prevent the parent/backdrop handlers from treating
+     * the X interaction as a backdrop interaction.
+     */
+    event.stopPropagation();
+  }
+
+  function handleBackdropClick(event) {
+    if (
+      event.target ===
+      event.currentTarget
+    ) {
+      closeScreen();
+    }
+  }
 
   function decreaseQuantity() {
-    setQuantity((current) =>
-      Math.max(1, current - 1)
+    setQuantity(
+      (current) =>
+        Math.max(
+          1,
+          current - 1
+        )
     );
   }
 
   function increaseQuantity() {
-    setQuantity((current) => current + 1);
+    setQuantity(
+      (current) =>
+        current + 1
+    );
   }
 
   function handleAddToCart() {
-    if (typeof onAddToCart !== "function") {
+    if (
+      typeof onAddToCart !==
+      "function"
+    ) {
       return;
     }
 
-    onAddToCart({
+    /*
+     * App.jsx expects the cart callback in this form:
+     *
+     *   onAddToCart(product, variant, absoluteQuantity)
+     *
+     * The quantity selected in this Product Detail screen is
+     * therefore sent directly to the cart handler.
+     */
+    onAddToCart(
       product,
-      variant: selectedVariant,
-      variantIndex: selectedVariantIndex,
-      quantity,
-      unitPrice: selectedPrice,
-      total,
-    });
-  }
-
-  function handleBackdropClick(event) {
-    if (event.target === event.currentTarget) {
-      onClose?.();
-    }
+      selectedVariant,
+      quantity
+    );
   }
 
   return (
@@ -413,20 +521,29 @@ export default function ProductDetailScreen({
       role="dialog"
       aria-modal="true"
       aria-label={`${name} product details`}
-      onMouseDown={handleBackdropClick}
+      onClick={handleBackdropClick}
     >
       <section
         className="jr-product-detail-sheet"
-        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) =>
+          event.stopPropagation()
+        }
       >
         {/* =================================================
-            CLOSE BUTTON
+            CLOSE
            ================================================= */}
+
         <button
           type="button"
           className="jr-product-detail-close"
-          onClick={() => onClose?.()}
+          onPointerDown={
+            handleClosePointerDown
+          }
+          onClick={
+            handleCloseClick
+          }
           aria-label="Close product details"
+          title="Close product details"
         >
           <CloseIcon />
         </button>
@@ -434,16 +551,24 @@ export default function ProductDetailScreen({
         {/* =================================================
             PRODUCT IMAGE
            ================================================= */}
+
         <div className="jr-product-detail-image-wrap">
-          {!imageError ? (
+          {!imageError && image ? (
             <img
               src={image}
               alt={name}
               className="jr-product-detail-image"
-              onError={() => setImageError(true)}
+              loading="eager"
+              decoding="async"
+              onError={() =>
+                setImageError(true)
+              }
             />
           ) : (
-            <div className="jr-product-detail-image-fallback">
+            <div
+              className="jr-product-detail-image-fallback"
+              aria-hidden="true"
+            >
               <span>🧃</span>
             </div>
           )}
@@ -452,6 +577,7 @@ export default function ProductDetailScreen({
         {/* =================================================
             PRODUCT INFO
            ================================================= */}
+
         <div className="jr-product-detail-info">
           <span className="jr-product-detail-eyebrow">
             FRESH SUGARCANE JUICE
@@ -459,23 +585,29 @@ export default function ProductDetailScreen({
 
           <h1>{name}</h1>
 
-          <p>{description}</p>
+          {description ? (
+            <p>{description}</p>
+          ) : null}
         </div>
 
         {/* =================================================
             CHOOSE SIZE
            ================================================= */}
+
         <section className="jr-product-detail-section">
           <div className="jr-product-detail-section-heading">
             <strong>CHOOSE SIZE</strong>
-            <small>Select your preferred serving</small>
+            <small>
+              Select your preferred serving
+            </small>
           </div>
 
           <div className="jr-product-variants">
             {fallbackVariants.map(
               (variant, index) => {
                 const active =
-                  index === selectedVariantIndex;
+                  index ===
+                  selectedVariantIndex;
 
                 const variantName =
                   getVariantName(
@@ -501,6 +633,7 @@ export default function ProductDetailScreen({
                     key={
                       variant?.id ??
                       variant?.variantId ??
+                      variant?.variant_id ??
                       index
                     }
                     className={
@@ -508,16 +641,20 @@ export default function ProductDetailScreen({
                         ? "jr-product-variant active"
                         : "jr-product-variant"
                     }
-                    onClick={() => {
-                      setSelectedVariantIndex(index);
-                    }}
+                    onClick={() =>
+                      setSelectedVariantIndex(
+                        index
+                      )
+                    }
                     aria-pressed={active}
                   >
                     <span
                       className="jr-product-variant-check"
                       aria-hidden="true"
                     >
-                      {active && <CheckIcon />}
+                      {active ? (
+                        <CheckIcon />
+                      ) : null}
                     </span>
 
                     <span className="jr-product-variant-copy">
@@ -546,27 +683,45 @@ export default function ProductDetailScreen({
         {/* =================================================
             QUANTITY
            ================================================= */}
+
         <section className="jr-product-detail-quantity-section">
           <div className="jr-product-detail-section-heading">
             <strong>QUANTITY</strong>
-            <small>How many would you like?</small>
+            <small>
+              How many would you like?
+            </small>
           </div>
 
-          <div className="jr-product-quantity-control">
+          <div
+            className="jr-product-quantity-control"
+            role="group"
+            aria-label="Quantity"
+          >
             <button
               type="button"
-              onClick={decreaseQuantity}
-              disabled={quantity <= 1}
+              onClick={
+                decreaseQuantity
+              }
+              disabled={
+                quantity <= 1
+              }
               aria-label="Decrease quantity"
             >
               −
             </button>
 
-            <span>{quantity}</span>
+            <span
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {quantity}
+            </span>
 
             <button
               type="button"
-              onClick={increaseQuantity}
+              onClick={
+                increaseQuantity
+              }
               aria-label="Increase quantity"
             >
               +
@@ -577,23 +732,31 @@ export default function ProductDetailScreen({
         {/* =================================================
             TOTAL
            ================================================= */}
+
         <div className="jr-product-detail-total">
           <span>TOTAL</span>
 
           <strong>
-            {formatMoney(total, money)}
+            {formatMoney(
+              total,
+              money
+            )}
           </strong>
         </div>
 
         {/* =================================================
             ADD TO CART
            ================================================= */}
+
         <button
           type="button"
           className="jr-product-detail-add"
-          onClick={handleAddToCart}
+          onClick={
+            handleAddToCart
+          }
         >
           <span>ADD TO CART</span>
+
           <span className="jr-product-detail-add-arrow">
             →
           </span>

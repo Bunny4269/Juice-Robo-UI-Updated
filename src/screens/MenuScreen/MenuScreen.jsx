@@ -1,522 +1,282 @@
+import { useMemo, useState, useCallback } from "react";
 import "./MenuScreen.css";
 
-/* =========================================================
-   JUICE ROBO — MENU SCREEN
-   Live cart quantity controls
-   ========================================================= */
-
-const ASSET_BASE =
-  String(import.meta.env.BASE_URL || "/").endsWith("/")
-    ? String(import.meta.env.BASE_URL || "/")
-    : `${String(import.meta.env.BASE_URL || "/")}/`;
-
-const PRODUCT_ASSETS = {
-  plain: "plain-juice.jpg",
-  lemon: "lemon-juice.jpg",
-  ginger: "ginger-juice.jpg",
-  "ginger-lemon": "ginger-lemon-juice.jpg",
-};
-
-/* =========================================================
-   GENERIC HELPERS
-   ========================================================= */
+/*
+ * Juice Robo Menu
+ *
+ * CART CONTRACT
+ * -------------
+ * The backend cart is keyed by variantId.
+ *
+ * +:
+ *   onAddToCart(product, variant, absoluteQuantity)
+ *
+ * -:
+ *   onUpdate(variantId, absoluteQuantity)
+ *
+ * The component does not hardcode product names, prices,
+ * outlet names, machine names, IDs, or API data.
+ */
 
 function clean(value) {
-  return String(value ?? "")
-    .replace(/\bundefined\b/gi, "")
-    .replace(/\bnull\b/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return String(value ?? "").trim();
 }
 
-function firstDefined(...values) {
-  return values.find(
-    (value) =>
-      value !== undefined &&
-      value !== null &&
-      clean(value) !== ""
+function toPositiveId(value) {
+  const id = Number(value);
+
+  return Number.isFinite(id) && id > 0
+    ? id
+    : null;
+}
+
+function getVariants(product = {}) {
+  if (Array.isArray(product?.lstVariants)) {
+    return product.lstVariants.filter(Boolean);
+  }
+
+  if (Array.isArray(product?.variants)) {
+    return product.variants.filter(Boolean);
+  }
+
+  return [];
+}
+
+function getVariantId(product = {}, variant = null) {
+  const value =
+    variant?.variantId ??
+    variant?.variant_id ??
+    variant?.id ??
+    product?.variantId ??
+    product?.variant_id ??
+    product?.id;
+
+  return toPositiveId(value);
+}
+
+function isAvailable(value) {
+  return (
+    value?.isAvailable !== false &&
+    value?.is_available !== false
   );
 }
 
-/* =========================================================
-   PRODUCT HELPERS
-   ========================================================= */
+function getDefaultVariant(product = {}) {
+  const variants = getVariants(product);
 
-function productSearchText(product = {}) {
-  const variants = Array.isArray(product?.lstVariants)
-    ? product.lstVariants
-    : Array.isArray(product?.variants)
-      ? product.variants
+  if (!variants.length) {
+    return null;
+  }
+
+  return (
+    variants.find(isAvailable) ??
+    variants.find((variant) =>
+      clean(
+        variant?.variantName ??
+        variant?.name
+      ).toLowerCase() === "full"
+    ) ??
+    variants[0]
+  );
+}
+
+function productCartId(product = {}) {
+  return getVariantId(
+    product,
+    getDefaultVariant(product)
+  );
+}
+
+function cartItemVariantId(item = {}) {
+  const nestedVariant =
+    item?._variant ??
+    item?.variant ??
+    null;
+
+  return getVariantId(
+    item,
+    nestedVariant
+  );
+}
+
+function readQuantity(value) {
+  const quantity = Number(value);
+
+  if (!Number.isFinite(quantity)) {
+    return 0;
+  }
+
+  return Math.max(
+    0,
+    Math.floor(quantity)
+  );
+}
+
+function quantityForProduct(cart, product) {
+  const targetVariantId =
+    productCartId(product);
+
+  if (targetVariantId === null) {
+    return 0;
+  }
+
+  const items =
+    Array.isArray(cart)
+      ? cart
       : [];
 
-  return [
-    product?.displayName,
-    product?.name,
-    product?.itemName,
-    product?.productName,
-    product?.product_name,
-    product?.title,
-    product?.description,
-    product?.displayDescription,
-    product?.desc,
-    product?.type,
-    product?.productType,
-    product?.product_type,
-    ...variants.flatMap((variant) => [
-      variant?.itemName,
-      variant?.variantName,
-      variant?.variantDesc,
-    ]),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-}
-
-function productType(product = {}) {
-  const text = productSearchText(product);
-
-  if (text.includes("ginger") && text.includes("lemon")) {
-    return "ginger-lemon";
-  }
-
-  if (text.includes("ginger")) {
-    return "ginger";
-  }
-
-  if (text.includes("lemon")) {
-    return "lemon";
-  }
-
-  return "plain";
-}
-
-function localProductImage(product = {}) {
-  return `/assets/${PRODUCT_ASSETS[productType(product)]}`;
-}
-
-function baseProductImage(product = {}) {
-  return `${ASSET_BASE}assets/${PRODUCT_ASSETS[productType(product)]}`;
-}
-
-function normalizeImageUrl(value) {
-  const raw = clean(value);
-
-  if (!raw) {
-    return "";
-  }
-
-  if (
-    /^https?:\/\//i.test(raw) ||
-    raw.startsWith("data:") ||
-    raw.startsWith("blob:")
-  ) {
-    return raw;
-  }
-
-  if (raw.startsWith("/assets/")) {
-    return raw;
-  }
-
-  if (raw.startsWith("/order_now/assets/")) {
-    return raw;
-  }
-
-  if (raw.startsWith("assets/")) {
-    return `/assets/${raw.slice("assets/".length)}`;
-  }
-
-  if (raw.startsWith("./assets/")) {
-    return `/assets/${raw.slice("./assets/".length)}`;
-  }
-
-  if (raw.startsWith("../assets/")) {
-    return `/assets/${raw.slice("../assets/".length)}`;
-  }
-
-  if (raw.startsWith("/")) {
-    return raw;
-  }
-
-  if (/\.(png|jpe?g|webp|gif|svg)$/i.test(raw)) {
-    return `/assets/${raw}`;
-  }
-
-  return raw;
-}
-
-function imageCandidates(product = {}, productImage) {
-  const candidates = [];
-
-  const add = (value) => {
-    const normalized = normalizeImageUrl(value);
-
-    if (normalized && !candidates.includes(normalized)) {
-      candidates.push(normalized);
-    }
-  };
-
-  if (typeof productImage === "function") {
-    add(productImage(product));
-  }
-
-  add(product?.image);
-  add(product?.image_url);
-  add(product?.imageUrl);
-  add(product?.photo_url);
-  add(product?.photoUrl);
-  add(product?.thumbnail);
-  add(product?.thumbnail_url);
-  add(product?.thumbnailUrl);
-  add(product?.itemPhoto);
-  add(product?.item_photo);
-  add(localProductImage(product));
-  add(baseProductImage(product));
-
-  return [...new Set(candidates)];
-}
-
-function displayNameFromProduct(product, displayProductName) {
-  const generated =
-    typeof displayProductName === "function"
-      ? clean(displayProductName(product))
-      : "";
-
-  const apiName = clean(product?.displayName);
-
-  const rawName = clean(
-    firstDefined(
-      product?.name,
-      product?.itemName,
-      product?.productName,
-      product?.product_name,
-      product?.title
-    )
+  const item = items.find(
+    (entry) =>
+      cartItemVariantId(entry) ===
+      targetVariantId
   );
 
-  const usable = (value) => {
-    const text = clean(value);
+  return readQuantity(
+    item?.quantity ??
+    item?.qty ??
+    0
+  );
+}
 
-    if (!text) {
-      return false;
-    }
-
-    const lower = text.toLowerCase();
-
-    return (
-      lower !== "juice" &&
-      !lower.includes("undefined") &&
-      !lower.includes("null")
+function displayName(
+  product,
+  resolver
+) {
+  if (typeof resolver === "function") {
+    const resolved = clean(
+      resolver(product)
     );
-  };
 
-  if (usable(apiName)) {
-    return apiName;
+    if (resolved) {
+      return resolved;
+    }
   }
 
-  if (usable(generated)) {
-    return generated;
-  }
-
-  if (usable(rawName)) {
-    return rawName;
-  }
-
-  const type = productType(product);
-
-  if (type === "ginger-lemon") {
-    return "Sugarcane Juice with Ginger + Lemon";
-  }
-
-  if (type === "ginger") {
-    return "Ginger Sugarcane Juice";
-  }
-
-  if (type === "lemon") {
-    return "Lemon Sugarcane Juice";
-  }
-
-  return "Plain Sugarcane Juice";
+  return (
+    clean(
+      product?.name ??
+      product?.productName ??
+      product?.itemName
+    ) || "Juice"
+  );
 }
 
-function descriptionFromProduct(product, displayDescription) {
-  const generated =
-    typeof displayDescription === "function"
-      ? clean(displayDescription(product))
-      : "";
+function displayDescription(
+  product,
+  resolver
+) {
+  if (typeof resolver === "function") {
+    const resolved = clean(
+      resolver(product)
+    );
 
-  if (generated) {
-    return generated;
+    if (resolved) {
+      return resolved;
+    }
   }
 
-  const apiDescription = clean(
-    firstDefined(
-      product?.displayDescription,
-      product?.description,
-      product?.desc
-    )
+  return clean(
+    product?.description ??
+    product?.desc
   );
-
-  if (apiDescription) {
-    return apiDescription;
-  }
-
-  const type = productType(product);
-
-  if (type === "ginger-lemon") {
-    return "A refreshing blend of ginger, lemon and fresh sugarcane.";
-  }
-
-  if (type === "ginger") {
-    return "Fresh sugarcane juice with a zing of ginger.";
-  }
-
-  if (type === "lemon") {
-    return "Fresh sugarcane juice with a refreshing lemon twist.";
-  }
-
-  return "Freshly prepared plain sugarcane juice.";
 }
 
-function priceFromProduct(product = {}) {
-  const variants = Array.isArray(product?.variants)
-    ? product.variants
-    : Array.isArray(product?.lstVariants)
-      ? product.lstVariants
-      : [];
-
-  const availableVariants = variants.filter(
-    (variant) =>
-      variant &&
-      variant?.isAvailable !== false &&
-      variant?.is_available !== false
-  );
-
-  const selectedVariant =
-    availableVariants.find(
-      (variant) =>
-        clean(
-          variant?.variantName ||
-            variant?.name
-        ).toLowerCase() === "full"
-    ) || availableVariants[0];
+function productPrice(product) {
+  const variant =
+    getDefaultVariant(product);
 
   const values = [
-    selectedVariant?.unitPrice,
-    selectedVariant?.unit_price,
-    selectedVariant?.price,
-    product?.price,
+    variant?.unitPrice,
+    variant?.unit_price,
+    variant?.price,
+
     product?.unitPrice,
     product?.unit_price,
     product?.sellingPrice,
     product?.selling_price,
+    product?.price,
     product?.amount,
   ];
 
   for (const value of values) {
-    if (value !== undefined && value !== null && value !== "") {
-      const number = Number(value);
+    if (
+      value === undefined ||
+      value === null ||
+      value === ""
+    ) {
+      continue;
+    }
 
-      if (Number.isFinite(number)) {
-        return number;
-      }
+    const amount = Number(value);
+
+    if (Number.isFinite(amount)) {
+      return amount;
     }
   }
 
   return 0;
 }
 
-function formatMoney(value, money) {
-  if (typeof money === "function") {
-    return money(value);
+function imageCandidates(
+  product,
+  resolver
+) {
+  const values = [];
+
+  if (typeof resolver === "function") {
+    try {
+      values.push(resolver(product));
+    } catch (error) {
+      console.warn(
+        "[Juice Robo] Product image resolver failed:",
+        error
+      );
+    }
   }
 
-  return `₹${Number(value || 0).toLocaleString("en-IN")}`;
+  values.push(
+    product?.image_url,
+    product?.imageUrl,
+    product?.image,
+    product?.photo,
+    product?.productPhoto,
+    product?.productImage,
+    product?.outletPhoto
+  );
+
+  const seen = new Set();
+
+  return values
+    .map(clean)
+    .filter((value) => {
+      if (!value || seen.has(value)) {
+        return false;
+      }
+
+      seen.add(value);
+      return true;
+    });
 }
 
-/* =========================================================
-   LOCATION / MACHINE HELPERS
-   ========================================================= */
+function moneyValue(value, formatter) {
+  if (typeof formatter === "function") {
+    return formatter(value);
+  }
 
-function locationName(location) {
+  return `₹${Number(
+    value || 0
+  ).toLocaleString("en-IN")}`;
+}
+
+function productKey(product, index) {
   return (
-    clean(
-      firstDefined(
-        location?.name,
-        location?.storeName,
-        location?.locationName,
-        location?.outletName
-      )
-    ) || "Selected location"
+    product?.id ??
+    product?.productId ??
+    product?.product_id ??
+    productCartId(product) ??
+    `product-${index}`
   );
 }
-
-function locationSecondary(location) {
-  return clean(
-    firstDefined(
-      location?.address,
-      location?.locAddress,
-      location?.storeAddress,
-      location?.location,
-      location?.description,
-      location?.outletDesc
-    )
-  );
-}
-
-function machineName(machine) {
-  return (
-    clean(
-      firstDefined(
-        machine?.name,
-        machine?.machineName,
-        machine?.machine_name,
-        machine?.machineCode,
-        machine?.machine_code,
-        machine?.code
-      )
-    ) || "Selected machine"
-  );
-}
-
-function machineStatus(machine) {
-  return clean(
-    firstDefined(
-      machine?.status,
-      machine?.machineStatus,
-      machine?.machine_status
-    )
-  );
-}
-
-/* =========================================================
-   CART QUANTITY HELPERS
-   ========================================================= */
-
-function cartItemsFromState(cart) {
-  if (Array.isArray(cart)) {
-    return cart;
-  }
-
-  const candidates = [
-    cart?.cartItems,
-    cart?.items,
-    cart?.data?.cartItems,
-    cart?.data?.items,
-    cart?.data?.cart?.cartItems,
-    cart?.data?.cart?.items,
-    cart?.cart?.cartItems,
-    cart?.cart?.items,
-  ];
-
-  return candidates.find(Array.isArray) || [];
-}
-
-function numericId(value) {
-  if (
-    value === undefined ||
-    value === null ||
-    value === ""
-  ) {
-    return null;
-  }
-
-  const number = Number(value);
-
-  return Number.isFinite(number) ? number : null;
-}
-
-function cartItemQuantity(cartItem) {
-  const quantity = Number(
-    firstDefined(
-      cartItem?.quantity,
-      cartItem?.qty,
-      cartItem?.count,
-      cartItem?.itemQuantity,
-      cartItem?.item_quantity,
-      0
-    )
-  );
-
-  return Number.isFinite(quantity)
-    ? Math.max(0, quantity)
-    : 0;
-}
-
-function cartItemIds(cartItem) {
-  return [
-    cartItem?.variantId,
-    cartItem?.variant_id,
-    cartItem?.productVariantId,
-    cartItem?.product_variant_id,
-    cartItem?.itemVariantId,
-    cartItem?.item_variant_id,
-    cartItem?.variant?.variantId,
-    cartItem?.variant?.variant_id,
-    cartItem?.variant?.id,
-    cartItem?.product?.variantId,
-    cartItem?.product?.variant_id,
-    cartItem?.product?.itemId,
-    cartItem?.itemId,
-    cartItem?.item_id,
-    cartItem?.productId,
-    cartItem?.product_id,
-  ]
-    .map(numericId)
-    .filter((value) => value !== null);
-}
-
-function productVariantIds(product) {
-  const variants = Array.isArray(product?.lstVariants)
-    ? product.lstVariants
-    : Array.isArray(product?.variants)
-      ? product.variants
-      : [];
-
-  return [
-    product?.variantId,
-    product?.variant_id,
-    product?.id,
-    product?.itemId,
-    product?.item_id,
-    ...variants.flatMap((variant) => [
-      variant?.variantId,
-      variant?.variant_id,
-      variant?.id,
-    ]),
-  ]
-    .map(numericId)
-    .filter((value) => value !== null);
-}
-
-function quantityForProduct(cart, product) {
-  const items = cartItemsFromState(cart);
-  const ids = new Set(productVariantIds(product));
-
-  if (!ids.size) {
-    return 0;
-  }
-
-  return items.reduce((total, cartItem) => {
-    const matches = cartItemIds(cartItem).some((id) =>
-      ids.has(id)
-    );
-
-    return matches
-      ? total + cartItemQuantity(cartItem)
-      : total;
-  }, 0);
-}
-
-function productCartId(product) {
-  const ids = productVariantIds(product);
-
-  return ids.length ? ids[0] : null;
-}
-
-/* =========================================================
-   MAIN MENU SCREEN
-   ========================================================= */
 
 export default function MenuScreen({
   products = [],
@@ -528,32 +288,55 @@ export default function MenuScreen({
   onAddToCart,
   productImage,
   displayProductName,
-  displayDescription,
+  displayDescription: displayDescriptionResolver,
   money,
 }) {
-  const safeProducts = Array.isArray(products)
-    ? products
-    : [];
+  const safeProducts = useMemo(
+    () =>
+      Array.isArray(products)
+        ? products.filter(Boolean)
+        : [],
+    [products]
+  );
 
-  const selectedLocationName =
-    locationName(selectedLocation);
+  const locationName =
+    clean(
+      selectedLocation?.name ??
+      selectedLocation?.storeName ??
+      selectedLocation?.outletName ??
+      selectedLocation?.locationName
+    ) || "Selected location";
 
-  const selectedLocationAddress =
-    locationSecondary(selectedLocation);
+  const locationAddress =
+    clean(
+      selectedLocation?.address ??
+      selectedLocation?.outletDesc ??
+      selectedLocation?.location ??
+      selectedLocation?.description
+    );
 
-  const selectedMachineName =
-    machineName(selectedMachine);
+  const machineName =
+    clean(
+      selectedMachine?.name ??
+      selectedMachine?.machineName ??
+      selectedMachine?.machine_name ??
+      selectedMachine?.machineCode ??
+      selectedMachine?.machine_code
+    ) || "Juice Robo Machine";
 
-  const selectedMachineStatus =
-    machineStatus(selectedMachine);
+  const handleProductSelect =
+    useCallback(
+      (product) => {
+        if (typeof onProduct === "function") {
+          onProduct(product);
+        }
+      },
+      [onProduct]
+    );
 
   return (
     <main className="jr-content jr-menu-page">
-      {/* =================================================
-          WELCOME CARD
-         ================================================= */}
-
-      <section className="jr-menu-welcome jr-welcome">
+      <section className="jr-welcome jr-menu-welcome">
         <div className="jr-welcome-copy">
           <span className="jr-eyebrow">
             FRESHLY MADE
@@ -579,10 +362,6 @@ export default function MenuScreen({
         </div>
       </section>
 
-      {/* =================================================
-          COLLECTION SUMMARY
-         ================================================= */}
-
       <section
         className="jr-selected-machine-banner"
         aria-label="Current collection point"
@@ -598,26 +377,17 @@ export default function MenuScreen({
           <small>COLLECTING FROM</small>
 
           <strong>
-            {selectedLocationAddress ||
-              selectedLocationName}
+            {locationAddress || locationName}
           </strong>
 
           <span>
-            {selectedMachineName}
-
-            {selectedMachineStatus && (
-              <>
-                {" · "}
-                {selectedMachineStatus}
-              </>
-            )}
+            {machineName}
+            {selectedMachine?.status
+              ? ` · ${selectedMachine.status}`
+              : ""}
           </span>
         </div>
       </section>
-
-      {/* =================================================
-          AVAILABLE JUICES
-         ================================================= */}
 
       <section className="jr-menu-section">
         <div className="jr-section-heading">
@@ -649,28 +419,26 @@ export default function MenuScreen({
               <strong>No juices available</strong>
 
               <p>
-                No available products were returned by the
-                Juice Robo API.
+                No available products were returned by
+                the Juice Robo Products API.
               </p>
             </div>
           ) : (
             safeProducts.map((product, index) => (
               <ProductCard
-                key={
-                  product?.id ??
-                  product?.variantId ??
-                  product?.productId ??
-                  product?.product_id ??
-                  `product-${index}`
-                }
+                key={productKey(product, index)}
                 product={product}
                 cart={cart}
-                onSelect={onProduct}
+                onSelect={handleProductSelect}
                 onUpdate={onUpdate}
                 onAddToCart={onAddToCart}
                 productImage={productImage}
-                displayProductName={displayProductName}
-                displayDescription={displayDescription}
+                displayProductName={
+                  displayProductName
+                }
+                displayDescription={
+                  displayDescriptionResolver
+                }
                 money={money}
               />
             ))
@@ -681,13 +449,9 @@ export default function MenuScreen({
   );
 }
 
-/* =========================================================
-   PRODUCT CARD
-   ========================================================= */
-
 function ProductCard({
-  product = {},
-  cart = [],
+  product,
+  cart,
   onSelect,
   onUpdate,
   onAddToCart,
@@ -696,176 +460,186 @@ function ProductCard({
   displayDescription,
   money,
 }) {
-  const name = displayNameFromProduct(
+  const [imageIndex, setImageIndex] =
+    useState(0);
+
+  const name = displayName(
     product,
     displayProductName
   );
 
-  const description = descriptionFromProduct(
-    product,
-    displayDescription
+  const description =
+    displayDescription(
+      product,
+      displayDescription
+    );
+
+  const price = productPrice(product);
+
+  const candidates = useMemo(
+    () =>
+      imageCandidates(
+        product,
+        productImage
+      ),
+    [product, productImage]
   );
 
-  const price = priceFromProduct(product);
+  const quantity =
+    quantityForProduct(
+      cart,
+      product
+    );
 
-  const cartQuantity = quantityForProduct(
-    cart,
-    product
-  );
+  const variant =
+    getDefaultVariant(product);
 
-  const candidates = imageCandidates(
-    product,
-    productImage
-  );
+  const variantId =
+    getVariantId(
+      product,
+      variant
+    );
 
-  const initialImage = candidates[0] || "";
+  const available =
+    isAvailable(product) &&
+    isAvailable(variant);
 
-  const cartId = productCartId(product);
+  const selectProduct =
+    useCallback(() => {
+      if (typeof onSelect === "function") {
+        onSelect(product);
+      }
+    }, [onSelect, product]);
 
-  function handleSelect() {
-    if (typeof onSelect === "function") {
-      onSelect(product);
-    }
-  }
+  const handleCardKeyDown =
+    useCallback(
+      (event) => {
+        if (
+          event.key !== "Enter" &&
+          event.key !== " "
+        ) {
+          return;
+        }
 
-  function handleQuantityUpdate(nextQuantity) {
-    if (typeof onUpdate !== "function" || cartId === null) {
-      return;
-    }
+        event.preventDefault();
+        selectProduct();
+      },
+      [selectProduct]
+    );
 
-    const parsedQuantity = Number(nextQuantity);
-    const next = Number.isFinite(parsedQuantity)
-      ? Math.max(0, Math.floor(parsedQuantity))
-      : 0;
+  const handleImageError =
+    useCallback(() => {
+      setImageIndex((current) => {
+        const next = current + 1;
 
-    onUpdate(cartId, next);
-  }
+        return next < candidates.length
+          ? next
+          : current;
+      });
+    }, [candidates.length]);
 
-  function handleMinus(event) {
-    event.stopPropagation();
-
-    if (cartQuantity <= 0) {
-      return;
-    }
-
-    handleQuantityUpdate(cartQuantity - 1);
-  }
-
-  function handlePlus(event) {
+  async function handlePlus(event) {
     event.preventDefault();
     event.stopPropagation();
 
-    /*
-     * FIRST +:
-     * Use App's real add-to-cart flow. This is important because
-     * onUpdate() only updates an item that already exists in the
-     * local cart; it cannot create the first cart item.
-     *
-     * SUBSEQUENT +:
-     * Use the existing quantity update flow.
-     */
-    if (cartQuantity <= 0) {
-      if (typeof onAddToCart !== "function") {
-        return;
-      }
-
-      const variants = Array.isArray(product?.lstVariants)
-        ? product.lstVariants
-        : Array.isArray(product?.variants)
-          ? product.variants
-          : [];
-
-      const availableVariant =
-        variants.find(
-          (variant) =>
-            variant &&
-            variant?.isAvailable !== false &&
-            variant?.is_available !== false
-        ) || variants[0] || null;
-
-      onAddToCart(product, availableVariant, 1);
+    if (!available) {
       return;
     }
 
-    handleQuantityUpdate(cartQuantity + 1);
-  }
-
-  function handleCardKeyDown(event) {
-    if (
-      event.key === "Enter" ||
-      event.key === " "
-    ) {
-      event.preventDefault();
-      handleSelect();
-    }
-  }
-
-  function handleImageError(event) {
-    const image = event.currentTarget;
-
-    const currentIndex = Number(
-      image.dataset.imageIndex || 0
-    );
-
-    const nextIndex = currentIndex + 1;
-
-    if (nextIndex < candidates.length) {
-      image.dataset.imageIndex = String(nextIndex);
-      image.src = candidates[nextIndex];
+    if (typeof onAddToCart !== "function") {
+      console.error(
+        "[Juice Robo] MenuScreen: onAddToCart is not connected."
+      );
       return;
     }
 
-    image.style.display = "none";
+    if (!variantId) {
+      console.error(
+        "[Juice Robo] Product has no valid variantId:",
+        product
+      );
+      return;
+    }
 
-    const placeholder =
-      image.parentElement?.querySelector(
-        ".jr-product-image-placeholder"
+    const nextQuantity =
+      Math.max(
+        1,
+        quantity + 1
       );
 
-    if (placeholder) {
-      placeholder.style.display = "flex";
+    try {
+      await onAddToCart(
+        product,
+        variant,
+        nextQuantity
+      );
+    } catch (error) {
+      console.error(
+        "[Juice Robo] Menu + failed:",
+        error
+      );
     }
   }
+
+  async function handleMinus(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (
+      quantity <= 0 ||
+      typeof onUpdate !== "function" ||
+      !variantId
+    ) {
+      return;
+    }
+
+    const nextQuantity =
+      Math.max(
+        0,
+        quantity - 1
+      );
+
+    try {
+      await onUpdate(
+        variantId,
+        nextQuantity
+      );
+    } catch (error) {
+      console.error(
+        "[Juice Robo] Menu - failed:",
+        error
+      );
+    }
+  }
+
+  const image =
+    candidates[imageIndex] || "";
 
   return (
     <article
-      className={`jr-product-card ${
-        cartQuantity > 0
-          ? "jr-product-card-in-cart"
+      className={`jr-product-card${
+        quantity > 0
+          ? " jr-product-card-in-cart"
           : ""
       }`}
     >
-      {/* =================================================
-          IMAGE
-         ================================================= */}
-
       <div
         className="jr-product-image-wrap"
         role="button"
         tabIndex={0}
-        onClick={handleSelect}
+        onClick={selectProduct}
         onKeyDown={handleCardKeyDown}
         aria-label={`View details for ${name}`}
       >
-        {initialImage ? (
-          <>
-            <img
-              src={initialImage}
-              alt={name}
-              className="jr-product-image"
-              loading="lazy"
-              data-image-index="0"
-              onError={handleImageError}
-            />
-
-            <div
-              className="jr-product-image-placeholder"
-              aria-hidden="true"
-              style={{ display: "none" }}
-            >
-              🧃
-            </div>
-          </>
+        {image ? (
+          <img
+            src={image}
+            alt={name}
+            className="jr-product-image"
+            loading="lazy"
+            decoding="async"
+            onError={handleImageError}
+          />
         ) : (
           <div
             className="jr-product-image-placeholder"
@@ -881,76 +655,58 @@ function ProductCard({
         </span>
       </div>
 
-      {/* =================================================
-          PRODUCT INFORMATION
-         ================================================= */}
-
       <div className="jr-product-info">
         <div
           className="jr-product-main"
           role="button"
           tabIndex={0}
-          onClick={handleSelect}
+          onClick={selectProduct}
           onKeyDown={handleCardKeyDown}
-          aria-label={`View details for ${name}`}
+          aria-label={`View ${name} details`}
         >
           <h3>{name}</h3>
 
-          {description && <p>{description}</p>}
+          {description ? (
+            <p>{description}</p>
+          ) : null}
         </div>
 
-        {/* =================================================
-            PRICE + BLENDED QUANTITY CONTROL
-           ================================================= */}
-
-        <div className="jr-product-footer">
+        <div className="jr-product-bottom">
           <strong className="jr-product-price">
-            {formatMoney(price, money)}
+            {moneyValue(price, money)}
           </strong>
 
           <div
-            className={`jr-quantity-control ${
-              cartQuantity > 0
-                ? "has-items"
-                : "is-empty"
-            }`}
+            className="jr-product-quantity"
             role="group"
-            aria-label={`Quantity for ${name}`}
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-            }}
-            onPointerDown={(event) => event.stopPropagation()}
-            onMouseDown={(event) => event.stopPropagation()}
-            onTouchStart={(event) => event.stopPropagation()}
+            aria-label={`${name} quantity`}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
             <button
               type="button"
-              className="jr-quantity-button jr-quantity-minus"
+              className="jr-quantity-minus"
               onClick={handleMinus}
-              disabled={cartQuantity <= 0}
+              disabled={quantity <= 0}
               aria-label={`Decrease ${name} quantity`}
             >
               −
             </button>
 
-            <span
-              className="jr-quantity-value"
+            <strong
               aria-live="polite"
-              aria-label={`${cartQuantity} ${name} in cart`}
+              aria-atomic="true"
             >
-              {cartQuantity}
-            </span>
+              {quantity}
+            </strong>
 
             <button
               type="button"
-              className="jr-quantity-button jr-quantity-plus"
+              className="jr-quantity-plus"
               onClick={handlePlus}
-              aria-label={
-                cartQuantity > 0
-                  ? `Increase ${name} quantity`
-                  : `Add ${name} to cart`
-              }
+              disabled={!available}
+              aria-label={`Increase ${name} quantity`}
             >
               +
             </button>

@@ -1382,3 +1382,38 @@
     transition: none;
   }
 }
+
+/* =========================================================
+   PAYMENT PENDING / FAILED / SUCCESS STATES
+   ========================================================= */
+.jr-confirmation-state-icon {
+  width: clamp(55px, 15vw, 66px);
+  height: clamp(55px, 15vw, 66px);
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  margin: 3px 0 11px;
+  border-radius: 20px;
+  font-size: clamp(27px, 7vw, 32px);
+  line-height: 1;
+  font-weight: 950;
+  box-shadow: 0 5px 15px rgba(0,0,0,.06);
+}
+.jr-confirmation-state-success { background:#e7f1e2; color:#2d8550; }
+.jr-confirmation-state-pending { background:#fff4dc; color:#c97800; }
+.jr-confirmation-state-failed { background:#fde8e7; color:#c53b32; }
+.jr-confirmation-eyebrow-pending { color:#c97800; }
+.jr-confirmation-eyebrow-failed { color:#c53b32; }
+.jr-confirmation-status-pending { border-color:#f0dfba; background:#fffdf7; }
+.jr-confirmation-status-failed { border-color:#f0d0ce; background:#fffafa; }
+.jr-confirmation-status-card .jr-confirmation-pending { color:#c97800; }
+.jr-confirmation-status-card .jr-confirmation-failed { color:#c53b32; }
+.jr-confirmation-secondary-disabled { opacity:.72; cursor:default; background:#f5f5f1; color:#777771; }
+.jr-confirmation-secondary-disabled:disabled { cursor:default; transform:none; }
+.jr-confirmation-retry-button { background:#c97800; box-shadow:0 6px 13px rgba(201,120,0,.15); }
+.jr-confirmation-retry-button:hover { background:#aa6500; }
+@media (max-width:390px){.jr-confirmation-state-icon{width:55px;height:55px;}}
+@media (max-width:360px){.jr-confirmation-state-icon{width:55px;height:55px;margin-bottom:9px;font-size:25px;}}
+@media (orientation:portrait) and (max-height:700px){.jr-confirmation-state-icon{width:52px;height:52px;margin-bottom:8px;font-size:25px;}}
+@media (orientation:landscape){.jr-confirmation-state-icon{width:43px;height:43px;margin:0 0 5px;border-radius:13px;font-size:22px;}}
+@media (orientation:landscape) and (max-height:430px){.jr-confirmation-state-icon{width:37px;height:37px;margin-bottom:3px;border-radius:11px;font-size:19px;}}

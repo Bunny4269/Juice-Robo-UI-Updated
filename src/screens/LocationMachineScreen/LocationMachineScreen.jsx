@@ -1,7 +1,12 @@
 import "./LocationMachineScreen.css";
 
 /* =========================================================
-   JUICE ROBO — LOCATION + MACHINE SCREEN
+   JUICE ROBO
+   LOCATION + MACHINE SCREEN
+   ========================================================= */
+
+/* =========================================================
+   HELPERS
    ========================================================= */
 
 function getLocationId(location = {}) {
@@ -9,61 +14,61 @@ function getLocationId(location = {}) {
     location?.storeId ??
       location?.store_id ??
       location?.locId ??
-      location?.id ??
       location?.locationId ??
       location?.location_id ??
+      location?.id ??
       ""
   );
 }
 
 function getMachineId(machine = {}) {
   return String(
-    machine?.id ??
-      machine?.machineId ??
+    machine?.machineId ??
       machine?.machine_id ??
-      machine?.storeId ??
-      machine?.store_id ??
+      machine?.id ??
+      machine?.machineCode ??
+      machine?.machine_code ??
       ""
   );
 }
 
 function getLocationName(location = {}) {
   return (
-    location?.name ||
-    location?.storeName ||
-    location?.outletName ||
-    location?.locationName ||
+    location?.name ??
+    location?.storeName ??
+    location?.outletName ??
+    location?.locationName ??
     "Juice Robo"
   );
 }
 
 function getLocationAddress(location = {}) {
   return (
-    location?.address ||
-    location?.locAddress ||
-    location?.storeAddress ||
-    location?.location ||
-    location?.description ||
+    location?.address ??
+    location?.locAddress ??
+    location?.storeAddress ??
+    location?.location ??
+    location?.description ??
     "Collection point"
   );
 }
 
 function getMachineName(machine = {}) {
   return (
-    machine?.name ||
-    machine?.machineName ||
-    machine?.machine_name ||
-    machine?.machineCode ||
-    machine?.machine_code ||
+    machine?.name ??
+    machine?.machineName ??
+    machine?.machine_name ??
+    machine?.machineCode ??
+    machine?.machine_code ??
     "Juice Robo Machine"
   );
 }
 
 function getMachineStatus(machine = {}) {
   return (
-    machine?.status ||
-    machine?.machineStatus ||
-    machine?.machine_status ||
+    machine?.status ??
+    machine?.machineStatus ??
+    machine?.machine_status ??
     "ONLINE"
   );
 }
@@ -75,9 +80,12 @@ function getMachineStatus(machine = {}) {
 function LocationIcon() {
   return (
     <svg
-      viewBox="0 0 24 24"
       className="jr-location-pin-svg"
+      viewBox="0 0 24 24"
+      width="23"
+      height="23"
       aria-hidden="true"
+      focusable="false"
     >
       <path
         d="M12 21s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12Z"
@@ -103,9 +111,12 @@ function LocationIcon() {
 function MachineIcon() {
   return (
     <svg
-      viewBox="0 0 42 42"
       className="jr-machine-svg"
+      viewBox="0 0 42 42"
+      width="29"
+      height="29"
       aria-hidden="true"
+      focusable="false"
     >
       <rect
         x="10"
@@ -124,7 +135,7 @@ function MachineIcon() {
         width="14"
         height="11"
         rx="2"
-        fill="#fff"
+        fill="#ffffff"
         stroke="#e4e6df"
       />
 
@@ -175,9 +186,12 @@ function MachineIcon() {
 function CheckIcon() {
   return (
     <svg
-      viewBox="0 0 16 16"
       className="jr-check-svg"
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
       aria-hidden="true"
+      focusable="false"
     >
       <path
         d="m3.2 8.1 3 3.1 6.6-6.7"
@@ -192,7 +206,7 @@ function CheckIcon() {
 }
 
 /* =========================================================
-   MAIN SCREEN
+   MAIN COMPONENT
    ========================================================= */
 
 export default function LocationMachineScreen({
@@ -212,45 +226,66 @@ export default function LocationMachineScreen({
     ? machines
     : [];
 
+  const normalizedSelectedLocationId = String(
+    selectedLocationId ?? ""
+  );
+
   /* =======================================================
-     FILTER MACHINES BY LOCATION
+     MACHINES FOR SELECTED LOCATION
      ======================================================= */
 
-  const visibleMachines = selectedLocationId
-    ? safeMachines.filter((machine) => {
-        const machineLocation = String(
-          machine?.locationId ??
-            machine?.location_id ??
-            machine?.storeId ??
-            machine?.store_id ??
-            ""
-        );
+  const visibleMachines = safeMachines.filter((machine) => {
+    if (!normalizedSelectedLocationId) {
+      return true;
+    }
 
-        /*
-         * If the API does not provide a location relation,
-         * keep the machine visible.
-         */
-        return (
-          !machineLocation ||
-          machineLocation ===
-            String(selectedLocationId)
-        );
-      })
-    : safeMachines;
+    const machineLocationId = String(
+      machine?.locationId ??
+        machine?.location_id ??
+        machine?.storeId ??
+        machine?.store_id ??
+        machine?.outletId ??
+        machine?.outlet_id ??
+        ""
+    );
+
+    /*
+     * If the backend does not provide a location relation,
+     * keep the machine visible.
+     */
+    if (!machineLocationId) {
+      return true;
+    }
+
+    return (
+      machineLocationId ===
+      normalizedSelectedLocationId
+    );
+  });
 
   const canContinue =
-    Boolean(selectedLocationId) &&
+    Boolean(normalizedSelectedLocationId) &&
     Boolean(selectedMachineId);
 
-  return (
-    <main className="jr-content jr-page jr-location-page jr-location-machine-screen">
+  /* =======================================================
+     RENDER
+     ======================================================= */
 
-      {/* =====================================================
-          PAGE INTRO
-         ===================================================== */}
+  return (
+    <main
+      className="
+        jr-content
+        jr-page
+        jr-location-page
+        jr-location-machine-page
+        jr-location-machine-screen
+      "
+    >
+      {/* ===================================================
+          PAGE HEADER
+         =================================================== */}
 
       <header className="jr-location-header">
-
         <span className="jr-location-eyebrow">
           COLLECTION POINT
         </span>
@@ -261,46 +296,40 @@ export default function LocationMachineScreen({
 
         <p className="jr-location-description">
           First choose your Juice Robo location, then select
-          <br className="jr-location-desktop-break" />
           the machine you&apos;d like to use.
         </p>
-
       </header>
 
+      {/* ===================================================
+          STEP 01 — LOCATION
+         =================================================== */}
 
-      {/* =====================================================
-          LOCATION
-         ===================================================== */}
-
-      <section className="jr-flow-section">
-
+      <section
+        className="jr-flow-section"
+        aria-labelledby="location-step-title"
+      >
         <div className="jr-flow-heading">
-
-          <span className="jr-flow-number">
+          <span
+            className="jr-flow-number"
+            aria-hidden="true"
+          >
             01
           </span>
 
           <div className="jr-flow-heading-copy">
-
-            <strong>
+            <strong id="location-step-title">
               SELECT LOCATION
             </strong>
 
             <small>
               Where will you collect your juice?
             </small>
-
           </div>
-
         </div>
 
-
         <div className="jr-choice-list">
-
           {safeLocations.length === 0 ? (
-
             <div className="jr-location-empty">
-
               <strong>
                 No collection locations available
               </strong>
@@ -309,119 +338,100 @@ export default function LocationMachineScreen({
                 Please try again after the Juice Robo
                 outlet data loads.
               </p>
-
             </div>
-
           ) : (
+            safeLocations.map((location, index) => {
+              const id = getLocationId(location);
 
-            safeLocations.map(
-              (location, index) => {
+              const key =
+                id || `location-${index}`;
 
-                const id =
-                  getLocationId(location);
+              const active =
+                String(id) ===
+                normalizedSelectedLocationId;
 
-                const key =
-                  id ||
-                  `location-${index}`;
-
-                const active =
-                  String(id) ===
-                  String(selectedLocationId);
-
-                return (
-                  <button
-                    className={
-                      active
-                        ? "jr-choice active"
-                        : "jr-choice"
-                    }
-                    key={key}
-                    type="button"
-                    onClick={() =>
-                      onLocation?.(location)
-                    }
-                    aria-selected={active}
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={
+                    active
+                      ? "jr-choice active"
+                      : "jr-choice"
+                  }
+                  onClick={() =>
+                    onLocation?.(location)
+                  }
+                  aria-selected={active}
+                >
+                  <span
+                    className="jr-choice-icon"
+                    aria-hidden="true"
                   >
+                    <LocationIcon />
+                  </span>
 
-                    {/* ICON */}
-                    <span className="jr-choice-icon">
-                      <LocationIcon />
-                    </span>
+                  <span className="jr-choice-copy">
+                    <strong>
+                      {getLocationName(location)}
+                    </strong>
 
+                    <small>
+                      {getLocationAddress(location)}
+                    </small>
+                  </span>
 
-                    {/* CONTENT */}
-                    <span className="jr-choice-copy">
-
-                      <strong>
-                        {getLocationName(
-                          location
-                        )}
-                      </strong>
-
-                      <small>
-                        {getLocationAddress(
-                          location
-                        )}
-                      </small>
-
-                    </span>
-
-
-                    {/* CHECK */}
-                    <span
-                      className="jr-choice-check"
-                      aria-hidden="true"
-                    >
-                      {active && (
-                        <CheckIcon />
-                      )}
-                    </span>
-
-                  </button>
-                );
-              }
-            )
-
+                  <span
+                    className="jr-choice-check"
+                    aria-hidden="true"
+                  >
+                    {active ? <CheckIcon /> : null}
+                  </span>
+                </button>
+              );
+            })
           )}
-
         </div>
-
       </section>
 
+      {/* ===================================================
+          STEP 02 — MACHINE
+         =================================================== */}
 
-      {/* =====================================================
-          MACHINE
-         ===================================================== */}
-
-      <section className="jr-flow-section jr-machine-section">
-
+      <section
+        className="
+          jr-flow-section
+          jr-machine-section
+        "
+        aria-labelledby="machine-step-title"
+      >
         <div className="jr-flow-heading">
-
-          <span className="jr-flow-number">
+          <span
+            className="jr-flow-number"
+            aria-hidden="true"
+          >
             02
           </span>
 
           <div className="jr-flow-heading-copy">
-
-            <strong>
+            <strong id="machine-step-title">
               SELECT MACHINE
             </strong>
 
             <small>
               Choose your Juice Robo machine.
             </small>
-
           </div>
-
         </div>
 
-
         <div className="jr-machine-list">
-
           {visibleMachines.length === 0 ? (
-
-            <div className="jr-location-empty jr-machine-empty">
-
+            <div
+              className="
+                jr-location-empty
+                jr-machine-empty
+              "
+            >
               <span
                 className="jr-empty-machine-icon"
                 aria-hidden="true"
@@ -437,128 +447,107 @@ export default function LocationMachineScreen({
                 Select a collection location to see
                 its machine.
               </p>
-
             </div>
-
           ) : (
+            visibleMachines.map((machine, index) => {
+              const id = getMachineId(machine);
 
-            visibleMachines.map(
-              (machine, index) => {
+              const key =
+                id || `machine-${index}`;
 
-                const id =
-                  getMachineId(machine);
+              const active =
+                String(id) ===
+                String(selectedMachineId);
 
-                const key =
-                  id ||
-                  `machine-${index}`;
+              const status =
+                getMachineStatus(machine);
 
-                const active =
-                  id ===
-                  String(selectedMachineId);
+              const statusText =
+                String(
+                  status || "ONLINE"
+                ).toUpperCase();
 
-                const status =
-                  getMachineStatus(
-                    machine
-                  );
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={
+                    active
+                      ? "jr-machine-card active"
+                      : "jr-machine-card"
+                  }
+                  onClick={() =>
+                    onMachine?.(machine)
+                  }
+                  aria-selected={active}
+                >
+                  <span
+                    className="jr-machine-icon"
+                    aria-hidden="true"
+                  >
+                    <MachineIcon />
+                  </span>
 
-                return (
-                  <button
+                  <span className="jr-machine-copy">
+                    <strong>
+                      {getMachineName(machine)}
+                    </strong>
+
+                    <small>
+                      {statusText}
+                    </small>
+                  </span>
+
+                  <span
                     className={
                       active
-                        ? "jr-machine-card active"
-                        : "jr-machine-card"
+                        ? "jr-machine-status selected"
+                        : "jr-machine-status"
                     }
-                    key={key}
-                    type="button"
-                    onClick={() =>
-                      onMachine?.(machine)
-                    }
-                    aria-selected={active}
                   >
+                    <i aria-hidden="true" />
 
-                    {/* MACHINE ICON */}
-                    <span className="jr-machine-icon">
-                      <MachineIcon />
-                    </span>
+                    {active
+                      ? "SELECTED"
+                      : statusText}
+                  </span>
 
-
-                    {/* MACHINE CONTENT */}
-                    <span className="jr-machine-copy">
-
-                      <strong>
-                        {getMachineName(
-                          machine
-                        )}
-                      </strong>
-
-                      <small>
-                        {status}
-                      </small>
-
-                    </span>
-
-
-                    {/* STATUS */}
-                    <span
-                      className={
-                        active
-                          ? "jr-machine-status selected"
-                          : "jr-machine-status"
-                      }
-                    >
-
-                      <i />
-
-                      {active
-                        ? "SELECTED"
-                        : String(status).toUpperCase()}
-
-                    </span>
-
-
-                    {/* CHECK */}
-                    <span
-                      className="jr-machine-check"
-                      aria-hidden="true"
-                    >
-                      {active && (
-                        <CheckIcon />
-                      )}
-                    </span>
-
-                  </button>
-                );
-              }
-            )
-
+                  <span
+                    className="jr-machine-check"
+                    aria-hidden="true"
+                  >
+                    {active ? <CheckIcon /> : null}
+                  </span>
+                </button>
+              );
+            })
           )}
-
         </div>
-
       </section>
 
-
-      {/* =====================================================
+      {/* ===================================================
           CONTINUE
-         ===================================================== */}
+         =================================================== */}
 
-      <button
-        className="jr-location-continue"
-        type="button"
-        onClick={onContinue}
-        disabled={!canContinue}
-      >
+      <div className="jr-location-actions">
+        <button
+          className="jr-location-continue"
+          type="button"
+          onClick={onContinue}
+          disabled={!canContinue}
+          aria-disabled={!canContinue}
+        >
+          <span className="jr-location-continue-label">
+            CONTINUE TO MENU
+          </span>
 
-        <span>
-          CONTINUE TO MENU
-        </span>
-
-        <span className="jr-continue-arrow">
-          →
-        </span>
-
-      </button>
-
+          {/* CSS arrow — NO SVG / NO TEXT GLYPH */}
+          <span
+            className="jr-location-continue-arrow"
+            aria-hidden="true"
+          />
+        </button>
+      </div>
     </main>
   );
 }
