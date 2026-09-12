@@ -2,6 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api";
 import "./App.css";
 
+/*
+ * Desktop-only mobile notice image.
+ *
+ * The file is located at:
+ * src/assets/desktop-mobile-notice.jpg
+ */
+import desktopMobileNotice from "./assets/desktop-mobile-notice.jpg";
+
 import LoginScreen from "./screens/LoginScreen/LoginScreen";
 
 import HomeScreen from "./screens/HomeScreen/HomeScreen";
@@ -3657,25 +3665,46 @@ useEffect(() => {
         verified?.paymentState,
         verified?.transaction_status,
         verified?.transactionStatus,
+
+        /*
+         * Some Order Master deployments expose the result of this
+         * payment-status endpoint as `status` / `orderStatus` rather
+         * than `payment_status`. Because this request is specifically
+         * the payment-status endpoint, include those fields too.
+         */
+        verified?.status,
+        verified?.orderStatus,
+        verified?.order_status,
+
         verified?.payment?.status,
         verified?.payment?.paymentStatus,
         verified?.payment?.payment_status,
+
         verified?.data?.payment_status,
         verified?.data?.paymentStatus,
         verified?.data?.payment_state,
         verified?.data?.paymentState,
         verified?.data?.transaction_status,
         verified?.data?.transactionStatus,
+        verified?.data?.status,
+        verified?.data?.orderStatus,
+        verified?.data?.order_status,
         verified?.data?.payment?.status,
         verified?.data?.payment?.paymentStatus,
+        verified?.data?.payment?.payment_status,
+
         verified?.result?.payment_status,
         verified?.result?.paymentStatus,
         verified?.result?.payment_state,
         verified?.result?.paymentState,
         verified?.result?.transaction_status,
         verified?.result?.transactionStatus,
+        verified?.result?.status,
+        verified?.result?.orderStatus,
+        verified?.result?.order_status,
         verified?.result?.payment?.status,
         verified?.result?.payment?.paymentStatus,
+        verified?.result?.payment?.payment_status,
       ];
 
       const normalizedPaymentStates =
@@ -3710,7 +3739,10 @@ useEffect(() => {
             value === "CREATED" ||
             value === "AWAITING_PAYMENT" ||
             value === "PAYMENT_PENDING" ||
-            value === "PAYMENT_PROCESSING"
+            value === "PAYMENT_PROCESSING" ||
+            value === "ORDER_SUCCESS" ||
+            value === "ORDER_COMPLETED" ||
+            value === "SUCCESSFULLY_PAID"
         ) ||
         normalizedPaymentStates[0] ||
         "PENDING";
@@ -3724,6 +3756,9 @@ useEffect(() => {
         "CAPTURED",
         "COMPLETED",
         "COMPLETE",
+        "ORDER_SUCCESS",
+        "ORDER_COMPLETED",
+        "SUCCESSFULLY_PAID",
       ].includes(paymentState);
 
       console.log(
@@ -3797,19 +3832,19 @@ useEffect(() => {
 
         items: safeCart,
 
-        subtotal: Number(
+        subtotal: parseFloat(
           latestOrder?.subtotal ??
-            verified?.subtotal ??
-            session.subtotal ??
-            subtotal
-        ),
+          verified?.subtotal ??
+          session.subtotal ??
+          subtotal
+        ) || 0.0,
 
-        gst: Number(
+        gst: parseFloat(
           latestOrder?.gst ??
-            verified?.gst ??
-            session.gst ??
-            gst
-        ),
+          verified?.gst ??
+          session.gst ??
+          0
+        ) || 0.0,
 
         total_amount: Number(
           latestOrder?.total_amount ??
@@ -4252,9 +4287,9 @@ useEffect(() => {
         cartId,
         orderId,
         upiUrl,
-        total: Number(finalTotal),
+        total: parseFloat(finalTotal) || 0.0,
         subtotal: Number(subtotal),
-        gst: Number(gst),
+        gst: parseFloat(gst) || 0.0,
         collectionCode:
           created?.collection_code ||
           created?.collectionCode ||
@@ -4532,56 +4567,13 @@ useEffect(() => {
 
 if (!isMobileViewport) {
   return (
-    <div className="jr-desktop-block" role="status" aria-live="polite">
-      <div className="jr-desktop-block-content">
-        <div className="jr-desktop-device-icon" aria-hidden="true">
-          <svg
-            viewBox="0 0 64 64"
-            xmlns="http://www.w3.org/2000/svg"
-            focusable="false"
-          >
-            <rect
-              x="17"
-              y="7"
-              width="30"
-              height="50"
-              rx="7"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-            />
-
-            <rect
-              x="22"
-              y="13"
-              width="20"
-              height="34"
-              rx="2"
-              fill="currentColor"
-              opacity="0.08"
-            />
-
-            <circle
-              cx="32"
-              cy="51"
-              r="2"
-              fill="currentColor"
-            />
-          </svg>
-        </div>
-
-        <span className="jr-desktop-block-eyebrow">
-          JUICE ROBO
-        </span>
-
-        <h1>Mobile Only</h1>
-
-        <p>
-          This site is optimised for mobile devices.
-          <br />
-          Please access Juice Robo using your mobile phone.
-        </p>
-      </div>
+    <div className="jr-desktop-block">
+      <img
+        src={desktopMobileNotice}
+        alt="Mobile Only"
+        className="jr-desktop-notice-image"
+        draggable="false"
+      />
     </div>
   );
 }

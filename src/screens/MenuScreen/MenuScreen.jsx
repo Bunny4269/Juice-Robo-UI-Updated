@@ -14,6 +14,15 @@ import "./MenuScreen.css";
  * -:
  *   onUpdate(variantId, absoluteQuantity)
  *
+ * RESPONSIVE LAYOUT
+ * -----------------
+ * Device type is NOT detected in this component.
+ *
+ * Layout/responsiveness is handled entirely by CSS.
+ * This allows the UI to expand naturally up to 1300px
+ * without incorrectly treating a resized desktop browser
+ * as a mobile device.
+ *
  * The component does not hardcode product names, prices,
  * outlet names, machine names, IDs, or API data.
  */
@@ -70,11 +79,12 @@ function getDefaultVariant(product = {}) {
 
   return (
     variants.find(isAvailable) ??
-    variants.find((variant) =>
-      clean(
-        variant?.variantName ??
-        variant?.name
-      ).toLowerCase() === "full"
+    variants.find(
+      (variant) =>
+        clean(
+          variant?.variantName ??
+          variant?.name
+        ).toLowerCase() === "full"
     ) ??
     variants[0]
   );
@@ -225,7 +235,9 @@ function imageCandidates(
 
   if (typeof resolver === "function") {
     try {
-      values.push(resolver(product));
+      values.push(
+        resolver(product)
+      );
     } catch (error) {
       console.warn(
         "[Juice Robo] Product image resolver failed:",
@@ -258,7 +270,10 @@ function imageCandidates(
     });
 }
 
-function moneyValue(value, formatter) {
+function moneyValue(
+  value,
+  formatter
+) {
   if (typeof formatter === "function") {
     return formatter(value);
   }
@@ -268,7 +283,10 @@ function moneyValue(value, formatter) {
   ).toLocaleString("en-IN")}`;
 }
 
-function productKey(product, index) {
+function productKey(
+  product,
+  index
+) {
   return (
     product?.id ??
     product?.productId ??
@@ -277,6 +295,11 @@ function productKey(product, index) {
     `product-${index}`
   );
 }
+
+
+/* =========================================================
+   MENU SCREEN
+   ========================================================= */
 
 export default function MenuScreen({
   products = [],
@@ -288,9 +311,15 @@ export default function MenuScreen({
   onAddToCart,
   productImage,
   displayProductName,
-  displayDescription: displayDescriptionResolver,
+  displayDescription:
+    displayDescriptionResolver,
   money,
 }) {
+
+  /* =======================================================
+     PRODUCTS
+     ======================================================= */
+
   const safeProducts = useMemo(
     () =>
       Array.isArray(products)
@@ -298,6 +327,11 @@ export default function MenuScreen({
         : [],
     [products]
   );
+
+
+  /* =======================================================
+     LOCATION
+     ======================================================= */
 
   const locationName =
     clean(
@@ -315,6 +349,11 @@ export default function MenuScreen({
       selectedLocation?.description
     );
 
+
+  /* =======================================================
+     MACHINE
+     ======================================================= */
+
   const machineName =
     clean(
       selectedMachine?.name ??
@@ -324,20 +363,39 @@ export default function MenuScreen({
       selectedMachine?.machine_code
     ) || "Juice Robo Machine";
 
+
+  /* =======================================================
+     PRODUCT SELECT
+     ======================================================= */
+
   const handleProductSelect =
     useCallback(
       (product) => {
-        if (typeof onProduct === "function") {
+        if (
+          typeof onProduct === "function"
+        ) {
           onProduct(product);
         }
       },
       [onProduct]
     );
 
+
+  /* =======================================================
+     RENDER
+     ======================================================= */
+
   return (
     <main className="jr-content jr-menu-page">
+
+      {/* ===================================================
+          WELCOME / HERO
+          =================================================== */}
+
       <section className="jr-welcome jr-menu-welcome">
+
         <div className="jr-welcome-copy">
+
           <span className="jr-eyebrow">
             FRESHLY MADE
           </span>
@@ -352,6 +410,7 @@ export default function MenuScreen({
             Pick your juice, choose your quantity and
             collect it fresh from your Juice Robo machine.
           </p>
+
         </div>
 
         <div
@@ -360,12 +419,19 @@ export default function MenuScreen({
         >
           🧃
         </div>
+
       </section>
+
+
+      {/* ===================================================
+          SELECTED MACHINE
+          =================================================== */}
 
       <section
         className="jr-selected-machine-banner"
         aria-label="Current collection point"
       >
+
         <div
           className="jr-selected-machine-icon"
           aria-hidden="true"
@@ -374,29 +440,47 @@ export default function MenuScreen({
         </div>
 
         <div className="jr-selected-machine-copy">
-          <small>COLLECTING FROM</small>
+
+          <small>
+            COLLECTING FROM
+          </small>
 
           <strong>
-            {locationAddress || locationName}
+            {locationAddress ||
+              locationName}
           </strong>
 
           <span>
             {machineName}
+
             {selectedMachine?.status
               ? ` · ${selectedMachine.status}`
               : ""}
           </span>
+
         </div>
+
       </section>
 
+
+      {/* ===================================================
+          MENU SECTION
+          =================================================== */}
+
       <section className="jr-menu-section">
+
         <div className="jr-section-heading">
+
           <div className="jr-section-heading-copy">
+
             <span className="jr-section-eyebrow">
               AVAILABLE JUICES
             </span>
 
-            <h2>What are you craving?</h2>
+            <h2>
+              What are you craving?
+            </h2>
+
           </div>
 
           <span
@@ -405,49 +489,88 @@ export default function MenuScreen({
           >
             {safeProducts.length}
           </span>
+
         </div>
+
 
         <p className="jr-section-subtitle">
           Choose your favourite fresh juice.
         </p>
 
-        <div className="jr-products">
-          {safeProducts.length === 0 ? (
-            <div className="jr-products-empty">
-              <span aria-hidden="true">🧃</span>
 
-              <strong>No juices available</strong>
+        {/* =================================================
+            PRODUCT GRID
+            ================================================= */}
+
+        <div className="jr-products">
+
+          {safeProducts.length === 0 ? (
+
+            <div className="jr-products-empty">
+
+              <span aria-hidden="true">
+                🧃
+              </span>
+
+              <strong>
+                No juices available
+              </strong>
 
               <p>
                 No available products were returned by
                 the Juice Robo Products API.
               </p>
+
             </div>
+
           ) : (
-            safeProducts.map((product, index) => (
-              <ProductCard
-                key={productKey(product, index)}
-                product={product}
-                cart={cart}
-                onSelect={handleProductSelect}
-                onUpdate={onUpdate}
-                onAddToCart={onAddToCart}
-                productImage={productImage}
-                displayProductName={
-                  displayProductName
-                }
-                displayDescription={
-                  displayDescriptionResolver
-                }
-                money={money}
-              />
-            ))
+
+            safeProducts.map(
+              (product, index) => (
+
+                <ProductCard
+                  key={productKey(
+                    product,
+                    index
+                  )}
+                  product={product}
+                  cart={cart}
+                  onSelect={
+                    handleProductSelect
+                  }
+                  onUpdate={onUpdate}
+                  onAddToCart={
+                    onAddToCart
+                  }
+                  productImage={
+                    productImage
+                  }
+                  displayProductName={
+                    displayProductName
+                  }
+                  displayDescription={
+                    displayDescriptionResolver
+                  }
+                  money={money}
+                />
+
+              )
+            )
+
           )}
+
         </div>
+
       </section>
+
     </main>
   );
 }
+
+
+/* =========================================================
+   PRODUCT CARD
+   ========================================================= */
 
 function ProductCard({
   product,
@@ -460,13 +583,22 @@ function ProductCard({
   displayDescription,
   money,
 }) {
-  const [imageIndex, setImageIndex] =
-    useState(0);
 
-  const name = displayName(
-    product,
-    displayProductName
-  );
+  const [
+    imageIndex,
+    setImageIndex,
+  ] = useState(0);
+
+
+  /* =======================================================
+     PRODUCT DATA
+     ======================================================= */
+
+  const name =
+    displayName(
+      product,
+      displayProductName
+    );
 
   const description =
     displayDescription(
@@ -474,16 +606,31 @@ function ProductCard({
       displayDescription
     );
 
-  const price = productPrice(product);
+  const price =
+    productPrice(product);
 
-  const candidates = useMemo(
-    () =>
-      imageCandidates(
+
+  /* =======================================================
+     PRODUCT IMAGES
+     ======================================================= */
+
+  const candidates =
+    useMemo(
+      () =>
+        imageCandidates(
+          product,
+          productImage
+        ),
+      [
         product,
-        productImage
-      ),
-    [product, productImage]
-  );
+        productImage,
+      ]
+    );
+
+
+  /* =======================================================
+     CART
+     ======================================================= */
 
   const quantity =
     quantityForProduct(
@@ -492,7 +639,9 @@ function ProductCard({
     );
 
   const variant =
-    getDefaultVariant(product);
+    getDefaultVariant(
+      product
+    );
 
   const variantId =
     getVariantId(
@@ -500,20 +649,45 @@ function ProductCard({
       variant
     );
 
+
+  /* =======================================================
+     AVAILABILITY
+     ======================================================= */
+
   const available =
     isAvailable(product) &&
     isAvailable(variant);
 
+
+  /* =======================================================
+     PRODUCT SELECTION
+     ======================================================= */
+
   const selectProduct =
-    useCallback(() => {
-      if (typeof onSelect === "function") {
-        onSelect(product);
-      }
-    }, [onSelect, product]);
+    useCallback(
+      () => {
+        if (
+          typeof onSelect ===
+          "function"
+        ) {
+          onSelect(product);
+        }
+      },
+      [
+        onSelect,
+        product,
+      ]
+    );
+
+
+  /* =======================================================
+     KEYBOARD ACCESSIBILITY
+     ======================================================= */
 
   const handleCardKeyDown =
     useCallback(
       (event) => {
+
         if (
           event.key !== "Enter" &&
           event.key !== " "
@@ -522,23 +696,47 @@ function ProductCard({
         }
 
         event.preventDefault();
+
         selectProduct();
       },
       [selectProduct]
     );
 
+
+  /* =======================================================
+     IMAGE ERROR / FALLBACK
+     ======================================================= */
+
   const handleImageError =
-    useCallback(() => {
-      setImageIndex((current) => {
-        const next = current + 1;
+    useCallback(
+      () => {
 
-        return next < candidates.length
-          ? next
-          : current;
-      });
-    }, [candidates.length]);
+        setImageIndex(
+          (current) => {
 
-  async function handlePlus(event) {
+            const next =
+              current + 1;
+
+            return next <
+              candidates.length
+              ? next
+              : current;
+          }
+        );
+
+      },
+      [candidates.length]
+    );
+
+
+  /* =======================================================
+     ADD TO CART
+     ======================================================= */
+
+  async function handlePlus(
+    event
+  ) {
+
     event.preventDefault();
     event.stopPropagation();
 
@@ -546,18 +744,25 @@ function ProductCard({
       return;
     }
 
-    if (typeof onAddToCart !== "function") {
+    if (
+      typeof onAddToCart !==
+      "function"
+    ) {
+
       console.error(
         "[Juice Robo] MenuScreen: onAddToCart is not connected."
       );
+
       return;
     }
 
     if (!variantId) {
+
       console.error(
         "[Juice Robo] Product has no valid variantId:",
         product
       );
+
       return;
     }
 
@@ -568,26 +773,39 @@ function ProductCard({
       );
 
     try {
+
       await onAddToCart(
         product,
         variant,
         nextQuantity
       );
+
     } catch (error) {
+
       console.error(
         "[Juice Robo] Menu + failed:",
         error
       );
+
     }
   }
 
-  async function handleMinus(event) {
+
+  /* =======================================================
+     REMOVE FROM CART
+     ======================================================= */
+
+  async function handleMinus(
+    event
+  ) {
+
     event.preventDefault();
     event.stopPropagation();
 
     if (
       quantity <= 0 ||
-      typeof onUpdate !== "function" ||
+      typeof onUpdate !==
+        "function" ||
       !variantId
     ) {
       return;
@@ -600,20 +818,34 @@ function ProductCard({
       );
 
     try {
+
       await onUpdate(
         variantId,
         nextQuantity
       );
+
     } catch (error) {
+
       console.error(
         "[Juice Robo] Menu - failed:",
         error
       );
+
     }
   }
 
+
+  /* =======================================================
+     CURRENT IMAGE
+     ======================================================= */
+
   const image =
     candidates[imageIndex] || "";
+
+
+  /* =======================================================
+     RENDER PRODUCT CARD
+     ======================================================= */
 
   return (
     <article
@@ -623,58 +855,105 @@ function ProductCard({
           : ""
       }`}
     >
+
+      {/* =================================================
+          PRODUCT IMAGE
+          ================================================= */}
+
       <div
         className="jr-product-image-wrap"
         role="button"
         tabIndex={0}
-        onClick={selectProduct}
-        onKeyDown={handleCardKeyDown}
+        onClick={
+          selectProduct
+        }
+        onKeyDown={
+          handleCardKeyDown
+        }
         aria-label={`View details for ${name}`}
       >
+
         {image ? (
+
           <img
             src={image}
             alt={name}
             className="jr-product-image"
             loading="lazy"
             decoding="async"
-            onError={handleImageError}
+            onError={
+              handleImageError
+            }
           />
+
         ) : (
+
           <div
             className="jr-product-image-placeholder"
             aria-hidden="true"
           >
             🧃
           </div>
+
         )}
 
+
         <span className="jr-fresh-badge">
+
           <i />
+
           FRESH
+
         </span>
+
       </div>
 
+
+      {/* =================================================
+          PRODUCT INFORMATION
+          ================================================= */}
+
       <div className="jr-product-info">
+
         <div
           className="jr-product-main"
           role="button"
           tabIndex={0}
-          onClick={selectProduct}
-          onKeyDown={handleCardKeyDown}
+          onClick={
+            selectProduct
+          }
+          onKeyDown={
+            handleCardKeyDown
+          }
           aria-label={`View ${name} details`}
         >
-          <h3>{name}</h3>
+
+          <h3>
+            {name}
+          </h3>
 
           {description ? (
-            <p>{description}</p>
+            <p>
+              {description}
+            </p>
           ) : null}
+
         </div>
 
+
+        {/* ===============================================
+            PRICE + QUANTITY
+            =============================================== */}
+
         <div className="jr-product-bottom">
+
           <strong className="jr-product-price">
-            {moneyValue(price, money)}
+            {moneyValue(
+              price,
+              money
+            )}
           </strong>
+
 
           <div
             className="jr-product-quantity"
@@ -684,15 +963,29 @@ function ProductCard({
               event.stopPropagation()
             }
           >
+
+            {/* -------------------------------------------
+                DECREASE
+                ------------------------------------------- */}
+
             <button
               type="button"
               className="jr-quantity-minus"
-              onClick={handleMinus}
-              disabled={quantity <= 0}
+              onClick={
+                handleMinus
+              }
+              disabled={
+                quantity <= 0
+              }
               aria-label={`Decrease ${name} quantity`}
             >
               −
             </button>
+
+
+            {/* -------------------------------------------
+                QUANTITY
+                ------------------------------------------- */}
 
             <strong
               aria-live="polite"
@@ -701,18 +994,31 @@ function ProductCard({
               {quantity}
             </strong>
 
+
+            {/* -------------------------------------------
+                INCREASE
+                ------------------------------------------- */}
+
             <button
               type="button"
               className="jr-quantity-plus"
-              onClick={handlePlus}
-              disabled={!available}
+              onClick={
+                handlePlus
+              }
+              disabled={
+                !available
+              }
               aria-label={`Increase ${name} quantity`}
             >
               +
             </button>
+
           </div>
+
         </div>
+
       </div>
+
     </article>
   );
 }

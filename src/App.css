@@ -549,18 +549,6 @@ svg {
    12. IMPORTANT — REMOVE OLD NATIVE HEADER SELECTS
    ========================================================= */
 
-/*
-   The previous Header implementation used native <select>
-   elements for location and machine.
-
-   Those native controls were responsible for the huge
-   grey popup / giant V seen in Chrome mobile emulation
-   and can behave differently on iOS Safari.
-
-   The new Header uses a button and opens the existing
-   LocationMachineScreen instead.
-*/
-
 .jr-header select,
 .jr-header .jr-header-select,
 .jr-header .jr-header-machine-select,
@@ -1056,12 +1044,6 @@ svg {
 /* =========================================================
    26. GLOBAL ARROW PROTECTION
    ========================================================= */
-
-/*
-   This is deliberately strict.
-
-   No arrow/chevron should ever become a giant V.
-*/
 
 .jr-continue-arrow,
 .jr-location-continue-arrow,
@@ -1799,4 +1781,142 @@ textarea:focus-visible {
   overflow: visible !important;
 
   transform: none !important;
+}
+
+
+/* =========================================================
+   43. DESKTOP — MOBILE ONLY NOTICE
+   ========================================================= */
+
+/*
+   PC / desktop users must see ONLY the supplied
+   desktop-mobile-notice.jpg image.
+
+   The actual mobile application remains untouched.
+
+   App.jsx should return:
+
+   <div className="jr-desktop-block">
+     <img
+       src={desktopMobileNotice}
+       alt="Mobile Only"
+       className="jr-desktop-notice-image"
+     />
+   </div>
+
+   when !isMobileViewport.
+*/
+
+.jr-desktop-block {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 999999;
+
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+
+  min-width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  isolation: isolate;
+}
+
+.jr-desktop-notice-image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  max-width: none;
+  max-height: none;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+
+  object-fit: contain;
+  object-position: center center;
+
+  background: #ffffff;
+
+  user-select: none;
+  -webkit-user-select: none;
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   44. DESKTOP NOTICE — DESKTOP ONLY
+   ========================================================= */
+
+@media screen and (min-width: 601px) {
+
+  .jr-desktop-block {
+    display: flex !important;
+  }
+
+  .jr-desktop-notice-image {
+    display: block !important;
+  }
+}
+
+
+/* =========================================================
+   45. MOBILE — NEVER SHOW DESKTOP NOTICE
+   ========================================================= */
+
+@media screen and (max-width: 600px) {
+
+  .jr-desktop-block {
+    display: none !important;
+  }
+
+  .jr-desktop-notice-image {
+    display: none !important;
+  }
+}
+
+
+/* =========================================================
+   46. DESKTOP BODY / ROOT SAFETY
+   ========================================================= */
+
+@media screen and (min-width: 601px) {
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+
+    margin: 0;
+    padding: 0;
+
+    overflow: hidden;
+
+    background: #ffffff;
+  }
 }

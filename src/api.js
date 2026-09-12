@@ -1,14 +1,6 @@
   /* ============================================================
-   JUICE ROBO — API ADAPTER
-   ============================================================
-   React/Vite frontend API service. No JSX belongs in this file.
-
-   GENERAL API:       https://tptest.juicerobo.com/tporder/api
-   ORDER MASTER API:  https://tptest.juicerobo.com/tpordermaster/api
-
-   API credentials are read from Vite environment variables:
-   VITE_JR_API_KEY, VITE_JR_API_KEY_SECRET, VITE_JR_ORG_ID
-   ============================================================ */
+    JUICE ROBO — API ADAPTER
+    ============================================================ */
 
 const API_BASE = String(
   import.meta.env.VITE_JR_API_BASE ||
