@@ -76,11 +76,14 @@ export default function CartScreen({
         1
     );
 
-    return Number.isFinite(quantity) &&
-      quantity > 0
+    return Number.isFinite(quantity) && quantity > 0
       ? Math.floor(quantity)
       : 1;
   }
+
+  /* =======================================================
+     MONEY FORMATTING
+     ======================================================= */
 
   function formatMoney(value) {
     if (typeof money === "function") {
@@ -90,7 +93,7 @@ export default function CartScreen({
     return `₹${Number(value || 0).toLocaleString(
       "en-IN",
       {
-        minimumFractionDigits: 2,
+        minimumFractionDigits: 0,
         maximumFractionDigits: 2,
       }
     )}`;
@@ -110,21 +113,42 @@ export default function CartScreen({
      TOTALS
      ======================================================= */
 
-  // Product prices are GST-inclusive.
-  // Extract the GST portion from the customer-facing gross total.
-  const grossTotal = items.reduce(
-    (sum, item) =>
-      sum +
-      getPrice(item) *
-        getQuantity(item),
-    0
-  );
+  /*
+   * Backend product prices are customer-facing prices
+   * and already include GST.
+   *
+   * Gross Total = actual amount customer pays
+   * Taxable Subtotal = Gross / 1.05
+   * GST = Gross - Taxable Subtotal
+   */
 
   const GST_RATE = 0.05;
 
-  const subtotal = grossTotal / (1 + GST_RATE);
-  const gst = grossTotal - subtotal;
-  const grandTotal = grossTotal;
+  const grossTotal = items.reduce(
+    (sum, item) => {
+      const price = getPrice(item);
+      const quantity = getQuantity(item);
+
+      if (
+        !Number.isFinite(price) ||
+        !Number.isFinite(quantity)
+      ) {
+        return sum;
+      }
+
+      return sum + price * quantity;
+    },
+    0
+  );
+
+  const subtotal =
+    grossTotal / (1 + GST_RATE);
+
+  const gst =
+    grossTotal - subtotal;
+
+  const grandTotal =
+    grossTotal;
 
   const itemCount = items.reduce(
     (sum, item) =>
@@ -139,14 +163,6 @@ export default function CartScreen({
   if (!items.length) {
     return (
       <main className="jr-content jr-page jr-cart-page">
-
-        <button
-          type="button"
-          className="jr-cart-back"
-          onClick={onBack}
-        >
-          ← Back to menu
-        </button>
 
         <div className="jr-cart-empty">
 
@@ -192,15 +208,16 @@ export default function CartScreen({
     <main className="jr-content jr-page jr-cart-page">
 
       {/* =================================================
-          BACK
+          CONTINUE SHOPPING
+          TOP LEFT
          ================================================= */}
 
       <button
         type="button"
-        className="jr-cart-back"
+        className="jr-cart-continue"
         onClick={onBack}
       >
-        ← Back to menu
+        ← Continue shopping
       </button>
 
 
@@ -300,13 +317,20 @@ export default function CartScreen({
 
         {items.map((item, index) => {
 
-          const price = getPrice(item);
-          const quantity = getQuantity(item);
+          const price =
+            getPrice(item);
+
+          const quantity =
+            getQuantity(item);
+
           const lineTotal =
             price * quantity;
 
-          const image = getImage(item);
-          const name = getName(item);
+          const image =
+            getImage(item);
+
+          const name =
+            getName(item);
 
           const variant =
             item?.variantName ||
@@ -319,7 +343,9 @@ export default function CartScreen({
               key={`${item?.id || index}-${variant}`}
             >
 
-              {/* IMAGE */}
+              {/* =================================================
+                  IMAGE
+                 ================================================= */}
 
               <div className="jr-cart-item-image">
 
@@ -341,7 +367,9 @@ export default function CartScreen({
               </div>
 
 
-              {/* INFO */}
+              {/* =================================================
+                  PRODUCT INFORMATION
+                 ================================================= */}
 
               <div className="jr-cart-item-info">
 
@@ -366,7 +394,9 @@ export default function CartScreen({
                   </strong>
 
 
-                  {/* QUANTITY */}
+                  {/* =================================================
+                      QUANTITY
+                     ================================================= */}
 
                   <div className="jr-cart-quantity">
 
@@ -376,7 +406,10 @@ export default function CartScreen({
                       onClick={() =>
                         onUpdate?.(
                           item.id,
-                          Math.max(0, quantity - 1)
+                          Math.max(
+                            0,
+                            quantity - 1
+                          )
                         )
                       }
                     >
@@ -407,7 +440,9 @@ export default function CartScreen({
               </div>
 
 
-              {/* RIGHT SIDE */}
+              {/* =================================================
+                  RIGHT SIDE
+                 ================================================= */}
 
               <div className="jr-cart-item-right">
 
@@ -436,25 +471,15 @@ export default function CartScreen({
 
 
       {/* =================================================
-          CONTINUE SHOPPING
-         ================================================= */}
-
-      <button
-        type="button"
-        className="jr-cart-continue"
-        onClick={onBack}
-      >
-        ← CONTINUE SHOPPING
-      </button>
-
-
-      {/* =================================================
           ORDER SUMMARY
          ================================================= */}
 
       <section className="jr-cart-summary">
 
+        {/* SUMMARY HEADER */}
+
         <div className="jr-cart-summary-heading">
+
           <span className="jr-eyebrow">
             ORDER SUMMARY
           </span>
@@ -465,10 +490,13 @@ export default function CartScreen({
               ? "item"
               : "items"}
           </strong>
+
         </div>
 
 
-        {/* SUBTOTAL */}
+        {/* =================================================
+            SUBTOTAL
+           ================================================= */}
 
         <div className="jr-summary-row">
 
@@ -477,13 +505,17 @@ export default function CartScreen({
           </span>
 
           <strong>
-            {formatSummaryMoney(subtotal)}
+            {formatSummaryMoney(
+              subtotal
+            )}
           </strong>
 
         </div>
 
 
-        {/* GST */}
+        {/* =================================================
+            GST
+           ================================================= */}
 
         <div className="jr-summary-row">
 
@@ -495,20 +527,29 @@ export default function CartScreen({
           </span>
 
           <strong>
-            {formatSummaryMoney(gst)}
+            {formatSummaryMoney(
+              gst
+            )}
           </strong>
 
         </div>
 
 
+        {/* =================================================
+            DIVIDER
+           ================================================= */}
+
         <div className="jr-summary-divider" />
 
 
-        {/* TOTAL */}
+        {/* =================================================
+            TOTAL
+           ================================================= */}
 
         <div className="jr-summary-total">
 
           <div>
+
             <span>
               TOTAL
             </span>
@@ -516,22 +557,28 @@ export default function CartScreen({
             <small>
               Inclusive of 5% GST
             </small>
+
           </div>
 
           <strong>
-            {formatSummaryMoney(grandTotal)}
+            {formatSummaryMoney(
+              grandTotal
+            )}
           </strong>
 
         </div>
 
 
-        {/* CHECKOUT */}
+        {/* =================================================
+            CHECKOUT
+           ================================================= */}
 
         <button
           type="button"
           className="jr-cart-checkout"
           onClick={onCheckout}
         >
+
           <span>
             PROCEED TO PAYMENT
           </span>
@@ -539,6 +586,7 @@ export default function CartScreen({
           <b>
             →
           </b>
+
         </button>
 
       </section>

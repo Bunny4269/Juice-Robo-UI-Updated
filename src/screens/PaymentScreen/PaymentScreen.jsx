@@ -3,6 +3,7 @@ import "./PaymentScreen.css";
 /* =========================================================
    JUICE ROBO — PAYMENT SCREEN
    Pre-payment review only. No invoice/receipt is shown here.
+   GST is inclusive at 5%.
    ========================================================= */
 
 function clean(value) {
@@ -20,6 +21,10 @@ function formatMoney(value, money) {
   })}`;
 }
 
+/* =========================================================
+   ITEM HELPERS
+   ========================================================= */
+
 function getItemName(item = {}) {
   return (
     clean(
@@ -29,7 +34,12 @@ function getItemName(item = {}) {
         item?.productName ||
         item?.product_name ||
         item?.title
-    ) || "Sugarcane Juice"
+    )
+      .replace(/\bundefined\b/gi, "")
+      .replace(/\bnull\b/gi, "")
+      .replace(/\s+/g, " ")
+      .trim() ||
+    "Sugarcane Juice"
   );
 }
 
@@ -55,7 +65,10 @@ function getItemUnitPrice(item = {}) {
       item?.selling_price
   );
 
-  if (Number.isFinite(directPrice) && directPrice >= 0) {
+  if (
+    Number.isFinite(directPrice) &&
+    directPrice >= 0
+  ) {
     return directPrice;
   }
 
@@ -89,7 +102,10 @@ function getItemSubtotal(item = {}) {
       item?.line_total
   );
 
-  if (Number.isFinite(direct) && direct >= 0) {
+  if (
+    Number.isFinite(direct) &&
+    direct >= 0
+  ) {
     return direct;
   }
 
@@ -98,7 +114,6 @@ function getItemSubtotal(item = {}) {
     getItemQuantity(item)
   );
 }
-
 
 /* =========================================================
    ICONS
@@ -173,7 +188,6 @@ export default function PaymentScreen({
   paymentStatus,
   busy,
   error,
-
   paymentMethod,
 }) {
   const safeCart = Array.isArray(items)
@@ -192,35 +206,55 @@ export default function PaymentScreen({
     0
   );
 
-  const calculatedSubtotal = safeCart.reduce(
-    (sum, item) =>
-      sum + getItemSubtotal(item),
-    0
-  );
+  const calculatedItemTotal =
+    safeCart.reduce(
+      (sum, item) =>
+        sum + getItemSubtotal(item),
+      0
+    );
 
   /* =======================================================
-     TOTAL
+     GST-INCLUSIVE TOTAL
+
+     Cart:
+       Subtotal = ₹0.95
+       GST 5%   = ₹0.05
+       Total    = ₹1.00
+
+     Therefore, when total includes GST:
+
+       taxable subtotal = total / 1.05
+       GST               = total - subtotal
      ======================================================= */
 
   const amount =
     Number(
       finalTotal ??
         total ??
-        calculatedSubtotal
+        calculatedItemTotal
     ) || 0;
 
-  const grossSubtotal = calculatedSubtotal;
+  const roundedAmount =
+    Math.round(
+      (amount + Number.EPSILON) * 100
+    ) / 100;
 
-  const calculatedTaxableSubtotal =
-    grossSubtotal / 1.05;
-
-  const calculatedGst =
-    grossSubtotal -
-    calculatedTaxableSubtotal;
+  const calculatedSubtotal =
+    Math.round(
+      (
+        roundedAmount / 1.05 +
+        Number.EPSILON
+      ) * 100
+    ) / 100;
 
   const gstAmount =
-    Number(gst ?? 0) ||
-    calculatedGst;
+    Math.round(
+      (
+        roundedAmount -
+        calculatedSubtotal +
+        Number.EPSILON
+      ) * 100
+    ) / 100;
 
   /* =======================================================
      LOCATION
@@ -269,9 +303,6 @@ export default function PaymentScreen({
     paymentStatus === "processing" ||
     paymentStatus === "PROCESSING";
 
-
-
-
   return (
     <main className="jr-content jr-page jr-payment-page">
 
@@ -285,33 +316,31 @@ export default function PaymentScreen({
         type="button"
         disabled={isProcessing}
       >
-        ← Back to order
+        ← Back to cart
       </button>
-
 
       {/* =================================================
           HEADER
-         ================================================= */}
+        ================================================= */}
 
       <header className="jr-payment-header">
 
         <span className="jr-payment-eyebrow">
-          PAYMENT
+          UPI PAYMENT
         </span>
 
         <h1>
-          Almost
+          Complete your
           <br />
-          <em>there.</em>
+          <em>payment.</em>
         </h1>
 
         <p>
-          Review your complete order before
-          making secure payment.
+          Complete payment in your UPI app. We will
+          verify it with Juice Robo.
         </p>
 
       </header>
-
 
       {/* =================================================
           COLLECTION CARD
@@ -345,7 +374,6 @@ export default function PaymentScreen({
 
       </section>
 
-
       {/* =================================================
           ORDER SUMMARY
          ================================================= */}
@@ -373,7 +401,6 @@ export default function PaymentScreen({
 
         </div>
 
-
         {/* ---------------------------------------------
             ITEM TABLE HEADER
            --------------------------------------------- */}
@@ -399,7 +426,6 @@ export default function PaymentScreen({
 
           </div>
         )}
-
 
         {/* ---------------------------------------------
             ITEMS
@@ -470,7 +496,6 @@ export default function PaymentScreen({
 
         </div>
 
-
         {/* ---------------------------------------------
             PRICE BREAKDOWN
            --------------------------------------------- */}
@@ -494,7 +519,6 @@ export default function PaymentScreen({
 
           </div>
 
-
           <div className="jr-payment-price-row">
 
             <span>
@@ -515,7 +539,6 @@ export default function PaymentScreen({
 
         </div>
 
-
         {/* ---------------------------------------------
             GRAND TOTAL
            --------------------------------------------- */}
@@ -529,14 +552,14 @@ export default function PaymentScreen({
             </span>
 
             <small>
-              Inclusive of applicable taxes
+              Inclusive of 5% GST
             </small>
 
           </div>
 
           <strong>
             {formatMoney(
-              amount,
+              roundedAmount,
               money
             )}
           </strong>
@@ -544,7 +567,6 @@ export default function PaymentScreen({
         </div>
 
       </section>
-
 
       {/* =================================================
           SECURE PAYMENT INFO
@@ -565,14 +587,13 @@ export default function PaymentScreen({
           <p>
             Your payment is securely processed
             through UPI. After successful payment,
-            Juice Robo will generate your collection
+            Juice Robo will provide your collection
             code.
           </p>
 
         </div>
 
       </section>
-
 
       {/* =================================================
           PAYMENT BUTTON
@@ -600,7 +621,6 @@ export default function PaymentScreen({
 
       </button>
 
-
       {/* =================================================
           SECURITY NOTE
          ================================================= */}
@@ -608,7 +628,6 @@ export default function PaymentScreen({
       <p className="jr-payment-security-note">
         Secure payment · Your payment details are protected
       </p>
-
 
       {/* =================================================
           ERROR

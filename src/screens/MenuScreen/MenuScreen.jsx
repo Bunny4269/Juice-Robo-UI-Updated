@@ -28,7 +28,113 @@ import "./MenuScreen.css";
  */
 
 function clean(value) {
-  return String(value ?? "").trim();
+  if (value === undefined || value === null) return "";
+  return String(value).replace(/^"|"$/g, "").trim();
+}
+
+function sanitizeText(value) {
+  return clean(value)
+    .replace(/\bundefined\b/gi, "")
+    .replace(/\bnull\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isUsableText(value) {
+  if (!value) return false;
+  const str = sanitizeText(value);
+  const lower = str.toLowerCase();
+  return (
+    str !== "" &&
+    lower !== "undefined" &&
+    lower !== "null" &&
+    lower !== "juice" &&
+    lower !== "full" &&
+    lower !== "item"
+  );
+}
+
+function getProductCategory(product = {}) {
+  // 1. Check explicit category fields
+  const candidates = [
+    product?.category,
+    product?.categoryName,
+    product?.category_name,
+    product?.catName,
+    product?.productCategory,
+    product?.product_category,
+    product?.itemCategory,
+    product?.item_category,
+    product?.group,
+    product?.itemGroup,
+    product?.item_group,
+    product?.productType,
+    product?.product_type,
+    product?.type,
+    product?._variant?.category,
+    product?._variant?.productType,
+  ];
+
+  for (const candidate of candidates) {
+    if (isUsableText(candidate)) {
+      return sanitizeText(candidate);
+    }
+  }
+
+  // 2. Derive from product text (name, description, variants)
+  const variants = Array.isArray(product?.lstVariants)
+    ? product.lstVariants
+    : Array.isArray(product?.variants)
+    ? product.variants
+    : [];
+
+  const text = [
+    product?.name,
+    product?.itemName,
+    product?.productName,
+    product?.product_name,
+    product?.title,
+    product?.desc,
+    product?.description,
+    ...variants.map((v) => v?.variantName),
+    ...variants.map((v) => v?.variantDesc),
+    ...variants.map((v) => v?.itemName),
+    ...variants.map((v) => v?.sizeML),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (text.includes("disinfection")) {
+    return "Disinfection";
+  }
+
+  if (text.includes("ginger") && text.includes("lemon")) {
+    return "Ginger Lemon";
+  }
+
+  if (text.includes("ginger")) {
+    return "Ginger";
+  }
+
+  if (text.includes("lemon")) {
+    return "Lemon";
+  }
+
+  if (text.includes("plain") || text.includes("classic")) {
+    return "Classic";
+  }
+
+  if (text.includes("sugarcane")) {
+    return "Sugarcane Juice";
+  }
+
+  const rawName = sanitizeText(product?.name || product?.itemName || product?.productName);
+  if (isUsableText(rawName)) {
+    return rawName;
+  }
+
+  return "Juices";
 }
 
 function toPositiveId(value) {
@@ -153,7 +259,7 @@ function displayName(
   resolver
 ) {
   if (typeof resolver === "function") {
-    const resolved = clean(
+    const resolved = sanitizeText(
       resolver(product)
     );
 
@@ -162,13 +268,14 @@ function displayName(
     }
   }
 
-  return (
-    clean(
-      product?.name ??
-      product?.productName ??
-      product?.itemName
-    ) || "Juice"
+  const raw = sanitizeText(
+    product?.displayName ??
+    product?.name ??
+    product?.productName ??
+    product?.itemName
   );
+
+  return raw || "Juice";
 }
 
 function displayDescription(
@@ -176,7 +283,7 @@ function displayDescription(
   resolver
 ) {
   if (typeof resolver === "function") {
-    const resolved = clean(
+    const resolved = sanitizeText(
       resolver(product)
     );
 
@@ -185,7 +292,7 @@ function displayDescription(
     }
   }
 
-  return clean(
+  return sanitizeText(
     product?.description ??
     product?.desc
   );
@@ -365,6 +472,58 @@ export default function MenuScreen({
 
 
   /* =======================================================
+     CATEGORIES / FLAVORS
+     ======================================================= */
+
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  const categories = useMemo(() => {
+    if (!safeProducts.length) return [];
+
+    const categoryMap = new Map();
+
+    safeProducts.forEach((product) => {
+      const category = getProductCategory(product);
+      if (isUsableText(category)) {
+        const count = (categoryMap.get(category) || 0) + 1;
+        categoryMap.set(category, count);
+      }
+    });
+
+    if (categoryMap.size === 0) return [];
+
+    const pills = [
+      { id: "all", label: "All", count: safeProducts.length }
+    ];
+
+    categoryMap.forEach((count, label) => {
+      pills.push({
+        id: label.toLowerCase().replace(/\s+/g, "-"),
+        label,
+        count,
+      });
+    });
+
+    return pills;
+  }, [safeProducts]);
+
+  const visibleProducts = useMemo(() => {
+    if (selectedCategory === "all" || !categories.length) {
+      return safeProducts;
+    }
+
+    const activeCatObj = categories.find((c) => c.id === selectedCategory);
+    if (!activeCatObj) return safeProducts;
+
+    const catLabel = activeCatObj.label.toLowerCase();
+
+    return safeProducts.filter((product) => {
+      const category = getProductCategory(product).toLowerCase();
+      return category === catLabel;
+    });
+  }, [safeProducts, selectedCategory, categories]);
+
+  /* =======================================================
      PRODUCT SELECT
      ======================================================= */
 
@@ -485,9 +644,9 @@ export default function MenuScreen({
 
           <span
             className="jr-count"
-            aria-label={`${safeProducts.length} juices available`}
+            aria-label={`${visibleProducts.length} juices available`}
           >
-            {safeProducts.length}
+            {visibleProducts.length}
           </span>
 
         </div>
@@ -496,6 +655,40 @@ export default function MenuScreen({
         <p className="jr-section-subtitle">
           Choose your favourite fresh juice.
         </p>
+
+
+        {/* =================================================
+            CATEGORY / FLAVOR NAVIGATION
+            ================================================= */}
+
+        {categories.length > 1 && (
+          <nav className="jr-category-nav" aria-label="Juice categories">
+            <div className="jr-category-pills">
+              {categories.map((cat) => {
+                const isActive = selectedCategory === cat.id;
+
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    className={`jr-category-pill${
+                      isActive ? " is-active" : ""
+                    }`}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    aria-pressed={isActive}
+                  >
+                    <span>{cat.label}</span>
+                    {typeof cat.count === "number" && (
+                      <small className="jr-category-pill-count">
+                        {cat.count}
+                      </small>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        )}
 
 
         {/* =================================================
@@ -523,9 +716,35 @@ export default function MenuScreen({
 
             </div>
 
+          ) : visibleProducts.length === 0 ? (
+
+            <div className="jr-products-empty">
+
+              <span aria-hidden="true">
+                🔍
+              </span>
+
+              <strong>
+                No juices in this category
+              </strong>
+
+              <p>
+                Try selecting another category or view all juices.
+              </p>
+
+              <button
+                type="button"
+                className="jr-category-reset-btn"
+                onClick={() => setSelectedCategory("all")}
+              >
+                View all juices
+              </button>
+
+            </div>
+
           ) : (
 
-            safeProducts.map(
+            visibleProducts.map(
               (product, index) => (
 
                 <ProductCard
@@ -853,7 +1072,7 @@ function ProductCard({
         quantity > 0
           ? " jr-product-card-in-cart"
           : ""
-      }`}
+      }${!available ? " jr-product-card-unavailable" : ""}`}
     >
 
       {/* =================================================
@@ -898,13 +1117,16 @@ function ProductCard({
         )}
 
 
-        <span className="jr-fresh-badge">
-
-          <i />
-
-          FRESH
-
-        </span>
+        {!available ? (
+          <span className="jr-fresh-badge jr-badge-unavailable">
+            Sold Out
+          </span>
+        ) : (
+          <span className="jr-fresh-badge">
+            <i />
+            FRESH
+          </span>
+        )}
 
       </div>
 

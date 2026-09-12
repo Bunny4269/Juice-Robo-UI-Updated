@@ -2,67 +2,83 @@ import "./LocationConfirmationScreen.css";
 
 /* =========================================================
    JUICE ROBO — LOCATION CONFIRMATION SCREEN
+
+   Final review before payment.
+
+   Flow:
+   CART
+     ↓
+   CONFIRM LOCATION
+     ↓
+   CONFIRM LOCATION & PAY
+     ↓
+   UPI PAYMENT
    ========================================================= */
 
 function clean(value) {
   return String(value ?? "").trim();
 }
 
-function formatMoney(value, money) {
-  if (typeof money === "function") {
-    return money(value);
+function roundMoney(value) {
+  return (
+    Math.round(
+      (Number(value || 0) + Number.EPSILON) * 100
+    ) / 100
+  );
+}
+
+function formatMoney(value) {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "₹0";
   }
 
-  return `₹${Number(value || 0).toLocaleString("en-IN", {
+  return `₹${amount.toLocaleString("en-IN", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   })}`;
 }
 
-function getLocationName(location) {
+function formatFloatMoney(value) {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "₹0.00";
+  }
+
+  return `₹${amount.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+/* =========================================================
+   ITEM NAME
+   ========================================================= */
+
+function getItemName(item = {}) {
+  const rawName =
+    item?.displayName ||
+    item?.name ||
+    item?.itemName ||
+    item?.productName ||
+    item?.product_name ||
+    item?.title;
+
   return (
-    clean(
-      location?.name ||
-        location?.storeName ||
-        location?.outletName ||
-        location?.locationName
-    ) || "Selected location"
+    clean(rawName)
+      .replace(/\bundefined\b/gi, "")
+      .replace(/\bnull\b/gi, "")
+      .replace(/\s+/g, " ")
+      .trim() ||
+    "Sugarcane Juice"
   );
 }
 
-function getLocationAddress(location) {
-  return (
-    clean(
-      location?.address ||
-        location?.locAddress ||
-        location?.storeAddress ||
-        location?.location ||
-        location?.description
-    ) || "Juice Robo collection point"
-  );
-}
-
-function getMachineName(machine) {
-  return (
-    clean(
-      machine?.name ||
-        machine?.machineName ||
-        machine?.machine_name ||
-        machine?.machineCode ||
-        machine?.machine_code
-    ) || "Selected machine"
-  );
-}
-
-function getMachineStatus(machine) {
-  return (
-    clean(
-      machine?.status ||
-        machine?.machineStatus ||
-        machine?.machine_status
-    ) || "Ready for collection"
-  );
-}
+/* =========================================================
+   QUANTITY
+   ========================================================= */
 
 function getQuantity(item = {}) {
   const quantity = Number(
@@ -77,6 +93,71 @@ function getQuantity(item = {}) {
     : 1;
 }
 
+/* =========================================================
+   ITEM PRICE
+   ========================================================= */
+
+function getItemUnitPrice(item = {}) {
+  const directPrice = Number(
+    item?.unitPrice ??
+      item?.unit_price ??
+      item?.price ??
+      item?.sellingPrice ??
+      item?.selling_price
+  );
+
+  if (
+    Number.isFinite(directPrice) &&
+    directPrice >= 0
+  ) {
+    return directPrice;
+  }
+
+  const quantity = getQuantity(item);
+
+  const subtotal = Number(
+    item?.subtotal ??
+      item?.subTotal ??
+      item?.total ??
+      item?.lineTotal ??
+      item?.line_total
+  );
+
+  if (
+    Number.isFinite(subtotal) &&
+    subtotal >= 0 &&
+    quantity > 0
+  ) {
+    return subtotal / quantity;
+  }
+
+  return 0;
+}
+
+/* =========================================================
+   ITEM SUBTOTAL
+   ========================================================= */
+
+function getItemSubtotal(item = {}) {
+  const directSubtotal = Number(
+    item?.subtotal ??
+      item?.subTotal ??
+      item?.lineTotal ??
+      item?.line_total
+  );
+
+  if (
+    Number.isFinite(directSubtotal) &&
+    directSubtotal >= 0
+  ) {
+    return directSubtotal;
+  }
+
+  const quantity = getQuantity(item);
+  const unitPrice = getItemUnitPrice(item);
+
+  return unitPrice * quantity;
+}
 
 /* =========================================================
    LOCATION ICON
@@ -95,6 +176,7 @@ function LocationIcon() {
         stroke="currentColor"
         strokeWidth="1.8"
       />
+
       <circle
         cx="12"
         cy="9"
@@ -106,7 +188,6 @@ function LocationIcon() {
     </svg>
   );
 }
-
 
 /* =========================================================
    MACHINE ICON
@@ -129,6 +210,7 @@ function MachineIcon() {
         stroke="currentColor"
         strokeWidth="1.7"
       />
+
       <rect
         x="9"
         y="6"
@@ -139,6 +221,7 @@ function MachineIcon() {
         stroke="currentColor"
         strokeWidth="1.5"
       />
+
       <path
         d="M9 15h6M9 18h3"
         fill="none"
@@ -149,7 +232,6 @@ function MachineIcon() {
     </svg>
   );
 }
-
 
 /* =========================================================
    MAIN SCREEN
@@ -164,11 +246,14 @@ export default function LocationConfirmationScreen({
   onConfirm,
   money,
   busy = false,
-  error,
 }) {
   const safeCart = Array.isArray(cart)
     ? cart
     : [];
+
+  /* =======================================================
+     ITEM COUNT
+     ======================================================= */
 
   const itemCount = safeCart.reduce(
     (sum, item) =>
@@ -176,17 +261,75 @@ export default function LocationConfirmationScreen({
     0
   );
 
+  /* =======================================================
+     TOTAL
+
+     The App already calculates the GST-inclusive total.
+     We use that total and derive the 5% GST breakdown
+     exactly like the Cart screen.
+
+     Example:
+       Total    ₹1.00
+       Subtotal ₹0.95
+       GST      ₹0.05
+     ======================================================= */
+
+  const payableTotal = roundMoney(
+    Number(total) || 0
+  );
+
+  const calculatedSubtotal = roundMoney(
+    payableTotal / 1.05
+  );
+
+  const calculatedGst = roundMoney(
+    payableTotal - calculatedSubtotal
+  );
+
+  /* =======================================================
+     LOCATION
+     ======================================================= */
+
   const locationName =
-    getLocationName(location);
+    clean(
+      location?.name ||
+        location?.storeName ||
+        location?.outletName ||
+        location?.locationName
+    ) || "Selected location";
 
   const locationAddress =
-    getLocationAddress(location);
+    clean(
+      location?.address ||
+        location?.locAddress ||
+        location?.storeAddress ||
+        location?.location ||
+        location?.description
+    ) || "Juice Robo collection point";
+
+  /* =======================================================
+     MACHINE
+     ======================================================= */
 
   const machineName =
-    getMachineName(machine);
+    clean(
+      machine?.name ||
+        machine?.machineName ||
+        machine?.machine_name ||
+        machine?.machineCode ||
+        machine?.machine_code
+    ) || "Selected machine";
 
   const machineStatus =
-    getMachineStatus(machine);
+    clean(
+      machine?.status ||
+        machine?.machineStatus ||
+        machine?.machine_status
+    ) || "Ready for collection";
+
+  /* =======================================================
+     SELECTION
+     ======================================================= */
 
   const hasSelection =
     Boolean(location) &&
@@ -207,7 +350,6 @@ export default function LocationConfirmationScreen({
       >
         ← Review order
       </button>
-
 
       {/* =================================================
           HEADER
@@ -232,7 +374,6 @@ export default function LocationConfirmationScreen({
 
       </header>
 
-
       {/* =================================================
           STEP 01 — LOCATION
          ================================================= */}
@@ -240,7 +381,10 @@ export default function LocationConfirmationScreen({
       <section className="jr-location-confirm-section">
 
         <div className="jr-location-confirm-section-label">
-          <span>01</span>
+
+          <span>
+            01
+          </span>
 
           <div>
             <strong>
@@ -251,8 +395,8 @@ export default function LocationConfirmationScreen({
               Where you will collect your juice
             </small>
           </div>
-        </div>
 
+        </div>
 
         <div className="jr-location-confirm-card">
 
@@ -284,7 +428,6 @@ export default function LocationConfirmationScreen({
 
       </section>
 
-
       {/* =================================================
           STEP 02 — MACHINE
          ================================================= */}
@@ -292,7 +435,10 @@ export default function LocationConfirmationScreen({
       <section className="jr-location-confirm-section">
 
         <div className="jr-location-confirm-section-label">
-          <span>02</span>
+
+          <span>
+            02
+          </span>
 
           <div>
             <strong>
@@ -303,8 +449,8 @@ export default function LocationConfirmationScreen({
               Your selected Juice Robo machine
             </small>
           </div>
-        </div>
 
+        </div>
 
         <div className="jr-location-confirm-card">
 
@@ -336,7 +482,6 @@ export default function LocationConfirmationScreen({
 
       </section>
 
-
       {/* =================================================
           ORDER SUMMARY
          ================================================= */}
@@ -350,11 +495,17 @@ export default function LocationConfirmationScreen({
           </h2>
 
           <span>
-            {itemCount} {itemCount === 1 ? "item" : "items"}
+            {itemCount}{" "}
+            {itemCount === 1
+              ? "item"
+              : "items"}
           </span>
 
         </div>
 
+        {/* =================================================
+            ITEMS
+           ================================================= */}
 
         {safeCart.length > 0 && (
           <div className="jr-location-confirm-items">
@@ -362,12 +513,13 @@ export default function LocationConfirmationScreen({
             {safeCart.map((item, index) => {
 
               const name =
-                item?.displayName ||
-                item?.name ||
-                item?.itemName ||
-                item?.productName ||
-                item?.product_name ||
-                "Sugarcane Juice";
+                getItemName(item);
+
+              const quantity =
+                getQuantity(item);
+
+              const itemSubtotal =
+                getItemSubtotal(item);
 
               return (
                 <div
@@ -383,8 +535,12 @@ export default function LocationConfirmationScreen({
                   <span>
                     {name}
                     {" × "}
-                    {getQuantity(item)}
+                    {quantity}
                   </span>
+
+                  <strong>
+                    {formatMoney(itemSubtotal)}
+                  </strong>
 
                 </div>
               );
@@ -393,6 +549,47 @@ export default function LocationConfirmationScreen({
           </div>
         )}
 
+        {/* =================================================
+            PRICE BREAKDOWN
+           ================================================= */}
+
+        <div className="jr-location-confirm-breakdown">
+
+          <div className="jr-location-confirm-price-row">
+
+            <span>
+              Subtotal
+            </span>
+
+            <strong>
+              {formatMoney(
+                calculatedSubtotal,
+                money
+              )}
+            </strong>
+
+          </div>
+
+          <div className="jr-location-confirm-price-row">
+
+            <span>
+              GST 5%
+            </span>
+
+            <strong>
+              {formatMoney(
+                calculatedGst,
+                money
+              )}
+            </strong>
+
+          </div>
+
+        </div>
+
+        {/* =================================================
+            TOTAL
+           ================================================= */}
 
         <div className="jr-location-confirm-total">
 
@@ -402,18 +599,20 @@ export default function LocationConfirmationScreen({
             </span>
 
             <small>
-              Inclusive of applicable GST
+              Inclusive of 5% GST
             </small>
           </div>
 
           <strong>
-            {formatMoney(total, money)}
+            {formatMoney(
+              payableTotal,
+              money
+            )}
           </strong>
 
         </div>
 
       </section>
-
 
       {/* =================================================
           CONFIRM BUTTON
@@ -442,21 +641,14 @@ export default function LocationConfirmationScreen({
 
       </button>
 
-
       {/* =================================================
           SECURITY NOTE
          ================================================= */}
 
       <p className="jr-location-confirm-note">
-        🔒 You can go back and change your collection point before payment.
+        🔒 You can go back and change your collection
+        point before payment.
       </p>
-
-
-      {error && (
-        <div className="jr-location-confirm-error">
-          {error}
-        </div>
-      )}
 
     </main>
   );

@@ -9,10 +9,7 @@
 
   box-sizing: border-box;
 
-  padding:
-    10px
-    10px
-    88px;
+  padding: 10px 10px 88px;
 
   overflow-x: hidden;
   overflow-y: auto;
@@ -47,26 +44,17 @@
 
   min-height: 28px;
 
-  margin:
-    0
-    0
-    10px;
-
-  padding:
-    0
-    2px;
+  margin: 0 0 10px;
+  padding: 0 2px;
 
   border: 0;
-
   background: transparent;
 
   color: #287f48;
 
   font-family: inherit;
-
-  font-size: clamp(9px, 2.4vw, 12px);
+  font-size: 12px;
   line-height: 1;
-
   font-weight: 900;
 
   cursor: pointer;
@@ -74,7 +62,6 @@
 
 .jr-location-confirm-back:disabled {
   opacity: 0.5;
-
   cursor: not-allowed;
 }
 
@@ -84,27 +71,20 @@
    ========================================================= */
 
 .jr-location-confirm-heading {
-  margin:
-    0
-    0
-    12px;
+  margin: 0 0 12px;
 }
 
 .jr-location-confirm-eyebrow {
   display: block;
 
-  margin:
-    0
-    0
-    5px;
+  margin: 0 0 5px;
 
   color: #ed7800;
 
-  font-size: clamp(6px, 1.6vw, 8px);
+  font-size: 8px;
   line-height: 1;
 
   font-weight: 900;
-
   letter-spacing: 0.11em;
 
   text-transform: uppercase;
@@ -115,31 +95,26 @@
 
   color: #111111;
 
-  font-size: clamp(23px, 6vw, 29px);
+  font-size: 29px;
   line-height: 0.93;
 
   font-weight: 950;
-
   letter-spacing: -0.055em;
 }
 
 .jr-location-confirm-heading h1 em {
   color: #f07800;
-
   font-style: normal;
 }
 
 .jr-location-confirm-heading p {
   max-width: 330px;
 
-  margin:
-    6px
-    0
-    0;
+  margin: 6px 0 0;
 
   color: #888884;
 
-  font-size: clamp(7px, 1.8vw, 9px);
+  font-size: 9px;
   line-height: 1.4;
 
   font-weight: 500;
@@ -147,14 +122,11 @@
 
 
 /* =========================================================
-   SECTION
+   LOCATION / MACHINE SECTIONS
    ========================================================= */
 
 .jr-location-confirm-section {
-  margin:
-    0
-    0
-    8px;
+  margin: 0 0 8px;
 }
 
 .jr-location-confirm-section-label {
@@ -163,10 +135,7 @@
 
   gap: 7px;
 
-  margin:
-    0
-    0
-    5px;
+  margin: 0 0 5px;
 }
 
 .jr-location-confirm-section-label > span {
@@ -181,7 +150,6 @@
   border-radius: 50%;
 
   background: #f07800;
-
   color: #ffffff;
 
   font-size: 6px;
@@ -202,18 +170,17 @@
 .jr-location-confirm-section-label strong {
   color: #272727;
 
-  font-size: clamp(7px, 1.8vw, 9px);
+  font-size: 9px;
   line-height: 1;
 
   font-weight: 900;
-
   letter-spacing: 0.04em;
 }
 
 .jr-location-confirm-section-label small {
   color: #969692;
 
-  font-size: clamp(5.5px, 1.4vw, 7px);
+  font-size: 7px;
   line-height: 1;
 }
 
@@ -233,21 +200,15 @@
 
   gap: 8px;
 
-  padding:
-    7px
-    8px;
+  padding: 7px 8px;
 
-  border:
-    2px solid
-    #f07800;
-
+  border: 2px solid #f07800;
   border-radius: 10px;
 
   background: #fffefa;
 
   box-shadow:
-    0 3px 9px
-    rgba(20, 45, 26, 0.035);
+    0 3px 9px rgba(20, 45, 26, 0.035);
 }
 
 .jr-location-confirm-icon {
@@ -262,7 +223,6 @@
   border-radius: 8px;
 
   background: #f0f7ed;
-
   color: #368253;
 }
 
@@ -285,11 +245,10 @@
 .jr-location-confirm-card-copy small {
   color: #999995;
 
-  font-size: clamp(4.5px, 1.2vw, 6px);
+  font-size: 6px;
   line-height: 1;
 
   font-weight: 900;
-
   letter-spacing: 0.08em;
 }
 
@@ -300,13 +259,12 @@
 
   color: #171717;
 
-  font-size: clamp(8px, 2.2vw, 11px);
+  font-size: 11px;
   line-height: 1;
 
   font-weight: 900;
 
   white-space: nowrap;
-
   text-overflow: ellipsis;
 }
 
@@ -317,11 +275,10 @@
 
   color: #888884;
 
-  font-size: clamp(5px, 1.35vw, 7px);
+  font-size: 7px;
   line-height: 1;
 
   white-space: nowrap;
-
   text-overflow: ellipsis;
 }
 
@@ -337,7 +294,6 @@
   border-radius: 50%;
 
   background: #f07800;
-
   color: #ffffff;
 
   font-size: 10px;
@@ -348,7 +304,7 @@
 
 
 /* =========================================================
-   ORDER SUMMARY
+   ORDER SUMMARY CARD
    ========================================================= */
 
 .jr-location-confirm-order-card {
@@ -356,38 +312,35 @@
 
   box-sizing: border-box;
 
-  margin:
-    2px
-    0
-    8px;
+  margin: 2px 0 8px;
+  padding: 10px 12px;
 
-  padding:
-    8px;
-
-  border:
-    1px solid
-    #e5e5df;
-
+  border: 1px solid #e5e5df;
   border-radius: 10px;
 
   background: #ffffff;
 
   box-shadow:
-    0 3px 10px
-    rgba(20, 45, 26, 0.03);
+    0 3px 10px rgba(20, 45, 26, 0.03);
+
+  overflow: hidden;
 }
 
+
+/* =========================================================
+   ORDER SUMMARY HEADER
+   ========================================================= */
+
 .jr-location-confirm-order-heading {
+  width: 100%;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  gap: 8px;
+  gap: 10px;
 
-  margin:
-    0
-    0
-    6px;
+  margin: 0 0 7px;
 }
 
 .jr-location-confirm-order-heading h2 {
@@ -395,66 +348,175 @@
 
   color: #393939;
 
-  font-size: clamp(7px, 1.9vw, 10px);
+  font-size: 11px;
   line-height: 1;
 
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .jr-location-confirm-order-heading span {
+  flex: 0 0 auto;
+
   color: #999995;
 
-  font-size: clamp(5px, 1.35vw, 7px);
+  font-size: 8px;
   line-height: 1;
+
+  white-space: nowrap;
 }
 
+
+/* =========================================================
+   ORDER ITEMS
+   ========================================================= */
+
 .jr-location-confirm-items {
+  width: 100%;
+
   display: flex;
   flex-direction: column;
 
-  gap: 4px;
+  gap: 0;
 
-  padding-bottom: 6px;
+  padding: 0 0 7px;
 
-  border-bottom:
-    1px solid
-    #e9e9e5;
+  border-bottom: 1px solid #e9e9e5;
 }
 
 .jr-location-confirm-item {
-  display: flex;
-  align-items: center;
-
+  width: 100%;
   min-width: 0;
 
-  color: #5e5e5a;
+  box-sizing: border-box;
 
-  font-size: clamp(6px, 1.65vw, 8px);
-  line-height: 1.2;
-
-  font-weight: 600;
-}
-
-.jr-location-confirm-item span {
-  overflow: hidden;
-
-  white-space: nowrap;
-
-  text-overflow: ellipsis;
-}
-
-.jr-location-confirm-total {
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  gap: 8px;
+  gap: 12px;
 
-  padding-top: 6px;
+  padding: 4px 0;
+
+  color: #4f4f4b;
+}
+
+.jr-location-confirm-item span {
+  min-width: 0;
+
+  flex: 1;
+
+  overflow: hidden;
+
+  font-size: 12px;
+  line-height: 1.25;
+
+  font-weight: 600;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.jr-location-confirm-item strong {
+  flex: 0 0 auto;
+
+  color: #333333;
+
+  font-size: 12px;
+  line-height: 1.25;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   PRICE BREAKDOWN
+   ========================================================= */
+
+.jr-location-confirm-breakdown {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+
+  padding: 8px 0 0;
+}
+
+.jr-location-confirm-price-row {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  min-height: 20px;
+}
+
+.jr-location-confirm-price-row span {
+  flex: 1 1 auto;
+
+  margin: 0;
+
+  color: #777777;
+
+  font-size: 13px;
+  line-height: 1.25;
+
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.jr-location-confirm-price-row strong {
+  flex: 0 0 auto;
+
+  margin: 0;
+
+  color: #303030;
+
+  font-size: 13px;
+  line-height: 1.25;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   TOTAL
+   ========================================================= */
+
+.jr-location-confirm-total {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-top: 8px;
+  padding-top: 9px;
+
+  border-top: 1px solid rgba(0, 0, 0, 0.09);
 }
 
 .jr-location-confirm-total > div {
   min-width: 0;
+
+  flex: 1;
 
   display: flex;
   flex-direction: column;
@@ -462,26 +524,41 @@
   gap: 2px;
 }
 
-.jr-location-confirm-total span {
-  color: #3d3d39;
+.jr-location-confirm-total > div > span {
+  display: block;
 
-  font-size: clamp(6px, 1.65vw, 8px);
-  line-height: 1;
+  margin: 0;
+
+  color: #303030;
+
+  font-size: 11px;
+  line-height: 1.2;
 
   font-weight: 900;
+  letter-spacing: 0.03em;
 }
 
-.jr-location-confirm-total small {
-  color: #999995;
+.jr-location-confirm-total > div > small {
+  display: block;
 
-  font-size: clamp(4.5px, 1.25vw, 6px);
-  line-height: 1;
+  margin: 0;
+
+  color: #999999;
+
+  font-size: 8px;
+  line-height: 1.2;
+
+  font-weight: 500;
 }
 
 .jr-location-confirm-total > strong {
+  flex: 0 0 auto;
+
+  margin: 0;
+
   color: #2d8450;
 
-  font-size: clamp(14px, 3.8vw, 18px);
+  font-size: 24px;
   line-height: 1;
 
   font-weight: 950;
@@ -497,8 +574,8 @@
 .jr-location-confirm-button {
   width: 100%;
 
-  height: 40px;
-  min-height: 40px;
+  height: 56px;
+  min-height: 56px;
 
   box-sizing: border-box;
 
@@ -506,23 +583,19 @@
   align-items: center;
   justify-content: space-between;
 
-  gap: 8px;
+  gap: 12px;
 
-  padding:
-    0
-    11px;
+  padding: 0 16px;
 
   border: 0;
-
-  border-radius: 8px;
+  border-radius: 9px;
 
   background: #f07800;
-
   color: #ffffff;
 
   font-family: inherit;
 
-  font-size: clamp(7px, 1.9vw, 9px);
+  font-size: 12px;
   line-height: 1;
 
   font-weight: 950;
@@ -530,8 +603,7 @@
   cursor: pointer;
 
   box-shadow:
-    0 6px 14px
-    rgba(240, 120, 0, 0.15);
+    0 6px 14px rgba(240, 120, 0, 0.15);
 
   transition:
     background 0.15s ease,
@@ -549,55 +621,55 @@
 
 .jr-location-confirm-button:disabled {
   opacity: 0.45;
-
   cursor: not-allowed;
-
   box-shadow: none;
 }
 
+.jr-location-confirm-button span {
+  min-width: 0;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .jr-location-confirm-button strong {
-  font-size: 15px;
+  flex: 0 0 auto;
+
+  font-size: 20px;
+  line-height: 1;
 
   font-weight: 400;
 }
 
 
 /* =========================================================
-   NOTE
+   SECURITY NOTE
    ========================================================= */
 
 .jr-location-confirm-note {
-  margin:
-    6px
-    0
-    0;
+  margin: 6px 0 0;
 
   color: #a0a09b;
 
-  font-size: clamp(5px, 1.3vw, 6.5px);
+  font-size: 7px;
   line-height: 1.25;
 
   text-align: center;
 }
 
 .jr-location-confirm-error {
-  margin-top: 6px;
+  margin-top: 7px;
+  padding: 7px 8px;
 
-  padding:
-    6px
-    7px;
-
-  border:
-    1px solid
-    #edcccc;
-
+  border: 1px solid #edcccc;
   border-radius: 7px;
 
   background: #fff3f2;
-
   color: #c84f4b;
 
-  font-size: clamp(6px, 1.5vw, 8px);
+  font-size: 9px;
   line-height: 1.3;
 
   text-align: center;
@@ -616,7 +688,7 @@
   }
 
   .jr-location-confirm-heading h1 {
-    font-size: 24px;
+    font-size: 27px;
   }
 
   .jr-location-confirm-card {
@@ -626,8 +698,11 @@
   .jr-location-confirm-icon {
     width: 31px;
     height: 31px;
-
     min-width: 31px;
+  }
+
+  .jr-location-confirm-order-card {
+    padding: 9px 11px;
   }
 }
 
@@ -644,13 +719,11 @@
   }
 
   .jr-location-confirm-heading h1 {
-    font-size: 22px;
+    font-size: 24px;
   }
 
   .jr-location-confirm-card {
-    padding:
-      6px
-      7px;
+    padding: 6px 7px;
   }
 
   .jr-location-confirm-section-label {
@@ -660,12 +733,20 @@
   .jr-location-confirm-section-label > span {
     width: 20px;
     height: 20px;
-
     min-width: 20px;
   }
 
+  .jr-location-confirm-order-card {
+    padding: 8px 10px;
+  }
+
+  .jr-location-confirm-price-row span,
+  .jr-location-confirm-price-row strong {
+    font-size: 12px;
+  }
+
   .jr-location-confirm-total > strong {
-    font-size: 14px;
+    font-size: 22px;
   }
 }
 
@@ -697,8 +778,8 @@
   }
 
   .jr-location-confirm-button {
-    height: 37px;
-    min-height: 37px;
+    height: 52px;
+    min-height: 52px;
   }
 }
 
@@ -711,7 +792,6 @@
 
   .jr-location-confirmation-page {
     width: 100%;
-
     min-height: 100%;
 
     padding:
@@ -725,7 +805,7 @@
 
     margin-bottom: 4px;
 
-    font-size: clamp(7px, 1.7vh, 10px);
+    font-size: 10px;
   }
 
   .jr-location-confirm-heading {
@@ -734,8 +814,7 @@
 
   .jr-location-confirm-eyebrow {
     margin-bottom: 3px;
-
-    font-size: clamp(5px, 1.35vh, 7px);
+    font-size: 7px;
   }
 
   .jr-location-confirm-heading h1 {
@@ -747,7 +826,7 @@
 
     margin-top: 3px;
 
-    font-size: clamp(5px, 1.35vh, 7px);
+    font-size: 7px;
   }
 
   .jr-location-confirm-section {
@@ -756,33 +835,29 @@
 
   .jr-location-confirm-section-label {
     gap: 6px;
-
     margin-bottom: 3px;
   }
 
   .jr-location-confirm-section-label > span {
     width: 18px;
     height: 18px;
-
     min-width: 18px;
 
     font-size: 5px;
   }
 
   .jr-location-confirm-section-label strong {
-    font-size: clamp(6px, 1.5vh, 8px);
+    font-size: 8px;
   }
 
   .jr-location-confirm-section-label small {
-    font-size: clamp(4.5px, 1.1vh, 6px);
+    font-size: 6px;
   }
 
   .jr-location-confirm-card {
     min-height: 36px;
 
-    padding:
-      4px
-      6px;
+    padding: 4px 6px;
 
     gap: 6px;
 
@@ -792,7 +867,6 @@
   .jr-location-confirm-icon {
     width: 24px;
     height: 24px;
-
     min-width: 24px;
 
     border-radius: 6px;
@@ -808,32 +882,27 @@
   }
 
   .jr-location-confirm-card-copy small {
-    font-size: clamp(4px, 1vh, 5px);
+    font-size: 5px;
   }
 
   .jr-location-confirm-card-copy strong {
-    font-size: clamp(6px, 1.55vh, 8px);
+    font-size: 8px;
   }
 
   .jr-location-confirm-card-copy span {
-    font-size: clamp(4.5px, 1.1vh, 6px);
+    font-size: 6px;
   }
 
   .jr-location-confirm-check {
     width: 16px;
     height: 16px;
-
     min-width: 16px;
 
     font-size: 8px;
   }
 
   .jr-location-confirm-order-card {
-    margin:
-      1px
-      0
-      5px;
-
+    margin: 1px 0 5px;
     padding: 6px;
 
     border-radius: 7px;
@@ -844,54 +913,68 @@
   }
 
   .jr-location-confirm-order-heading h2 {
-    font-size: clamp(6px, 1.45vh, 8px);
+    font-size: 8px;
   }
 
   .jr-location-confirm-order-heading span {
-    font-size: clamp(4.5px, 1.1vh, 6px);
+    font-size: 6px;
   }
 
   .jr-location-confirm-items {
-    gap: 2px;
-
     padding-bottom: 4px;
   }
 
   .jr-location-confirm-item {
-    font-size: clamp(5px, 1.25vh, 6.5px);
+    padding: 2px 0;
   }
 
-  .jr-location-confirm-total {
-    padding-top: 4px;
+  .jr-location-confirm-item span,
+  .jr-location-confirm-item strong {
+    font-size: 7px;
+  }
+
+  .jr-location-confirm-breakdown {
+    gap: 3px;
+    padding-top: 5px;
+  }
+
+  .jr-location-confirm-price-row {
+    min-height: 15px;
+  }
+
+  .jr-location-confirm-price-row span,
+  .jr-location-confirm-price-row strong {
+    font-size: 7px;
   }
 
   .jr-location-confirm-total {
     gap: 6px;
+
+    margin-top: 5px;
+    padding-top: 5px;
   }
 
-  .jr-location-confirm-total span {
-    font-size: clamp(5px, 1.25vh, 6.5px);
+  .jr-location-confirm-total > div > span {
+    font-size: 6.5px;
   }
 
-  .jr-location-confirm-total small {
-    font-size: clamp(4px, 0.95vh, 5px);
+  .jr-location-confirm-total > div > small {
+    font-size: 5px;
   }
 
   .jr-location-confirm-total > strong {
-    font-size: clamp(11px, 2.8vh, 15px);
+    font-size: 15px;
   }
 
   .jr-location-confirm-button {
     height: 31px;
     min-height: 31px;
 
+    padding: 0 10px;
+
     border-radius: 7px;
 
-    padding:
-      0
-      10px;
-
-    font-size: clamp(5.5px, 1.35vh, 7px);
+    font-size: 7px;
   }
 
   .jr-location-confirm-button strong {
@@ -900,18 +983,13 @@
 
   .jr-location-confirm-note {
     margin-top: 4px;
-
-    font-size: clamp(4px, 1vh, 5.5px);
+    font-size: 5.5px;
   }
 
   .jr-location-confirm-error {
     margin-top: 4px;
-
-    padding:
-      4px
-      6px;
-
-    font-size: clamp(5px, 1.2vh, 6.5px);
+    padding: 4px 6px;
+    font-size: 6.5px;
   }
 }
 
@@ -932,9 +1010,7 @@
 
   .jr-location-confirm-back {
     min-height: 20px;
-
     margin-bottom: 2px;
-
     font-size: 7px;
   }
 
@@ -948,7 +1024,6 @@
 
   .jr-location-confirm-heading p {
     margin-top: 2px;
-
     font-size: 5px;
   }
 
@@ -963,7 +1038,6 @@
   .jr-location-confirm-section-label > span {
     width: 16px;
     height: 16px;
-
     min-width: 16px;
 
     font-size: 4.5px;
@@ -980,21 +1054,17 @@
   .jr-location-confirm-card {
     min-height: 30px;
 
-    padding:
-      3px
-      5px;
+    padding: 3px 5px;
 
     gap: 5px;
 
     border-width: 1.5px;
-
     border-radius: 6px;
   }
 
   .jr-location-confirm-icon {
     width: 20px;
     height: 20px;
-
     min-width: 20px;
 
     border-radius: 5px;
@@ -1016,7 +1086,6 @@
   .jr-location-confirm-check {
     width: 14px;
     height: 14px;
-
     min-width: 14px;
 
     font-size: 7px;
@@ -1024,7 +1093,6 @@
 
   .jr-location-confirm-order-card {
     padding: 5px;
-
     margin-bottom: 3px;
   }
 
@@ -1041,24 +1109,42 @@
   }
 
   .jr-location-confirm-items {
-    gap: 1px;
-
     padding-bottom: 3px;
   }
 
   .jr-location-confirm-item {
+    padding: 1px 0;
+  }
+
+  .jr-location-confirm-item span,
+  .jr-location-confirm-item strong {
+    font-size: 4.5px;
+  }
+
+  .jr-location-confirm-breakdown {
+    gap: 2px;
+    padding-top: 3px;
+  }
+
+  .jr-location-confirm-price-row {
+    min-height: 12px;
+  }
+
+  .jr-location-confirm-price-row span,
+  .jr-location-confirm-price-row strong {
     font-size: 4.5px;
   }
 
   .jr-location-confirm-total {
     padding-top: 3px;
+    margin-top: 3px;
   }
 
-  .jr-location-confirm-total span {
+  .jr-location-confirm-total > div > span {
     font-size: 4.5px;
   }
 
-  .jr-location-confirm-total small {
+  .jr-location-confirm-total > div > small {
     font-size: 3.5px;
   }
 
@@ -1081,7 +1167,6 @@
 
   .jr-location-confirm-note {
     margin-top: 2px;
-
     font-size: 3.8px;
   }
 }

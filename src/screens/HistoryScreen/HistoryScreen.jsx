@@ -9,6 +9,18 @@ import "./HistoryScreen.css";
    JUICE ROBO — HISTORY / MY ORDERS
    ========================================================= */
 
+/* =========================================================
+   BASIC HELPERS
+   ========================================================= */
+
+function clean(value) {
+  return String(value ?? "").trim();
+}
+
+/* =========================================================
+   HISTORY SCREEN
+   ========================================================= */
+
 export default function HistoryScreen({
   orders = [],
   onBack,
@@ -34,7 +46,7 @@ export default function HistoryScreen({
   );
 
   /* =======================================================
-     KEEP FIRST ORDER OPEN WHEN ORDER DATA CHANGES
+     KEEP FIRST ORDER OPEN WHEN DATA CHANGES
      ======================================================= */
 
   useEffect(() => {
@@ -78,9 +90,7 @@ export default function HistoryScreen({
      DATE / TIME
      ======================================================= */
 
-  function formatDateTime(
-    value
-  ) {
+  function formatDateTime(value) {
     if (!value) {
       return "Recent order";
     }
@@ -114,12 +124,10 @@ export default function HistoryScreen({
   }
 
   /* =======================================================
-     ORDER FIELD HELPERS
+     ORDER ID / TRANSACTION ID
      ======================================================= */
 
-  function transactionId(
-    order = {}
-  ) {
+  function getTransactionId(order = {}) {
     return (
       order?.transactionId ??
       order?.transaction_id ??
@@ -132,9 +140,11 @@ export default function HistoryScreen({
     );
   }
 
-  function orderDate(
-    order = {}
-  ) {
+  /* =======================================================
+     ORDER DATE
+     ======================================================= */
+
+  function getOrderDate(order = {}) {
     return (
       order?.orderDate ??
       order?.order_date ??
@@ -145,63 +155,166 @@ export default function HistoryScreen({
     );
   }
 
-  function orderStatus(
-    order = {}
-  ) {
-    return (
-      order?.paymentStatus ??
-      order?.payment_status ??
-      order?.orderStatus ??
-      order?.order_status ??
-      order?.status ??
-      "PENDING"
-    );
-  }
+  /* =======================================================
+     COLLECTION / PICKUP CODE
+     ======================================================= */
 
-  function pickupCode(
-    order = {}
-  ) {
+  function getPickupCode(order = {}) {
     const raw =
-      order?.orderPin ??
-      order?.order_pin ??
       order?.collectionCode ??
       order?.collection_code ??
       order?.pickupCode ??
       order?.pickup_code ??
+      order?.collectionPin ??
+      order?.collection_pin ??
+      order?.orderPin ??
+      order?.order_pin ??
+      order?.data?.collectionCode ??
+      order?.data?.collection_code ??
+      order?.data?.pickupCode ??
+      order?.data?.pickup_code ??
+      order?.data?.collectionPin ??
+      order?.data?.collection_pin ??
+      order?.data?.orderPin ??
+      order?.data?.order_pin ??
+      order?.result?.collectionCode ??
+      order?.result?.collection_code ??
+      order?.result?.pickupCode ??
+      order?.result?.pickup_code ??
+      order?.result?.collectionPin ??
+      order?.result?.collection_pin ??
+      order?.result?.orderPin ??
+      order?.result?.order_pin ??
       "";
 
     const value =
-      String(raw).trim();
+      clean(raw);
 
     return value || "—";
   }
 
-  function statusClass(
-    status
-  ) {
-    const value =
-      String(status || "")
-        .trim()
+  /* =======================================================
+     VALID COLLECTION CODE
+     ======================================================= */
+
+  function hasValidPickupCode(order = {}) {
+    const pickup =
+      getPickupCode(order);
+
+    return /^\d{4}$/.test(
+      pickup
+    );
+  }
+
+  /* =======================================================
+     RAW PAYMENT STATUS
+     ======================================================= */
+
+  function getRawPaymentStatus(order = {}) {
+    return clean(
+      order?.paymentStatus ??
+        order?.payment_status ??
+        order?.paymentState ??
+        order?.payment_state ??
+        order?.transactionStatus ??
+        order?.transaction_status ??
+        order?.orderStatus ??
+        order?.order_status ??
+        order?.status ??
+        order?.data?.paymentStatus ??
+        order?.data?.payment_status ??
+        order?.data?.paymentState ??
+        order?.data?.payment_state ??
+        order?.data?.transactionStatus ??
+        order?.data?.transaction_status ??
+        order?.data?.orderStatus ??
+        order?.data?.order_status ??
+        order?.data?.status ??
+        order?.result?.paymentStatus ??
+        order?.result?.payment_status ??
+        order?.result?.paymentState ??
+        order?.result?.payment_state ??
+        order?.result?.transactionStatus ??
+        order?.result?.transaction_status ??
+        order?.result?.orderStatus ??
+        order?.result?.order_status ??
+        order?.result?.status ??
+        ""
+    );
+  }
+
+  /* =======================================================
+     NORMALIZE PAYMENT STATUS
+     
+     IMPORTANT:
+     A valid 4-digit collection code is issued by the
+     Juice Robo order/payment flow. When it exists,
+     the history card should not remain visually stuck
+     at PENDING.
+     ======================================================= */
+
+  function getPaymentStatus(order = {}) {
+    const rawStatus =
+      getRawPaymentStatus(
+        order
+      );
+
+    const normalized =
+      rawStatus
         .toUpperCase()
         .replace(
           /[\s-]+/g,
           "_"
         );
 
+    /*
+     * Collection code takes priority.
+     *
+     * This prevents an order such as:
+     *
+     * paymentStatus = PENDING
+     * pickupCode    = 5089
+     *
+     * from being displayed as PENDING.
+     */
+    if (
+      hasValidPickupCode(
+        order
+      )
+    ) {
+      return "SUCCESSFUL";
+    }
+
+    /* =====================================================
+       SUCCESS STATES
+       ===================================================== */
+
     if (
       [
         "SUCCESS",
         "SUCCESSFUL",
+        "SUCCEEDED",
         "PAID",
         "PAYMENT_SUCCESS",
         "PAYMENT_SUCCESSFUL",
+        "PAYMENT_SUCCEEDED",
         "CAPTURED",
         "COMPLETED",
         "COMPLETE",
-      ].includes(value)
+        "ORDER_SUCCESS",
+        "ORDER_SUCCESSFUL",
+        "ORDER_COMPLETED",
+        "SUCCESSFULLY_PAID",
+      ].includes(
+        normalized
+      )
     ) {
-      return "success";
+      return "SUCCESSFUL";
     }
+
+    /* =====================================================
+       FAILED STATES
+       ===================================================== */
 
     if (
       [
@@ -213,15 +326,26 @@ export default function HistoryScreen({
         "REJECTED",
         "PAYMENT_FAILED",
         "PAYMENT_FAILURE",
+        "PAYMENT_DECLINED",
         "TRANSACTION_FAILED",
         "TRANSACTION_FAILURE",
-      ].includes(value)
+        "ORDER_FAILED",
+        "ORDER_CANCELLED",
+        "ORDER_CANCELED",
+      ].includes(
+        normalized
+      )
     ) {
-      return "failed";
+      return "FAILED";
     }
+
+    /* =====================================================
+       PENDING STATES
+       ===================================================== */
 
     if (
       [
+        "",
         "PENDING",
         "PROCESSING",
         "INITIATED",
@@ -230,7 +354,51 @@ export default function HistoryScreen({
         "PAYMENT_PENDING",
         "PAYMENT_PROCESSING",
         "PENDING_PAYMENT",
-      ].includes(value)
+      ].includes(
+        normalized
+      )
+    ) {
+      return "PENDING";
+    }
+
+    /*
+     * Unknown backend states should not be treated as
+     * successful. Keep them pending until the backend
+     * explicitly confirms payment.
+     */
+    return "PENDING";
+  }
+
+  /* =======================================================
+     STATUS CSS CLASS
+     ======================================================= */
+
+  function getStatusClass(status) {
+    const normalized =
+      clean(status)
+        .toUpperCase()
+        .replace(
+          /[\s-]+/g,
+          "_"
+        );
+
+    if (
+      normalized ===
+      "SUCCESSFUL"
+    ) {
+      return "success";
+    }
+
+    if (
+      normalized ===
+      "FAILED"
+    ) {
+      return "failed";
+    }
+
+    if (
+      normalized ===
+      "PENDING"
     ) {
       return "pending";
     }
@@ -238,9 +406,11 @@ export default function HistoryScreen({
     return "default";
   }
 
-  function number(
-    value
-  ) {
+  /* =======================================================
+     NUMBER
+     ======================================================= */
+
+  function number(value) {
     const amount =
       Number(value);
 
@@ -249,6 +419,103 @@ export default function HistoryScreen({
     )
       ? amount
       : 0;
+  }
+
+  /* =======================================================
+     ORDER QUANTITY
+     ======================================================= */
+
+  function getOrderQuantity(
+    order = {}
+  ) {
+    return number(
+      order?.orderQuantity ??
+        order?.order_quantity ??
+        order?.quantity ??
+        order?.qty ??
+        0
+    );
+  }
+
+  /* =======================================================
+     GST
+     ======================================================= */
+
+  function getGst(order = {}) {
+    return number(
+      order?.cartGST ??
+        order?.cart_gst ??
+        order?.gst ??
+        order?.gstAmount ??
+        order?.gst_amount ??
+        0
+    );
+  }
+
+  /* =======================================================
+     TOTAL
+     ======================================================= */
+
+  function getTotal(order = {}) {
+    return number(
+      order?.netBill ??
+        order?.net_bill ??
+        order?.totalAmount ??
+        order?.total_amount ??
+        order?.grossBill ??
+        order?.gross_bill ??
+        order?.finalTotal ??
+        order?.final_total ??
+        order?.total ??
+        0
+    );
+  }
+
+  /* =======================================================
+     ITEMS TOTAL
+     ======================================================= */
+
+  function getItemsTotal(
+    order = {},
+    total = 0,
+    gst = 0
+  ) {
+    const explicitItemsTotal =
+      order?.itemsTotal ??
+      order?.items_total ??
+      order?.itemTotal ??
+      order?.item_total ??
+      order?.subtotal ??
+      order?.subTotal ??
+      order?.taxableSubtotal ??
+      order?.taxable_subtotal;
+
+    if (
+      explicitItemsTotal !=
+        null &&
+      Number.isFinite(
+        Number(
+          explicitItemsTotal
+        )
+      )
+    ) {
+      return number(
+        explicitItemsTotal
+      );
+    }
+
+    /*
+     * Fallback:
+     *
+     * Total is GST-inclusive.
+     *
+     * We display the customer-facing item value
+     * without adding GST on top.
+     */
+    return Math.max(
+      0,
+      total - gst
+    );
   }
 
   /* =======================================================
@@ -291,6 +558,7 @@ export default function HistoryScreen({
         <div className="jr-history-title-row">
 
           <div>
+
             <h1>
               My Orders
             </h1>
@@ -298,6 +566,7 @@ export default function HistoryScreen({
             <p className="jr-history-subtitle">
               View and manage your order history
             </p>
+
           </div>
 
           {safeOrders.length > 0 && (
@@ -318,11 +587,7 @@ export default function HistoryScreen({
 
 
       {/* =================================================
-          ORDERS
-          No search bar.
-          No status filter.
-          No date filter.
-          No sort filter.
+          EMPTY STATE
          ================================================= */}
 
       {safeOrders.length === 0 ? (
@@ -341,6 +606,10 @@ export default function HistoryScreen({
 
       ) : (
 
+        /* =================================================
+           ORDER LIST
+           ================================================= */
+
         <section
           className="jr-history-list"
           aria-label="Order history"
@@ -356,70 +625,77 @@ export default function HistoryScreen({
                 expandedIndex ===
                 index;
 
+              /* =========================================
+                 STATUS
+                 ========================================= */
+
               const status =
-                orderStatus(
+                getPaymentStatus(
                   order
                 );
 
               const statusType =
-                statusClass(
+                getStatusClass(
                   status
                 );
 
+              /* =========================================
+                 ORDER VALUES
+                 ========================================= */
+
               const quantity =
-                number(
-                  order?.orderQuantity ??
-                    order?.order_quantity ??
-                    order?.quantity ??
-                    order?.qty ??
-                    0
-                );
-
-              const gst =
-                number(
-                  order?.cartGST ??
-                    order?.cart_gst ??
-                    order?.gst ??
-                    order?.gstAmount ??
-                    order?.gst_amount ??
-                    0
-                );
-
-              const total =
-                number(
-                  order?.netBill ??
-                    order?.net_bill ??
-                    order?.totalAmount ??
-                    order?.total_amount ??
-                    order?.grossBill ??
-                    order?.gross_bill ??
-                    0
-                );
-
-              const explicitItemsTotal =
-                order?.itemsTotal ??
-                order?.items_total ??
-                order?.itemTotal ??
-                order?.item_total;
-
-              const itemsTotal =
-                explicitItemsTotal !=
-                  null
-                  ? number(
-                      explicitItemsTotal
-                    )
-                  : Math.max(
-                      0,
-                      total - gst
-                    );
-
-              const pickup =
-                pickupCode(
+                getOrderQuantity(
                   order
                 );
 
-              const hasPickupCode =
-                pickup !== "—";
+              const gst =
+                getGst(
+                  order
+                );
+
+              const total =
+                getTotal(
+                  order
+                );
+
+              const itemsTotal =
+                getItemsTotal(
+                  order,
+                  total,
+                  gst
+                );
+
+              /* =========================================
+                 PICKUP CODE
+                 ========================================= */
+
+              const pickup =
+                getPickupCode(
+                  order
+                );
+
+              const hasPickup =
+                /^\d{4}$/.test(
+                  pickup
+                );
+
+              /* =========================================
+                 TRANSACTION
+                 ========================================= */
+
+              const transaction =
+                getTransactionId(
+                  order
+                );
+
+              /* =========================================
+                 DATE
+                 ========================================= */
+
+              const date =
+                getOrderDate(
+                  order
+                );
 
               return (
                 <article
@@ -439,7 +715,7 @@ export default function HistoryScreen({
                 >
 
                   {/* =====================================
-                      ORDER SUMMARY
+                      ORDER HEADER
                      ===================================== */}
 
                   <button
@@ -457,6 +733,10 @@ export default function HistoryScreen({
                     }
                   >
 
+                    {/* -----------------------------------
+                        TRANSACTION INFO
+                       ----------------------------------- */}
+
                     <span className="jr-order-summary-copy">
 
                       <span className="jr-order-label">
@@ -464,35 +744,28 @@ export default function HistoryScreen({
                       </span>
 
                       <strong className="jr-order-transaction">
-                        {transactionId(
-                          order
-                        )}
+                        {transaction}
                       </strong>
 
                       <span className="jr-order-date">
                         {formatDateTime(
-                          orderDate(
-                            order
-                          )
+                          date
                         )}
                       </span>
 
                     </span>
 
 
+                    {/* -----------------------------------
+                        STATUS
+                       ----------------------------------- */}
+
                     <span className="jr-order-summary-status">
 
                       <span
                         className={`jr-order-status ${statusType}`}
                       >
-                        {String(
-                          status
-                        )
-                          .replace(
-                            /_/g,
-                            " "
-                          )
-                          .toUpperCase()}
+                        {status}
                       </span>
 
                       <span
@@ -517,7 +790,11 @@ export default function HistoryScreen({
 
                     <div className="jr-order-details">
 
-                      {hasPickupCode && (
+                      {/* =================================
+                          PICKUP CODE
+                         ================================= */}
+
+                      {hasPickup && (
                         <div className="jr-order-row">
 
                           <span>
@@ -532,6 +809,10 @@ export default function HistoryScreen({
                       )}
 
 
+                      {/* =================================
+                          QUANTITY
+                         ================================= */}
+
                       <div className="jr-order-row">
 
                         <span>
@@ -539,11 +820,17 @@ export default function HistoryScreen({
                         </span>
 
                         <strong>
-                          {quantity || "—"}
+                          {quantity > 0
+                            ? quantity
+                            : "—"}
                         </strong>
 
                       </div>
 
+
+                      {/* =================================
+                          ITEMS TOTAL
+                         ================================= */}
 
                       <div className="jr-order-row">
 
@@ -560,6 +847,10 @@ export default function HistoryScreen({
                       </div>
 
 
+                      {/* =================================
+                          GST
+                         ================================= */}
+
                       <div className="jr-order-row">
 
                         <span>
@@ -574,6 +865,10 @@ export default function HistoryScreen({
 
                       </div>
 
+
+                      {/* =================================
+                          TOTAL
+                         ================================= */}
 
                       <div className="jr-order-total">
 

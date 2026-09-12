@@ -2,13 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api";
 import "./App.css";
 
-/*
- * Desktop-only mobile notice image.
- *
- * The file is located at:
- * src/assets/desktop-mobile-notice.jpg
- */
-import desktopMobileNotice from "./assets/desktop-mobile-notice.jpg";
 
 import LoginScreen from "./screens/LoginScreen/LoginScreen";
 
@@ -18,7 +11,6 @@ import CartScreen from "./screens/CartScreen/CartScreen";
 import LocationMachineScreen from "./screens/LocationMachineScreen/LocationMachineScreen";
 import LocationConfirmationScreen from "./screens/LocationConfirmationScreen/LocationConfirmationScreen";
 import ProductDetailScreen from "./screens/ProductDetailScreen/ProductDetailScreen";
-import PaymentScreen from "./screens/PaymentScreen/PaymentScreen";
 import ConfirmationScreen from "./screens/ConfirmationScreen/ConfirmationScreen";
 import HistoryScreen from "./screens/HistoryScreen/HistoryScreen";
 import ProfileScreen from "./screens/ProfileScreen/ProfileScreen";
@@ -55,7 +47,7 @@ const STORAGE = {
   paymentCollectionCode: "juice_robo_collection_code",
 };
 
-const GST_RATE = 0.12;
+const GST_RATE = 0.05;
 
 const EMPTY_CUSTOMER = {
   name: "",
@@ -478,9 +470,27 @@ function getVariantId(
 }
 
 function money(value) {
-  return `₹${Number(
-    value || 0
-  ).toFixed(0)}`;
+  const numericValue =
+    Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return "₹0";
+  }
+
+  return `₹${Math.round(
+    numericValue
+  )}`;
+}
+
+function productMoney(value) {
+  const numericValue =
+    Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return "₹0.00";
+  }
+
+  return `₹${numericValue.toFixed(2)}`;
 }
 
 function errorText(error) {
@@ -1026,24 +1036,37 @@ export default function App() {
      CART TOTALS
      ======================================================= */
 
+  /*
+   * Backend product prices are the FINAL customer-facing prices
+   * and already include GST.
+   *
+   * Calculations are performed in paise so JavaScript floating-point
+   * precision does not affect the payable amount.
+   */
+
   const safeCart =
     normalizeCart(cart);
+
+  /* -------------------------------------------------------
+     CART ITEM COUNT
+     ------------------------------------------------------- */
 
   const cartCount =
     useMemo(
       () =>
         safeCart.reduce(
           (sum, item) => {
-            const quantity = Number(
-              item?.quantity || 0
-            );
+            const itemQuantity =
+              Number(
+                item?.quantity || 0
+              );
 
             return (
               sum +
               (
-                Number.isFinite(quantity) &&
-                quantity > 0
-                  ? Math.floor(quantity)
+                Number.isFinite(itemQuantity) &&
+                itemQuantity > 0
+                  ? Math.floor(itemQuantity)
                   : 0
               )
             );
@@ -1053,32 +1076,98 @@ export default function App() {
       [safeCart]
     );
 
-  const subtotal =
+  /* -------------------------------------------------------
+     FINAL PRICE — GST INCLUDED
+     ------------------------------------------------------- */
+
+  const grossTotalPaise =
     useMemo(
       () =>
         safeCart.reduce(
-          (sum, item) =>
-            sum +
-            Number(
-              item.price ||
-                item.unitPrice ||
-                0
-            ) *
+          (sum, item) => {
+            const unitPrice =
               Number(
-                item.quantity || 1
-              ),
+                item?.price ??
+                  item?.unitPrice ??
+                  0
+              );
+
+            const itemQuantity =
+              Number(
+                item?.quantity || 1
+              );
+
+            if (
+              !Number.isFinite(unitPrice) ||
+              !Number.isFinite(itemQuantity)
+            ) {
+              return sum;
+            }
+
+            const unitPricePaise =
+              Math.round(
+                unitPrice * 100
+              );
+
+            const quantity =
+              Math.max(
+                1,
+                Math.floor(
+                  itemQuantity
+                )
+              );
+
+            return (
+              sum +
+              unitPricePaise *
+                quantity
+            );
+          },
           0
         ),
       [safeCart]
     );
 
-  const gst =
-    subtotal *
-    GST_RATE;
+  /* -------------------------------------------------------
+     GST INCLUDED IN FINAL PRICE
+     -------------------------------------------------------
+     GST = Gross × 5 / 105
+     ------------------------------------------------------- */
+
+  const gstPaise =
+    Math.round(
+      (
+        grossTotalPaise *
+        GST_RATE
+      ) /
+        (1 + GST_RATE)
+    );
+
+  /* -------------------------------------------------------
+     PRICE BEFORE GST
+     ------------------------------------------------------- */
+
+  const taxableSubtotalPaise =
+    grossTotalPaise -
+    gstPaise;
+
+  /* -------------------------------------------------------
+     DISPLAY / PAYABLE VALUES
+     ------------------------------------------------------- */
 
   const finalTotal =
-    subtotal + gst;
+    grossTotalPaise / 100;
 
+  const subtotal =
+    taxableSubtotalPaise / 100;
+
+  const gst =
+    gstPaise / 100;
+
+  /*
+   * Actual customer payable amount.
+   * GST is already included in this amount.
+   */
   const cartTotal =
     finalTotal;
 
@@ -1241,21 +1330,42 @@ export default function App() {
         );
 
       /*
-       * A GET /v1/cart response can temporarily be empty immediately
-       * after a successful POST /v1/addcart. Never let that transient
-       * response erase a valid frontend cart. Only hydrate when the
-       * backend actually returned cart items.
-       */
+      * BACKEND CART HAS ITEMS
+      *
+      * The backend is the source of truth when it actually
+      * returns cart items.
+      */
       if (hydratedItems.length > 0) {
         setCart(hydratedItems);
+
+        console.log(
+          "[Juice Robo] Backend cart loaded successfully:",
+          hydratedItems
+        );
+
         return hydratedItems;
       }
 
-      console.warn(
-        "[Juice Robo] Backend cart GET returned no items. Keeping current frontend cart."
+      /*
+      * BACKEND CART IS EMPTY
+      *
+      * HTTP 200 with no cart items is a valid empty-cart state.
+      *
+      * Do NOT treat this as an error and do NOT print a warning.
+      *
+      * Keep the current frontend cart because the backend
+      * environment can temporarily return an empty cart after
+      * addcart.
+      */
+      const currentCart =
+        normalizeCart(cart);
+
+      console.log(
+        "[Juice Robo] Backend cart is empty. Keeping current frontend cart:",
+        currentCart
       );
 
-      return normalizeCart(cart);
+      return currentCart;
     } catch (cartError) {
       console.error(
         "[Juice Robo] Backend cart load failed:",
@@ -1285,14 +1395,35 @@ export default function App() {
     const normalizedCart =
       normalizeCart(nextCart);
 
-    const locationId =
+    const storeId =
       selectedLocation?.storeId ||
       selectedLocation?.store_id ||
-      selectedLocation?.locId ||
       selectedLocation?.id ||
       selectedLocationId;
 
-    if (!locationId) {
+    /*
+     * Only pass a UUID-shaped location identifier to the API.
+     * Never pass storeId (for example 200) as locId.
+     *
+     * api.addCart() performs the final authoritative UUID resolution
+     * if this selected-location snapshot does not contain the UUID.
+     */
+    const locationUuidCandidates = [
+      selectedLocation?.locId,
+      selectedLocation?.locationId,
+      selectedLocation?.location_id,
+      selectedLocation?.locationUuid,
+      selectedLocation?.uuid,
+    ];
+
+    const locationUuid =
+      locationUuidCandidates
+        .map((value) => String(value ?? "").trim())
+        .find((value) =>
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+        ) || "";
+
+    if (!storeId) {
       throw new Error(
         "Please select a collection location before adding items."
       );
@@ -1305,9 +1436,10 @@ export default function App() {
     }
 
     const payload = {
-      locId: String(
-        locationId
-      ),
+      /* locId must be the backend UUID, never numeric storeId. */
+      locId: locationUuid,
+      storeId: String(storeId),
+      location: selectedLocation,
       cartItems:
         normalizedCart,
     };
@@ -1399,12 +1531,10 @@ export default function App() {
   }, []);
 
   /* =======================================================
-     ORDER HISTORY
-     ======================================================= */
+    ORDER HISTORY
+    ======================================================= */
 
-
-
-  function openOrderHistory() {
+  async function openOrderHistory() {
     if (!loggedIn) {
       showToast(
         "Please sign in to view your order history"
@@ -1414,9 +1544,85 @@ export default function App() {
       return;
     }
 
+    /*
+    * Show the history screen immediately using whatever is already
+    * available locally, then refresh it from the authoritative
+    * Juice Robo backend.
+    */
     setScreen("history");
-  }
 
+    try {
+      console.log(
+        "[Juice Robo] Loading order history from backend..."
+      );
+
+      const backendOrders =
+        await api.orders();
+
+      const safeBackendOrders =
+        Array.isArray(backendOrders)
+          ? backendOrders.filter(Boolean)
+          : [];
+
+      console.log(
+        "[Juice Robo] ORDER HISTORY LOADED:",
+        safeBackendOrders
+      );
+
+      /*
+      * Backend is the source of truth.
+      *
+      * If the backend returned orders, use them.
+      * If it returned an empty list, keep the screen empty.
+      */
+      setHistoryOrders(
+        safeBackendOrders
+      );
+
+      /*
+      * Persist the refreshed history locally so it is available
+      * immediately the next time the screen opens.
+      */
+      try {
+        writeJSON(
+          ordersKey(user),
+          safeBackendOrders
+        );
+
+        writeJSON(
+          STORAGE.orders,
+          safeBackendOrders
+        );
+      } catch (storageError) {
+        console.warn(
+          "[Juice Robo] Could not persist order history:",
+          storageError
+        );
+      }
+    } catch (historyError) {
+      console.error(
+        "[Juice Robo] ORDER HISTORY LOAD FAILED:",
+        historyError
+      );
+
+      /*
+      * Keep locally stored orders if the backend is temporarily
+      * unavailable.
+      */
+      if (
+        Array.isArray(historyOrders) &&
+        historyOrders.length > 0
+      ) {
+        showToast(
+          "Showing saved order history"
+        );
+      } else {
+        showToast(
+          "Unable to load order history"
+        );
+      }
+    }
+  }
   function clearOrderHistory() {
     setHistoryOrders([]);
 
@@ -1692,85 +1898,154 @@ export default function App() {
   ]);
 
   /* =======================================================
-     RETURN FROM UPI APP / BROWSER
-     ======================================================= */
+      RETURN FROM UPI APP / BROWSER
+      ======================================================= */
 
-  useEffect(() => {
-    async function handlePageShow() {
-      const session =
-        readJSON(
-          "juice_robo_payment_session",
-          null
+    useEffect(() => {
+      let mounted = true;
+
+      async function verifyAfterBrowserReturn(
+        source
+      ) {
+        if (!mounted) {
+          return;
+        }
+
+        /*
+        * Read directly from sessionStorage.
+        *
+        * This is deliberately NOT dependent only on React state.
+        * Mobile browsers can suspend and restore React state while
+        * the UPI application is open.
+        */
+        const session =
+          readJSON(
+            "juice_robo_payment_session",
+            null
+          );
+
+        if (
+          !session?.cartId ||
+          !session?.orderId
+        ) {
+          return;
+        }
+
+        console.log(
+          `[Juice Robo] BROWSER RETURN DETECTED (${source})`,
+          {
+            cartId:
+              session.cartId,
+            orderId:
+              session.orderId,
+          }
         );
 
-      if (
-        !session?.cartId ||
-        !session?.orderId
-      ) {
-        return;
-      }
+        /*
+        * The user has returned to the Juice Robo browser.
+        * Keep them on the payment screen while the backend is checked.
+        */
+        if (
+          screen !==
+            "upi-payment" &&
+          paymentStatus !==
+            "paid"
+        ) {
+          setScreen(
+            "upi-payment"
+          );
+        }
 
-      /*
-       * Keep the payment page after the OS returns from PhonePe,
-       * Google Pay, Paytm, BHIM, etc.
-       */
-      if (
-        screen !== "upi-payment" &&
-        paymentStatus !== "paid"
-      ) {
-        setScreen(
-          "upi-payment"
-        );
-      }
-
-      /*
-       * IMPORTANT: returning from the UPI app is the trigger to
-       * re-check the backend immediately. Do not wait for the next
-       * polling timeout. Safari/iOS can suspend the page while the
-       * UPI app is open, so the old polling timer is not sufficient.
-       *
-       * The backend remains the only source of truth for payment
-       * success. We never mark the order paid merely because the
-       * UPI app opened or because Safari returned to this page.
-       */
-      console.log(
-        "[Juice Robo] Returned from UPI app; verifying payment immediately."
-      );
-
-      if (
-        paymentStatus !== "paid"
-      ) {
+        /*
+        * Verify immediately.
+        */
         await verifyPendingPayment({
           silent: true,
         });
       }
-    }
 
-    window.addEventListener(
-      "pageshow",
-      handlePageShow
-    );
+      function handlePageShow() {
+        verifyAfterBrowserReturn(
+          "pageshow"
+        );
+      }
 
-    window.addEventListener(
-      "focus",
-      handlePageShow
-    );
+      function handleFocus() {
+        verifyAfterBrowserReturn(
+          "focus"
+        );
+      }
 
-    return () => {
-      window.removeEventListener(
+      function handleVisibilityChange() {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          verifyAfterBrowserReturn(
+            "visibilitychange"
+          );
+        }
+      }
+
+      /*
+      * pageshow:
+      * Handles Safari back-forward cache / page restoration.
+      */
+      window.addEventListener(
         "pageshow",
         handlePageShow
       );
 
-      window.removeEventListener(
+      /*
+      * focus:
+      * Handles returning from an external UPI application.
+      */
+      window.addEventListener(
         "focus",
-        handlePageShow
+        handleFocus
       );
-    };
-  }, [
-    screen,
-    paymentStatus,
-  ]);
+
+      /*
+      * visibilitychange:
+      * Handles Safari/Chrome returning the tab to foreground.
+      */
+      document.addEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+
+      /*
+      * Also check once when this effect starts.
+      *
+      * This handles a browser reload while a payment session is
+      * already pending.
+      */
+      verifyAfterBrowserReturn(
+        "initial-check"
+      );
+
+      return () => {
+        mounted = false;
+
+        window.removeEventListener(
+          "pageshow",
+          handlePageShow
+        );
+
+        window.removeEventListener(
+          "focus",
+          handleFocus
+        );
+
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange
+        );
+      };
+    }, [
+      screen,
+      paymentStatus,
+    ]);
 
   /* =======================================================
    INITIAL DATA LOAD
@@ -2213,6 +2488,35 @@ useEffect(() => {
   }, [customer]);
 
   /* =======================================================
+     UUID SAFETY CLEANUP
+     ======================================================= */
+
+  useEffect(() => {
+    const cachedLocationUuid =
+      String(
+        localStorage.getItem(
+          "juice_robo_location_uuid"
+        ) || ""
+      ).trim();
+
+    /*
+     * Older builds could accidentally cache the numeric storeId
+     * (for example "200") under the UUID key. Remove it so it can
+     * never be reused by the payment/cart flow.
+     */
+    if (
+      cachedLocationUuid &&
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        cachedLocationUuid
+      )
+    ) {
+      localStorage.removeItem(
+        "juice_robo_location_uuid"
+      );
+    }
+  }, []);
+
+  /* =======================================================
      TOAST
      ======================================================= */
 
@@ -2373,10 +2677,64 @@ useEffect(() => {
         "true"
       );
 
+      /*
+       * Preserve items that were added while logged out. Merge the
+       * guest cart into the user's existing local cart instead of
+       * discarding it at login.
+       */
+      const guestCart =
+        readCart({});
+
+      const existingUserCart =
+        readCart(loggedUser);
+
+      const mergedLoginCart =
+        normalizeCart(existingUserCart);
+
+      guestCart.forEach((guestItem) => {
+        const guestVariantId =
+          getCartVariantId(guestItem);
+
+        const existingIndex =
+          mergedLoginCart.findIndex(
+            (item) =>
+              String(
+                getCartVariantId(item)
+              ) ===
+              String(guestVariantId)
+          );
+
+        if (existingIndex >= 0) {
+          mergedLoginCart[existingIndex] = {
+            ...mergedLoginCart[existingIndex],
+            ...guestItem,
+            quantity: Number(
+              guestItem.quantity
+            ),
+          };
+        } else {
+          mergedLoginCart.push(guestItem);
+        }
+      });
+
       setCart(
-        readCart(
-          loggedUser
-        )
+        mergedLoginCart
+      );
+
+      /* Move the guest cart into the authenticated local scope. */
+      writeJSON(
+        cartKey(loggedUser),
+        mergedLoginCart
+      );
+
+      writeJSON(
+        "juice_robo_cart",
+        mergedLoginCart
+      );
+
+      writeJSON(
+        cartKey({}),
+        []
       );
 
       setHistoryOrders(
@@ -2386,19 +2744,22 @@ useEffect(() => {
       );
 
       /*
-       * Update-1: once authenticated, hydrate the frontend cart
-       * from the backend rather than treating localStorage as
-       * the source of truth.
+       * If there was no guest cart, keep the existing behavior of
+       * hydrating from the backend. If a guest cart exists, preserve
+       * it for checkout; the next authenticated cart edit will sync
+       * the merged cart through /v1/addcart.
        */
-      try {
-        await loadCartFromBackend({
-          silent: true,
-        });
-      } catch (cartLoadError) {
-        console.warn(
-          "[Juice Robo] Backend cart unavailable after login:",
-          cartLoadError
-        );
+      if (!guestCart.length) {
+        try {
+          await loadCartFromBackend({
+            silent: true,
+          });
+        } catch (cartLoadError) {
+          console.warn(
+            "[Juice Robo] Backend cart unavailable after login:",
+            cartLoadError
+          );
+        }
       }
 
       const loadedLocations =
@@ -2792,6 +3153,30 @@ useEffect(() => {
       location
     );
 
+    const locationUuid =
+      location?.locId ||
+      location?.locationId ||
+      location?.location_id ||
+      location?.locationUuid ||
+      location?.uuid ||
+      "";
+
+    const isValidLocationUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        String(locationUuid || "").trim()
+      );
+
+    if (isValidLocationUuid) {
+      localStorage.setItem(
+        "juice_robo_location_uuid",
+        String(locationUuid).trim()
+      );
+    } else {
+      localStorage.removeItem(
+        "juice_robo_location_uuid"
+      );
+    }
+
     /*
      * The current Juice Robo API adapter represents the physical
      * machine through the outlet/store record. Keep the complete
@@ -3051,12 +3436,56 @@ useEffect(() => {
               item,
             ];
 
-      const savedCart =
-        await saveCartToBackend(
+      /*
+       * Guests use a local cart. No backend cart request is made
+       * until the user is authenticated. This lets guests add and
+       * edit items freely; payment remains protected by startCheckout().
+       */
+      if (!loggedIn) {
+        setCart(nextCart);
+
+        writeJSON(
+          cartKey({}),
           nextCart
         );
 
-      setCart(
+        writeJSON(
+          "juice_robo_cart",
+          nextCart
+        );
+
+        showToast(
+          `${displayProductName(
+            product
+          )} added to cart`
+        );
+
+        closeProduct();
+
+        setScreen(
+          "menu"
+        );
+
+        return;
+      }
+
+      /*
+       * Authenticated cart editing uses the Juice Robo cart API.
+       * The API adapter is responsible for sending the UUID-shaped
+       * locId and preserving the backend cart ID returned by /v1/addcart.
+       */
+      const savedCart =
+        await saveCartToBackend(nextCart);
+
+      setCart(savedCart);
+
+      writeJSON(
+        cartKey(user || {}),
+        savedCart
+      );
+
+      writeJSON(
+        "juice_robo_cart",
         savedCart
       );
 
@@ -3094,23 +3523,9 @@ useEffect(() => {
     nextQuantity
   ) {
     /*
-     * Menu/product browsing is public, but adding an item to
-     * the cart requires authentication.
+     * Cart editing is public. Guests are stored in the local cart;
+     * authenticated users also sync their cart with the backend.
      */
-    if (!loggedIn) {
-      showToast(
-        "Please sign in to add items to your cart"
-      );
-
-      closeProduct();
-
-      setScreen(
-        "login"
-      );
-
-      return;
-    }
-
     let actualVariant =
       variant;
 
@@ -3214,16 +3629,43 @@ useEffect(() => {
       return;
     }
 
+    if (!loggedIn) {
+      setCart(nextCart);
+
+      writeJSON(
+        cartKey({}),
+        nextCart
+      );
+
+      writeJSON(
+        "juice_robo_cart",
+        nextCart
+      );
+
+      showToast(
+        "Cart updated successfully"
+      );
+
+      return;
+    }
+
     try {
       setBusy(true);
       setError("");
 
+      /* Authenticated quantity editing uses the Juice Robo cart API. */
       const savedCart =
-        await saveCartToBackend(
-          nextCart
-        );
+        await saveCartToBackend(nextCart);
 
-      setCart(
+      setCart(savedCart);
+
+      writeJSON(
+        cartKey(user || {}),
+        savedCart
+      );
+
+      writeJSON(
+        "juice_robo_cart",
         savedCart
       );
 
@@ -3274,16 +3716,40 @@ useEffect(() => {
     }
 
     /*
-     * The backend currently exposes /v1/addcart but no confirmed
-     * empty-cart/delete-cart operation. Do not invent an endpoint.
-     *
-     * The X button must still work in the UI, so when the user removes
-     * the last item we clear the local cart immediately. The next
-     * non-empty cart save will write the current cart contents back to
-     * the backend.
+     * Use the Juice Robo cart API whenever a non-empty cart remains.
+     * There is still no confirmed empty-cart/delete endpoint, so
+     * removing the final item remains a local UI operation.
      */
     if (!nextCart.length) {
       setCart([]);
+
+      writeJSON(
+        cartKey({}),
+        []
+      );
+
+      writeJSON(
+        "juice_robo_cart",
+        []
+      );
+
+      showToast("Item removed from cart");
+      return;
+    }
+
+    if (!loggedIn) {
+      setCart(nextCart);
+
+      writeJSON(
+        cartKey({}),
+        nextCart
+      );
+
+      writeJSON(
+        "juice_robo_cart",
+        nextCart
+      );
+
       showToast("Item removed from cart");
       return;
     }
@@ -3292,13 +3758,17 @@ useEffect(() => {
       setBusy(true);
       setError("");
 
-      const savedCart =
-        await saveCartToBackend(
-          nextCart
-        );
+      /* Normal item removal stays frontend-only. */
+      setCart(nextCart);
 
-      setCart(
-        savedCart
+      writeJSON(
+        cartKey(user || {}),
+        nextCart
+      );
+
+      writeJSON(
+        "juice_robo_cart",
+        nextCart
       );
 
       showToast(
@@ -3329,6 +3799,17 @@ useEffect(() => {
      * contents with the current frontend cart.
      */
     setCart([]);
+
+    writeJSON(
+      cartKey(loggedIn ? user : {}),
+      []
+    );
+
+    writeJSON(
+      "juice_robo_cart",
+      []
+    );
+
     showToast("Cart cleared");
   }
 
@@ -3337,15 +3818,18 @@ useEffect(() => {
      ======================================================= */
 
   async function openCart() {
+    /*
+     * Cart is public. Guests see and edit their local cart.
+     * Authenticated users load the current cart from the Juice Robo
+     * cart API so the backend remains the source of truth.
+     */
     if (!loggedIn) {
-      showToast(
-        "Please sign in to view your cart"
+      setCart(
+        readCart({})
       );
 
-      setScreen(
-        "login"
-      );
-
+      setError("");
+      setScreen("cart");
       return;
     }
 
@@ -3358,13 +3842,8 @@ useEffect(() => {
           silent: true,
         });
 
-      setCart(
-        backendCart
-      );
-
-      setScreen(
-        "cart"
-      );
+      setCart(backendCart);
+      setScreen("cart");
     } catch (cartError) {
       console.error(
         "[Juice Robo] Unable to open backend cart:",
@@ -3442,9 +3921,13 @@ useEffect(() => {
       return;
     }
 
-    setScreen(
-      "payment"
-    );
+    /*
+    * Location has already been confirmed.
+    * Start the real payment flow directly.
+    *
+    * This removes the intermediate PaymentScreen.
+    */
+    handlePayment();
   }
 
   /* =======================================================
@@ -3478,7 +3961,7 @@ useEffect(() => {
     {
       id: "phonepe",
       name: "PhonePe",
-      scheme: "phonepe://pay",
+      scheme: "phonepe://upi/pay",
       description: "Open payment in PhonePe",
     },
     {
@@ -3490,7 +3973,7 @@ useEffect(() => {
     {
       id: "paytm",
       name: "Paytm",
-      scheme: "paytmmp://pay",
+      scheme: "paytmmp://upi/pay",
       description: "Open payment in Paytm",
     },
     {
@@ -3603,569 +4086,619 @@ useEffect(() => {
   }
 
   async function verifyPendingPayment({
-    silent = false,
-  } = {}) {
-    if (paymentVerifyInFlight.current) {
-      return false;
-    }
-
-    const session = paymentSession;
-
-    if (
-      !session?.cartId ||
-      !session?.orderId
-    ) {
-      if (!silent) {
-        showToast(
-          "No pending payment was found."
-        );
-      }
-      return false;
-    }
-
-    paymentVerifyInFlight.current = true;
-
-    try {
-      if (!silent) {
-        setPaymentStatus("processing");
-        setPaymentMessage(
-          "Checking payment with Juice Robo..."
-        );
-      }
-
-      console.log(
-        "[Juice Robo] VERIFYING PAYMENT:",
-        {
-          cartId: session.cartId,
-          orderId: session.orderId,
-        }
-      );
-
-      const verified =
-        await api.orderStatus(
-          session.cartId,
-          session.orderId
-        );
-
-      /*
-       * The Order Master API has returned payment status in several
-       * shapes across backend versions. Normalize all supported
-       * locations before deciding whether payment is complete.
-       *
-       * In particular, do not assume that payment_status is always
-       * on the top-level object. It may be nested under `payment`,
-       * `data`, or `result`.
-       */
-      const paymentCandidates = [
-        verified?.payment_status,
-        verified?.paymentStatus,
-        verified?.payment_status_name,
-        verified?.paymentStatusName,
-        verified?.payment_state,
-        verified?.paymentState,
-        verified?.transaction_status,
-        verified?.transactionStatus,
-
-        /*
-         * Some Order Master deployments expose the result of this
-         * payment-status endpoint as `status` / `orderStatus` rather
-         * than `payment_status`. Because this request is specifically
-         * the payment-status endpoint, include those fields too.
-         */
-        verified?.status,
-        verified?.orderStatus,
-        verified?.order_status,
-
-        verified?.payment?.status,
-        verified?.payment?.paymentStatus,
-        verified?.payment?.payment_status,
-
-        verified?.data?.payment_status,
-        verified?.data?.paymentStatus,
-        verified?.data?.payment_state,
-        verified?.data?.paymentState,
-        verified?.data?.transaction_status,
-        verified?.data?.transactionStatus,
-        verified?.data?.status,
-        verified?.data?.orderStatus,
-        verified?.data?.order_status,
-        verified?.data?.payment?.status,
-        verified?.data?.payment?.paymentStatus,
-        verified?.data?.payment?.payment_status,
-
-        verified?.result?.payment_status,
-        verified?.result?.paymentStatus,
-        verified?.result?.payment_state,
-        verified?.result?.paymentState,
-        verified?.result?.transaction_status,
-        verified?.result?.transactionStatus,
-        verified?.result?.status,
-        verified?.result?.orderStatus,
-        verified?.result?.order_status,
-        verified?.result?.payment?.status,
-        verified?.result?.payment?.paymentStatus,
-        verified?.result?.payment?.payment_status,
-      ];
-
-      const normalizedPaymentStates =
-        paymentCandidates
-          .filter(
-            (value) =>
-              value !== undefined &&
-              value !== null &&
-              String(value).trim() !== ""
-          )
-          .map((value) =>
-            String(value)
-              .trim()
-              .toUpperCase()
-              .replace(/[\s-]+/g, "_")
-          );
-
-      const paymentState =
-        normalizedPaymentStates.find(
-          (value) =>
-            value === "PAID" ||
-            value === "SUCCESS" ||
-            value === "SUCCESSFUL" ||
-            value === "PAYMENT_SUCCESS" ||
-            value === "PAYMENT_SUCCESSFUL" ||
-            value === "CAPTURED" ||
-            value === "COMPLETED" ||
-            value === "COMPLETE" ||
-            value === "PENDING" ||
-            value === "PROCESSING" ||
-            value === "INITIATED" ||
-            value === "CREATED" ||
-            value === "AWAITING_PAYMENT" ||
-            value === "PAYMENT_PENDING" ||
-            value === "PAYMENT_PROCESSING" ||
-            value === "ORDER_SUCCESS" ||
-            value === "ORDER_COMPLETED" ||
-            value === "SUCCESSFULLY_PAID"
-        ) ||
-        normalizedPaymentStates[0] ||
-        "PENDING";
-
-      const isPaid = [
-        "PAID",
-        "SUCCESS",
-        "SUCCESSFUL",
-        "PAYMENT_SUCCESS",
-        "PAYMENT_SUCCESSFUL",
-        "CAPTURED",
-        "COMPLETED",
-        "COMPLETE",
-        "ORDER_SUCCESS",
-        "ORDER_COMPLETED",
-        "SUCCESSFULLY_PAID",
-      ].includes(paymentState);
-
-      console.log(
-        "[Juice Robo] PAYMENT STATUS:",
-        {
-          paymentState,
-          rawPaymentCandidates: paymentCandidates,
-          normalizedPaymentStates,
-          verified,
-        }
-      );
-
-      if (!isPaid) {
-        setPaymentStatus("pending");
-        setPaymentMessage(
-          "Payment is not confirmed yet. Complete the payment in your UPI app and return here."
-        );
-
-        if (!silent) {
-          showToast(
-            "Payment not confirmed yet."
-          );
-        }
-
-        return false;
-      }
-
-      /*
-       * PAYMENT IS PAID. Fetch the latest order record before showing
-       * the success screen because some Juice Robo deployments return
-       * the collection PIN only from the single-order endpoint.
-       */
-      let latestOrder = null;
-
-      try {
-        if (typeof api.getOrder === "function") {
-          latestOrder = await api.getOrder(session.orderId);
-        } else if (typeof api.order === "function") {
-          latestOrder = await api.order(session.orderId);
-        }
-      } catch (latestOrderError) {
-        console.warn(
-          "[Juice Robo] Latest order fetch after payment success failed; using verification response:",
-          latestOrderError
-        );
-      }
-
-      const mergedOrder = {
-        ...(session.orderSnapshot || {}),
-        ...(verified || {}),
-        ...(latestOrder || {}),
-
-        id:
-          latestOrder?.id ||
-          latestOrder?.orderId ||
-          verified?.id ||
-          verified?.orderId ||
-          session.orderId,
-
-        orderId:
-          latestOrder?.orderId ||
-          latestOrder?.id ||
-          verified?.orderId ||
-          verified?.id ||
-          session.orderId,
-
-        cartId:
-          latestOrder?.cartId ||
-          verified?.cartId ||
-          session.cartId,
-
-        items: safeCart,
-
-        subtotal: parseFloat(
-          latestOrder?.subtotal ??
-          verified?.subtotal ??
-          session.subtotal ??
-          subtotal
-        ) || 0.0,
-
-        gst: parseFloat(
-          latestOrder?.gst ??
-          verified?.gst ??
-          session.gst ??
-          0
-        ) || 0.0,
-
-        total_amount: Number(
-          latestOrder?.total_amount ??
-            latestOrder?.totalAmount ??
-            verified?.total_amount ??
-            verified?.totalAmount ??
-            session.total ??
-            finalTotal
-        ),
-
-        totalAmount: Number(
-          latestOrder?.total_amount ??
-            latestOrder?.totalAmount ??
-            verified?.total_amount ??
-            verified?.totalAmount ??
-            session.total ??
-            finalTotal
-        ),
-
-        payment_status: paymentState,
-        paymentStatus: paymentState,
-
-        collection_code:
-          latestOrder?.collection_code ||
-          latestOrder?.collectionCode ||
-          latestOrder?.orderPin ||
-          latestOrder?.order_pin ||
-          latestOrder?.pickupCode ||
-          latestOrder?.pickup_code ||
-          verified?.collection_code ||
-          verified?.collectionCode ||
-          verified?.orderPin ||
-          verified?.order_pin ||
-          verified?.pickupCode ||
-          verified?.pickup_code ||
-          verified?.data?.collection_code ||
-          verified?.data?.collectionCode ||
-          verified?.data?.orderPin ||
-          verified?.data?.order_pin ||
-          verified?.data?.pickupCode ||
-          verified?.data?.pickup_code ||
-          verified?.result?.collection_code ||
-          verified?.result?.collectionCode ||
-          verified?.result?.orderPin ||
-          verified?.result?.order_pin ||
-          verified?.result?.pickupCode ||
-          verified?.result?.pickup_code ||
-          session.collectionCode ||
-          "",
-
-        collectionCode:
-          latestOrder?.collectionCode ||
-          latestOrder?.collection_code ||
-          latestOrder?.orderPin ||
-          latestOrder?.order_pin ||
-          latestOrder?.pickupCode ||
-          latestOrder?.pickup_code ||
-          verified?.collectionCode ||
-          verified?.collection_code ||
-          verified?.orderPin ||
-          verified?.order_pin ||
-          verified?.pickupCode ||
-          verified?.pickup_code ||
-          verified?.data?.collectionCode ||
-          verified?.data?.collection_code ||
-          verified?.data?.orderPin ||
-          verified?.data?.order_pin ||
-          verified?.data?.pickupCode ||
-          verified?.data?.pickup_code ||
-          verified?.result?.collectionCode ||
-          verified?.result?.collection_code ||
-          verified?.result?.orderPin ||
-          verified?.result?.order_pin ||
-          verified?.result?.pickupCode ||
-          verified?.result?.pickup_code ||
-          session.collectionCode ||
-          "",
-      };
-
-      /* Never manufacture a PIN. Accept only a real four-digit value. */
-      const rawCodeCandidates = [
-        mergedOrder.collection_code,
-        mergedOrder.collectionCode,
-        mergedOrder.orderPin,
-        mergedOrder.order_pin,
-        mergedOrder.pickupCode,
-        mergedOrder.pickup_code,
-        latestOrder?.collection_code,
-        latestOrder?.collectionCode,
-        latestOrder?.orderPin,
-        latestOrder?.order_pin,
-        latestOrder?.pickupCode,
-        latestOrder?.pickup_code,
-        verified?.collection_code,
-        verified?.collectionCode,
-        verified?.orderPin,
-        verified?.order_pin,
-        verified?.pickupCode,
-        verified?.pickup_code,
-        verified?.data?.collection_code,
-        verified?.data?.collectionCode,
-        verified?.data?.orderPin,
-        verified?.data?.order_pin,
-        verified?.data?.pickupCode,
-        verified?.data?.pickup_code,
-        verified?.result?.collection_code,
-        verified?.result?.collectionCode,
-        verified?.result?.orderPin,
-        verified?.result?.order_pin,
-        verified?.result?.pickupCode,
-        verified?.result?.pickup_code,
-        session.collectionCode,
-      ];
-
-      const code = rawCodeCandidates
-        .map((value) => String(value ?? "").trim())
-        .map((value) =>
-          value.match(/^(?:\D*?)(\d{4})(?:\D*)$/)?.[1] || ""
-        )
-        .find((value) => /^\d{4}$/.test(value)) || "";
-
-      if (!/^\d{4}$/.test(code)) {
-        setPaymentStatus("pending");
-        setPaymentMessage(
-          "Payment is verified, but the 4-digit collection code has not been returned by the backend yet."
-        );
-
-        console.warn(
-          "[Juice Robo] PAYMENT VERIFIED BUT COLLECTION CODE IS NOT READY."
-        );
-
-        return false;
-      }
-
-      mergedOrder.collection_code = code;
-      mergedOrder.collectionCode = code;
-      mergedOrder.orderPin = code;
-      mergedOrder.order_pin = code;
-      mergedOrder.pickupCode = code;
-      mergedOrder.pickup_code = code;
-
-      setOrder(
-        mergedOrder
-      );
-
-      setPaymentStatus(
-        "paid"
-      );
-
-      setPaymentMessage(
-        "Payment verified successfully."
-      );
-
-      /*
-      * ---------------------------------------------------------
-      * PERSIST VERIFIED SUCCESS STATE
-      * ---------------------------------------------------------
-      *
-      * Do this BEFORE clearing the payment session.
-      *
-      * The collection code is generated/returned by the backend.
-      * We never generate a code locally.
-      */
-      try {
-        sessionStorage.setItem(
-          STORAGE.paymentCollectionCode,
-          code
-        );
-
-        sessionStorage.setItem(
-          "juice_robo_payment_confirmed",
-          "1"
-        );
-
-        sessionStorage.setItem(
-          "juice_robo_success_order_id",
-          String(
-            mergedOrder?.orderId ||
-              mergedOrder?.id ||
-              session.orderId ||
-              ""
-          )
-        );
-
-        sessionStorage.setItem(
-          "juice_robo_success_cart_id",
-          String(
-            mergedOrder?.cartId ||
-              session.cartId ||
-              ""
-          )
-        );
-
-        /*
-        * Persist the complete verified order for the current browser
-        * session so the success screen survives a page refresh.
-        */
-        sessionStorage.setItem(
-          STORAGE.paymentSuccess,
-          JSON.stringify(
-            mergedOrder
-          )
-        );
-      } catch (storageError) {
-        console.warn(
-          "[Juice Robo] Unable to persist successful payment state:",
-          storageError
-        );
-      }
-
-      /*
-      * Keep the order in React state as well.
-      */
-      setOrder(
-        mergedOrder
-      );
-
-      /*
-      * Update order history.
-      */
-      setHistoryOrders(
-        (current) => [
-          mergedOrder,
-          ...current.filter(
-            (item) =>
-              String(
-                item?.id ||
-                  item?.orderId ||
-                  item?.order_id ||
-                  ""
-              ) !==
-              String(
-                mergedOrder.id ||
-                  mergedOrder.orderId ||
-                  ""
-              )
-          ),
-        ]
-      );
-
-      /*
-      * The payment transaction is now verified.
-      *
-      * The pending UPI session can safely be removed.
-      */
-      try {
-        sessionStorage.removeItem(
-          "juice_robo_payment_session"
-        );
-
-        sessionStorage.removeItem(
-          "juice_robo_pending_order_id"
-        );
-
-        sessionStorage.removeItem(
-          "juice_robo_pending_transaction_id"
-        );
-
-        sessionStorage.removeItem(
-          "juice_robo_pending_upi_url"
-        );
-
-        sessionStorage.removeItem(
-          "juice_robo_pending_upi_id"
-        );
-      } catch {
-        // Ignore storage errors.
-      }
-
-      /*
-      * Stop payment polling.
-      */
-      setPaymentSession(
-        null
-      );
-
-      paymentPollStarted.current =
-        false;
-
-      /*
-      * Payment is complete, so the cart is consumed.
-      */
-      setCart([]);
-
-      /*
-      * IMPORTANT:
-      * The success screen is now the persisted current screen.
-      */
-      setScreen(
-        "payment-success"
-      );
-
-      showToast(
-        "Payment successful."
-      );
-
-      return true;
-    } catch (verificationError) {
-      console.error(
-        "[Juice Robo] Payment verification failed:",
-        verificationError
-      );
-
-      setPaymentStatus("pending");
-      setPaymentMessage(
-        "We could not verify the payment yet. Please return to this screen and try again."
-      );
-
-      if (!silent) {
-        showToast(
-          errorText(verificationError) ||
-            "Payment verification failed."
-        );
-      }
-
-      return false;
-    } finally {
-      paymentVerifyInFlight.current = false;
-    }
+  silent = false,
+} = {}) {
+  if (paymentVerifyInFlight.current) {
+    return false;
   }
 
+  /*
+   * ALWAYS read the latest session from sessionStorage.
+   *
+   * This is important after returning from PhonePe / GPay / Paytm,
+   * because React state may contain an older value after the browser
+   * has been suspended and restored.
+   */
+  const storedSession =
+    readJSON(
+      "juice_robo_payment_session",
+      null
+    );
+
+  const session =
+    storedSession || paymentSession;
+
+  if (
+    !session?.cartId ||
+    !session?.orderId
+  ) {
+    if (!silent) {
+      showToast(
+        "No pending payment was found."
+      );
+    }
+
+    return false;
+  }
+
+  paymentVerifyInFlight.current = true;
+
+  try {
+    setPaymentStatus("processing");
+
+    setPaymentMessage(
+      "Checking payment with Juice Robo..."
+    );
+
+    console.log(
+      "[Juice Robo] VERIFYING PAYMENT AFTER BROWSER RETURN:",
+      {
+        cartId: session.cartId,
+        orderId: session.orderId,
+      }
+    );
+
+    /*
+     * Backend is the ONLY payment source of truth.
+     */
+    const verified =
+      await api.orderStatus(
+        session.cartId,
+        session.orderId
+      );
+
+    console.log(
+      "[Juice Robo] ORDER STATUS RESPONSE:",
+      verified
+    );
+
+    /*
+     * ---------------------------------------------------------
+     * NORMALIZE PAYMENT STATUS
+     * ---------------------------------------------------------
+     */
+
+    const paymentCandidates = [
+      verified?.payment_status,
+      verified?.paymentStatus,
+      verified?.payment_state,
+      verified?.paymentState,
+      verified?.transaction_status,
+      verified?.transactionStatus,
+
+      verified?.status,
+      verified?.orderStatus,
+      verified?.order_status,
+
+      verified?.payment?.status,
+      verified?.payment?.paymentStatus,
+      verified?.payment?.payment_status,
+
+      verified?.data?.payment_status,
+      verified?.data?.paymentStatus,
+      verified?.data?.payment_state,
+      verified?.data?.paymentState,
+      verified?.data?.transaction_status,
+      verified?.data?.transactionStatus,
+      verified?.data?.status,
+      verified?.data?.orderStatus,
+      verified?.data?.order_status,
+
+      verified?.data?.payment?.status,
+      verified?.data?.payment?.paymentStatus,
+      verified?.data?.payment?.payment_status,
+
+      verified?.result?.payment_status,
+      verified?.result?.paymentStatus,
+      verified?.result?.payment_state,
+      verified?.result?.paymentState,
+      verified?.result?.transaction_status,
+      verified?.result?.transactionStatus,
+      verified?.result?.status,
+      verified?.result?.orderStatus,
+      verified?.result?.order_status,
+
+      verified?.result?.payment?.status,
+      verified?.result?.payment?.paymentStatus,
+      verified?.result?.payment?.payment_status,
+    ];
+
+    const normalizedPaymentStates =
+      paymentCandidates
+        .filter(
+          (value) =>
+            value !== undefined &&
+            value !== null &&
+            String(value).trim() !== ""
+        )
+        .map((value) =>
+          String(value)
+            .trim()
+            .toUpperCase()
+            .replace(/[\s-]+/g, "_")
+        );
+
+    const paidStates = [
+      "PAID",
+      "SUCCESS",
+      "SUCCESSFUL",
+      "PAYMENT_SUCCESS",
+      "PAYMENT_SUCCESSFUL",
+      "CAPTURED",
+      "COMPLETED",
+      "COMPLETE",
+      "ORDER_SUCCESS",
+      "ORDER_COMPLETED",
+      "SUCCESSFULLY_PAID",
+    ];
+
+    const paymentState =
+      normalizedPaymentStates.find(
+        (value) =>
+          paidStates.includes(value) ||
+          value === "PENDING" ||
+          value === "PROCESSING" ||
+          value === "INITIATED" ||
+          value === "CREATED" ||
+          value === "AWAITING_PAYMENT" ||
+          value === "PAYMENT_PENDING" ||
+          value === "PAYMENT_PROCESSING"
+      ) ||
+      normalizedPaymentStates[0] ||
+      "PENDING";
+
+    const isPaid =
+      paidStates.includes(
+        paymentState
+      );
+
+    console.log(
+      "[Juice Robo] PAYMENT STATE:",
+      {
+        paymentState,
+        isPaid,
+        normalizedPaymentStates,
+      }
+    );
+
+    /*
+     * ---------------------------------------------------------
+     * PAYMENT NOT CONFIRMED
+     * ---------------------------------------------------------
+     */
+
+    if (!isPaid) {
+      setPaymentStatus("pending");
+
+      setPaymentMessage(
+        "Payment is not confirmed yet. Complete the payment in your UPI app and return here."
+      );
+
+      return false;
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * PAYMENT CONFIRMED
+     *
+     * Now fetch the latest order because the collection code
+     * may only be available from the order endpoint.
+     * ---------------------------------------------------------
+     */
+
+    let latestOrder = null;
+
+    try {
+      if (
+        typeof api.getOrder ===
+        "function"
+      ) {
+        latestOrder =
+          await api.getOrder(
+            session.orderId
+          );
+      } else if (
+        typeof api.order ===
+        "function"
+      ) {
+        latestOrder =
+          await api.order(
+            session.orderId
+          );
+      }
+    } catch (orderError) {
+      console.warn(
+        "[Juice Robo] Latest order fetch failed:",
+        orderError
+      );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * MERGE BACKEND DATA
+     * ---------------------------------------------------------
+     */
+
+    const mergedOrder = {
+      ...(session.orderSnapshot || {}),
+      ...(verified || {}),
+      ...(latestOrder || {}),
+
+      id:
+        latestOrder?.id ||
+        latestOrder?.orderId ||
+        verified?.id ||
+        verified?.orderId ||
+        session.orderId,
+
+      orderId:
+        latestOrder?.orderId ||
+        latestOrder?.id ||
+        verified?.orderId ||
+        verified?.id ||
+        session.orderId,
+
+      cartId:
+        latestOrder?.cartId ||
+        latestOrder?.cart_id ||
+        verified?.cartId ||
+        verified?.cart_id ||
+        session.cartId,
+
+      items:
+        session.orderSnapshot?.items ||
+        safeCart,
+
+      total_amount:
+        Number(
+          latestOrder?.total_amount ??
+            latestOrder?.totalAmount ??
+            verified?.total_amount ??
+            verified?.totalAmount ??
+            session.total ??
+            finalTotal
+        ),
+
+      totalAmount:
+        Number(
+          latestOrder?.total_amount ??
+            latestOrder?.totalAmount ??
+            verified?.total_amount ??
+            verified?.totalAmount ??
+            session.total ??
+            finalTotal
+        ),
+
+      subtotal:
+        Number(
+          latestOrder?.subtotal ??
+            verified?.subtotal ??
+            session.subtotal ??
+            subtotal
+        ),
+
+      gst:
+        Number(
+          latestOrder?.gst ??
+            verified?.gst ??
+            session.gst ??
+            gst
+        ),
+
+      payment_status:
+        paymentState,
+
+      paymentStatus:
+        paymentState,
+    };
+
+    /*
+     * ---------------------------------------------------------
+     * COLLECTION CODE
+     * ---------------------------------------------------------
+     *
+     * NEVER generate this locally.
+     */
+
+    const rawCodeCandidates = [
+      latestOrder?.collection_code,
+      latestOrder?.collectionCode,
+      latestOrder?.collection_pin,
+      latestOrder?.collectionPin,
+      latestOrder?.orderPin,
+      latestOrder?.order_pin,
+      latestOrder?.pickupCode,
+      latestOrder?.pickup_code,
+
+      verified?.collection_code,
+      verified?.collectionCode,
+      verified?.collection_pin,
+      verified?.collectionPin,
+      verified?.orderPin,
+      verified?.order_pin,
+      verified?.pickupCode,
+      verified?.pickup_code,
+
+      verified?.data?.collection_code,
+      verified?.data?.collectionCode,
+      verified?.data?.collection_pin,
+      verified?.data?.collectionPin,
+      verified?.data?.orderPin,
+      verified?.data?.order_pin,
+      verified?.data?.pickupCode,
+      verified?.data?.pickup_code,
+
+      verified?.result?.collection_code,
+      verified?.result?.collectionCode,
+      verified?.result?.collection_pin,
+      verified?.result?.collectionPin,
+      verified?.result?.orderPin,
+      verified?.result?.order_pin,
+      verified?.result?.pickupCode,
+      verified?.result?.pickup_code,
+
+      session.collectionCode,
+    ];
+
+    const code =
+      rawCodeCandidates
+        .map(
+          (value) =>
+            String(
+              value ?? ""
+            ).trim()
+        )
+        .map(
+          (value) =>
+            value.match(
+              /^(?:\D*?)(\d{4})(?:\D*)$/
+            )?.[1] || ""
+        )
+        .find(
+          (value) =>
+            /^\d{4}$/.test(value)
+        ) || "";
+
+    /*
+     * Payment can be paid while the collection code is still being
+     * generated. Keep polling instead of showing false success.
+     */
+    if (!/^\d{4}$/.test(code)) {
+      setPaymentStatus("pending");
+
+      setPaymentMessage(
+        "Payment is verified. Waiting for Juice Robo to return your 4-digit collection code..."
+      );
+
+      console.log(
+        "[Juice Robo] PAYMENT PAID BUT COLLECTION CODE IS NOT READY."
+      );
+
+      return false;
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * FINAL VERIFIED ORDER
+     * ---------------------------------------------------------
+     */
+
+    mergedOrder.collection_code =
+      code;
+
+    mergedOrder.collectionCode =
+      code;
+
+    mergedOrder.collection_pin =
+      code;
+
+    mergedOrder.collectionPin =
+      code;
+
+    mergedOrder.orderPin =
+      code;
+
+    mergedOrder.order_pin =
+      code;
+
+    mergedOrder.pickupCode =
+      code;
+
+    mergedOrder.pickup_code =
+      code;
+
+    console.log(
+      "[Juice Robo] PAYMENT FULLY CONFIRMED:",
+      mergedOrder
+    );
+
+    /*
+     * ---------------------------------------------------------
+     * PERSIST SUCCESS BEFORE CHANGING SCREEN
+     * ---------------------------------------------------------
+     */
+
+    try {
+      sessionStorage.setItem(
+        STORAGE.paymentCollectionCode,
+        code
+      );
+
+      sessionStorage.setItem(
+        "juice_robo_payment_confirmed",
+        "1"
+      );
+
+      sessionStorage.setItem(
+        "juice_robo_success_order_id",
+        String(
+          mergedOrder.orderId
+        )
+      );
+
+      sessionStorage.setItem(
+        "juice_robo_success_cart_id",
+        String(
+          mergedOrder.cartId
+        )
+      );
+
+      sessionStorage.setItem(
+        STORAGE.paymentSuccess,
+        JSON.stringify(
+          mergedOrder
+        )
+      );
+
+      /*
+       * Also persist locally so a browser refresh does not lose
+       * the success screen.
+       */
+      writeJSON(
+        STORAGE.paymentSuccess,
+        mergedOrder
+      );
+    } catch (storageError) {
+      console.warn(
+        "[Juice Robo] Success persistence failed:",
+        storageError
+      );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * UPDATE REACT STATE
+     * ---------------------------------------------------------
+     */
+
+    setOrder(
+      mergedOrder
+    );
+
+    setPaymentStatus(
+      "paid"
+    );
+
+    setPaymentMessage(
+      "Payment verified successfully."
+    );
+
+    setHistoryOrders(
+      (current) => [
+        mergedOrder,
+        ...current.filter(
+          (item) =>
+            String(
+              item?.id ||
+                item?.orderId ||
+                item?.order_id ||
+                ""
+            ) !==
+            String(
+              mergedOrder.id ||
+                mergedOrder.orderId ||
+                ""
+            )
+        ),
+      ]
+    );
+
+    /*
+     * ---------------------------------------------------------
+     * REMOVE PENDING PAYMENT SESSION
+     * ---------------------------------------------------------
+     */
+
+    try {
+      sessionStorage.removeItem(
+        "juice_robo_payment_session"
+      );
+
+      sessionStorage.removeItem(
+        "juice_robo_pending_order_id"
+      );
+
+      sessionStorage.removeItem(
+        "juice_robo_pending_transaction_id"
+      );
+
+      sessionStorage.removeItem(
+        "juice_robo_pending_upi_url"
+      );
+
+      sessionStorage.removeItem(
+        "juice_robo_pending_upi_id"
+      );
+    } catch {
+      // Ignore storage errors.
+    }
+
+    setPaymentSession(
+      null
+    );
+
+    paymentPollStarted.current =
+      false;
+
+    /*
+     * ---------------------------------------------------------
+     * PAYMENT SUCCESS
+     * ---------------------------------------------------------
+     */
+
+    setCart([]);
+
+    /*
+     * IMPORTANT:
+     * Persist the screen BEFORE navigating.
+     */
+    try {
+      localStorage.setItem(
+        STORAGE.screen,
+        "payment-success"
+      );
+    } catch {
+      // Ignore storage errors.
+    }
+
+    setScreen(
+      "payment-success"
+    );
+
+    showToast(
+      "Payment successful."
+    );
+
+    return true;
+  } catch (verificationError) {
+    console.error(
+      "[Juice Robo] Payment verification failed:",
+      verificationError
+    );
+
+    setPaymentStatus(
+      "pending"
+    );
+
+    setPaymentMessage(
+      "We could not verify the payment yet. Returning to this screen will retry automatically."
+    );
+
+    if (!silent) {
+      showToast(
+        errorText(
+          verificationError
+        ) ||
+          "Payment verification failed."
+      );
+    }
+
+    return false;
+  } finally {
+    paymentVerifyInFlight.current =
+      false;
+  }
+}
   async function handlePayment() {
     if (paymentSession) {
       await verifyPendingPayment();
@@ -4202,20 +4735,44 @@ useEffect(() => {
       );
 
       /*
-       * Create the Juice Robo order first. This is order creation,
-       * not payment confirmation.
-       */
-      const created =
-        await api.createOrder({
-          storeId:
-            selectedLocation?.storeId ||
-            selectedLocation?.id,
-          locationId:
-            selectedLocation?.id,
-          machineId:
-            selectedMachine?.id,
-          cartItems: safeCart,
-        });
+      * Create the Juice Robo order first. This is order creation,
+      * not payment confirmation.
+      */
+      const created = await api.createOrder({
+        storeId:
+          selectedLocation?.storeId ||
+          selectedLocation?.id,
+
+        /*
+         * Only a real UUID is allowed here. If the selected outlet
+         * snapshot does not contain it, api.createOrder()/api.addCart()
+         * resolves it from authoritative backend data.
+         *
+         * Never use storeId (for example 200) as locId.
+         */
+        locId: [
+          selectedLocation?.locId,
+          selectedLocation?.locationId,
+          selectedLocation?.location_id,
+          selectedLocation?.locationUuid,
+          selectedLocation?.uuid,
+        ]
+          .map((value) => String(value ?? "").trim())
+          .find((value) =>
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+          ) || "",
+
+        location:
+          selectedLocation,
+
+        locationId:
+          selectedLocation?.id,
+
+        machineId:
+          selectedMachine?.id,
+
+        cartItems: safeCart,
+      });
 
       if (!created) {
         throw new Error(
@@ -4229,10 +4786,21 @@ useEffect(() => {
 
       const orderId = String(
         created?.orderId ||
-          created?.id ||
           created?.order_id ||
+          created?.orderID ||
+          created?.id ||
           created?.orderNumber ||
           created?.order_number ||
+          created?.rawOrderResponse?.data?.orderId ||
+          created?.rawOrderResponse?.data?.order_id ||
+          (
+            typeof api.extractOrderId === "function"
+              ? api.extractOrderId(
+                  created?.rawOrderResponse ||
+                    created
+                )
+              : ""
+          ) ||
           ""
       ).trim();
 
@@ -4281,6 +4849,19 @@ useEffect(() => {
         throw new Error(
           "Juice Robo payment details are unavailable."
         );
+      }
+
+      try {
+        localStorage.setItem(
+          "juice_robo_backend_cart_id",
+          cartId
+        );
+        localStorage.setItem(
+          "juice_robo_order_id",
+          orderId
+        );
+      } catch {
+        // Ignore storage errors.
       }
 
       const session = {
@@ -4351,20 +4932,72 @@ useEffect(() => {
         }
       );
 
-      setBusy(false);
+      console.log(
+        "[Juice Robo] UPI PAYMENT READY:",
+        {
+          cartId,
+          orderId,
+          amount: Number(finalTotal).toFixed(2),
+          source: Boolean(
+            normalizeUpiPaymentUrl(
+              backendQrString
+            )
+          )
+            ? "BACKEND"
+            : "CONFIGURED UPI ID",
+          upiUrl,
+        }
+      );
 
       /*
-       * IMPORTANT:
-       * Do NOT automatically launch the UPI URI here.
-       * handlePayment() has awaited the order API, so the original
-       * user gesture is no longer available on iOS. Launching here
-       * can cause Safari/iOS to block or incorrectly route the URI.
+       * =========================================================
+       * OLD JUICE ROBO BEHAVIOUR — STANDARD UPI INTENT
+       * =========================================================
        *
-       * The UPI PAYMENT screen now owns the launch. The user taps
-       * "OPEN UPI APP" there, and that synchronous click calls
-       * launchUpiPayment(), allowing Android/iOS to select the
+       * The old website navigates to the backend-generated
+       * upi://pay?... URI. Android can then hand the URI to the
        * installed/default UPI application.
+       *
+       * The payment session has already been persisted above,
+       * BEFORE leaving the browser, so returning from the UPI app
+       * can resume verification safely.
+       *
+       * iOS is handled separately because Safari may block or route
+       * a generic upi:// URI unpredictably. We therefore show the
+       * explicit UPI-app picker and launch the selected app from
+       * the user's synchronous tap.
+       *
+       * IMPORTANT:
+       * Launching the UPI URI is NEVER treated as payment success.
+       * The backend orderStatus() check remains mandatory.
        */
+      setBusy(false);
+
+      if (isIOSDevice) {
+        setShowUpiAppPicker(true);
+        return;
+      }
+
+      /*
+       * Android / other UPI-capable browsers:
+       * navigate directly to the exact backend-generated UPI URI,
+       * matching the old Juice Robo flow.
+       */
+      const launched =
+        launchUpiPayment(
+          upiUrl
+        );
+
+      if (!launched) {
+        /*
+         * Keep the UPI payment screen visible as a manual fallback
+         * if the browser refuses the navigation.
+         */
+        setScreen("upi-payment");
+        setPaymentMessage(
+          "Tap OPEN UPI APP to continue your payment."
+        );
+      }
     } catch (paymentError) {
       console.error(
         "[Juice Robo] Payment initiation failed:",
@@ -4400,7 +5033,7 @@ useEffect(() => {
   }
 
   /* =======================================================
-     PAYMENT VERIFICATION POLLING
+     PAYMENT VERIFICATION POLLING — 30 MINUTES
      ======================================================= */
 
   useEffect(() => {
@@ -4409,19 +5042,43 @@ useEffect(() => {
       return undefined;
     }
 
-    if (
-      paymentStatus === "paid"
-    ) {
-      return undefined;
-    }
-
     let cancelled = false;
     let timeoutId = null;
     let attempts = 0;
 
-    const maxAttempts = 100;
+    /*
+     * 30 minutes / 3 seconds = 600 backend verification attempts.
+     *
+     * This is intentionally backend-driven. We do not use a local
+     * timer to declare success. The session stops as soon as the
+     * backend confirms payment + returns the 4-digit collection code.
+     */
+    const POLL_INTERVAL_MS = 3000;
+    const MAX_ATTEMPTS = 600;
+
     const poll = async () => {
-      if (cancelled) return;
+      if (cancelled) {
+        return;
+      }
+
+      /*
+       * Re-read the session before every attempt. Once a successful
+       * verification clears the sessionStorage entry, polling will
+       * naturally stop.
+       */
+      const latestSession =
+        readJSON(
+          "juice_robo_payment_session",
+          null
+        );
+
+      if (
+        !latestSession?.cartId ||
+        !latestSession?.orderId
+      ) {
+        paymentPollStarted.current = false;
+        return;
+      }
 
       attempts += 1;
 
@@ -4429,25 +5086,46 @@ useEffect(() => {
         silent: true,
       });
 
-      if (
-        cancelled ||
-        paymentStatus === "paid"
-      ) {
+      if (cancelled) {
         return;
       }
 
-      if (attempts >= maxAttempts) {
+      /*
+       * Successful verification removes the pending payment session.
+       */
+      const remainingSession =
+        readJSON(
+          "juice_robo_payment_session",
+          null
+        );
+
+      if (
+        !remainingSession?.cartId ||
+        !remainingSession?.orderId
+      ) {
+        paymentPollStarted.current = false;
+        return;
+      }
+
+      if (attempts >= MAX_ATTEMPTS) {
         setPaymentStatus("pending");
         setPaymentMessage(
-          "Payment is still awaiting backend confirmation. Please keep this screen open while we verify it."
+          "Payment is still awaiting backend confirmation after 30 minutes. Please check your order history or contact Juice Robo support."
         );
+
+        console.log(
+          "[Juice Robo] 30-minute payment verification window reached."
+        );
+
+        paymentPollStarted.current = false;
         return;
       }
 
-      timeoutId = window.setTimeout(
-        poll,
-        3000
-      );
+      timeoutId =
+        window.setTimeout(
+          poll,
+          POLL_INTERVAL_MS
+        );
     };
 
     if (!paymentPollStarted.current) {
@@ -4455,128 +5133,19 @@ useEffect(() => {
       poll();
     }
 
-    const handleVisibility = () => {
-      if (
-        document.visibilityState ===
-        "visible"
-      ) {
-        verifyPendingPayment({
-          silent: true,
-        });
-      }
-    };
-
-    document.addEventListener(
-      "visibilitychange",
-      handleVisibility
-    );
-
-    window.addEventListener(
-      "focus",
-      handleVisibility
-    );
-
     return () => {
       cancelled = true;
+
       if (timeoutId) {
-        window.clearTimeout(timeoutId);
+        window.clearTimeout(
+          timeoutId
+        );
       }
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisibility
-      );
-      window.removeEventListener(
-        "focus",
-        handleVisibility
-      );
     };
   }, [
     paymentSession,
   ]);
 
-  /* =======================================================
-     MOBILE VIEWPORT
-     ======================================================= */
-
-  const MOBILE_BREAKPOINT = 1024;
-
-  const getMobileViewport = () => {
-    if (typeof window === "undefined") {
-      return true;
-    }
-
-    return window.matchMedia(
-      `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
-    ).matches;
-  };
-
-  const [
-    isMobileViewport,
-    setIsMobileViewport,
-  ] = useState(
-    getMobileViewport
-  );
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return undefined;
-    }
-
-    const mediaQuery =
-      window.matchMedia(
-        `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
-      );
-
-    const handleViewportChange = (event) => {
-      setIsMobileViewport(
-        event.matches
-      );
-    };
-
-    if (
-      typeof mediaQuery.addEventListener ===
-      "function"
-    ) {
-      mediaQuery.addEventListener(
-        "change",
-        handleViewportChange
-      );
-
-      return () => {
-        mediaQuery.removeEventListener(
-          "change",
-          handleViewportChange
-        );
-      };
-    }
-
-    mediaQuery.addListener(
-      handleViewportChange
-    );
-
-    return () => {
-      mediaQuery.removeListener(
-        handleViewportChange
-      );
-    };
-  }, []);
-
-/* =======================================================
-   DESKTOP BLOCK
-   ======================================================= */
-
-if (!isMobileViewport) {
-  return (
-    <div className="jr-desktop-block">
-      <img
-        src={desktopMobileNotice}
-        alt="Mobile Only"
-        className="jr-desktop-notice-image"
-        draggable="false"
-      />
-    </div>
-  );
-}
 
   /* =======================================================
      LOADING / STARTUP ERROR
@@ -4705,21 +5274,7 @@ if (!isMobileViewport) {
             selectMachine
           }
 
-          onCart={() => {
-            if (!loggedIn) {
-              showToast(
-                "Please sign in to view your cart"
-              );
-
-              setScreen(
-                "login"
-              );
-
-              return;
-            }
-
-            openCart();
-          }}
+          onCart={openCart}
 
           onProfile={() => {
             if (!loggedIn) {
@@ -5035,7 +5590,7 @@ if (!isMobileViewport) {
               }
 
               money={
-                money
+                productMoney
               }
             />
           )}
@@ -5165,65 +5720,6 @@ if (!isMobileViewport) {
               }
             />
           )}
-
-          {/* =================================================
-              PAYMENT
-             ================================================= */}
-
-          {screen === "payment" && (
-            <PaymentScreen
-              cart={
-                safeCart
-              }
-
-              total={
-                finalTotal
-              }
-
-              subtotal={
-                subtotal
-              }
-
-              gst={
-                gst
-              }
-
-              finalTotal={
-                finalTotal
-              }
-
-              location={
-                selectedLocation
-              }
-
-              machine={
-                selectedMachine
-              }
-
-              onBack={() =>
-                setScreen(
-                  "location-confirmation"
-                )
-              }
-
-              onPay={
-                handlePayment
-              }
-
-              money={
-                money
-              }
-
-              busy={
-                busy
-              }
-
-              error={
-                error
-              }
-            />
-          )}
-
           {/* =================================================
               UPI PAYMENT
              ================================================= */}
@@ -5960,8 +6456,6 @@ function BottomNav({
   screen,
   setScreen,
   cartCount,
-  loggedIn,
-  onRequireSignIn,
   onCart,
 }) {
   const activeColor =
@@ -6200,11 +6694,6 @@ function BottomNav({
             : ""
         }
         onClick={() => {
-          if (!loggedIn) {
-            onRequireSignIn?.();
-            return;
-          }
-
           if (typeof onCart === "function") {
             onCart();
           } else {

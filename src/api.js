@@ -39,6 +39,61 @@ function clean(value) {
   return String(value).trim().replace(/^"|"$/g, "");
 }
 
+/* ============================================================
+   LOCATION IDENTIFIERS
+   IMPORTANT: storeId and locId are different identifiers.
+   /v1/addcart expects locId as a UUID. Never send a numeric
+   storeId such as 200 in the locId field.
+   ============================================================ */
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clean(value));
+}
+
+function findUuidInObject(source, depth = 0) {
+  if (!source || depth > 6) return "";
+
+  if (typeof source === "string") {
+    const value = clean(source);
+    return isUuid(value) ? value : "";
+  }
+
+  if (Array.isArray(source)) {
+    for (const item of source) {
+      const found = findUuidInObject(item, depth + 1);
+      if (found) return found;
+    }
+    return "";
+  }
+
+  if (typeof source !== "object") return "";
+
+  const preferredKeys = [
+    "locId", "locID", "locationId", "location_id",
+    "locationUUID", "locationUuid", "location_uuid",
+    "outletId", "outlet_id", "outletUUID", "outletUuid",
+    "storeLocationId", "store_location_id",
+    "id", "uuid", "locationUuid"
+  ];
+
+  for (const key of preferredKeys) {
+    const value = clean(source?.[key]);
+    if (isUuid(value)) return value;
+  }
+
+  for (const key of ["location", "outlet", "store", "data", "result", "_legacyOutlet"]) {
+    const found = findUuidInObject(source?.[key], depth + 1);
+    if (found) return found;
+  }
+
+  return "";
+}
+
+function getLocationUuid(source) {
+  return findUuidInObject(source);
+}
+
+
 function readJson(key, fallback = null) {
   try {
     const raw = localStorage.getItem(key);
@@ -235,7 +290,7 @@ async function request(path, options = {}, baseUrl = API_BASE) {
   } catch (error) {
     console.error("[Juice Robo] Network error:", error);
     throw new Error(
-      "Unable to connect to the Juice Robo API. Check the internet connection."
+      "Please check your Internet Connection"
     );
   }
 
@@ -459,22 +514,24 @@ function normalizeProduct(item) {
 function normalizeLocation(outlet, index = 0, parent = null) {
   if (!outlet || typeof outlet !== "object") return null;
 
+  /* Numeric/legacy outlet identifier used for product APIs. */
   const storeId = clean(
     firstDefined(
-      outlet?.locId,
-      outlet?.locID,
-      outlet?.locationId,
-      outlet?.location_id,
       outlet?.storeId,
       outlet?.storeID,
       outlet?.store_id,
-      outlet?.id,
       outlet?.storeCode,
-      outlet?.store_code
+      outlet?.store_code,
+      outlet?.id,
+      outlet?.locId,
+      outlet?.locID
     )
   );
 
   if (!storeId) return null;
+
+  /* UUID required by the order-service cart contract. */
+  const locationUuid = getLocationUuid(outlet) || getLocationUuid(parent);
 
   const name = String(
     firstDefined(
@@ -503,7 +560,10 @@ function normalizeLocation(outlet, index = 0, parent = null) {
     ...outlet,
     id: storeId,
     storeId,
-    locId: firstDefined(outlet?.locId, outlet?.locID, storeId),
+    /* Only expose a value as locId when it is actually a UUID. */
+    locId: locationUuid || "",
+    locationId: locationUuid || firstDefined(outlet?.locationId, outlet?.location_id, ""),
+    locationUuid: locationUuid || "",
     name,
     storeName: firstDefined(outlet?.storeName, name),
     address,
@@ -612,7 +672,119 @@ function normalizeMachines(locationsList) {
    ORDER NORMALIZATION
    ============================================================ */
 
+function parsePossibleJson(value) {
+  if (typeof value !== "string") return value;
+
+  const text = value.trim();
+  if (!text) return value;
+
+  // Backend gateways occasionally serialize `data` as a JSON string.
+  if (
+    (text.startsWith("{") && text.endsWith("}")) ||
+    (text.startsWith("[") && text.endsWith("]"))
+  ) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return value;
+    }
+  }
+
+  return value;
+}
+
+function extractOrderIdDeep(value, depth = 0, seen = new Set()) {
+  if (depth > 10 || value === undefined || value === null) {
+    return "";
+  }
+
+  const parsed = parsePossibleJson(value);
+
+  if (parsed !== value) {
+    return extractOrderIdDeep(parsed, depth + 1, seen);
+  }
+
+  if (
+    typeof value === "string" ||
+    typeof value === "number"
+  ) {
+    return clean(value);
+  }
+
+  if (
+    typeof value !== "object" ||
+    seen.has(value)
+  ) {
+    return "";
+  }
+
+  seen.add(value);
+
+  const preferredKeys = [
+    "orderId",
+    "order_id",
+    "orderID",
+    "OrderId",
+    "OrderID",
+    "orderNumber",
+    "order_number",
+    "orderNo",
+    "order_no",
+    "orderCode",
+    "order_code",
+  ];
+
+  for (const key of preferredKeys) {
+    if (
+      Object.prototype.hasOwnProperty.call(
+        value,
+        key
+      )
+    ) {
+      const candidate = clean(value[key]);
+      if (candidate) return candidate;
+    }
+  }
+
+  for (const key of Object.keys(value)) {
+    const normalizedKey = String(key)
+      .replace(/[ _-]/g, "")
+      .toLowerCase();
+
+    if (
+      normalizedKey === "orderresp" ||
+      normalizedKey === "orderresponse" ||
+      normalizedKey === "orderinfo" ||
+      normalizedKey === "order"
+    ) {
+      const found = extractOrderIdDeep(
+        value[key],
+        depth + 1,
+        seen
+      );
+      if (found) return found;
+    }
+  }
+
+  for (const key of Object.keys(value)) {
+    const found = extractOrderIdDeep(
+      value[key],
+      depth + 1,
+      seen
+    );
+    if (found) return found;
+  }
+
+  return "";
+}
+
 function extractOrderId(value) {
+  const deepOrderId = extractOrderIdDeep(value);
+
+  if (deepOrderId) {
+    return deepOrderId;
+  }
+
   const data = unwrap(value) || {};
 
   if (typeof data === "string" || typeof data === "number") {
@@ -703,7 +875,72 @@ function extractOrderId(value) {
   return visit(data);
 }
 
+function extractCartIdDeep(value, depth = 0, seen = new Set()) {
+  if (depth > 10 || value === undefined || value === null) {
+    return "";
+  }
+
+  const parsed = parsePossibleJson(value);
+
+  if (parsed !== value) {
+    return extractCartIdDeep(parsed, depth + 1, seen);
+  }
+
+  if (
+    typeof value === "string" ||
+    typeof value === "number"
+  ) {
+    return clean(value);
+  }
+
+  if (
+    typeof value !== "object" ||
+    seen.has(value)
+  ) {
+    return "";
+  }
+
+  seen.add(value);
+
+  const preferredKeys = [
+    "cartId",
+    "cart_id",
+    "cartID",
+    "CartId",
+    "cartIdentifier",
+  ];
+
+  for (const key of preferredKeys) {
+    if (
+      Object.prototype.hasOwnProperty.call(
+        value,
+        key
+      )
+    ) {
+      const candidate = clean(value[key]);
+      if (candidate) return candidate;
+    }
+  }
+
+  for (const key of Object.keys(value)) {
+    const found = extractCartIdDeep(
+      value[key],
+      depth + 1,
+      seen
+    );
+    if (found) return found;
+  }
+
+  return "";
+}
+
 function extractCartId(value) {
+  const deepCartId = extractCartIdDeep(value);
+
+  if (deepCartId) {
+    return deepCartId;
+  }
+
   const data = unwrap(value) || {};
   const direct = clean(
     firstDefined(
@@ -1071,11 +1308,33 @@ function buildLegacyOrderPayload(payload = {}) {
     firstDefined(
       payload?.storeId,
       payload?.store_id,
-      payload?.locationId,
-      payload?.location_id,
+      payload?.location?.storeId,
+      payload?.location?.store_id,
       getStoreId()
     )
   );
+
+  /*
+   * IMPORTANT:
+   * locId belongs to the Order Master service and MUST be a UUID.
+   *
+   * Do not validate it by falling back to storeId here. The real
+   * UUID may need to be resolved by api.addCart() from the
+   * authoritative location object or the existing backend cart.
+   *
+   * Keeping this function synchronous also means it cannot perform
+   * an API lookup. Therefore createOrder() delegates the final
+   * UUID resolution to api.addCart().
+   */
+  const suppliedLocId =
+    clean(payload?.locId) ||
+    getLocationUuid(payload?.location) ||
+    clean(localStorage.getItem("juice_robo_location_uuid"));
+
+  const locId =
+    isUuid(suppliedLocId)
+      ? suppliedLocId
+      : "";
 
   if (!storeId) {
     throw new Error("No Juice Robo collection location is selected.");
@@ -1096,6 +1355,7 @@ function buildLegacyOrderPayload(payload = {}) {
   return {
     cartId: String(cartId),
     storeId,
+    locId,
     updatedBy,
     cartItems: buildLegacyCartItems(sourceItems),
   };
@@ -1380,16 +1640,41 @@ export const api = {
   getMachines: async (locationsList) => api.machines(locationsList),
 
   addCart: async (payload = {}) => {
-    const locId = clean(
-      firstDefined(
-        payload?.locId,
-        payload?.locationId,
-        payload?.location_id,
-        payload?.storeId,
-        payload?.store_id,
-        getStoreId()
-      )
-    );
+    /*
+     * /v1/addcart expects locId as java.util.UUID.
+     * NEVER fall back to storeId here. The screenshot error was
+     * caused by sending the numeric store id (for example 200).
+     */
+    let locId =
+      getLocationUuid(payload) ||
+      clean(localStorage.getItem("juice_robo_location_uuid"));
+
+    /*
+     * A previous build could have stored the numeric store ID under
+     * the UUID key. Never trust it.
+     */
+    if (!isUuid(locId)) {
+      locId = "";
+      localStorage.removeItem("juice_robo_location_uuid");
+    }
+
+    /* If the selected location object/cache did not expose the UUID,
+       try the authoritative current backend cart before failing. */
+    if (!locId) {
+      try {
+        const currentCart = await request(
+          "/v1/cart",
+          {},
+          ORDER_API_BASE
+        );
+        locId = getLocationUuid(currentCart);
+        if (locId) {
+          console.log("[Juice Robo] Resolved cart locId UUID from backend cart:", locId);
+        }
+      } catch (cartLookupError) {
+        console.warn("[Juice Robo] Could not resolve locId UUID from current cart:", cartLookupError);
+      }
+    }
 
     const sourceItems = Array.isArray(payload?.cartItems)
       ? payload.cartItems
@@ -1397,14 +1682,37 @@ export const api = {
         ? payload.items
         : [];
 
-    if (!locId) throw new Error("No Juice Robo collection location is selected.");
+    if (!locId) {
+      throw new Error("Juice Robo collection location ID is unavailable. Please refresh and select the collection location again.");
+    }
+    if (!isUuid(locId)) {
+      throw new Error("Invalid Juice Robo collection location ID. A UUID is required.");
+    }
     if (!sourceItems.length) throw new Error("Your Juice Robo cart is empty.");
 
-    const cartId =
-      clean(payload?.cartId) ||
-      clean(localStorage.getItem("juice_robo_backend_cart_id")) ||
-      clean(localStorage.getItem("juice_robo_cart_id")) ||
-      generateUuidV4();
+    /*
+     * /v1/addcart expects cartId as java.util.UUID too.
+     * Older builds could have persisted the numeric store ID (200)
+     * under a cart-id key. Never send that value as cartId.
+     */
+    const suppliedCartId = clean(payload?.cartId);
+    const storedBackendCartId = clean(localStorage.getItem("juice_robo_backend_cart_id"));
+    const storedCartId = clean(localStorage.getItem("juice_robo_cart_id"));
+
+    const cartIdCandidates = [
+      suppliedCartId,
+      storedBackendCartId,
+      storedCartId,
+    ];
+
+    let cartId = cartIdCandidates.find((candidate) => isUuid(candidate)) || "";
+
+    /* Purge legacy numeric/invalid cart IDs so they cannot leak into the request. */
+    if (!cartId) {
+      localStorage.removeItem("juice_robo_backend_cart_id");
+      localStorage.removeItem("juice_robo_cart_id");
+      cartId = generateUuidV4();
+    }
 
     const cartPayload = {
       cartId: String(cartId),
@@ -1424,7 +1732,8 @@ export const api = {
     const returnedCartId = extractCartId(response);
     const finalCartId = returnedCartId || cartId;
 
-    saveStoreId(locId);
+    /* Do not overwrite store_Id with the UUID locId. */
+    localStorage.setItem("juice_robo_location_uuid", String(locId));
     localStorage.setItem("juice_robo_backend_cart_id", String(finalCartId));
     localStorage.setItem("juice_robo_cart_id", String(finalCartId));
 
@@ -1459,118 +1768,489 @@ export const api = {
   },
 
   createOrder: async (payload = {}) => {
-    const legacyPayload = buildLegacyOrderPayload(payload);
+  console.log(
+    "[Juice Robo] createOrder payload:",
+    payload
+  );
 
-    const addCartResponse = await request(
-      "/v1/addcart",
+  const legacyPayload =
+    buildLegacyOrderPayload(payload);
+
+  /*
+   * Never trust legacy cartId values here. Older frontend state can
+   * contain the numeric outlet/store id (for example "200").
+   * api.addCart() is responsible for selecting/creating a valid UUID.
+   */
+  const suppliedCartId = clean(legacyPayload.cartId);
+  const cartId = isUuid(suppliedCartId) ? suppliedCartId : "";
+
+  /*
+   * ==========================================================
+   * 1. ADD CART
+   * ==========================================================
+   */
+
+  /*
+   * ==========================================================
+   * ADD CART THROUGH THE SINGLE UUID-SAFE PATH
+   * ==========================================================
+   *
+   * Do NOT construct /v1/addcart directly here.
+   *
+   * api.addCart() is the single enforcement point for the
+   * Order Master locId contract. It:
+   *   1. accepts a real UUID when the selected location has one
+   *   2. otherwise tries the authoritative existing backend cart
+   *      to recover the UUID
+   *   3. refuses to send numeric store IDs such as "200"
+   *
+   * This removes the old code path that could accidentally send:
+   *     { "locId": "200" }
+   */
+  const addCartPayload = {
+    ...legacyPayload,
+    /* Empty/invalid values are intentionally passed through so
+       api.addCart() can create a UUID instead of ever sending 200. */
+    cartId,
+    cartItems: legacyPayload.cartItems,
+  };
+
+  console.log(
+    "[Juice Robo] ADD CART URL:",
+    `${ORDER_API_BASE}/v1/addcart`
+  );
+
+  console.log(
+    "[Juice Robo] ADD CART payload before UUID resolution:",
+    {
+      cartId,
+      locId:
+        legacyPayload.locId || "[RESOLVE FROM BACKEND]",
+      cartItems:
+        legacyPayload.cartItems.map(
+          (item) => ({
+            variantId:
+              Number(item.variantId),
+            quantity:
+              Number(item.quantity),
+          })
+        ),
+    }
+  );
+
+  const addCartResult =
+    await api.addCart(
+      addCartPayload
+    );
+
+  const addCartResponse =
+    addCartResult?.response ??
+    addCartResult;
+
+  console.log(
+    "[Juice Robo] ADD CART response:",
+    addCartResponse
+  );
+
+  /*
+   * The backend may return the authoritative cart ID.
+   * Use it when available.
+   */
+  /*
+   * api.addCart() returns the authoritative cartId explicitly.
+   * Prefer that value over parsing the raw response because this API
+   * returns the UUID in `data` as a string, while older parsing logic
+   * only looked for object-shaped cartId fields.
+   */
+  const returnedCartId =
+    clean(addCartResult?.cartId) ||
+    extractCartId(addCartResponse);
+
+  const submitCartId =
+    isUuid(returnedCartId)
+      ? returnedCartId
+      : isUuid(cartId)
+        ? cartId
+        : "";
+
+  if (!submitCartId) {
+    throw new Error(
+      "Juice Robo did not return a valid cart ID."
+    );
+  }
+
+  console.log(
+    "[Juice Robo] AUTHORITATIVE CART ID:",
+    submitCartId
+  );
+
+  /*
+   * Save the cart ID so the payment flow can survive
+   * returning from the UPI application.
+   */
+  try {
+    localStorage.setItem(
+      "juice_robo_backend_cart_id",
+      String(submitCartId)
+    );
+
+    localStorage.setItem(
+      "juice_robo_cart_id",
+      String(submitCartId)
+    );
+  } catch {
+    // Ignore storage errors.
+  }
+
+  /*
+   * ==========================================================
+   * 2. SUBMIT ORDER
+   * ==========================================================
+   */
+
+  const submitPayload = {
+    cartId:
+      String(
+        submitCartId
+      ),
+  };
+
+  console.log(
+    "[Juice Robo] ORDER SUBMIT URL:",
+    `${ORDER_API_BASE}/v1/order/submit`
+  );
+
+  console.log(
+    "[Juice Robo] ORDER SUBMIT payload:",
+    submitPayload
+  );
+
+  const submitResponse =
+    await request(
+      "/v1/order/submit",
       {
         method: "POST",
-        body: JSON.stringify({
-          cartId: legacyPayload.cartId,
-          locId: legacyPayload.storeId,
-          cartItems: legacyPayload.cartItems.map((item) => ({
-            variantId: Number(item.variantId),
-            quantity: Number(item.quantity),
-          })),
-        }),
+
+        body:
+          JSON.stringify(
+            submitPayload
+          ),
       },
       ORDER_API_BASE
     );
 
-    const returnedCartId = extractCartId(addCartResponse);
-    const submitCartId = returnedCartId || legacyPayload.cartId;
+  console.log(
+    "[Juice Robo] ORDER SUBMIT raw response:",
+    submitResponse
+  );
 
-    saveStoreId(legacyPayload.storeId);
-    localStorage.setItem("juice_robo_backend_cart_id", String(submitCartId));
-    localStorage.setItem("juice_robo_cart_id", String(submitCartId));
+  /*
+   * ==========================================================
+   * 3. READ THE ACTUAL BACKEND DATA
+   * ==========================================================
+   *
+   * Backend response:
+   *
+   * {
+   *   status: 200,
+   *   message: "...",
+   *   data: {
+   *     orderId: "...",
+   *     cartId: "...",
+   *     transactionId: "...",
+   *     qrString: "..."
+   *   }
+   * }
+   *
+   * IMPORTANT:
+   * Read data.orderId directly first.
+   */
 
-    const submitResponse = await api.submitOrder(submitCartId);
-    const normalized = normalizeOrder(submitResponse);
-    let returnedOrderId = extractOrderId(submitResponse);
-    let recentOrder = null;
+  const submitData =
+    unwrap(
+      submitResponse
+    ) || {};
 
-    if (!returnedOrderId) {
-      try {
-        const recentOrders = await api.orders();
-        const candidates = Array.isArray(recentOrders) ? recentOrders : [];
+  console.log(
+    "[Juice Robo] ORDER SUBMIT data:",
+    submitData
+  );
 
-        const getCandidateCartId = (item) =>
-          clean(
-            firstDefined(
-              item?.cartId,
-              item?.cart_id,
-              item?.cartID,
-              item?.CartId,
-              item?.OrderInfo?.cartId,
-              item?.OrderInfo?.cart_id,
-              item?.order?.cartId,
-              item?.order?.cart_id
+  /*
+   * ==========================================================
+   * 4. EXTRACT ORDER ID
+   * ==========================================================
+   */
+
+  let orderId =
+    clean(
+      firstDefined(
+        /*
+         * Direct backend response
+         */
+        submitResponse?.orderId,
+        submitResponse?.order_id,
+        submitResponse?.orderID,
+
+        /*
+         * Actual OrderResp location
+         */
+        submitResponse?.data?.orderId,
+        submitResponse?.data?.order_id,
+        submitResponse?.data?.orderID,
+
+        /*
+         * Unwrapped response
+         */
+        submitData?.orderId,
+        submitData?.order_id,
+        submitData?.orderID,
+
+        /*
+         * Other known wrappers
+         */
+        submitData?.OrderInfo?.orderId,
+        submitData?.OrderInfo?.order_id,
+
+        submitData?.orderInfo?.orderId,
+        submitData?.orderInfo?.order_id,
+
+        submitData?.order?.orderId,
+        submitData?.order?.order_id,
+
+        /*
+         * Generic extractor as final fallback
+         */
+        extractOrderId(
+          submitResponse
+        )
+      )
+    );
+
+  /*
+   * If the backend serializes data as a JSON string,
+   * parse it once and retry.
+   */
+  if (
+    !orderId &&
+    typeof submitResponse?.data ===
+      "string"
+  ) {
+    try {
+      const parsedData =
+        JSON.parse(
+          submitResponse.data
+        );
+
+      orderId =
+        clean(
+          firstDefined(
+            parsedData?.orderId,
+            parsedData?.order_id,
+            parsedData?.orderID,
+            extractOrderId(
+              parsedData
             )
-          );
+          )
+        );
 
-        recentOrder =
-          candidates.find(
-            (item) =>
-              getCandidateCartId(item) === String(submitCartId)
-          ) ||
-          candidates.find(
-            (item) =>
-              String(item?.transactionId || item?.transaction_id || "") ===
-              String(normalized?.transactionId || normalized?.transaction_id || "")
-          ) ||
-          (candidates.length === 1 ? candidates[0] : null) ||
-          null;
-
-        returnedOrderId = extractOrderId(recentOrder);
-      } catch (error) {
-        console.warn("[Juice Robo] Could not resolve orderId from recent orders:", error);
-      }
+      console.log(
+        "[Juice Robo] Parsed string data orderId:",
+        orderId
+      );
+    } catch {
+      // data was not JSON; ignore.
     }
+  }
 
-    const qrString =
-      findQrString(submitResponse) ||
-      findQrString(addCartResponse) ||
-      findQrString(normalized) ||
-      findQrString(recentOrder);
+  console.log(
+    "[Juice Robo] FINAL ORDER ID:",
+    orderId || "[MISSING]"
+  );
 
-    const mergedOrder = normalizeOrder({
-      ...(recentOrder || {}),
-      ...(normalized || {}),
-      ...(submitResponse || {}),
-    });
+  /*
+   * ==========================================================
+   * 5. EXTRACT CART ID
+   * ==========================================================
+   */
 
-    if (mergedOrder && returnedOrderId) {
-      mergedOrder.orderId = returnedOrderId;
-      mergedOrder.order_id = returnedOrderId;
-      mergedOrder.id = returnedOrderId;
-      mergedOrder.orderNumber = firstDefined(mergedOrder.orderNumber, returnedOrderId);
-      mergedOrder.order_number = firstDefined(mergedOrder.order_number, returnedOrderId);
+  const responseCartId =
+    clean(
+      firstDefined(
+        submitResponse?.cartId,
+        submitResponse?.cart_id,
+
+        submitResponse?.data?.cartId,
+        submitResponse?.data?.cart_id,
+
+        submitData?.cartId,
+        submitData?.cart_id,
+
+        extractCartId(
+          submitResponse
+        ),
+
+        submitCartId
+      )
+    );
+
+  /*
+   * ==========================================================
+   * 6. EXTRACT TRANSACTION ID
+   * ==========================================================
+   */
+
+  const transactionId =
+    clean(
+      firstDefined(
+        submitResponse?.transactionId,
+        submitResponse?.transaction_id,
+
+        submitResponse?.data?.transactionId,
+        submitResponse?.data?.transaction_id,
+
+        submitData?.transactionId,
+        submitData?.transaction_id
+      )
+    );
+
+  /*
+   * ==========================================================
+   * 7. EXTRACT BACKEND QR
+   * ==========================================================
+   */
+
+  const qrString =
+    findQrString(
+      submitResponse
+    ) ||
+    findQrString(
+      submitData
+    );
+
+  console.log(
+    "[Juice Robo] PAYMENT DATA:",
+    {
+      cartId: responseCartId,
+      orderId,
+      transactionId,
+      hasQrString:
+        Boolean(qrString),
     }
+  );
 
-    if (!returnedOrderId) {
-      const diagnostic = {
-        cartId: submitCartId,
-        submitResponse,
-        recentOrder,
-      };
-      console.error("[Juice Robo] Order was submitted but no authoritative orderId was returned/resolved:", diagnostic);
-      const error = new Error(
+  /*
+   * ==========================================================
+   * 8. DO NOT USE CART ID AS ORDER ID
+   * ==========================================================
+   *
+   * The backend status endpoint requires:
+   *
+   * /order/status/{cartId}/{orderId}
+   *
+   * Therefore we must have the real backend orderId.
+   */
+
+  if (!orderId) {
+    const diagnostic = {
+      cartId: responseCartId,
+      submitResponse,
+      submitData,
+    };
+
+    console.error(
+      "[Juice Robo] Backend order was submitted but orderId could not be extracted:",
+      diagnostic
+    );
+
+    const error =
+      new Error(
         "Juice Robo order was created, but the backend did not return the order ID required for payment verification."
       );
-      error.backendResponse = diagnostic;
-      throw error;
-    }
 
-    return {
-      ...(mergedOrder || {}),
-      cartId: String(submitCartId),
+    error.backendResponse =
+      diagnostic;
+
+    throw error;
+  }
+
+  /*
+   * ==========================================================
+   * 9. NORMALIZE ORDER
+   * ==========================================================
+   */
+
+  const normalized =
+    normalizeOrder(
+      submitResponse
+    ) || {};
+
+  const finalOrder = {
+    ...normalized,
+
+    id:
+      String(orderId),
+
+    orderId:
+      String(orderId),
+
+    order_id:
+      String(orderId),
+
+    orderNumber:
+      String(orderId),
+
+    order_number:
+      String(orderId),
+
+    cartId:
+      String(responseCartId),
+
+    cart_id:
+      String(responseCartId),
+
+    transactionId:
+      transactionId,
+
+    transaction_id:
+      transactionId,
+
+    qrString:
+      qrString,
+
+    qr_string:
+      qrString,
+
+    rawCartResponse:
       addCartResponse,
+
+    rawOrderResponse:
       submitResponse,
-      recentOrder,
-      qrString: qrString || "",
-      items: payload?.cartItems || payload?.items || [],
-    };
-  },
+
+    items:
+      payload?.cartItems ||
+      payload?.items ||
+      [],
+
+    total_amount:
+      Number(
+        firstDefined(
+          submitData?.netBill,
+          submitData?.total_amount,
+          submitData?.totalAmount,
+          normalized?.total_amount,
+          0
+        )
+      ),
+  };
+
+  console.log(
+    "[Juice Robo] FINAL CREATED ORDER:",
+    finalOrder
+  );
+
+  return finalOrder;
+},
 
   orders: async (params = {}) => {
     const query = new URLSearchParams();
@@ -1707,6 +2387,10 @@ export {
   normalizeAuth,
   request,
   buildLegacyOrderPayload,
+  extractOrderId,
+  extractCartId,
+  isUuid,
+  getLocationUuid,
 };
 
 export default api;

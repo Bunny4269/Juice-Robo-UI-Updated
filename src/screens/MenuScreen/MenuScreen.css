@@ -1,64 +1,54 @@
 /* =========================================================
    JUICE ROBO — MenuScreen.css
-   FULL RESPONSIVE MENU
+   MODERN RESPONSIVE STOREFRONT & PRODUCT CATALOG
    =========================================================
-   Source of truth:
-   - MenuScreen.jsx
-   - No API data is hardcoded here.
-   - Quantity control:
-       [  −   0   +  ]
-   - Actual JSX class:
-       .jr-product-quantity
-
-   RESPONSIVE BEHAVIOUR
-   --------------------
-   <= 767px
-      Mobile / compact 2-column menu
-
-   768px - 1099px
-      Tablet / small desktop
-      2-column product grid
-
-   1100px - 1299px
-      Desktop
-      3-column product grid
-
-   >= 1300px
-      Content capped at exactly 1300px
-      and centered
-
+   Responsive Breakpoints:
+     < 768px          Mobile single-column layout, comfortable touch targets
+     768px - 1099px   Tablet 2-column product grid
+     1100px - 1399px  Desktop 3-column product grid
+     >= 1400px        Wide desktop 3-column grid inside centered frame
    ========================================================= */
 
-
 /* =========================================================
-   ROOT MENU PAGE
+   PAGE ROOT & DESIGN TOKENS
    ========================================================= */
 
 .jr-menu-page {
-  --jr-green: #2f8050;
-  --jr-green-dark: #236c40;
+  --jr-green: #236c40;
+  --jr-green-hover: #1b5431;
   --jr-green-soft: #edf6eb;
-  --jr-green-pale: #f5faf3;
+  --jr-green-pale: #f4f9f2;
+  --jr-green-accent: #2e8b52;
 
-  --jr-orange: #ed7800;
+  --jr-orange: #e86e00;
+  --jr-orange-soft: #fff3e6;
 
-  --jr-ink: #20251f;
-  --jr-muted: #858b82;
-  --jr-border: #e3e8df;
+  --jr-ink: #161f17;
+  --jr-ink-secondary: #475145;
+  --jr-muted: #737e71;
+  --jr-border: #e2eae0;
+  --jr-border-focus: #236c40;
   --jr-surface: #ffffff;
-  --jr-page: #fbfaf3;
+  --jr-page: #fbfbf7;
+
+  --jr-radius-sm: 8px;
+  --jr-radius-md: 12px;
+  --jr-radius-lg: 16px;
+  --jr-radius-pill: 999px;
+
+  --jr-shadow-sm: 0 2px 6px rgba(20, 44, 24, 0.03);
+  --jr-shadow-card: 0 2px 10px rgba(18, 40, 22, 0.04), 0 1px 3px rgba(18, 40, 22, 0.02);
+  --jr-shadow-hover: 0 8px 22px rgba(18, 40, 22, 0.07), 0 2px 6px rgba(18, 40, 22, 0.03);
 
   width: 100%;
-  max-width: 1300px;
-
+  max-width: 100%;
   min-width: 0;
   min-height: 100%;
-
   margin: 0 auto;
-
   box-sizing: border-box;
 
-  padding: 12px 12px 92px;
+  /* Safe bottom padding ensures floating BottomNav never clips content */
+  padding: 14px 14px 104px;
 
   overflow-x: hidden;
   overflow-y: auto;
@@ -76,7 +66,6 @@
 
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
@@ -85,21 +74,11 @@
   display: none;
 }
 
-
-/* =========================================================
-   GLOBAL BOX SIZING
-   ========================================================= */
-
 .jr-menu-page *,
 .jr-menu-page *::before,
 .jr-menu-page *::after {
   box-sizing: border-box;
 }
-
-
-/* =========================================================
-   BUTTONS / INTERACTION
-   ========================================================= */
 
 .jr-menu-page button,
 .jr-menu-page [role="button"] {
@@ -115,214 +94,165 @@
 
 
 /* =========================================================
-   WELCOME / HERO
+   WELCOME / HERO SECTION
    ========================================================= */
 
 .jr-menu-page .jr-menu-welcome {
   position: relative;
-
   width: 100%;
-  min-height: 123px;
-
   display: flex;
-  align-items: flex-start;
-
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   overflow: hidden;
 
-  margin: 0 0 10px;
-  padding: 16px 14px;
+  margin: 0 0 12px;
+  padding: 18px 16px;
 
-  border-radius: 15px;
+  border: 1px solid rgba(215, 232, 210, 0.7);
+  border-radius: var(--jr-radius-lg);
 
   background:
     linear-gradient(
       135deg,
-      #edf6e8 0%,
-      #f5f4e5 58%,
-      #fff4df 100%
+      #edf6ea 0%,
+      #f7f8ee 56%,
+      #fff5e4 100%
     );
 
+  box-shadow: var(--jr-shadow-sm);
   isolation: isolate;
 }
 
 .jr-menu-page .jr-welcome-copy {
   position: relative;
   z-index: 2;
-
-  width: 70%;
+  flex: 1;
   min-width: 0;
 }
 
 .jr-menu-page .jr-eyebrow {
   display: block;
-
-  margin: 0 0 6px;
-
+  margin: 0 0 5px;
   color: var(--jr-green);
-
-  font-size: 7px;
+  font-size: 11px;
   line-height: 1;
-
-  font-weight: 900;
-  letter-spacing: 0.1em;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 .jr-menu-page .jr-welcome h1 {
   margin: 0;
-
-  color: #172019;
-
-  font-size: 25px;
-  line-height: 0.96;
-
-  font-weight: 950;
-  letter-spacing: -0.055em;
+  color: #141c15;
+  font-size: 23px;
+  line-height: 1.15;
+  font-weight: 850;
+  letter-spacing: -0.035em;
 }
 
 .jr-menu-page .jr-welcome h1 em {
   color: var(--jr-green);
-
   font-style: normal;
 }
 
 .jr-menu-page .jr-welcome p {
-  max-width: 205px;
-
-  margin: 7px 0 0;
-
-  color: #737c72;
-
-  font-size: 7.5px;
-  line-height: 1.35;
-
+  max-width: 360px;
+  margin: 6px 0 0;
+  color: var(--jr-ink-secondary);
+  font-size: 13px;
+  line-height: 1.4;
   font-weight: 500;
 }
 
 .jr-menu-page .jr-welcome-icon {
-  position: absolute;
-  z-index: 1;
-
-  right: 16px;
-  top: 50%;
-
-  width: 43px;
-  height: 43px;
-
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
-
   border-radius: 50%;
-
-  background: rgba(255, 255, 255, 0.78);
-
-  font-size: 22px;
+  background: rgba(255, 255, 255, 0.88);
+  font-size: 24px;
   line-height: 1;
-
-  box-shadow:
-    0 8px 22px rgba(46, 78, 46, 0.06);
-
-  transform: translateY(-50%);
+  box-shadow: 0 4px 14px rgba(35, 75, 40, 0.08);
 }
 
 
 /* =========================================================
-   SELECTED MACHINE
+   SELECTED MACHINE BANNER
    ========================================================= */
 
 .jr-menu-page .jr-selected-machine-banner {
   width: 100%;
-  min-height: 51px;
-
   display: flex;
   align-items: center;
+  gap: 12px;
 
-  gap: 8px;
-
-  margin: 0 0 12px;
-  padding: 7px 9px;
+  margin: 0 0 16px;
+  padding: 11px 13px;
 
   border: 1px solid var(--jr-border);
-  border-radius: 11px;
-
+  border-radius: var(--jr-radius-md);
   background: var(--jr-surface);
-
-  box-shadow:
-    0 3px 10px rgba(28, 58, 34, 0.035);
+  box-shadow: var(--jr-shadow-sm);
 }
 
 .jr-menu-page .jr-selected-machine-icon {
-  width: 31px;
-  height: 31px;
-  min-width: 31px;
-
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   display: grid;
   place-items: center;
-
-  border-radius: 9px;
-
-  background: var(--jr-green-pale);
-
+  border-radius: 10px;
+  background: var(--jr-green-soft);
   color: var(--jr-green);
-
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1;
 }
 
 .jr-menu-page .jr-selected-machine-copy {
   min-width: 0;
   flex: 1;
-
   display: flex;
   flex-direction: column;
-
   gap: 2px;
 }
 
 .jr-menu-page .jr-selected-machine-copy small {
   display: block;
-
-  color: #999e97;
-
-  font-size: 6px;
+  color: var(--jr-muted);
+  font-size: 10px;
   line-height: 1;
-
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .jr-menu-page .jr-selected-machine-copy strong {
   display: block;
-
   overflow: hidden;
-
-  color: #292e29;
-
-  font-size: 9px;
-  line-height: 1.15;
-
-  font-weight: 850;
-
+  color: var(--jr-ink);
+  font-size: 13.5px;
+  line-height: 1.3;
+  font-weight: 800;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .jr-menu-page .jr-selected-machine-copy span {
   display: block;
-
   overflow: hidden;
-
-  color: #8c918b;
-
-  font-size: 6.5px;
-  line-height: 1.1;
-
+  color: var(--jr-ink-secondary);
+  font-size: 12px;
+  line-height: 1.25;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 
 /* =========================================================
-   MENU SECTION
+   MENU SECTION & HEADER
    ========================================================= */
 
 .jr-menu-page .jr-menu-section {
@@ -332,13 +262,10 @@
 
 .jr-menu-page .jr-section-heading {
   width: 100%;
-
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-
-  gap: 8px;
-
+  gap: 10px;
   margin: 0;
 }
 
@@ -348,83 +275,148 @@
 
 .jr-menu-page .jr-section-eyebrow {
   display: block;
-
   margin: 0 0 3px;
-
   color: var(--jr-orange);
-
-  font-size: 6.5px;
+  font-size: 11px;
   line-height: 1;
-
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .jr-menu-page .jr-section-heading h2 {
   margin: 0;
-
-  color: #20251f;
-
-  font-size: 18px;
-  line-height: 1.05;
-
-  font-weight: 900;
-  letter-spacing: -0.035em;
+  color: var(--jr-ink);
+  font-size: 21px;
+  line-height: 1.15;
+  font-weight: 850;
+  letter-spacing: -0.03em;
 }
 
 .jr-menu-page .jr-count {
-  width: 23px;
-  height: 23px;
-  min-width: 23px;
-
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   display: grid;
   place-items: center;
-
-  margin-bottom: 1px;
-
+  margin-bottom: 2px;
   border-radius: 50%;
-
-  background: #eaf5e9;
+  background: var(--jr-green-soft);
   color: var(--jr-green);
-
-  font-size: 8px;
+  font-size: 12.5px;
   line-height: 1;
-
-  font-weight: 900;
+  font-weight: 850;
 }
 
 .jr-menu-page .jr-section-subtitle {
-  margin: 4px 0 8px;
-
-  color: #92978f;
-
-  font-size: 7px;
-  line-height: 1.2;
-
+  margin: 4px 0 12px;
+  color: var(--jr-muted);
+  font-size: 13px;
+  line-height: 1.35;
   font-weight: 500;
 }
 
 
 /* =========================================================
-   PRODUCT GRID
+   CATEGORY / FLAVOR FILTER NAVIGATION
+   ========================================================= */
+
+.jr-menu-page .jr-category-nav {
+  width: 100%;
+  margin: 0 0 14px;
+}
+
+.jr-menu-page .jr-category-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 3px 2px 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.jr-menu-page .jr-category-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.jr-menu-page .jr-category-pill {
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--jr-border);
+  border-radius: var(--jr-radius-pill);
+  background: var(--jr-surface);
+  color: var(--jr-ink-secondary);
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    transform 120ms ease;
+  box-shadow: var(--jr-shadow-sm);
+}
+
+.jr-menu-page .jr-category-pill:hover {
+  background: var(--jr-green-pale);
+  border-color: #cde0cc;
+  color: var(--jr-green);
+}
+
+.jr-menu-page .jr-category-pill:active {
+  transform: scale(0.97);
+}
+
+.jr-menu-page .jr-category-pill.is-active {
+  background: var(--jr-green);
+  border-color: var(--jr-green);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(35, 108, 64, 0.25);
+}
+
+.jr-menu-page .jr-category-pill-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--jr-radius-pill);
+  background: var(--jr-green-soft);
+  color: var(--jr-green);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 800;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.jr-menu-page .jr-category-pill.is-active .jr-category-pill-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   PRODUCT GRID (< 768px Mobile Default)
+   Single-column mobile-friendly layout
    ========================================================= */
 
 .jr-menu-page .jr-products {
   width: 100%;
   min-width: 0;
-
   display: grid;
-
-  /*
-   * Default/mobile:
-   * 2 columns
-   */
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-
-  gap: 8px;
-
-  align-items: start;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  align-items: stretch;
 }
 
 
@@ -435,31 +427,33 @@
 .jr-menu-page .jr-product-card {
   min-width: 0;
   width: 100%;
-
   display: flex;
   flex-direction: column;
-
   overflow: hidden;
 
   border: 1px solid var(--jr-border);
-  border-radius: 11px;
-
+  border-radius: var(--jr-radius-lg);
   background: var(--jr-surface);
-
-  box-shadow:
-    0 3px 11px rgba(25, 53, 30, 0.035);
+  box-shadow: var(--jr-shadow-card);
 
   transition:
-    transform 120ms ease,
-    box-shadow 120ms ease;
+    transform 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 
-.jr-menu-page .jr-product-card:active {
-  transform: translateY(1px);
+.jr-menu-page .jr-product-card:hover {
+  border-color: #cce0cb;
+  box-shadow: var(--jr-shadow-hover);
 }
 
 .jr-menu-page .jr-product-card-in-cart {
-  border-color: #d9e8d8;
+  border-color: #2e8b52;
+  box-shadow: 0 3px 12px rgba(35, 108, 64, 0.12);
+}
+
+.jr-menu-page .jr-product-card-unavailable {
+  opacity: 0.72;
 }
 
 
@@ -469,1494 +463,620 @@
 
 .jr-menu-page .jr-product-image-wrap {
   position: relative;
-
   width: 100%;
-  height: 91px;
-
+  height: 168px;
   display: grid;
   place-items: center;
-
   overflow: hidden;
-
   background:
     linear-gradient(
       180deg,
-      #f4f8ef 0%,
-      #faf9f1 100%
+      #f3f8f0 0%,
+      #fbf9f2 100%
     );
-
   cursor: pointer;
-
   user-select: none;
 }
 
 .jr-menu-page .jr-product-image {
   width: 100%;
   height: 100%;
-
   display: block;
-
   object-fit: cover;
   object-position: center;
-
   background: #f4f8ef;
-
   user-select: none;
   -webkit-user-drag: none;
+  transition: transform 240ms ease;
+}
+
+.jr-menu-page .jr-product-card:hover .jr-product-image {
+  transform: scale(1.03);
 }
 
 .jr-menu-page .jr-product-image-placeholder {
   width: 100%;
   height: 100%;
-
   display: grid;
   place-items: center;
-
   background: #f2f7ee;
-
-  font-size: 34px;
+  font-size: 44px;
   line-height: 1;
 }
 
 
 /* =========================================================
-   FRESH BADGE
+   BADGES (FRESH / SOLD OUT)
    ========================================================= */
 
 .jr-menu-page .jr-fresh-badge {
   position: absolute;
-
-  left: 6px;
-  top: 6px;
-
-  height: 16px;
-
+  left: 10px;
+  top: 10px;
+  height: 22px;
   display: inline-flex;
   align-items: center;
+  gap: 5px;
+  padding: 0 8px;
 
-  gap: 4px;
-
-  padding: 0 6px;
-
-  border: 1px solid #e2eee0;
-  border-radius: 999px;
-
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #dce8da;
+  border-radius: var(--jr-radius-pill);
+  background: rgba(255, 255, 255, 0.94);
   color: var(--jr-green);
 
-  font-size: 5.5px;
+  font-size: 10.5px;
   line-height: 1;
-
-  font-weight: 900;
-  letter-spacing: 0.03em;
-
-  box-shadow:
-    0 2px 7px rgba(20, 50, 25, 0.04);
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 7px rgba(20, 50, 25, 0.06);
+  backdrop-filter: blur(4px);
 }
 
 .jr-menu-page .jr-fresh-badge i {
-  width: 4px;
-  height: 4px;
-
+  width: 5px;
+  height: 5px;
   display: block;
-
   border-radius: 50%;
+  background: #39b54a;
+}
 
-  background: #4aa864;
+.jr-menu-page .jr-fresh-badge.jr-badge-unavailable {
+  background: rgba(255, 243, 243, 0.94);
+  border-color: #fbd5d5;
+  color: #c53030;
 }
 
 
 /* =========================================================
-   PRODUCT INFO
+   PRODUCT INFORMATION
    ========================================================= */
 
 .jr-menu-page .jr-product-info {
   min-width: 0;
-
   display: flex;
   flex-direction: column;
-
   flex: 1;
-
-  padding: 7px 7px 8px;
+  padding: 12px 14px 14px;
 }
 
 .jr-menu-page .jr-product-main {
   min-width: 0;
-
-  min-height: 39px;
-
+  flex: 1;
   cursor: pointer;
 }
 
 .jr-menu-page .jr-product-main h3 {
   margin: 0;
-
-  color: #242924;
-
-  font-size: 10px;
-  line-height: 1.15;
-
-  font-weight: 850;
-
+  color: var(--jr-ink);
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 800;
   overflow: hidden;
-
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-
   line-clamp: 2;
+  transition: color 140ms ease;
+}
+
+.jr-menu-page .jr-product-card:hover .jr-product-main h3 {
+  color: var(--jr-green);
 }
 
 .jr-menu-page .jr-product-main p {
-  margin: 3px 0 0;
-
-  color: #949a92;
-
-  font-size: 6.5px;
-  line-height: 1.15;
-
+  margin: 4px 0 0;
+  color: var(--jr-muted);
+  font-size: 12.5px;
+  line-height: 1.35;
   overflow: hidden;
-
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 
 /* =========================================================
-   PRODUCT BOTTOM ROW
+   PRODUCT BOTTOM ROW (PRICE + QUANTITY)
    ========================================================= */
 
 .jr-menu-page .jr-product-bottom {
   width: 100%;
   min-width: 0;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-
-  gap: 5px;
-
-  margin-top: 4px;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid #f2f6f1;
 }
 
 .jr-menu-page .jr-product-price {
   min-width: 0;
   flex: 1 1 auto;
-
   overflow: hidden;
-
   color: var(--jr-green);
-
-  font-size: 9px;
+  font-size: 17px;
   line-height: 1;
-
-  font-weight: 900;
-
+  font-weight: 850;
+  letter-spacing: -0.02em;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 
 /* =========================================================
-   QUANTITY CONTROL
-   =========================================================
-   Actual JSX class:
-       .jr-product-quantity
-
-   Reference:
-       [  −   0   +  ]
+   QUANTITY CONTROL [  −   0   +  ]
    ========================================================= */
 
 .jr-menu-page .jr-product-quantity {
   flex: 0 0 auto;
-
-  width: 72px;
-  min-width: 72px;
-  height: 29px;
-  min-height: 29px;
+  width: 96px;
+  min-width: 96px;
+  height: 36px;
+  min-height: 36px;
 
   display: grid;
-
-  grid-template-columns:
-    23px
-    minmax(18px, 1fr)
-    23px;
-
+  grid-template-columns: 32px minmax(24px, 1fr) 32px;
   align-items: center;
   justify-items: center;
-
   gap: 0;
-
   padding: 2px;
 
-  border: 1px solid #d9e6d8;
-  border-radius: 999px;
-
+  border: 1px solid #d4e3d1;
+  border-radius: var(--jr-radius-pill);
   background: #f7fbf6;
-
   overflow: hidden;
-
-  box-shadow:
-    inset 0 0 0 1px
-    rgba(255, 255, 255, 0.8);
-
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+  transition: border-color 140ms ease, background-color 140ms ease;
   isolation: isolate;
 }
 
-
-/* =========================================================
-   QUANTITY BUTTONS
-   ========================================================= */
+.jr-menu-page .jr-product-card-in-cart .jr-product-quantity {
+  border-color: #2e8b52;
+  background: #edf6eb;
+}
 
 .jr-menu-page .jr-product-quantity button {
-  width: 23px !important;
-  min-width: 23px !important;
-  max-width: 23px !important;
-
-  height: 23px !important;
-  min-height: 23px !important;
-  max-height: 23px !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
 
   display: grid !important;
   place-items: center !important;
-
   padding: 0 !important;
   margin: 0 !important;
-
   border: 0 !important;
   border-radius: 50% !important;
-
   outline: none !important;
 
   appearance: none !important;
   -webkit-appearance: none !important;
-
   background: transparent !important;
   color: var(--jr-green) !important;
 
   font-family: inherit !important;
-  font-size: 14px !important;
-  line-height: 23px !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
   font-weight: 800 !important;
 
   text-align: center !important;
   text-indent: 0 !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
-
   box-shadow: none !important;
-
   cursor: pointer;
-
   touch-action: manipulation;
+  transition: background-color 120ms ease, transform 100ms ease;
 }
-
-
-/* =========================================================
-   PLUS BUTTON
-   ========================================================= */
 
 .jr-menu-page .jr-product-quantity .jr-quantity-plus {
-  background: #e5f1e4 !important;
-  color: #2f8050 !important;
+  background: #e2f1e0 !important;
+  color: var(--jr-green) !important;
 }
-
-
-/* =========================================================
-   MINUS BUTTON
-   ========================================================= */
 
 .jr-menu-page .jr-product-quantity .jr-quantity-minus {
   background: transparent !important;
-  color: #2f8050 !important;
+  color: var(--jr-green) !important;
 }
 
-
-/* =========================================================
-   DISABLED QUANTITY BUTTONS
-   ========================================================= */
-
-.jr-menu-page
-.jr-product-quantity
-.jr-quantity-minus:disabled {
-  color: #aab5aa !important;
-  opacity: 0.7 !important;
+.jr-menu-page .jr-product-quantity .jr-quantity-minus:disabled {
+  color: #b1bdb0 !important;
+  opacity: 0.55 !important;
   cursor: not-allowed;
 }
 
-.jr-menu-page
-.jr-product-quantity
-.jr-quantity-plus:disabled {
-  color: #aab5aa !important;
-  background: #eef3ec !important;
-  opacity: 0.7 !important;
+.jr-menu-page .jr-product-quantity .jr-quantity-plus:disabled {
+  color: #b1bdb0 !important;
+  background: #edf3ec !important;
+  opacity: 0.55 !important;
   cursor: not-allowed;
 }
-
-
-/* =========================================================
-   QUANTITY HOVER
-   ========================================================= */
 
 @media (hover: hover) {
-  .jr-menu-page
-  .jr-product-quantity
-  .jr-quantity-minus:hover:not(:disabled) {
-    background: #edf6eb !important;
+  .jr-menu-page .jr-product-quantity .jr-quantity-minus:hover:not(:disabled) {
+    background: #eaf4e8 !important;
   }
 
-  .jr-menu-page
-  .jr-product-quantity
-  .jr-quantity-plus:hover:not(:disabled) {
-    background: #dcefdc !important;
+  .jr-menu-page .jr-product-quantity .jr-quantity-plus:hover:not(:disabled) {
+    background: #d4ebd2 !important;
+    transform: scale(1.06);
   }
 }
 
-
-/* =========================================================
-   QUANTITY PRESS
-   ========================================================= */
-
-.jr-menu-page
-.jr-product-quantity
-button:active:not(:disabled) {
+.jr-menu-page .jr-product-quantity button:active:not(:disabled) {
   transform: scale(0.9);
 }
-
-
-/* =========================================================
-   QUANTITY NUMBER
-   ========================================================= */
 
 .jr-menu-page .jr-product-quantity > strong {
   width: 100%;
   min-width: 0;
-
-  height: 23px;
-
+  height: 32px;
   display: grid;
   place-items: center;
-
   padding: 0;
   margin: 0;
 
-  color: #2b322b;
-
+  color: #1a221b;
   font-family: inherit;
-  font-size: 10px;
-  line-height: 23px;
-
+  font-size: 14px;
+  line-height: 1;
   font-weight: 850;
-
   text-align: center;
-
   font-variant-numeric: tabular-nums;
-
   user-select: none;
 }
 
-
-/* =========================================================
-   REMOVE GLOBAL PSEUDO ELEMENTS
-   ========================================================= */
-
-.jr-menu-page
-.jr-product-quantity
-button::before,
-.jr-menu-page
-.jr-product-quantity
-button::after {
+.jr-menu-page .jr-product-quantity button::before,
+.jr-menu-page .jr-product-quantity button::after {
   display: none !important;
   content: none !important;
 }
 
 
 /* =========================================================
-   EMPTY PRODUCTS
+   EMPTY STATE
    ========================================================= */
 
 .jr-menu-page .jr-products-empty {
   grid-column: 1 / -1;
-
   width: 100%;
-  min-height: 105px;
-
+  min-height: 140px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 32px 18px;
 
-  padding: 15px;
-
-  border: 1px dashed #d9e1d6;
-  border-radius: 12px;
-
-  background: #f8faf6;
-
+  border: 1.5px dashed #d5e2d2;
+  border-radius: var(--jr-radius-lg);
+  background: #f9fbf8;
   text-align: center;
+  gap: 6px;
 }
 
 .jr-menu-page .jr-products-empty > span {
-  margin-bottom: 6px;
-
-  font-size: 25px;
+  font-size: 32px;
   line-height: 1;
 }
 
 .jr-menu-page .jr-products-empty strong {
-  color: #303730;
-
-  font-size: 10px;
+  color: #212921;
+  font-size: 15px;
   line-height: 1.2;
-
-  font-weight: 850;
+  font-weight: 800;
 }
 
 .jr-menu-page .jr-products-empty p {
-  max-width: 235px;
+  max-width: 280px;
+  margin: 2px 0 0;
+  color: var(--jr-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
 
-  margin: 4px 0 0;
+.jr-menu-page .jr-category-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 16px;
+  margin-top: 8px;
+  border: none;
+  border-radius: var(--jr-radius-pill);
+  background: var(--jr-green);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 140ms ease, transform 120ms ease;
+}
 
-  color: #92988f;
+.jr-menu-page .jr-category-reset-btn:hover {
+  background: var(--jr-green-hover);
+}
 
-  font-size: 7px;
-  line-height: 1.35;
+.jr-menu-page .jr-category-reset-btn:active {
+  transform: scale(0.97);
 }
 
 
 /* =========================================================
    =========================================================
-   TABLET
-   768px - 1099px
+   TABLET RESPONSIVE BREAKPOINT
+   768px - 1099px: 2-column product grid
    =========================================================
    ========================================================= */
 
 @media (min-width: 768px) and (max-width: 1099px) {
 
   .jr-menu-page {
-    width: 100%;
-    max-width: 1022px;
-
-    padding:
-      16px
-      16px
-      100px;
+    padding: 18px 20px 108px;
   }
-
-
-  /* ---------------------------------------------------------
-     HERO
-     --------------------------------------------------------- */
 
   .jr-menu-page .jr-menu-welcome {
-    min-height: 145px;
-
-    margin-bottom: 13px;
-
-    padding: 20px 20px;
-
-    border-radius: 17px;
-  }
-
-  .jr-menu-page .jr-welcome-copy {
-    width: 72%;
+    padding: 22px 22px;
   }
 
   .jr-menu-page .jr-eyebrow {
-    margin-bottom: 8px;
-
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .jr-menu-page .jr-welcome h1 {
-    font-size: 31px;
+    font-size: 28px;
   }
 
   .jr-menu-page .jr-welcome p {
-    max-width: 300px;
-
-    margin-top: 9px;
-
-    font-size: 9px;
+    font-size: 14px;
+    max-width: 440px;
   }
 
   .jr-menu-page .jr-welcome-icon {
-    right: 24px;
-
-    width: 50px;
-    height: 50px;
-
-    font-size: 25px;
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
   }
 
-
-  /* ---------------------------------------------------------
-     MACHINE
-     --------------------------------------------------------- */
-
   .jr-menu-page .jr-selected-machine-banner {
-    min-height: 60px;
-
-    gap: 11px;
-
-    margin-bottom: 16px;
-
-    padding: 9px 12px;
-
-    border-radius: 13px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
   }
 
   .jr-menu-page .jr-selected-machine-icon {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-
-    border-radius: 10px;
-
-    font-size: 16px;
-  }
-
-  .jr-menu-page .jr-selected-machine-copy {
-    gap: 3px;
-  }
-
-  .jr-menu-page .jr-selected-machine-copy small {
-    font-size: 7px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 18px;
   }
 
   .jr-menu-page .jr-selected-machine-copy strong {
-    font-size: 11px;
+    font-size: 14.5px;
   }
 
   .jr-menu-page .jr-selected-machine-copy span {
-    font-size: 7.5px;
-  }
-
-
-  /* ---------------------------------------------------------
-     SECTION
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-section-eyebrow {
-    font-size: 8px;
+    font-size: 12.5px;
   }
 
   .jr-menu-page .jr-section-heading h2 {
-    font-size: 23px;
+    font-size: 24px;
   }
 
   .jr-menu-page .jr-count {
-    width: 29px;
-    height: 29px;
-    min-width: 29px;
-
-    font-size: 10px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    font-size: 13.5px;
   }
 
   .jr-menu-page .jr-section-subtitle {
-    margin-top: 5px;
-    margin-bottom: 11px;
-
-    font-size: 9px;
+    font-size: 13.5px;
+    margin-bottom: 14px;
   }
 
-
-  /* ---------------------------------------------------------
-     PRODUCT GRID
-     --------------------------------------------------------- */
-
+  /* 2-column grid on tablet */
   .jr-menu-page .jr-products {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-
-    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
   }
-
-
-  /* ---------------------------------------------------------
-     PRODUCT CARD
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-product-card {
-    border-radius: 14px;
-  }
-
-
-  /* ---------------------------------------------------------
-     PRODUCT IMAGE
-     --------------------------------------------------------- */
 
   .jr-menu-page .jr-product-image-wrap {
-    height: 180px;
-  }
-
-
-  /* ---------------------------------------------------------
-     FRESH BADGE
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-fresh-badge {
-    left: 9px;
-    top: 9px;
-
-    height: 22px;
-
-    gap: 5px;
-
-    padding: 0 8px;
-
-    font-size: 7px;
-  }
-
-  .jr-menu-page .jr-fresh-badge i {
-    width: 5px;
-    height: 5px;
-  }
-
-
-  /* ---------------------------------------------------------
-     PRODUCT INFO
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-product-info {
-    padding: 12px 12px 13px;
-  }
-
-  .jr-menu-page .jr-product-main {
-    min-height: 52px;
+    height: 175px;
   }
 
   .jr-menu-page .jr-product-main h3 {
-    font-size: 14px;
-  }
-
-  .jr-menu-page .jr-product-main p {
-    margin-top: 5px;
-
-    font-size: 9px;
-  }
-
-
-  /* ---------------------------------------------------------
-     PRODUCT BOTTOM
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-product-bottom {
-    gap: 8px;
-
-    margin-top: 7px;
+    font-size: 16px;
   }
 
   .jr-menu-page .jr-product-price {
-    font-size: 13px;
-  }
-
-
-  /* ---------------------------------------------------------
-     QUANTITY
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-product-quantity {
-    width: 88px;
-    min-width: 88px;
-
-    height: 34px;
-    min-height: 34px;
-
-    grid-template-columns:
-      27px
-      minmax(20px, 1fr)
-      27px;
-  }
-
-  .jr-menu-page .jr-product-quantity button {
-    width: 27px !important;
-    min-width: 27px !important;
-    max-width: 27px !important;
-
-    height: 27px !important;
-    min-height: 27px !important;
-    max-height: 27px !important;
-
-    font-size: 16px !important;
-    line-height: 27px !important;
-  }
-
-  .jr-menu-page .jr-product-quantity > strong {
-    height: 27px;
-
-    font-size: 12px;
-    line-height: 27px;
+    font-size: 18px;
   }
 }
 
 
 /* =========================================================
    =========================================================
-   DESKTOP
-   1100px - 1299px
+   DESKTOP RESPONSIVE BREAKPOINT
+   1100px - 1399px: 3-column product grid
    =========================================================
    ========================================================= */
 
-@media (min-width: 1100px) {
+@media (min-width: 1100px) and (max-width: 1399px) {
 
   .jr-menu-page {
-    width: 100%;
-    max-width: 1300px;
-
-    padding:
-      20px
-      20px
-      105px;
+    padding: 22px 24px 112px;
   }
-
-
-  /* ---------------------------------------------------------
-     HERO
-     --------------------------------------------------------- */
 
   .jr-menu-page .jr-menu-welcome {
-    min-height: 170px;
-
-    margin-bottom: 16px;
-
-    padding: 25px 28px;
-
-    border-radius: 18px;
-  }
-
-  .jr-menu-page .jr-welcome-copy {
-    width: 70%;
+    padding: 26px 28px;
+    margin-bottom: 18px;
   }
 
   .jr-menu-page .jr-eyebrow {
-    margin-bottom: 9px;
-
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .jr-menu-page .jr-welcome h1 {
-    font-size: 38px;
-    line-height: 0.98;
+    font-size: 32px;
   }
 
   .jr-menu-page .jr-welcome p {
-    max-width: 390px;
-
-    margin-top: 11px;
-
-    font-size: 10px;
-    line-height: 1.4;
+    font-size: 14.5px;
+    max-width: 480px;
   }
 
   .jr-menu-page .jr-welcome-icon {
-    right: 34px;
-
     width: 60px;
     height: 60px;
-
-    font-size: 29px;
+    font-size: 30px;
   }
 
-
-  /* ---------------------------------------------------------
-     MACHINE
-     --------------------------------------------------------- */
-
   .jr-menu-page .jr-selected-machine-banner {
-    min-height: 68px;
-
-    gap: 13px;
-
-    margin-bottom: 20px;
-
-    padding: 10px 14px;
-
-    border-radius: 14px;
-
-    box-shadow:
-      0 4px 13px rgba(28, 58, 34, 0.04);
+    padding: 13px 18px;
+    margin-bottom: 22px;
   }
 
   .jr-menu-page .jr-selected-machine-icon {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-
-    border-radius: 11px;
-
-    font-size: 18px;
-  }
-
-  .jr-menu-page .jr-selected-machine-copy {
-    gap: 3px;
-  }
-
-  .jr-menu-page .jr-selected-machine-copy small {
-    font-size: 8px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    font-size: 20px;
   }
 
   .jr-menu-page .jr-selected-machine-copy strong {
-    font-size: 13px;
-  }
-
-  .jr-menu-page .jr-selected-machine-copy span {
-    font-size: 8.5px;
-  }
-
-
-  /* ---------------------------------------------------------
-     SECTION HEADER
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-section-eyebrow {
-    margin-bottom: 5px;
-
-    font-size: 9px;
+    font-size: 15px;
   }
 
   .jr-menu-page .jr-section-heading h2 {
-    font-size: 28px;
-    line-height: 1.05;
+    font-size: 26px;
   }
 
   .jr-menu-page .jr-count {
     width: 34px;
     height: 34px;
     min-width: 34px;
-
-    margin-bottom: 2px;
-
-    font-size: 11px;
+    font-size: 14px;
   }
 
   .jr-menu-page .jr-section-subtitle {
-    margin: 6px 0 14px;
-
-    font-size: 10px;
+    font-size: 14px;
+    margin-bottom: 16px;
   }
 
-
-  /* ---------------------------------------------------------
-     PRODUCT GRID
-     
-     3 equal columns.
-     This is the main desktop expansion.
-     --------------------------------------------------------- */
-
+  /* 3-column grid on desktop */
   .jr-menu-page .jr-products {
-    width: 100%;
-
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
-
-    gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
   }
 
-
-  /* ---------------------------------------------------------
-     PRODUCT CARD
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-product-card {
-    border-radius: 15px;
-
-    box-shadow:
-      0 4px 14px rgba(25, 53, 30, 0.04);
+  .jr-menu-page .jr-product-image-wrap {
+    height: 185px;
   }
 
+  .jr-menu-page .jr-product-main h3 {
+    font-size: 16.5px;
+  }
 
-  /* ---------------------------------------------------------
-     PRODUCT IMAGE
-     --------------------------------------------------------- */
+  .jr-menu-page .jr-product-price {
+    font-size: 18px;
+  }
+}
+
+
+/* =========================================================
+   =========================================================
+   WIDE DESKTOP RESPONSIVE BREAKPOINT
+   >= 1400px: 3-column grid inside centered frame
+   =========================================================
+   ========================================================= */
+
+@media (min-width: 1400px) {
+
+  .jr-menu-page {
+    padding: 24px 28px 116px;
+  }
+
+  .jr-menu-page .jr-menu-welcome {
+    padding: 28px 32px;
+    margin-bottom: 20px;
+  }
+
+  .jr-menu-page .jr-welcome h1 {
+    font-size: 34px;
+  }
+
+  .jr-menu-page .jr-welcome p {
+    font-size: 15px;
+    max-width: 520px;
+  }
+
+  .jr-menu-page .jr-welcome-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 32px;
+  }
+
+  .jr-menu-page .jr-selected-machine-banner {
+    padding: 14px 20px;
+    margin-bottom: 24px;
+  }
+
+  .jr-menu-page .jr-section-heading h2 {
+    font-size: 28px;
+  }
+
+  /* 3-column grid on wide desktop */
+  .jr-menu-page .jr-products {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
 
   .jr-menu-page .jr-product-image-wrap {
     height: 195px;
   }
 
-
-  /* ---------------------------------------------------------
-     FRESH BADGE
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-fresh-badge {
-    left: 11px;
-    top: 11px;
-
-    height: 24px;
-
-    gap: 5px;
-
-    padding: 0 9px;
-
-    font-size: 7.5px;
-  }
-
-  .jr-menu-page .jr-fresh-badge i {
-    width: 5px;
-    height: 5px;
-  }
-
-
-  /* ---------------------------------------------------------
-     PRODUCT INFO
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-product-info {
-    padding: 13px 14px 14px;
-  }
-
-  .jr-menu-page .jr-product-main {
-    min-height: 57px;
-  }
-
   .jr-menu-page .jr-product-main h3 {
-    font-size: 15px;
-    line-height: 1.18;
-  }
-
-  .jr-menu-page .jr-product-main p {
-    margin-top: 5px;
-
-    font-size: 9.5px;
-  }
-
-
-  /* ---------------------------------------------------------
-     PRODUCT BOTTOM
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-product-bottom {
-    gap: 10px;
-
-    margin-top: 8px;
-  }
-
-  .jr-menu-page .jr-product-price {
-    font-size: 14px;
-  }
-
-
-  /* ---------------------------------------------------------
-     QUANTITY CONTROL
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-product-quantity {
-    width: 96px;
-    min-width: 96px;
-
-    height: 38px;
-    min-height: 38px;
-
-    grid-template-columns:
-      30px
-      minmax(22px, 1fr)
-      30px;
-
-    padding: 3px;
-  }
-
-  .jr-menu-page .jr-product-quantity button {
-    width: 30px !important;
-    min-width: 30px !important;
-    max-width: 30px !important;
-
-    height: 30px !important;
-    min-height: 30px !important;
-    max-height: 30px !important;
-
-    font-size: 17px !important;
-    line-height: 30px !important;
-  }
-
-  .jr-menu-page .jr-product-quantity > strong {
-    height: 30px;
-
-    font-size: 13px;
-    line-height: 30px;
-  }
-}
-
-
-/* =========================================================
-   =========================================================
-   LARGE DESKTOP
-   >= 1300px
-   =========================================================
-   ========================================================= */
-
-@media (min-width: 1300px) {
-
-  .jr-menu-page {
-    width: 100%;
-    max-width: 1300px;
-
-    margin-left: auto;
-    margin-right: auto;
-
-    padding:
-      22px
-      22px
-      110px;
-  }
-
-
-  /* ---------------------------------------------------------
-     HERO
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-menu-welcome {
-    min-height: 180px;
-
-    padding: 28px 30px;
-
-    border-radius: 19px;
-  }
-
-  .jr-menu-page .jr-welcome h1 {
-    font-size: 40px;
-  }
-
-  .jr-menu-page .jr-welcome p {
-    max-width: 410px;
-
-    font-size: 10.5px;
-  }
-
-  .jr-menu-page .jr-welcome-icon {
-    right: 38px;
-
-    width: 64px;
-    height: 64px;
-
-    font-size: 31px;
-  }
-
-
-  /* ---------------------------------------------------------
-     MACHINE
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-selected-machine-banner {
-    min-height: 72px;
-
-    margin-bottom: 22px;
-
-    padding:
-      11px
-      15px;
-
-    border-radius: 15px;
-  }
-
-  .jr-menu-page .jr-selected-machine-icon {
-    width: 46px;
-    height: 46px;
-    min-width: 46px;
-  }
-
-
-  /* ---------------------------------------------------------
-     SECTION
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-section-heading h2 {
-    font-size: 30px;
-  }
-
-  .jr-menu-page .jr-section-subtitle {
-    margin-bottom: 15px;
-
-    font-size: 10.5px;
-  }
-
-
-  /* ---------------------------------------------------------
-     PRODUCTS
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-products {
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
-
-    gap: 16px;
-  }
-
-
-  /* ---------------------------------------------------------
-     PRODUCT IMAGE
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-product-image-wrap {
-    height: 205px;
-  }
-
-
-  /* ---------------------------------------------------------
-     PRODUCT INFO
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-product-info {
-    padding:
-      14px
-      15px
-      15px;
-  }
-
-  .jr-menu-page .jr-product-main {
-    min-height: 60px;
-  }
-
-  .jr-menu-page .jr-product-main h3 {
-    font-size: 16px;
-  }
-
-  .jr-menu-page .jr-product-main p {
-    font-size: 10px;
-  }
-
-  .jr-menu-page .jr-product-price {
-    font-size: 15px;
-  }
-
-
-  /* ---------------------------------------------------------
-     QUANTITY
-     --------------------------------------------------------- */
-
-  .jr-menu-page .jr-product-quantity {
-    width: 100px;
-    min-width: 100px;
-
-    height: 40px;
-    min-height: 40px;
-
-    grid-template-columns:
-      31px
-      minmax(22px, 1fr)
-      31px;
-  }
-
-  .jr-menu-page .jr-product-quantity button {
-    width: 31px !important;
-    min-width: 31px !important;
-    max-width: 31px !important;
-
-    height: 31px !important;
-    min-height: 31px !important;
-    max-height: 31px !important;
-
-    font-size: 18px !important;
-    line-height: 31px !important;
-  }
-
-  .jr-menu-page .jr-product-quantity > strong {
-    height: 31px;
-
-    font-size: 13px;
-    line-height: 31px;
-  }
-}
-
-
-/* =========================================================
-   =========================================================
-   SMALL PHONES
-   <= 390px
-   =========================================================
-   ========================================================= */
-
-@media (max-width: 390px) {
-
-  .jr-menu-page {
-    width: 100%;
-    max-width: 100%;
-
-    padding:
-      10px
-      10px
-      92px;
-  }
-
-  .jr-menu-page .jr-menu-welcome {
-    min-height: 119px;
-
-    padding:
-      15px
-      13px;
-  }
-
-  .jr-menu-page .jr-welcome h1 {
-    font-size: 24px;
-  }
-
-  .jr-menu-page .jr-welcome p {
-    max-width: 185px;
-
-    font-size: 7px;
-  }
-
-  .jr-menu-page .jr-welcome-icon {
-    right: 14px;
-
-    width: 40px;
-    height: 40px;
-
-    font-size: 20px;
-  }
-
-  .jr-menu-page .jr-product-image-wrap {
-    height: 86px;
-  }
-
-  .jr-menu-page .jr-product-info {
-    padding:
-      6px
-      6px
-      7px;
-  }
-
-  .jr-menu-page .jr-product-main {
-    min-height: 37px;
-  }
-
-  .jr-menu-page .jr-product-main h3 {
-    font-size: 9.5px;
-  }
-
-  .jr-menu-page .jr-product-main p {
-    font-size: 6px;
-  }
-
-  .jr-menu-page .jr-product-quantity {
-    width: 68px;
-    min-width: 68px;
-
-    height: 28px;
-    min-height: 28px;
-
-    grid-template-columns:
-      22px
-      minmax(16px, 1fr)
-      22px;
-  }
-
-  .jr-menu-page .jr-product-quantity button {
-    width: 22px !important;
-    min-width: 22px !important;
-    max-width: 22px !important;
-
-    height: 22px !important;
-    min-height: 22px !important;
-    max-height: 22px !important;
-
-    font-size: 13px !important;
-    line-height: 22px !important;
-  }
-
-  .jr-menu-page .jr-product-quantity > strong {
-    height: 22px;
-
-    line-height: 22px;
-    font-size: 10px;
-  }
-}
-
-
-/* =========================================================
-   =========================================================
-   VERY SMALL PHONES
-   <= 360px
-   =========================================================
-   ========================================================= */
-
-@media (max-width: 360px) {
-
-  .jr-menu-page {
-    width: 100%;
-    max-width: 100%;
-
-    padding-left: 8px;
-    padding-right: 8px;
-  }
-
-  .jr-menu-page .jr-products {
-    gap: 6px;
-  }
-
-  .jr-menu-page .jr-menu-welcome {
-    min-height: 114px;
-
-    padding:
-      14px
-      12px;
-  }
-
-  .jr-menu-page .jr-welcome h1 {
-    font-size: 22px;
-  }
-
-  .jr-menu-page .jr-welcome p {
-    max-width: 170px;
-
-    font-size: 6.7px;
-  }
-
-  .jr-menu-page .jr-welcome-icon {
-    right: 12px;
-
-    width: 37px;
-    height: 37px;
-
-    font-size: 18px;
-  }
-
-  .jr-menu-page .jr-selected-machine-banner {
-    min-height: 48px;
-
-    padding:
-      6px
-      8px;
-  }
-
-  .jr-menu-page .jr-selected-machine-icon {
-    width: 29px;
-    height: 29px;
-    min-width: 29px;
-  }
-
-  .jr-menu-page .jr-section-heading h2 {
     font-size: 17px;
   }
 
-  .jr-menu-page .jr-product-image-wrap {
-    height: 77px;
-  }
-
-  .jr-menu-page .jr-product-info {
-    padding:
-      6px
-      5px
-      6px;
-  }
-
-  .jr-menu-page .jr-product-main {
-    min-height: 35px;
-  }
-
-  .jr-menu-page .jr-product-main h3 {
-    font-size: 9px;
-  }
-
-  .jr-menu-page .jr-product-main p {
-    font-size: 5.7px;
-  }
-
   .jr-menu-page .jr-product-price {
-    font-size: 8px;
-  }
-
-  .jr-menu-page .jr-product-quantity {
-    width: 64px;
-    min-width: 64px;
-
-    height: 27px;
-    min-height: 27px;
-
-    grid-template-columns:
-      20px
-      minmax(16px, 1fr)
-      20px;
-  }
-
-  .jr-menu-page .jr-product-quantity button {
-    width: 20px !important;
-    min-width: 20px !important;
-    max-width: 20px !important;
-
-    height: 21px !important;
-    min-height: 21px !important;
-    max-height: 21px !important;
-
-    font-size: 12px !important;
-    line-height: 21px !important;
-  }
-
-  .jr-menu-page .jr-product-quantity > strong {
-    height: 21px;
-
-    line-height: 21px;
-    font-size: 9px;
+    font-size: 18.5px;
   }
 }
 
 
 /* =========================================================
-   =========================================================
-   SHORT VIEWPORTS
-   =========================================================
-   ========================================================= */
-
-@media (max-height: 700px) {
-
-  .jr-menu-page {
-    padding-top: 8px;
-  }
-
-  .jr-menu-page .jr-menu-welcome {
-    min-height: 108px;
-
-    margin-bottom: 8px;
-
-    padding-top: 13px;
-    padding-bottom: 13px;
-  }
-
-  .jr-menu-page .jr-selected-machine-banner {
-    margin-bottom: 9px;
-  }
-
-  .jr-menu-page .jr-section-subtitle {
-    margin-bottom: 6px;
-  }
-
-  .jr-menu-page .jr-product-image-wrap {
-    height: 80px;
-  }
-}
-
-
-/* =========================================================
-   SAFE AREA
+   SAFE AREA SUPPORT
    ========================================================= */
 
 @supports (padding: max(0px)) {
-
   .jr-menu-page {
-    padding-left:
-      max(
-        8px,
-        env(safe-area-inset-left, 0px)
-      );
-
-    padding-right:
-      max(
-        8px,
-        env(safe-area-inset-right, 0px)
-      );
-
-    padding-bottom:
-      max(
-        92px,
-        calc(
-          84px +
-          env(
-            safe-area-inset-bottom,
-            0px
-          )
-        )
-      );
+    padding-left: max(14px, env(safe-area-inset-left, 0px));
+    padding-right: max(14px, env(safe-area-inset-right, 0px));
+    padding-bottom: max(104px, calc(90px + env(safe-area-inset-bottom, 0px)));
   }
 }
 
@@ -1966,7 +1086,6 @@ button::after {
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
-
   .jr-menu-page *,
   .jr-menu-page *::before,
   .jr-menu-page *::after {
