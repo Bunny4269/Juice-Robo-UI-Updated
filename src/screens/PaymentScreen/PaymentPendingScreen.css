@@ -1,0 +1,381 @@
+/* =========================================================
+   JUICE ROBO — PAYMENT PENDING SCREEN STYLES
+   Incorporates demo PaymentLoader terminal animation + modern fintech layout
+   ========================================================= */
+
+.jr-payment-pending-page {
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 30px 16px calc(60px + env(safe-area-inset-bottom, 24px));
+  background: #fbfaf4;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1b1e19;
+  -webkit-font-smoothing: antialiased;
+}
+
+.jr-payment-pending-content {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* =========================================================
+   1. DEMO ADAPTED PAYMENT LOADER (TERMINAL + CHIP + WRITELINE)
+   ========================================================= */
+
+.jr-payment-loader-wrapper {
+  width: 100%;
+  padding: 24px 0 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.jr-demo-payment-loader {
+  width: 80px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 0 auto;
+}
+
+.jr-demo-pad {
+  width: 68px;
+  height: 44px;
+  border-radius: 10px;
+  border: 2.5px solid #2e7d32;
+  padding: 6px;
+  box-sizing: border-box;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(46, 125, 50, 0.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.jr-demo-chip {
+  width: 14px;
+  height: 9px;
+  background: #2e7d32;
+  border-radius: 3px;
+  margin-top: 2px;
+  margin-left: 2px;
+}
+
+.jr-demo-line {
+  height: 4px;
+  background: #f59e0b;
+  border-radius: 100px;
+  opacity: 0;
+  margin-left: 2px;
+}
+
+.jr-demo-line.line1 {
+  width: 48px;
+  animation: jrWriteLine 2.8s infinite ease-in;
+}
+
+.jr-demo-line.line2 {
+  width: 32px;
+  animation: jrWriteLine2 2.8s 0.4s infinite ease-in;
+}
+
+@keyframes jrWriteLine {
+  0% { width: 0px; opacity: 0; }
+  33% { width: 48px; opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes jrWriteLine2 {
+  0% { width: 0px; opacity: 0; }
+  33% { width: 32px; opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Pulsing radar rings behind loader */
+.jr-pending-radar-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: rgba(46, 125, 50, 0.07);
+  animation: jrPendingRadar 2.2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes jrPendingRadar {
+  0% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.8; }
+  60% { transform: translate(-50%, -50%) scale(1.25); opacity: 0.15; }
+  100% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; }
+}
+
+/* =========================================================
+   2. HERO STATUS & TYPOGRAPHY
+   ========================================================= */
+
+.jr-payment-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.jr-payment-pending-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  animation: jrPendingDotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes jrPendingDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.8); }
+}
+
+.jr-payment-pending-title {
+  margin: 0;
+  color: #1b1e19;
+  font-size: 26px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  text-align: center;
+}
+
+.jr-payment-pending-message {
+  max-width: 380px;
+  margin: 0;
+  color: #555852;
+  font-size: 13.5px;
+  line-height: 1.55;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* =========================================================
+   3. ORDER DETAILS CARD
+   ========================================================= */
+
+.jr-payment-pending-card {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.jr-pending-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.jr-pending-card-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.jr-pending-card-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1f2937;
+  text-align: right;
+}
+
+.jr-pending-card-amount {
+  font-size: 24px;
+  font-weight: 900;
+  color: #1b5e20;
+}
+
+.jr-pending-order-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  font-family: "JetBrains Mono", monospace, inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.jr-pending-notice-box {
+  background: #fdfaf0;
+  border: 1px solid #fef3c7;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.jr-pending-notice-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.jr-pending-notice-text {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #78350f;
+  margin: 0;
+}
+
+/* =========================================================
+   4. ACTION BUTTONS
+   ========================================================= */
+
+.jr-payment-pending-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.jr-pending-check-btn {
+  width: 100%;
+  min-height: 52px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.25);
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.jr-pending-check-btn:active {
+  transform: scale(0.98);
+}
+
+.jr-pending-check-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.jr-pending-cancel-btn {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #4b5563;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.jr-pending-reopen-btn {
+  width: 100%;
+  min-height: 52px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 14px;
+  background: #5f259f;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(95, 37, 159, 0.28);
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.jr-pending-reopen-btn:active {
+  transform: scale(0.98);
+}
+
+.jr-pending-simulate-btn {
+  width: 100%;
+  min-height: 42px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: 1.5px dashed #43a047;
+  border-radius: 12px;
+  background: #f1f8e9;
+  color: #2e7d32;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.jr-pending-simulate-btn:active {
+  background: #e8f5e9;
+}
+
+.jr-pending-cancel-btn:active {
+  background: #f9fafb;
+}
+
+/* Small phones */
+@media screen and (max-width: 380px) {
+  .jr-payment-pending-title {
+    font-size: 22px;
+  }
+}

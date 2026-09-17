@@ -1,0 +1,190 @@
+/* =========================================================
+   JUICE ROBO — PAYMENT FAILED SCREEN STYLES
+   Matches demo PaymentStatus failure UI (_failed border, times-circle)
+   ========================================================= */
+
+.jr-payment-failed-page {
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 30px 16px calc(60px + env(safe-area-inset-bottom, 24px));
+  background: #fbfaf4;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1b1e19;
+  -webkit-font-smoothing: antialiased;
+}
+
+.jr-payment-failed-content {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* =========================================================
+   1. DEMO ADAPTED FAILED STATUS BOX (_success _failed)
+   ========================================================= */
+
+.jr-demo-failed-box {
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #fee2e2;
+  border-bottom: 4px solid #dc2626 !important;
+  box-shadow: 0 15px 30px rgba(220, 38, 38, 0.08);
+  padding: 36px 24px 28px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.jr-demo-failed-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #dc2626;
+  display: grid;
+  place-items: center;
+  font-size: 36px;
+  margin-bottom: 4px;
+}
+
+.jr-demo-failed-title {
+  margin: 0;
+  color: #111827;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.jr-demo-failed-subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+.jr-failed-reason-pill {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* =========================================================
+   2. ORDER SUMMARY CONTEXT
+   ========================================================= */
+
+.jr-failed-order-summary {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jr-failed-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.jr-failed-summary-label {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.jr-failed-summary-value {
+  color: #111827;
+  font-weight: 800;
+}
+
+/* =========================================================
+   3. ACTION BUTTONS (TRY AGAIN & BACK TO CART)
+   ========================================================= */
+
+.jr-failed-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.jr-failed-try-again-btn {
+  width: 100%;
+  min-height: 52px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(46, 125, 50, 0.28);
+  transition: transform 0.12s ease;
+}
+
+.jr-failed-try-again-btn:active {
+  transform: scale(0.98);
+}
+
+.jr-failed-back-cart-btn {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #374151;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: background 0.12s ease;
+}
+
+.jr-failed-back-cart-btn:active {
+  background: #f9fafb;
+}
+
+.jr-failed-help-text {
+  font-size: 11.5px;
+  color: #9ca3af;
+  text-align: center;
+  line-height: 1.45;
+  margin: 4px 0 0;
+}

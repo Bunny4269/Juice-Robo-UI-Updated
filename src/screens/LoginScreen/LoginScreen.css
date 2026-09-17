@@ -1166,6 +1166,217 @@
 
 
 /* =========================================================
+   CONNECTED OUTLET BADGE & RESCAN BUTTON
+   ========================================================= */
+
+.jr-login-outlet-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(47, 128, 80, 0.1);
+  border: 1px solid rgba(47, 128, 80, 0.25);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #1e5a38;
+  margin-bottom: 12px;
+}
+
+.jr-login-outlet-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2f8050;
+  box-shadow: 0 0 0 3px rgba(47, 128, 80, 0.2);
+}
+
+.jr-login-rescan-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  background: transparent;
+  border: 1.5px dashed #c0cbd6;
+  border-radius: 12px;
+  color: #52636f;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.jr-login-rescan-btn:hover {
+  background: #f0f4f8;
+  border-color: #92a4b5;
+  color: #2b3942;
+}
+
+/* =========================================================
+   LOGIN MODAL / OVERLAY (IN-PLACE DIALOG OVER CART)
+   ========================================================= */
+
+.jr-login-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(12, 22, 16, 0.68);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: jrModalFadeIn 0.22s ease-out;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.jr-login-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  max-height: calc(100dvh - 32px);
+  background: #f8f9ef;
+  border-radius: 24px;
+  box-shadow:
+    0 24px 48px -12px rgba(10, 30, 20, 0.38),
+    0 4px 16px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: jrModalSlideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: auto;
+}
+
+.jr-login-modal-inner {
+  position: relative;
+  width: 100%;
+  padding: 24px 20px 22px;
+  box-sizing: border-box;
+}
+
+.jr-login-modal-inner .jr-login-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.jr-login-modal-inner .jr-login-logo-container {
+  margin-bottom: 12px;
+}
+
+.jr-login-modal-inner .jr-login-logo-image {
+  width: 140px;
+  height: auto;
+}
+
+.jr-login-modal-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  color: #4a5d52;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: background 0.18s ease, color 0.18s ease, transform 0.15s ease;
+  z-index: 10;
+}
+
+.jr-login-modal-close-btn:hover {
+  background: #edf2ee;
+  color: #0d2c20;
+  transform: scale(1.06);
+}
+
+.jr-login-modal-close-btn:active {
+  transform: scale(0.96);
+}
+
+.jr-login-copy--modal {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.jr-login-copy--modal .jr-login-eyebrow {
+  margin-bottom: 4px;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+}
+
+.jr-login-copy--modal h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0d2c20;
+  margin: 0 0 6px 0;
+  line-height: 1.2;
+}
+
+.jr-login-copy--modal p {
+  font-size: 13px;
+  color: #55695d;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.jr-login-modal-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  background: transparent;
+  border: 1.5px solid #c9d5cc;
+  border-radius: 12px;
+  color: #4e6356;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.jr-login-modal-cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: #9cb1a2;
+  color: #1a3023;
+}
+
+.jr-login-modal-cancel-btn:active {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+@keyframes jrModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes jrModalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================================
    REDUCED MOTION
    ========================================================= */
 
@@ -1173,7 +1384,11 @@
   .jr-login-field input,
   .jr-login-button,
   .jr-continue-without-login,
-  .jr-login-password-toggle {
+  .jr-login-password-toggle,
+  .jr-login-rescan-btn,
+  .jr-login-modal-overlay,
+  .jr-login-modal-card {
     transition: none;
+    animation: none;
   }
 }

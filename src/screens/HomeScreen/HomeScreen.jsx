@@ -15,6 +15,7 @@ export default function HomeScreen({
   selectedLocation,
   selectedMachine,
   onProduct,
+  onScanQR,
   productImage,
   displayProductName,
   displayDescription,
@@ -112,6 +113,51 @@ export default function HomeScreen({
 
       </section>
 
+      {/* =================================================
+          QR CODE SCANNER CARD (TASK 3)
+         ================================================= */}
+
+      {onScanQR && (
+        <section
+          className="jr-qr-order-card"
+          onClick={onScanQR}
+          role="button"
+          tabIndex={0}
+          aria-label="Scan Machine QR to Order"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onScanQR();
+            }
+          }}
+        >
+          <div className="jr-qr-order-card-icon" aria-hidden="true">
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 9V5C3 3.89543 3.89543 3 5 3H9M15 3H19C20.1046 3 21 3.89543 21 5V9M21 15V19C21 20.1046 20.1046 21 19 21H15M9 21H5C3.89543 21 3 20.1046 3 19V15M7 7H10V10H7V7ZM14 7H17V10H14V7ZM7 14H10V17H7V14ZM14 14H17V17H14V14Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+          <div className="jr-qr-order-card-content">
+            <small>INSTANT ORDER</small>
+            <strong>Scan Machine QR Code</strong>
+            <span>Point camera at machine screen to order</span>
+          </div>
+          <span className="jr-qr-order-card-arrow" aria-hidden="true">
+            →
+          </span>
+        </section>
+      )}
 
       {/* =================================================
           AVAILABLE JUICES

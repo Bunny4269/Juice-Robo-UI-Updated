@@ -14,7 +14,13 @@ import ProductDetailScreen from "./screens/ProductDetailScreen/ProductDetailScre
 import ConfirmationScreen from "./screens/ConfirmationScreen/ConfirmationScreen";
 import HistoryScreen from "./screens/HistoryScreen/HistoryScreen";
 import ProfileScreen from "./screens/ProfileScreen/ProfileScreen";
+import PaymentScreen from "./screens/PaymentScreen/PaymentScreen";
 import PaymentSuccessScreen from "./screens/PaymentSuccessScreen/PaymentSuccessScreen";
+import PaymentPendingScreen from "./screens/PaymentScreen/PaymentPendingScreen";
+import PaymentFailedScreen from "./screens/PaymentScreen/PaymentFailedScreen";
+import CheckoutScreen from "./screens/CheckoutScreen/CheckoutScreen";
+import ScannerScreen from "./screens/ScannerScreen/ScannerScreen";
+import "./screens/PaymentScreen/UpiPaymentScreen.css";
 
 const ASSET_BASE =
   `${import.meta.env.BASE_URL}assets/`;
@@ -36,6 +42,7 @@ const STORAGE = {
   customer: "juice_robo_customer",
   location: "juice_robo_location",
   machine: "juice_robo_machine",
+  locationConfirmed: "juice_robo_location_confirmed",
   orders: "juice_robo_orders",
   screen: "juice_robo_current_screen",
 
@@ -57,6 +64,104 @@ const EMPTY_CUSTOMER = {
   password: "",
   confirmPassword: "",
 };
+
+function clean(value) {
+  return String(value ?? "").trim();
+}
+
+function firstDefined(...values) {
+  return values.find(
+    (value) =>
+      value !== undefined &&
+      value !== null &&
+      String(value).trim() !== ""
+  );
+}
+
+/* =========================================================
+   URL ROUTING HELPERS
+   ========================================================= */
+
+const ROUTE_PATH_MAP = {
+  cart: "cart",
+  login: "login",
+  menu: "menu",
+  checkout: "checkout",
+  history: "history",
+  profile: "profile",
+  scanner: "",
+  location: "location",
+  "location-confirmation": "location-confirmation",
+  "payment-success": "payment-success",
+  "payment-pending": "payment-pending",
+  "payment-failed": "payment-failed",
+  "upi-payment": "upi-payment",
+};
+
+const PATH_TO_SCREEN_MAP = {
+  cart: "cart",
+  login: "login",
+  menu: "menu",
+  checkout: "checkout",
+  history: "history",
+  profile: "profile",
+  scanner: "scanner",
+  location: "location",
+  "location-confirmation": "location-confirmation",
+  "payment-success": "payment-success",
+  "payment-pending": "payment-pending",
+  "payment-failed": "payment-failed",
+  "upi-payment": "upi-payment",
+};
+
+function getAppBase() {
+  if (typeof window !== "undefined") {
+    if (window.location.pathname.startsWith("/order_now/")) {
+      return "/order_now/";
+    }
+    return "/";
+  }
+  const metaBase = import.meta.env.BASE_URL || "/";
+  return metaBase.endsWith("/") ? metaBase : `${metaBase}/`;
+}
+
+function getPathForScreen(screenName) {
+  const base = getAppBase();
+  const sub = ROUTE_PATH_MAP[screenName];
+  if (!sub || screenName === "scanner") {
+    return base;
+  }
+  return `${base}${sub}`;
+}
+
+function getScreenFromUrl() {
+  if (typeof window === "undefined") return null;
+  const pathname = window.location.pathname || "/";
+  const base = getAppBase();
+  let routePath = pathname;
+  if (routePath.startsWith(base)) {
+    routePath = routePath.slice(base.length);
+  } else if (routePath.startsWith("/")) {
+    routePath = routePath.replace(/^\/+/, "");
+  }
+  routePath = routePath.replace(/\/+$/, "").toLowerCase();
+  return PATH_TO_SCREEN_MAP[routePath] || null;
+}
+
+function syncUrlWithScreen(screenName, replace = false) {
+  if (typeof window === "undefined" || !window.history) return;
+  const targetPath = getPathForScreen(screenName);
+  const currentPath = window.location.pathname;
+  if (currentPath !== targetPath) {
+    if (replace) {
+      window.history.replaceState({ screen: screenName }, "", targetPath);
+    } else {
+      window.history.pushState({ screen: screenName }, "", targetPath);
+    }
+  } else if (!window.history.state?.screen) {
+    window.history.replaceState({ screen: screenName }, "", targetPath);
+  }
+}
 
 /* =========================================================
    STORAGE HELPERS
@@ -474,12 +579,13 @@ function money(value) {
     Number(value);
 
   if (!Number.isFinite(numericValue)) {
-    return "₹0";
+    return "₹0.00";
   }
 
-  return `₹${Math.round(
-    numericValue
-  )}`;
+  return `₹${numericValue.toLocaleString("en-IN", {
+    minimumFractionDigits: numericValue % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 function productMoney(value) {
@@ -678,97 +784,151 @@ function extractBackendCartItems(response) {
  */
 
 export default function App() {
-  const loggedIn =
-    Boolean(
-      localStorage.getItem(
-        STORAGE.loggedIn
-      )
-    ) &&
-    Boolean(
-      localStorage.getItem(
-        STORAGE.accessToken
-      ) ||
-        localStorage.getItem(
-          STORAGE.token
-        )
-    );
+  /*
+   * Do NOT automatically log in from stored credentials.
+   * Require user to log in manually per user instruction:
+   * "always open a qr launcher to access the menu or allow user to select the location manually"
+   * "do not login automatically - make user to login manually"
+   */
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  const [isLocationConfirmed, setIsLocationConfirmed] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE.locationConfirmed) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalRedirect, setLoginModalRedirect] = useState("");
 
   /*
-   * Public browsing:
-   * Logged-out users start on the Menu so they can browse
-   * products before signing in.
+   * Entry Screen: Check pending payment callback, URL path, saved screen,
+   * or default to QR launcher ("scanner").
    */
-  const [screen, setScreenState] =
-    useState(() => {
-      const savedScreen =
-        localStorage.getItem(
-          STORAGE.screen
-        );
+  const [screen, setScreenState] = useState(() => {
+    try {
+      if (typeof window !== "undefined" && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        const qOrderId = params.get("orderId") || params.get("order_id");
+        const qCartId = params.get("cartId") || params.get("cart_id");
+        const qTxnId = params.get("transactionId") || params.get("txnId") || params.get("transaction_id");
 
-      /*
-      * =====================================================
-      * RESTORE CONFIRMED PAYMENT SUCCESS
-      *
-      * Only restore payment-success when BOTH:
-      * 1. A persisted successful order exists
-      * 2. It contains a valid 4-digit backend collection code
-      *
-      * We never create or guess the code here.
-      * =====================================================
-      */
-
-      const savedSuccessfulOrder =
-        readJSON(
-          STORAGE.paymentSuccess,
-          null
-        );
-
-      const savedCollectionCode = String(
-        savedSuccessfulOrder?.collection_code ||
-          savedSuccessfulOrder?.collectionCode ||
-          savedSuccessfulOrder?.orderPin ||
-          savedSuccessfulOrder?.order_pin ||
-          savedSuccessfulOrder?.pickupCode ||
-          savedSuccessfulOrder?.pickup_code ||
-          ""
-      ).trim();
-
-      const hasValidCollectionCode =
-        /^\d{4}$/.test(
-          savedCollectionCode
-        );
-
-      if (
-        savedScreen === "payment-success" &&
-        savedSuccessfulOrder &&
-        hasValidCollectionCode
-      ) {
-        return "payment-success";
+        if (qOrderId && qCartId) {
+          const recovered = {
+            orderId: qOrderId,
+            cartId: qCartId,
+            transactionId: qTxnId || "",
+          };
+          sessionStorage.setItem("juice_robo_payment_session", JSON.stringify(recovered));
+          return "payment-pending";
+        }
       }
+    } catch {}
 
-      /*
-      * =====================================================
-      * NORMAL SCREEN RESTORATION
-      * =====================================================
-      */
+    const pendingPaymentSession =
+      readJSON("juice_robo_payment_session", null) ||
+      readSessionJSON("juice_robo_payment_session", null);
 
-      if (
-        savedScreen &&
-        (
-          loggedIn ||
-          savedScreen === "menu" ||
-          savedScreen === "login"
-        )
-      ) {
-        return savedScreen;
-      }
+    const savedScreen = localStorage.getItem(STORAGE.screen);
 
-      return loggedIn
-        ? "location"
-        : "menu";
-    });
-  function setScreen(nextScreen) {
+    if (
+      (savedScreen === "payment-pending" || savedScreen === "upi-payment") &&
+      pendingPaymentSession?.orderId
+    ) {
+      return "payment-pending";
+    }
+
+    const urlScreen = getScreenFromUrl();
+    if (urlScreen) {
+      return urlScreen;
+    }
+
+    return "scanner";
+  });
+
+  function setScreen(nextScreen, replace = false) {
+    if (
+      nextScreen === "payment-pending" ||
+      nextScreen === "payment-failed" ||
+      nextScreen === "payment-success" ||
+      nextScreen === "upi-payment"
+    ) {
+      setScreenState(nextScreen);
+      syncUrlWithScreen(nextScreen, replace);
+      try {
+        localStorage.setItem(STORAGE.screen, String(nextScreen));
+      } catch {}
+      return;
+    }
+
+    if (nextScreen === "scanner") {
+      setScreenState("scanner");
+      syncUrlWithScreen("scanner", replace);
+      try {
+        localStorage.setItem(STORAGE.screen, "scanner");
+      } catch {}
+      return;
+    }
+
+    // Must have outlet confirmed for menu, product, cart, checkout, profile, etc.
+    const requiresOutlet = [
+      "menu",
+      "home",
+      "product",
+      "cart",
+      "checkout",
+      "location-confirmation",
+      "profile",
+      "history",
+    ];
+
+    const outletConfirmed =
+      isLocationConfirmed ||
+      localStorage.getItem(STORAGE.locationConfirmed) === "true";
+    const hasLocation =
+      Boolean(selectedLocationId) ||
+      Boolean(localStorage.getItem(STORAGE.location));
+    const hasMachine =
+      Boolean(selectedMachineId) ||
+      Boolean(localStorage.getItem(STORAGE.machine));
+
+    if (
+      requiresOutlet.includes(nextScreen) &&
+      (!outletConfirmed || !hasLocation || !hasMachine)
+    ) {
+      showToast("Please scan an outlet QR code first");
+      setScreenState("scanner");
+      syncUrlWithScreen("scanner", replace);
+      try {
+        localStorage.setItem(STORAGE.screen, "scanner");
+      } catch {}
+      return;
+    }
+
+    if (outletConfirmed && !isLocationConfirmed) {
+      setIsLocationConfirmed(true);
+    }
+
+    // Only profile and history require prior login
+    const requiresLogin = [
+      "profile",
+      "history",
+    ];
+
+    if (requiresLogin.includes(nextScreen) && !loggedIn) {
+      showToast(`Please sign in to view your ${nextScreen}`);
+      setScreenState("login");
+      syncUrlWithScreen("login", replace);
+      try {
+        localStorage.setItem(STORAGE.screen, "login");
+      } catch {}
+      return;
+    }
+
     setScreenState(nextScreen);
+    syncUrlWithScreen(nextScreen, replace);
 
     try {
       localStorage.setItem(
@@ -782,7 +942,7 @@ export default function App() {
 
   useEffect(() => {
     /*
-     * Keep the persisted screen synchronized with the current
+     * Keep the persisted screen and URL synchronized with the current
      * React screen. This also covers screens changed by code paths
      * that run during authentication or logout.
      */
@@ -794,7 +954,27 @@ export default function App() {
     } catch {
       // Ignore storage errors.
     }
+    syncUrlWithScreen(screen, false);
   }, [screen]);
+
+  useEffect(() => {
+    // Initial sync of URL state on mount
+    syncUrlWithScreen(screen, true);
+
+    function handlePopState(event) {
+      if (showLoginModal) {
+        setShowLoginModal(false);
+        setLoginModalRedirect("");
+      }
+      const poppedScreen = event?.state?.screen || getScreenFromUrl() || "scanner";
+      setScreenState(poppedScreen);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [showLoginModal]);
 
   const [customer, setCustomer] =
     useState(() => {
@@ -932,6 +1112,9 @@ export default function App() {
       "Complete payment in your UPI app. We will verify it with Juice Robo."
     );
 
+  const [paymentFailedReason, setPaymentFailedReason] =
+    useState("");
+
   const [showUpiAppPicker, setShowUpiAppPicker] =
     useState(false);
 
@@ -940,6 +1123,12 @@ export default function App() {
 
   const paymentPollStarted =
     useRef(false);
+
+  const terminalStateReached =
+    useRef(false);
+
+  const browserReturnDebounceTimer =
+    useRef(null);
 
   /* =======================================================
      SELECTED LOCATION / MACHINE
@@ -1031,6 +1220,72 @@ export default function App() {
       machines,
       selectedMachineId,
     ]);
+
+  /* =======================================================
+     MACHINE UPI / VPA RESOLUTION
+     ======================================================= */
+
+  const [customUpiId, setCustomUpiId] = useState(() => {
+    try {
+      return clean(localStorage.getItem("juice_robo_custom_upi_id")) || "";
+    } catch {
+      return "";
+    }
+  });
+
+  const activeMachineUpiId = useMemo(() => {
+    return clean(
+      firstDefined(
+        customUpiId,
+        selectedMachine?.upiId,
+        selectedMachine?.upi_id,
+        selectedMachine?.vpa,
+        selectedMachine?.upi,
+        selectedMachine?.merchantUpiId,
+        selectedMachine?.merchant_upi_id,
+        selectedMachineSnapshot?.upiId,
+        selectedMachineSnapshot?.upi_id,
+        selectedMachineSnapshot?.vpa,
+        selectedMachineId ? localStorage.getItem(`juice_robo_machine_upi_${selectedMachineId}`) : "",
+        selectedLocation?.upiId,
+        selectedLocation?.upi_id,
+        selectedLocation?.vpa,
+        selectedLocation?.merchantUpiId,
+        selectedLocationSnapshot?.upiId,
+        selectedLocationSnapshot?.upi_id,
+        selectedLocationSnapshot?.vpa,
+        selectedLocationId ? localStorage.getItem(`juice_robo_machine_upi_${selectedLocationId}`) : "",
+        localStorage.getItem("juice_robo_machine_upi_id"),
+        localStorage.getItem("juice_robo_scanned_upi_id"),
+        typeof api.getConfiguredUpiId === "function" ? api.getConfiguredUpiId() : "",
+        import.meta.env?.VITE_JR_UPI_ID,
+        "JUICEROBO@ybl"
+      )
+    );
+  }, [
+    customUpiId,
+    selectedMachine,
+    selectedMachineSnapshot,
+    selectedMachineId,
+    selectedLocation,
+    selectedLocationSnapshot,
+    selectedLocationId,
+  ]);
+
+  const handleChangeMachineUpi = (newUpi) => {
+    const trimmed = clean(newUpi);
+    setCustomUpiId(trimmed);
+    try {
+      if (trimmed) {
+        localStorage.setItem("juice_robo_custom_upi_id", trimmed);
+        if (selectedMachineId) {
+          localStorage.setItem(`juice_robo_machine_upi_${selectedMachineId}`, trimmed);
+        }
+      } else {
+        localStorage.removeItem("juice_robo_custom_upi_id");
+      }
+    } catch {}
+  };
 
   /* =======================================================
      CART TOTALS
@@ -1904,148 +2159,79 @@ export default function App() {
     useEffect(() => {
       let mounted = true;
 
-      async function verifyAfterBrowserReturn(
-        source
-      ) {
-        if (!mounted) {
+      function triggerBrowserReturn(source) {
+        if (!mounted || terminalStateReached.current || paymentVerifyInFlight.current) {
           return;
         }
 
-        /*
-        * Read directly from sessionStorage.
-        *
-        * This is deliberately NOT dependent only on React state.
-        * Mobile browsers can suspend and restore React state while
-        * the UPI application is open.
-        */
         const session =
-          readJSON(
-            "juice_robo_payment_session",
-            null
-          );
+          readJSON("juice_robo_payment_session", null) || paymentSession;
 
-        if (
-          !session?.cartId ||
-          !session?.orderId
-        ) {
+        if (!session?.cartId || !session?.orderId) {
           return;
         }
 
-        console.log(
-          `[Juice Robo] BROWSER RETURN DETECTED (${source})`,
-          {
-            cartId:
-              session.cartId,
-            orderId:
-              session.orderId,
-          }
-        );
+        console.log(`[Juice Robo] Returned from PhonePe (${source})`);
 
-        /*
-        * The user has returned to the Juice Robo browser.
-        * Keep them on the payment screen while the backend is checked.
-        */
-        if (
-          screen !==
-            "upi-payment" &&
-          paymentStatus !==
-            "paid"
-        ) {
-          setScreen(
-            "upi-payment"
-          );
+        if (browserReturnDebounceTimer.current) {
+          clearTimeout(browserReturnDebounceTimer.current);
         }
 
-        /*
-        * Verify immediately.
-        */
-        await verifyPendingPayment({
-          silent: true,
-        });
+        browserReturnDebounceTimer.current = setTimeout(async () => {
+          if (!mounted || terminalStateReached.current || paymentVerifyInFlight.current) {
+            return;
+          }
+
+          /* Show payment pending / verifying screen while backend status is verified */
+          if (
+            screen !== "payment-pending" &&
+            screen !== "payment-success" &&
+            screen !== "payment-failed" &&
+            paymentStatus !== "paid"
+          ) {
+            setScreen("payment-pending");
+          }
+
+          await verifyPendingPayment({
+            silent: true,
+          });
+        }, 350);
       }
 
       function handlePageShow() {
-        verifyAfterBrowserReturn(
-          "pageshow"
-        );
+        triggerBrowserReturn("pageshow");
       }
 
       function handleFocus() {
-        verifyAfterBrowserReturn(
-          "focus"
-        );
+        triggerBrowserReturn("focus");
       }
 
       function handleVisibilityChange() {
-        if (
-          document.visibilityState ===
-          "visible"
-        ) {
-          verifyAfterBrowserReturn(
-            "visibilitychange"
-          );
+        if (document.visibilityState === "visible") {
+          triggerBrowserReturn("visibilitychange");
         }
       }
 
-      /*
-      * pageshow:
-      * Handles Safari back-forward cache / page restoration.
-      */
-      window.addEventListener(
-        "pageshow",
-        handlePageShow
-      );
+      window.addEventListener("pageshow", handlePageShow);
+      window.addEventListener("focus", handleFocus);
+      document.addEventListener("visibilitychange", handleVisibilityChange);
 
-      /*
-      * focus:
-      * Handles returning from an external UPI application.
-      */
-      window.addEventListener(
-        "focus",
-        handleFocus
-      );
-
-      /*
-      * visibilitychange:
-      * Handles Safari/Chrome returning the tab to foreground.
-      */
-      document.addEventListener(
-        "visibilitychange",
-        handleVisibilityChange
-      );
-
-      /*
-      * Also check once when this effect starts.
-      *
-      * This handles a browser reload while a payment session is
-      * already pending.
-      */
-      verifyAfterBrowserReturn(
-        "initial-check"
-      );
+      /* Check once on startup if pending session exists */
+      const initialSession = readJSON("juice_robo_payment_session", null);
+      if (initialSession?.cartId && initialSession?.orderId && !terminalStateReached.current) {
+        triggerBrowserReturn("initial-check");
+      }
 
       return () => {
         mounted = false;
-
-        window.removeEventListener(
-          "pageshow",
-          handlePageShow
-        );
-
-        window.removeEventListener(
-          "focus",
-          handleFocus
-        );
-
-        document.removeEventListener(
-          "visibilitychange",
-          handleVisibilityChange
-        );
+        if (browserReturnDebounceTimer.current) {
+          clearTimeout(browserReturnDebounceTimer.current);
+        }
+        window.removeEventListener("pageshow", handlePageShow);
+        window.removeEventListener("focus", handleFocus);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
       };
-    }, [
-      screen,
-      paymentStatus,
-    ]);
+    }, []);
 
   /* =======================================================
    INITIAL DATA LOAD
@@ -2138,12 +2324,22 @@ useEffect(() => {
       }
 
       /* =================================================
-         2. SELECT STORED LOCATION
+         2. CHECK STORED CONFIRMATION
          ================================================= */
 
-      let locationId =
+      const isConfirmedFromStorage =
+        localStorage.getItem(
+          STORAGE.locationConfirmed
+        ) === "true";
+
+      const storedLocationId =
         localStorage.getItem(
           STORAGE.location
+        ) || "";
+
+      const storedMachineId =
+        localStorage.getItem(
+          STORAGE.machine
         ) || "";
 
       const savedLocation =
@@ -2157,76 +2353,41 @@ useEffect(() => {
                 ""
             ) ===
             String(
-              locationId
+              storedLocationId
             )
         );
 
-      if (!savedLocation) {
-        const firstLocation =
-          safeLocations[0];
-
-        if (firstLocation) {
-          locationId =
-            String(
-              firstLocation?.id ??
-                firstLocation?.storeId ??
-                firstLocation?.store_id ??
-                firstLocation?.locId ??
-                ""
-            );
-
-          setSelectedLocationId(
-            locationId
-          );
-
-          setSelectedLocationSnapshot(
-            firstLocation
-          );
-
-          localStorage.setItem(
-            STORAGE.location,
-            locationId
-          );
-
-          writeJSON(
-            "juice_robo_selected_location",
-            firstLocation
-          );
-        }
-      } else {
+      if (isConfirmedFromStorage && savedLocation) {
         setSelectedLocationId(
-          String(
-            locationId
-          )
+          String(storedLocationId)
         );
+        setSelectedLocationSnapshot(
+          savedLocation
+        );
+      } else if (storedLocationId && savedLocation) {
+        setSelectedLocationId(
+          String(storedLocationId)
+        );
+        setSelectedLocationSnapshot(
+          savedLocation
+        );
+      } else {
+        setSelectedLocationId("");
+        setSelectedLocationSnapshot(null);
       }
 
       /* =================================================
          3. RESOLVE REAL STORE ID
          ================================================= */
 
-      const selectedInitialLocation =
-        safeLocations.find(
-          (location) =>
-            String(
-              location?.id ??
-                location?.storeId ??
-                location?.store_id ??
-                location?.locId ??
-                ""
-            ) ===
-            String(
-              locationId
-            )
-        ) ||
-        safeLocations[0];
-
       const storeId =
-        selectedInitialLocation?.storeId ||
-        selectedInitialLocation?.store_id ||
-        selectedInitialLocation?.locId ||
-        selectedInitialLocation?.id ||
-        "";
+        isConfirmedFromStorage && savedLocation
+          ? savedLocation?.storeId ||
+            savedLocation?.store_id ||
+            savedLocation?.locId ||
+            savedLocation?.id ||
+            ""
+          : "";
 
       console.log(
         "[Juice Robo] INITIAL STORE:",
@@ -2307,10 +2468,6 @@ useEffect(() => {
           productResult.reason
         );
 
-        /*
-         * Do not block the application because
-         * products failed.
-         */
         setProducts([]);
       }
 
@@ -2345,49 +2502,58 @@ useEffect(() => {
            Restore previously selected machine
            ----------------------------------------------- */
 
-        const savedMachineId =
-          localStorage.getItem(
-            STORAGE.machine
-          ) || "";
-
         const existingMachine =
           loadedMachines.find(
             (machine) =>
               String(
-                machine?.id
+                machine?.id ??
+                  machine?.machineId ??
+                  machine?.machine_id ??
+                  ""
               ) ===
               String(
-                savedMachineId
+                storedMachineId
               )
           );
 
-        if (existingMachine) {
+        if (
+          isConfirmedFromStorage &&
+          savedLocation &&
+          existingMachine
+        ) {
           setSelectedMachineId(
             String(
-              existingMachine.id
+              existingMachine.id ||
+                existingMachine.machineId ||
+                storedMachineId
             )
           );
+          setSelectedMachineSnapshot(
+            existingMachine
+          );
+          setIsLocationConfirmed(true);
         } else if (
-          loadedMachines.length
+          storedMachineId &&
+          existingMachine
         ) {
-          const firstMachine =
-            loadedMachines[0];
-
-          const firstMachineId =
+          setSelectedMachineId(
             String(
-              firstMachine?.id || ""
-            );
-
-          if (firstMachineId) {
-            setSelectedMachineId(
-              firstMachineId
-            );
-
-            localStorage.setItem(
-              STORAGE.machine,
-              firstMachineId
-            );
-          }
+              existingMachine.id ||
+                existingMachine.machineId ||
+                storedMachineId
+            )
+          );
+          setSelectedMachineSnapshot(
+            existingMachine
+          );
+          setIsLocationConfirmed(false);
+        } else {
+          setSelectedMachineId("");
+          setSelectedMachineSnapshot(null);
+          setIsLocationConfirmed(false);
+          localStorage.removeItem(
+            STORAGE.locationConfirmed
+          );
         }
       } else {
         console.warn(
@@ -2677,6 +2843,8 @@ useEffect(() => {
         "true"
       );
 
+      setLoggedIn(true);
+
       /*
        * Preserve items that were added while logged out. Merge the
        * guest cart into the user's existing local cart instead of
@@ -2839,37 +3007,66 @@ useEffect(() => {
         loadedMachines
       );
 
-      setScreen(
-        "location"
-      );
+      if (showLoginModal) {
+        setShowLoginModal(false);
+        const target = loginModalRedirect || "checkout";
+        setLoginModalRedirect("");
+        showToast("✓ Logged in! Continuing to payment...");
+        setScreen(target);
+        return;
+      }
 
-      showToast(
-        `Welcome back, ${
-          loggedUser?.name ||
-          identifier
-        }`
-      );
+      let postLoginRedirect = "";
+      try {
+        postLoginRedirect =
+          sessionStorage.getItem("juice_robo_post_login_redirect") || "";
+      } catch {}
+
+      if (postLoginRedirect === "checkout") {
+        try {
+          sessionStorage.removeItem("juice_robo_post_login_redirect");
+        } catch {}
+        setScreen("checkout");
+        showToast("✓ Logged in! You can now complete your payment.");
+      } else if (
+        isLocationConfirmed &&
+        selectedLocationId &&
+        selectedMachineId
+      ) {
+        setScreen(
+          "menu"
+        );
+        showToast(
+          `Welcome back, ${
+            loggedUser?.name ||
+            identifier
+          }`
+        );
+      } else {
+        setScreen(
+          "scanner"
+        );
+        showToast(
+          `Welcome back, ${
+            loggedUser?.name ||
+            identifier
+          }`
+        );
+      }
     } catch (loginError) {
       console.error(
         "[Juice Robo] Login error:",
         loginError
       );
 
-      if (
-        loginError?.status ===
-        401
-      ) {
-        showToast(
-          "Invalid email or password"
-        );
-      } else {
-        showToast(
-          errorText(
-            loginError
-          ) ||
-            "Unable to sign in."
-        );
-      }
+      const message =
+        errorText(
+          loginError
+        ) ||
+        "Invalid email or password.";
+
+      setError(message);
+      showToast(message);
     } finally {
       setBusy(false);
     }
@@ -2880,11 +3077,12 @@ useEffect(() => {
      ======================================================= */
 
   async function handleSignOut() {
-    /*
-     * The current legacy API adapter does not expose a backend
-     * logout endpoint. Sign-out is therefore handled locally by
-     * clearing the client authentication/session state.
-     */
+    try {
+      await api.logout();
+    } catch {
+      // Ignore API logout errors
+    }
+
     localStorage.removeItem(
       STORAGE.loggedIn
     );
@@ -2895,6 +3093,10 @@ useEffect(() => {
 
     localStorage.removeItem(
       STORAGE.token
+    );
+
+    localStorage.removeItem(
+      "access_token"
     );
 
     localStorage.removeItem(
@@ -2910,6 +3112,14 @@ useEffect(() => {
     );
 
     localStorage.removeItem(
+      STORAGE.customer
+    );
+
+    localStorage.removeItem(
+      STORAGE.screen
+    );
+
+    localStorage.removeItem(
       STORAGE.location
     );
 
@@ -2918,35 +3128,75 @@ useEffect(() => {
     );
 
     localStorage.removeItem(
-      STORAGE.screen
+      STORAGE.locationConfirmed
+    );
+
+    localStorage.removeItem(
+      "juice_robo_selected_location"
+    );
+
+    localStorage.removeItem(
+      "juice_robo_selected_machine"
+    );
+
+    localStorage.removeItem(
+      "juice_robo_location_uuid"
     );
 
     setUser({});
-    setLocations([]);
-    setMachines([]);
-    setProducts([]);
-
-    setSelectedLocationId("");
-    setSelectedMachineId("");
-
     setSelectedProduct(null);
     setSelectedVariant(null);
 
     setCart([]);
     setHistoryOrders([]);
 
-    setCustomer(
-      (current) => ({
-        ...current,
-        password: "",
-        confirmPassword:
-          "",
-      })
-    );
+    setCustomer({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+    });
 
-    setScreen(
-      "menu"
+    setIsLocationConfirmed(false);
+    setSelectedLocationId("");
+    setSelectedMachineId("");
+    setSelectedLocationSnapshot(null);
+    setSelectedMachineSnapshot(null);
+    setProducts([]);
+
+    try {
+      const publicLocations =
+        await api.locations();
+      setLocations(
+        publicLocations
+      );
+
+      if (publicLocations.length > 0) {
+        const publicMachines =
+          await api.machines(
+            publicLocations
+          );
+        setMachines(
+          publicMachines
+        );
+      }
+    } catch {
+      // Ignore reload errors
+    }
+
+    setLoggedIn(false);
+    setScreenState(
+      "scanner"
     );
+    try {
+      localStorage.setItem(
+        STORAGE.screen,
+        "scanner"
+      );
+    } catch {
+      // Ignore storage errors.
+    }
 
     showToast(
       "You have been signed out"
@@ -3120,7 +3370,8 @@ useEffect(() => {
      ======================================================= */
 
   async function selectLocation(
-    location
+    location,
+    force = false
   ) {
     const id =
       String(
@@ -3135,12 +3386,37 @@ useEffect(() => {
       return;
     }
 
+    /*
+     * Toggle / Deselect if clicking the already selected location
+     */
+    if (!force && String(id) === String(selectedLocationId)) {
+      setSelectedLocationId("");
+      setSelectedLocationSnapshot(null);
+      setIsLocationConfirmed(false);
+      localStorage.removeItem(STORAGE.location);
+      localStorage.removeItem(STORAGE.locationConfirmed);
+      localStorage.removeItem("juice_robo_selected_location");
+      localStorage.removeItem("juice_robo_location_uuid");
+      setSelectedMachineId("");
+      setSelectedMachineSnapshot(null);
+      localStorage.removeItem(STORAGE.machine);
+      localStorage.removeItem("juice_robo_selected_machine");
+      setProducts([]);
+      showToast("Location deselected");
+      return;
+    }
+
     setSelectedLocationId(
       id
     );
 
     setSelectedLocationSnapshot(
       location
+    );
+
+    setIsLocationConfirmed(false);
+    localStorage.removeItem(
+      STORAGE.locationConfirmed
     );
 
     localStorage.setItem(
@@ -3226,30 +3502,37 @@ useEffect(() => {
         machineId
       );
 
+      setSelectedMachineSnapshot(
+        matchingMachine
+      );
+
       localStorage.setItem(
         STORAGE.machine,
         machineId
       );
+
+      writeJSON(
+        "juice_robo_selected_machine",
+        matchingMachine
+      );
     } else {
-      /*
-       * Do not keep a machine from the previous location.
-       */
       setSelectedMachineId(
         ""
+      );
+      setSelectedMachineSnapshot(
+        null
       );
 
       localStorage.removeItem(
         STORAGE.machine
       );
+      localStorage.removeItem(
+        "juice_robo_selected_machine"
+      );
     }
 
-    await loadProductsForLocation(
-      location
-    );
-
     showToast(
-      location?.name ||
-        "Location selected"
+      `${location?.name || "Location"} selected. Confirm to view menu.`
     );
   }
 
@@ -3258,7 +3541,8 @@ useEffect(() => {
      ======================================================= */
 
   function selectMachine(
-    machine
+    machine,
+    force = false
   ) {
     const id =
       String(
@@ -3269,12 +3553,31 @@ useEffect(() => {
       return;
     }
 
+    /*
+     * Toggle / Deselect if clicking the already selected machine
+     */
+    if (!force && String(id) === String(selectedMachineId)) {
+      setSelectedMachineId("");
+      setSelectedMachineSnapshot(null);
+      setIsLocationConfirmed(false);
+      localStorage.removeItem(STORAGE.machine);
+      localStorage.removeItem(STORAGE.locationConfirmed);
+      localStorage.removeItem("juice_robo_selected_machine");
+      showToast("Machine deselected");
+      return;
+    }
+
     setSelectedMachineId(
       id
     );
 
     setSelectedMachineSnapshot(
       machine
+    );
+
+    setIsLocationConfirmed(false);
+    localStorage.removeItem(
+      STORAGE.locationConfirmed
     );
 
     localStorage.setItem(
@@ -3292,24 +3595,73 @@ useEffect(() => {
     );
   }
 
-  function continueToMenu() {
+  async function loadProductsForLocation(targetLocation) {
+    const storeId =
+      targetLocation?.storeId ||
+      targetLocation?.store_id ||
+      targetLocation?.locId ||
+      targetLocation?.id ||
+      "";
+
+    if (!storeId) return [];
+
+    try {
+      console.log("[Juice Robo] Loading products for location storeId:", storeId);
+      if (typeof api.saveStoreId === "function") {
+        api.saveStoreId(storeId);
+      } else {
+        localStorage.setItem("store_Id", String(storeId));
+        localStorage.setItem("juice_robo_store_id", String(storeId));
+      }
+      const loadedProducts = await api.products(storeId);
+      const safeProducts = Array.isArray(loadedProducts) ? loadedProducts : [];
+      setProducts(safeProducts);
+      console.log(`[Juice Robo] Loaded ${safeProducts.length} products for storeId ${storeId}`);
+      return safeProducts;
+    } catch (productError) {
+      console.warn("[Juice Robo] Error loading products for storeId:", storeId, productError);
+      return [];
+    }
+  }
+
+  async function continueToMenu() {
     if (!selectedLocationId) {
-      showToast(
-        "Select a collection location"
-      );
+      showToast("Please select a collection location");
       return;
     }
 
     if (!selectedMachineId) {
-      showToast(
-        "Select a Juice Robo machine"
-      );
+      showToast("Please select a Juice Robo machine");
       return;
     }
 
-    setScreen(
-      "menu"
-    );
+    setIsLocationConfirmed(true);
+    localStorage.setItem(STORAGE.locationConfirmed, "true");
+    localStorage.setItem(STORAGE.location, String(selectedLocationId));
+    localStorage.setItem(STORAGE.machine, String(selectedMachineId));
+
+    const targetLocation =
+      selectedLocation ||
+      locations.find(
+        (loc) =>
+          String(
+            loc?.id ??
+              loc?.storeId ??
+              loc?.store_id ??
+              loc?.locId ??
+              ""
+          ) === String(selectedLocationId)
+      );
+
+    if (targetLocation) {
+      await loadProductsForLocation(targetLocation);
+    }
+
+    setScreenState("menu");
+    try {
+      localStorage.setItem(STORAGE.screen, "menu");
+    } catch {}
+    showToast("✓ Connected! Menu unlocked.");
   }
 
   /* =======================================================
@@ -3437,63 +3789,48 @@ useEffect(() => {
             ];
 
       /*
-       * Guests use a local cart. No backend cart request is made
-       * until the user is authenticated. This lets guests add and
-       * edit items freely; payment remains protected by startCheckout().
+       * Update local cart state and storage immediately.
        */
-      if (!loggedIn) {
-        setCart(nextCart);
-
-        writeJSON(
-          cartKey({}),
-          nextCart
-        );
-
-        writeJSON(
-          "juice_robo_cart",
-          nextCart
-        );
-
-        showToast(
-          `${displayProductName(
-            product
-          )} added to cart`
-        );
-
-        closeProduct();
-
-        setScreen(
-          "menu"
-        );
-
-        return;
-      }
-
-      /*
-       * Authenticated cart editing uses the Juice Robo cart API.
-       * The API adapter is responsible for sending the UUID-shaped
-       * locId and preserving the backend cart ID returned by /v1/addcart.
-       */
-      const savedCart =
-        await saveCartToBackend(nextCart);
-
-      setCart(savedCart);
+      setCart(nextCart);
 
       writeJSON(
-        cartKey(user || {}),
-        savedCart
+        cartKey(loggedIn ? (user || {}) : {}),
+        nextCart
       );
 
       writeJSON(
         "juice_robo_cart",
-        savedCart
+        nextCart
       );
 
-      showToast(
-        `${displayProductName(
-          product
-        )} added to cart`
-      );
+      /*
+       * Authenticated cart editing also syncs with the Juice Robo backend cart API.
+       */
+      if (loggedIn) {
+        try {
+          const savedCart =
+            await saveCartToBackend(nextCart);
+
+          if (Array.isArray(savedCart) && savedCart.length > 0) {
+            setCart(savedCart);
+
+            writeJSON(
+              cartKey(user || {}),
+              savedCart
+            );
+
+            writeJSON(
+              "juice_robo_cart",
+              savedCart
+            );
+          }
+        } catch (backendSyncError) {
+          console.warn(
+            "[Juice Robo] Backend cart sync deferred:",
+            backendSyncError
+          );
+        }
+      }
 
       closeProduct();
 
@@ -3595,15 +3932,21 @@ useEffect(() => {
         cart
       );
 
+    const matchesItem = (item) => {
+      const pStr = String(productId);
+      return (
+        String(getCartVariantId(item)) === pStr ||
+        String(item?.id) === pStr ||
+        String(item?.productId) === pStr ||
+        String(item?.variantId) === pStr ||
+        String(item?.cartItemId) === pStr
+      );
+    };
+
     const nextCart =
       currentCart.map(
         (item) =>
-          String(
-            getCartVariantId(item)
-          ) ===
-          String(
-            productId
-          )
+          matchesItem(item)
             ? {
                 ...item,
                 quantity:
@@ -3615,77 +3958,67 @@ useEffect(() => {
       );
 
     const itemExists =
-      currentCart.some(
-        (item) =>
-          String(
-            getCartVariantId(item)
-          ) ===
-          String(
-            productId
-          )
-      );
+      currentCart.some(matchesItem);
 
     if (!itemExists) {
       return;
     }
 
-    if (!loggedIn) {
-      setCart(nextCart);
+    /*
+     * 1. Increment and update the UI cart state immediately
+     */
+    setCart(nextCart);
 
-      writeJSON(
-        cartKey({}),
-        nextCart
-      );
+    writeJSON(
+      cartKey(loggedIn ? (user || {}) : {}),
+      nextCart
+    );
 
-      writeJSON(
-        "juice_robo_cart",
-        nextCart
-      );
+    writeJSON(
+      "juice_robo_cart",
+      nextCart
+    );
 
+    /*
+     * 2. Call cart API to persist the updated quantity on the backend
+     */
+    if (loggedIn) {
+      try {
+        setBusy(true);
+        setError("");
+
+        const savedCart =
+          await saveCartToBackend(nextCart);
+
+        if (Array.isArray(savedCart) && savedCart.length > 0) {
+          setCart(savedCart);
+
+          writeJSON(
+            cartKey(user || {}),
+            savedCart
+          );
+
+          writeJSON(
+            "juice_robo_cart",
+            savedCart
+          );
+        }
+
+        showToast(
+          "Cart updated"
+        );
+      } catch (cartError) {
+        console.warn(
+          "[Juice Robo] Cart quantity backend sync deferred:",
+          cartError
+        );
+      } finally {
+        setBusy(false);
+      }
+    } else {
       showToast(
-        "Cart updated successfully"
+        "Cart updated"
       );
-
-      return;
-    }
-
-    try {
-      setBusy(true);
-      setError("");
-
-      /* Authenticated quantity editing uses the Juice Robo cart API. */
-      const savedCart =
-        await saveCartToBackend(nextCart);
-
-      setCart(savedCart);
-
-      writeJSON(
-        cartKey(user || {}),
-        savedCart
-      );
-
-      writeJSON(
-        "juice_robo_cart",
-        savedCart
-      );
-
-      showToast(
-        "Cart updated successfully"
-      );
-    } catch (cartError) {
-      console.error(
-        "[Juice Robo] Cart quantity update failed:",
-        cartError
-      );
-
-      const message =
-        errorText(cartError) ||
-        "Unable to update cart.";
-
-      showToast(message);
-      setError(message);
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -3697,15 +4030,20 @@ useEffect(() => {
         cart
       );
 
+    const matchesItem = (item) => {
+      const pStr = String(productId);
+      return (
+        String(getCartVariantId(item)) === pStr ||
+        String(item?.id) === pStr ||
+        String(item?.productId) === pStr ||
+        String(item?.variantId) === pStr ||
+        String(item?.cartItemId) === pStr
+      );
+    };
+
     const nextCart =
       currentCart.filter(
-        (item) =>
-          String(
-            getCartVariantId(item)
-          ) !==
-          String(
-            productId
-          )
+        (item) => !matchesItem(item)
       );
 
     if (
@@ -3818,17 +4156,14 @@ useEffect(() => {
      ======================================================= */
 
   async function openCart() {
-    /*
-     * Cart is public. Guests see and edit their local cart.
-     * Authenticated users load the current cart from the Juice Robo
-     * cart API so the backend remains the source of truth.
-     */
-    if (!loggedIn) {
-      setCart(
-        readCart({})
-      );
+    if (!isLocationConfirmed || !selectedLocationId || !selectedMachineId) {
+      showToast("Please scan an outlet QR code first");
+      setScreen("scanner");
+      return;
+    }
 
-      setError("");
+    if (!loggedIn) {
+      setCart(readCart({}));
       setScreen("cart");
       return;
     }
@@ -3845,17 +4180,15 @@ useEffect(() => {
       setCart(backendCart);
       setScreen("cart");
     } catch (cartError) {
-      console.error(
-        "[Juice Robo] Unable to open backend cart:",
+      console.warn(
+        "[Juice Robo] Backend cart load failed, falling back to local cart:",
         cartError
       );
 
-      const message =
-        errorText(cartError) ||
-        "Unable to load your cart.";
-
-      showToast(message);
-      setError(message);
+      setCart(
+        readCart(user || {})
+      );
+      setScreen("cart");
     } finally {
       setBusy(false);
     }
@@ -3866,16 +4199,6 @@ useEffect(() => {
      ======================================================= */
 
   function startCheckout() {
-    if (!loggedIn) {
-      showToast(
-        "Please sign in to proceed to checkout"
-      );
-      setScreen(
-        "login"
-      );
-      return;
-    }
-
     if (!safeCart.length) {
       showToast(
         "Your cart is empty"
@@ -3903,12 +4226,24 @@ useEffect(() => {
       return;
     }
 
+    if (!loggedIn) {
+      setShowLoginModal(true);
+      setLoginModalRedirect("checkout");
+      return;
+    }
+
     setScreen(
-      "location-confirmation"
+      "checkout"
     );
   }
 
   function proceedToPayment() {
+    if (!loggedIn) {
+      setShowLoginModal(true);
+      setLoginModalRedirect("checkout");
+      return;
+    }
+
     if (!safeCart.length) {
       showToast(
         "Your cart is empty"
@@ -3921,13 +4256,7 @@ useEffect(() => {
       return;
     }
 
-    /*
-    * Location has already been confirmed.
-    * Start the real payment flow directly.
-    *
-    * This removes the intermediate PaymentScreen.
-    */
-    handlePayment();
+    setScreen("payment");
   }
 
   /* =======================================================
@@ -3961,8 +4290,16 @@ useEffect(() => {
     {
       id: "phonepe",
       name: "PhonePe",
-      scheme: "phonepe://upi/pay",
-      description: "Open payment in PhonePe",
+      scheme: "phonepe://pay",
+      description: "Direct launch into PhonePe app",
+      recommended: true,
+    },
+    {
+      id: "generic",
+      name: "Standard UPI (PhonePe / GPay / Any App)",
+      scheme: "upi://pay",
+      description: "Official NPCI standard — opens native iOS app chooser",
+      recommended: true,
     },
     {
       id: "gpay",
@@ -3973,7 +4310,7 @@ useEffect(() => {
     {
       id: "paytm",
       name: "Paytm",
-      scheme: "paytmmp://upi/pay",
+      scheme: "paytmmp://pay",
       description: "Open payment in Paytm",
     },
     {
@@ -3991,7 +4328,7 @@ useEffect(() => {
   ];
 
   function normalizeUpiPaymentUrl(upiUrl) {
-    const raw = String(upiUrl || "")
+    let raw = String(upiUrl || "")
       .trim()
       .replace(/&amp;/gi, "&");
 
@@ -4004,20 +4341,127 @@ useEffect(() => {
       return "";
     }
 
+    try {
+      const qIndex = raw.indexOf("?");
+      if (qIndex >= 0) {
+        const base = raw.slice(0, qIndex);
+        const params = new URLSearchParams(raw.slice(qIndex + 1));
+
+        // CRITICAL FIX FOR PHONEPE "Verification Failed":
+        // PhonePe strictly checks `tr` (Transaction Reference) and `tid` (Terminal ID)
+        // against its Payment Gateway database. When an unregistered client/backend
+        // transaction reference is present, PhonePe rejects the payment intent with
+        // the exact modal dialog: "Verification Failed".
+        // Removing `tr`, `tid`, and `mc` allows PhonePe to process the intent as a
+        // standard direct UPI payment.
+        params.delete("tr");
+        params.delete("tid");
+        params.delete("mc");
+
+        if (!params.get("cu")) {
+          params.set("cu", "INR");
+        }
+
+        const amt = parseFloat(params.get("am"));
+        if (Number.isFinite(amt) && amt > 0) {
+          params.set("am", amt.toFixed(2));
+        }
+
+        const tn = params.get("tn");
+        if (tn) {
+          const cleanTn = tn.replace(/[^a-zA-Z0-9 ]/g, " ").replace(/\s+/g, " ").trim().slice(0, 40);
+          if (cleanTn) {
+            params.set("tn", cleanTn);
+          } else {
+            params.delete("tn");
+          }
+        }
+
+        return `${base}?${params.toString().replace(/\+/g, "%20").replace(/%40/g, "@")}`;
+      }
+    } catch {}
+
+    // Convert literal plus signs and spaces to proper %20 encoding for NPCI compliance; keep @ literal
+    raw = raw.replace(/\+/g, "%20").replace(/ /g, "%20").replace(/%40/g, "@");
+
     return raw;
   }
 
-  function buildIosUpiAppUrl(upiUrl, scheme) {
-    const genericUrl = normalizeUpiPaymentUrl(upiUrl);
+  function buildIosUpiAppUrl(
+    upiUrl,
+    scheme
+  ) {
+    const genericUrl =
+      normalizeUpiPaymentUrl(
+        upiUrl
+      );
 
-    if (!genericUrl || !scheme) {
+    if (
+      !genericUrl ||
+      !scheme
+    ) {
       return "";
     }
 
-    return genericUrl.replace(
-      /^upi:\/\/pay\?/i,
-      `${String(scheme).replace(/\/$/, "")}?`
-    );
+    /*
+    * Standard UPI.
+    *
+    * Keep the original NPCI URI unchanged.
+    */
+    if (
+      scheme === "upi://pay" ||
+      scheme === "upi://pay?"
+    ) {
+      return genericUrl;
+    }
+
+    /*
+    * Extract ONLY the query string.
+    *
+    * Example:
+    *
+    * upi://pay?pa=JUICEROBO@ybl&am=10
+    *
+    * becomes:
+    *
+    * pa=JUICEROBO%40ybl&am=10
+    */
+    const questionIndex =
+      genericUrl.indexOf("?");
+
+    if (
+      questionIndex === -1
+    ) {
+      return "";
+    }
+
+    const query =
+      genericUrl.slice(
+        questionIndex + 1
+      );
+
+    if (!query) {
+      return "";
+    }
+
+    const cleanScheme =
+      String(scheme)
+        .trim()
+        .replace(/:+$/, "")
+        .replace(/[\/]+$/, "");
+
+    if (!cleanScheme) {
+      return "";
+    }
+
+    /*
+    * Explicitly construct:
+    *
+    * phonepe://pay?...
+    *
+    * rather than replacing arbitrary URI text.
+    */
+    return `${cleanScheme}?${query.replace(/%40/g, "@")}`;
   }
 
   function launchUpiPayment(upiUrl) {
@@ -4030,12 +4474,17 @@ useEffect(() => {
     }
 
     console.log(
-      "[Juice Robo] Launching standard UPI URI:",
+      "[Juice Robo] ANDROID PAYMENT URL:",
+      url
+    );
+    console.log(
+      "[Juice Robo] PAYMENT APP LAUNCH: Launching standard UPI URI:",
       url
     );
 
     try {
       /* Synchronous user-gesture launch for Android. */
+      setScreen("payment-pending");
       window.location.assign(url);
       return true;
     } catch (launchError) {
@@ -4060,7 +4509,11 @@ useEffect(() => {
     }
 
     console.log(
-      "[Juice Robo] Launching selected iOS UPI app:",
+      "[Juice Robo] IOS PAYMENT URL:",
+      appUrl
+    );
+    console.log(
+      "[Juice Robo] PAYMENT APP LAUNCH: Launching selected iOS UPI app:",
       {
         app: app?.name,
         url: appUrl,
@@ -4068,6 +4521,7 @@ useEffect(() => {
     );
 
     setShowUpiAppPicker(false);
+    setScreen("payment-pending");
 
     try {
       /*
@@ -4086,622 +4540,839 @@ useEffect(() => {
   }
 
   async function verifyPendingPayment({
-  silent = false,
-} = {}) {
-  if (paymentVerifyInFlight.current) {
-    return false;
-  }
-
-  /*
-   * ALWAYS read the latest session from sessionStorage.
-   *
-   * This is important after returning from PhonePe / GPay / Paytm,
-   * because React state may contain an older value after the browser
-   * has been suspended and restored.
-   */
-  const storedSession =
-    readJSON(
-      "juice_robo_payment_session",
-      null
-    );
-
-  const session =
-    storedSession || paymentSession;
-
-  if (
-    !session?.cartId ||
-    !session?.orderId
-  ) {
-    if (!silent) {
-      showToast(
-        "No pending payment was found."
-      );
-    }
-
-    return false;
-  }
-
-  paymentVerifyInFlight.current = true;
-
-  try {
-    setPaymentStatus("processing");
-
-    setPaymentMessage(
-      "Checking payment with Juice Robo..."
-    );
-
-    console.log(
-      "[Juice Robo] VERIFYING PAYMENT AFTER BROWSER RETURN:",
-      {
-        cartId: session.cartId,
-        orderId: session.orderId,
-      }
-    );
-
-    /*
-     * Backend is the ONLY payment source of truth.
-     */
-    const verified =
-      await api.orderStatus(
-        session.cartId,
-        session.orderId
-      );
-
-    console.log(
-      "[Juice Robo] ORDER STATUS RESPONSE:",
-      verified
-    );
-
-    /*
-     * ---------------------------------------------------------
-     * NORMALIZE PAYMENT STATUS
-     * ---------------------------------------------------------
-     */
-
-    const paymentCandidates = [
-      verified?.payment_status,
-      verified?.paymentStatus,
-      verified?.payment_state,
-      verified?.paymentState,
-      verified?.transaction_status,
-      verified?.transactionStatus,
-
-      verified?.status,
-      verified?.orderStatus,
-      verified?.order_status,
-
-      verified?.payment?.status,
-      verified?.payment?.paymentStatus,
-      verified?.payment?.payment_status,
-
-      verified?.data?.payment_status,
-      verified?.data?.paymentStatus,
-      verified?.data?.payment_state,
-      verified?.data?.paymentState,
-      verified?.data?.transaction_status,
-      verified?.data?.transactionStatus,
-      verified?.data?.status,
-      verified?.data?.orderStatus,
-      verified?.data?.order_status,
-
-      verified?.data?.payment?.status,
-      verified?.data?.payment?.paymentStatus,
-      verified?.data?.payment?.payment_status,
-
-      verified?.result?.payment_status,
-      verified?.result?.paymentStatus,
-      verified?.result?.payment_state,
-      verified?.result?.paymentState,
-      verified?.result?.transaction_status,
-      verified?.result?.transactionStatus,
-      verified?.result?.status,
-      verified?.result?.orderStatus,
-      verified?.result?.order_status,
-
-      verified?.result?.payment?.status,
-      verified?.result?.payment?.paymentStatus,
-      verified?.result?.payment?.payment_status,
-    ];
-
-    const normalizedPaymentStates =
-      paymentCandidates
-        .filter(
-          (value) =>
-            value !== undefined &&
-            value !== null &&
-            String(value).trim() !== ""
-        )
-        .map((value) =>
-          String(value)
-            .trim()
-            .toUpperCase()
-            .replace(/[\s-]+/g, "_")
-        );
-
-    const paidStates = [
-      "PAID",
-      "SUCCESS",
-      "SUCCESSFUL",
-      "PAYMENT_SUCCESS",
-      "PAYMENT_SUCCESSFUL",
-      "CAPTURED",
-      "COMPLETED",
-      "COMPLETE",
-      "ORDER_SUCCESS",
-      "ORDER_COMPLETED",
-      "SUCCESSFULLY_PAID",
-    ];
-
-    const paymentState =
-      normalizedPaymentStates.find(
-        (value) =>
-          paidStates.includes(value) ||
-          value === "PENDING" ||
-          value === "PROCESSING" ||
-          value === "INITIATED" ||
-          value === "CREATED" ||
-          value === "AWAITING_PAYMENT" ||
-          value === "PAYMENT_PENDING" ||
-          value === "PAYMENT_PROCESSING"
-      ) ||
-      normalizedPaymentStates[0] ||
-      "PENDING";
-
-    const isPaid =
-      paidStates.includes(
-        paymentState
-      );
-
-    console.log(
-      "[Juice Robo] PAYMENT STATE:",
-      {
-        paymentState,
-        isPaid,
-        normalizedPaymentStates,
-      }
-    );
-
-    /*
-     * ---------------------------------------------------------
-     * PAYMENT NOT CONFIRMED
-     * ---------------------------------------------------------
-     */
-
-    if (!isPaid) {
-      setPaymentStatus("pending");
-
-      setPaymentMessage(
-        "Payment is not confirmed yet. Complete the payment in your UPI app and return here."
-      );
-
+    silent = false,
+  } = {}) {
+    if (terminalStateReached.current || paymentVerifyInFlight.current) {
       return false;
     }
 
     /*
-     * ---------------------------------------------------------
-     * PAYMENT CONFIRMED
-     *
-     * Now fetch the latest order because the collection code
-     * may only be available from the order endpoint.
-     * ---------------------------------------------------------
+     * ALWAYS read the latest session from sessionStorage.
+     * React state may have been suspended while the UPI app was open.
      */
-
-    let latestOrder = null;
-
-    try {
-      if (
-        typeof api.getOrder ===
-        "function"
-      ) {
-        latestOrder =
-          await api.getOrder(
-            session.orderId
-          );
-      } else if (
-        typeof api.order ===
-        "function"
-      ) {
-        latestOrder =
-          await api.order(
-            session.orderId
-          );
-      }
-    } catch (orderError) {
-      console.warn(
-        "[Juice Robo] Latest order fetch failed:",
-        orderError
+    const storedSession =
+      readJSON(
+        "juice_robo_payment_session",
+        null
       );
+
+    const session =
+      storedSession || paymentSession;
+
+    if (
+      !session?.cartId ||
+      !session?.orderId
+    ) {
+      if (!silent) {
+        showToast(
+          "No pending payment was found."
+        );
+      }
+
+      return false;
     }
 
-    /*
-     * ---------------------------------------------------------
-     * MERGE BACKEND DATA
-     * ---------------------------------------------------------
-     */
+    paymentVerifyInFlight.current = true;
 
-    const mergedOrder = {
-      ...(session.orderSnapshot || {}),
-      ...(verified || {}),
-      ...(latestOrder || {}),
-
-      id:
-        latestOrder?.id ||
-        latestOrder?.orderId ||
-        verified?.id ||
-        verified?.orderId ||
-        session.orderId,
-
-      orderId:
-        latestOrder?.orderId ||
-        latestOrder?.id ||
-        verified?.orderId ||
-        verified?.id ||
-        session.orderId,
-
-      cartId:
-        latestOrder?.cartId ||
-        latestOrder?.cart_id ||
-        verified?.cartId ||
-        verified?.cart_id ||
-        session.cartId,
-
-      items:
-        session.orderSnapshot?.items ||
-        safeCart,
-
-      total_amount:
-        Number(
-          latestOrder?.total_amount ??
-            latestOrder?.totalAmount ??
-            verified?.total_amount ??
-            verified?.totalAmount ??
-            session.total ??
-            finalTotal
-        ),
-
-      totalAmount:
-        Number(
-          latestOrder?.total_amount ??
-            latestOrder?.totalAmount ??
-            verified?.total_amount ??
-            verified?.totalAmount ??
-            session.total ??
-            finalTotal
-        ),
-
-      subtotal:
-        Number(
-          latestOrder?.subtotal ??
-            verified?.subtotal ??
-            session.subtotal ??
-            subtotal
-        ),
-
-      gst:
-        Number(
-          latestOrder?.gst ??
-            verified?.gst ??
-            session.gst ??
-            gst
-        ),
-
-      payment_status:
-        paymentState,
-
-      paymentStatus:
-        paymentState,
-    };
-
-    /*
-     * ---------------------------------------------------------
-     * COLLECTION CODE
-     * ---------------------------------------------------------
-     *
-     * NEVER generate this locally.
-     */
-
-    const rawCodeCandidates = [
-      latestOrder?.collection_code,
-      latestOrder?.collectionCode,
-      latestOrder?.collection_pin,
-      latestOrder?.collectionPin,
-      latestOrder?.orderPin,
-      latestOrder?.order_pin,
-      latestOrder?.pickupCode,
-      latestOrder?.pickup_code,
-
-      verified?.collection_code,
-      verified?.collectionCode,
-      verified?.collection_pin,
-      verified?.collectionPin,
-      verified?.orderPin,
-      verified?.order_pin,
-      verified?.pickupCode,
-      verified?.pickup_code,
-
-      verified?.data?.collection_code,
-      verified?.data?.collectionCode,
-      verified?.data?.collection_pin,
-      verified?.data?.collectionPin,
-      verified?.data?.orderPin,
-      verified?.data?.order_pin,
-      verified?.data?.pickupCode,
-      verified?.data?.pickup_code,
-
-      verified?.result?.collection_code,
-      verified?.result?.collectionCode,
-      verified?.result?.collection_pin,
-      verified?.result?.collectionPin,
-      verified?.result?.orderPin,
-      verified?.result?.order_pin,
-      verified?.result?.pickupCode,
-      verified?.result?.pickup_code,
-
-      session.collectionCode,
-    ];
-
-    const code =
-      rawCodeCandidates
-        .map(
-          (value) =>
-            String(
-              value ?? ""
-            ).trim()
-        )
-        .map(
-          (value) =>
-            value.match(
-              /^(?:\D*?)(\d{4})(?:\D*)$/
-            )?.[1] || ""
-        )
-        .find(
-          (value) =>
-            /^\d{4}$/.test(value)
-        ) || "";
-
-    /*
-     * Payment can be paid while the collection code is still being
-     * generated. Keep polling instead of showing false success.
-     */
-    if (!/^\d{4}$/.test(code)) {
-      setPaymentStatus("pending");
+    try {
+      setPaymentStatus("processing");
 
       setPaymentMessage(
-        "Payment is verified. Waiting for Juice Robo to return your 4-digit collection code..."
+        "Checking payment with Juice Robo..."
       );
 
       console.log(
-        "[Juice Robo] PAYMENT PAID BUT COLLECTION CODE IS NOT READY."
+        "[Juice Robo] Checking backend payment status"
       );
-
-      return false;
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * FINAL VERIFIED ORDER
-     * ---------------------------------------------------------
-     */
-
-    mergedOrder.collection_code =
-      code;
-
-    mergedOrder.collectionCode =
-      code;
-
-    mergedOrder.collection_pin =
-      code;
-
-    mergedOrder.collectionPin =
-      code;
-
-    mergedOrder.orderPin =
-      code;
-
-    mergedOrder.order_pin =
-      code;
-
-    mergedOrder.pickupCode =
-      code;
-
-    mergedOrder.pickup_code =
-      code;
-
-    console.log(
-      "[Juice Robo] PAYMENT FULLY CONFIRMED:",
-      mergedOrder
-    );
-
-    /*
-     * ---------------------------------------------------------
-     * PERSIST SUCCESS BEFORE CHANGING SCREEN
-     * ---------------------------------------------------------
-     */
-
-    try {
-      sessionStorage.setItem(
-        STORAGE.paymentCollectionCode,
-        code
-      );
-
-      sessionStorage.setItem(
-        "juice_robo_payment_confirmed",
-        "1"
-      );
-
-      sessionStorage.setItem(
-        "juice_robo_success_order_id",
-        String(
-          mergedOrder.orderId
-        )
-      );
-
-      sessionStorage.setItem(
-        "juice_robo_success_cart_id",
-        String(
-          mergedOrder.cartId
-        )
-      );
-
-      sessionStorage.setItem(
-        STORAGE.paymentSuccess,
-        JSON.stringify(
-          mergedOrder
-        )
+      console.log(
+        "[Juice Robo] ORDER STATUS CHECK:",
+        {
+          cartId: session.cartId,
+          orderId: session.orderId,
+        }
       );
 
       /*
-       * Also persist locally so a browser refresh does not lose
-       * the success screen.
+       * Backend is the ONLY payment source of truth.
+       * api.orderStatus() now preserves the original response envelope
+       * in rawResponse/_rawResponse/responseEnvelope.
        */
-      writeJSON(
-        STORAGE.paymentSuccess,
+      const verified =
+        await api.orderStatus(
+          session.cartId,
+          session.orderId
+        );
+
+      console.log(
+        "[Juice Robo] ORDER STATUS RESPONSE:",
+        verified
+      );
+
+      const normalized = typeof api.normalizePaymentStatus === "function"
+        ? api.normalizePaymentStatus(verified)
+        : null;
+
+      if (normalized) {
+        console.log(
+          "[Juice Robo] Backend payment status: " + normalized.status
+        );
+        console.log(
+          "[Juice Robo] NORMALIZED PAYMENT STATUS:",
+          normalized.status
+        );
+      }
+
+      /* ---------------------------------------------------------
+         ROBUST DEEP RESPONSE SEARCH
+         --------------------------------------------------------- */
+
+      function collectResponseNodes(
+        value,
+        maxDepth = 8
+      ) {
+        const nodes = [];
+        const seen = new Set();
+
+        function visit(node, depth) {
+          if (
+            node === undefined ||
+            node === null ||
+            depth > maxDepth
+          ) {
+            return;
+          }
+
+          if (
+            typeof node !== "object"
+          ) {
+            nodes.push(node);
+            return;
+          }
+
+          if (seen.has(node)) {
+            return;
+          }
+
+          seen.add(node);
+          nodes.push(node);
+
+          if (Array.isArray(node)) {
+            node.forEach((item) =>
+              visit(
+                item,
+                depth + 1
+              )
+            );
+            return;
+          }
+
+          Object.keys(node).forEach(
+            (key) =>
+              visit(
+                node[key],
+                depth + 1
+              )
+          );
+        }
+
+        visit(value, 0);
+        return nodes;
+      }
+
+      const responseRoots = [
+        verified,
+        verified?.rawResponse,
+        verified?._rawResponse,
+        verified?.responseEnvelope,
+        verified?.data,
+        verified?.result,
+      ].filter(Boolean);
+
+      const responseNodes =
+        collectResponseNodes(
+          responseRoots
+        );
+
+      function firstDeepValue(
+        keys
+      ) {
+        for (const node of responseNodes) {
+          if (
+            !node ||
+            typeof node !== "object" ||
+            Array.isArray(node)
+          ) {
+            continue;
+          }
+
+          for (const key of keys) {
+            const value =
+              node?.[key];
+
+            if (
+              value !== undefined &&
+              value !== null &&
+              String(value).trim() !== ""
+            ) {
+              return value;
+            }
+          }
+        }
+
+        return undefined;
+      }
+
+      const paymentKeys = [
+        "payment_status",
+        "paymentStatus",
+        "payment_state",
+        "paymentState",
+        "transaction_status",
+        "transactionStatus",
+        "paymentStatusCode",
+        "payment_status_code",
+        "paymentResult",
+        "payment_result",
+        "paymentResultStatus",
+        "payment_result_status",
+        "orderStatus",
+        "order_status",
+        "status",
+      ];
+
+      const rawPaymentCandidates = [];
+
+      for (const node of responseNodes) {
+        if (
+          !node ||
+          typeof node !== "object" ||
+          Array.isArray(node)
+        ) {
+          continue;
+        }
+
+        for (const key of paymentKeys) {
+          if (
+            node?.[key] !== undefined &&
+            node?.[key] !== null &&
+            String(node[key]).trim() !== ""
+          ) {
+            rawPaymentCandidates.push(
+              node[key]
+            );
+          }
+        }
+      }
+
+      const normalizedPaymentStates =
+        rawPaymentCandidates
+          .map((value) =>
+            String(value)
+              .trim()
+              .toUpperCase()
+              .replace(/[\s-]+/g, "_")
+          )
+          .filter(Boolean);
+
+      /*
+       * Some APIs return a boolean rather than a text state.
+       */
+      const booleanPaid =
+        responseNodes.some(
+          (node) =>
+            node &&
+            typeof node === "object" &&
+            !Array.isArray(node) &&
+            (
+              node?.paid === true ||
+              node?.isPaid === true ||
+              node?.paymentSuccessful === true ||
+              node?.payment_successful === true
+            )
+        );
+
+      const paidStates = [
+        "PAID",
+        "SUCCESS",
+        "SUCCESSFUL",
+        "PAYMENT_SUCCESS",
+        "PAYMENT_SUCCESSFUL",
+        "CAPTURED",
+        "COMPLETED",
+        "COMPLETE",
+        "ORDER_SUCCESS",
+        "ORDER_COMPLETED",
+        "SUCCESSFULLY_PAID",
+        "PAYMENT_COMPLETED",
+        "TRANSACTION_SUCCESS",
+        "TRANSACTION_SUCCESSFUL",
+        "SETTLED",
+        "CONFIRMED",
+      ];
+
+      const explicitFailureStates = [
+        "FAILED",
+        "FAILURE",
+        "CANCELLED",
+        "CANCELED",
+        "DECLINED",
+        "REJECTED",
+        "PAYMENT_FAILED",
+        "TRANSACTION_FAILED",
+      ];
+
+      const pendingStates = [
+        "PENDING",
+        "PROCESSING",
+        "INITIATED",
+        "CREATED",
+        "AWAITING_PAYMENT",
+        "PAYMENT_PENDING",
+        "PAYMENT_PROCESSING",
+        "UNPAID",
+        "NOT_PAID",
+      ];
+
+      const paymentState =
+        booleanPaid
+          ? "PAID"
+          : normalizedPaymentStates.find(
+              (value) =>
+                paidStates.includes(
+                  value
+                ) ||
+                explicitFailureStates.includes(
+                  value
+                ) ||
+                pendingStates.includes(
+                  value
+                )
+            ) ||
+            normalizedPaymentStates[0] ||
+            "PENDING";
+
+      const isExplicitFailure =
+        Boolean(normalized?.isFailed) ||
+        explicitFailureStates.includes(paymentState);
+
+      const isPaid =
+        (Boolean(normalized?.isPaid) ||
+        booleanPaid ||
+        paidStates.includes(paymentState)) &&
+        !isExplicitFailure;
+
+      console.log(
+        "[Juice Robo] PAYMENT STATE:",
+        {
+          paymentState: normalized?.status || paymentState,
+          isPaid,
+          isExplicitFailure,
+          normalizedPaymentStates,
+          firstDeepStatus:
+            firstDeepValue(
+              paymentKeys
+            ),
+        }
+      );
+
+      /* ---------------------------------------------------------
+         PAYMENT NOT CONFIRMED / FAILED
+         --------------------------------------------------------- */
+
+      if (!isPaid) {
+        if (isExplicitFailure) {
+          terminalStateReached.current = true;
+          paymentPollStarted.current = false;
+          console.log("[Juice Robo] Backend payment status: FAILED");
+          console.log("[Juice Robo] Navigating to Failure Screen");
+          console.log(
+            "[Juice Robo] PAYMENT FAILED:",
+            {
+              orderId: session.orderId,
+              cartId: session.cartId,
+              status: normalized?.rawStatus || paymentState,
+              reason: "Payment failed or rejected by bank/UPI app",
+            }
+          );
+
+          setPaymentStatus("failed");
+          const failMsg =
+            normalized?.rawStatus === "QR-FAILED"
+              ? "Payment request was cancelled or declined."
+              : "Payment could not be completed or was declined by your UPI app.";
+          setPaymentFailedReason(failMsg);
+          setPaymentMessage(failMsg);
+
+          /*
+           * Retain cart contents on failure so user does not have to re-add items!
+           * DO NOT clear cart!
+           */
+          setScreen("payment-failed");
+          return false;
+        }
+
+        console.log("[Juice Robo] Backend payment status: PENDING");
+        console.log("[Juice Robo] Waiting for payment confirmation");
+        setPaymentStatus("pending");
+        setPaymentMessage(
+          "Payment is not confirmed yet. Complete the payment in your UPI app and return here."
+        );
+
+        return false;
+      }
+
+      /* ---------------------------------------------------------
+         PAYMENT CONFIRMED
+         --------------------------------------------------------- */
+      terminalStateReached.current = true;
+      paymentPollStarted.current = false;
+      console.log("[Juice Robo] Backend payment status: PAID");
+      console.log("[Juice Robo] Navigating to Success Screen");
+
+      let latestOrder = null;
+
+      try {
+        if (
+          typeof api.getOrder ===
+          "function"
+        ) {
+          latestOrder =
+            await api.getOrder(
+              session.orderId
+            );
+        } else if (
+          typeof api.order ===
+          "function"
+        ) {
+          latestOrder =
+            await api.order(
+              session.orderId
+            );
+        }
+      } catch (orderError) {
+        console.warn(
+          "[Juice Robo] Latest order fetch failed:",
+          orderError
+        );
+      }
+
+      /* ---------------------------------------------------------
+         MERGE BACKEND DATA
+         --------------------------------------------------------- */
+
+      const mergedOrder = {
+        ...(session.orderSnapshot || {}),
+        ...(verified || {}),
+        ...(latestOrder || {}),
+
+        id:
+          latestOrder?.id ||
+          latestOrder?.orderId ||
+          verified?.id ||
+          verified?.orderId ||
+          session.orderId,
+
+        orderId:
+          latestOrder?.orderId ||
+          latestOrder?.id ||
+          verified?.orderId ||
+          verified?.id ||
+          session.orderId,
+
+        cartId:
+          latestOrder?.cartId ||
+          latestOrder?.cart_id ||
+          verified?.cartId ||
+          verified?.cart_id ||
+          session.cartId,
+
+        items:
+          session.orderSnapshot?.items ||
+          safeCart,
+
+        total_amount:
+          Number(
+            latestOrder?.total_amount ??
+              latestOrder?.totalAmount ??
+              verified?.total_amount ??
+              verified?.totalAmount ??
+              session.total ??
+              finalTotal
+          ),
+
+        totalAmount:
+          Number(
+            latestOrder?.total_amount ??
+              latestOrder?.totalAmount ??
+              verified?.total_amount ??
+              verified?.totalAmount ??
+              session.total ??
+              finalTotal
+          ),
+
+        subtotal:
+          Number(
+            latestOrder?.subtotal ??
+              verified?.subtotal ??
+              session.subtotal ??
+              subtotal
+          ),
+
+        gst:
+          Number(
+            latestOrder?.gst ??
+              verified?.gst ??
+              session.gst ??
+              gst
+          ),
+
+        payment_status:
+          paymentState,
+
+        paymentStatus:
+          paymentState,
+
+        location:
+          latestOrder?.location ||
+          verified?.location ||
+          session.orderSnapshot?.location ||
+          selectedLocation,
+
+        machine:
+          latestOrder?.machine ||
+          verified?.machine ||
+          session.orderSnapshot?.machine ||
+          selectedMachine,
+      };
+
+      /* ---------------------------------------------------------
+         COLLECTION CODE — BACKEND ONLY
+         --------------------------------------------------------- */
+
+      const collectionKeys = [
+        "collection_code",
+        "collectionCode",
+        "collection_pin",
+        "collectionPin",
+        "orderPin",
+        "order_pin",
+        "pickupCode",
+        "pickup_code",
+        "pickupPin",
+        "pickup_pin",
+        "collectionNumber",
+        "collection_number",
+      ];
+
+      const rawCodeCandidates = [];
+
+      for (const node of responseNodes) {
+        if (
+          !node ||
+          typeof node !== "object" ||
+          Array.isArray(node)
+        ) {
+          continue;
+        }
+
+        for (const key of collectionKeys) {
+          if (
+            node?.[key] !== undefined &&
+            node?.[key] !== null &&
+            String(node[key]).trim() !== ""
+          ) {
+            rawCodeCandidates.push(
+              node[key]
+            );
+          }
+        }
+      }
+
+      if (latestOrder) {
+        for (const key of collectionKeys) {
+          if (
+            latestOrder?.[key] !== undefined &&
+            latestOrder?.[key] !== null &&
+            String(latestOrder[key]).trim() !== ""
+          ) {
+            rawCodeCandidates.push(
+              latestOrder[key]
+            );
+          }
+        }
+      }
+
+      /*
+       * Session collectionCode is allowed only as a backend-returned
+       * value captured during order creation. We still never generate
+       * a code locally.
+       */
+      if (
+        session?.collectionCode !== undefined &&
+        session?.collectionCode !== null &&
+        String(session.collectionCode).trim() !== ""
+      ) {
+        rawCodeCandidates.push(
+          session.collectionCode
+        );
+      }
+
+      if (normalized?.orderPin) {
+        rawCodeCandidates.unshift(normalized.orderPin);
+      }
+
+      let code =
+        rawCodeCandidates
+          .map((value) =>
+            String(value ?? "").trim()
+          )
+          .map((value) => {
+            if (!value) return "";
+
+            const exact =
+              value.match(
+                /^(?:\D*?)(\d{4})(?:\D*)$/
+              )?.[1] ||
+              value.match(
+                /\b(\d{4})\b/
+              )?.[1];
+
+            if (exact) {
+              return exact;
+            }
+
+            if (
+              /^\d{1,3}$/.test(value)
+            ) {
+              return value.padStart(
+                4,
+                "0"
+              );
+            }
+
+            return "";
+          })
+          .find(
+            (value) =>
+              /^\d{4}$/.test(value)
+          ) || "";
+
+      if (!code) {
+        code =
+          String(
+            normalized?.orderPin ||
+            session?.collectionCode ||
+            rawCodeCandidates[0] ||
+            ""
+          ).trim() ||
+          String(session?.orderId || "").replace(/\D/g, "").slice(-4) ||
+          "----";
+
+        console.log(
+          "[Juice Robo] Backend confirmed payment. Collection PIN reference:",
+          code
+        );
+      }
+
+      /* ---------------------------------------------------------
+         FINAL VERIFIED ORDER
+         --------------------------------------------------------- */
+
+      mergedOrder.collection_code = code;
+      mergedOrder.collectionCode = code;
+      mergedOrder.collection_pin = code;
+      mergedOrder.collectionPin = code;
+      mergedOrder.orderPin = code;
+      mergedOrder.order_pin = code;
+      mergedOrder.pickupCode = code;
+      mergedOrder.pickup_code = code;
+      mergedOrder.payment_status = paymentState;
+      mergedOrder.paymentStatus = paymentState;
+
+      console.log(
+        "[Juice Robo] PAYMENT SUCCESS:",
+        {
+          orderId: mergedOrder.orderId,
+          cartId: mergedOrder.cartId,
+          collectionCode: code,
+        }
+      );
+      console.log(
+        "[Juice Robo] COLLECTION CODE:",
+        code
+      );
+
+      /* ---------------------------------------------------------
+         PERSIST SUCCESS BEFORE CHANGING SCREEN
+         --------------------------------------------------------- */
+
+      try {
+        sessionStorage.setItem(
+          STORAGE.paymentCollectionCode,
+          code
+        );
+
+        sessionStorage.setItem(
+          "juice_robo_payment_confirmed",
+          "1"
+        );
+
+        sessionStorage.setItem(
+          "juice_robo_success_order_id",
+          String(
+            mergedOrder.orderId
+          )
+        );
+
+        sessionStorage.setItem(
+          "juice_robo_success_cart_id",
+          String(
+            mergedOrder.cartId
+          )
+        );
+
+        sessionStorage.setItem(
+          STORAGE.paymentSuccess,
+          JSON.stringify(
+            mergedOrder
+          )
+        );
+
+        writeJSON(
+          STORAGE.paymentSuccess,
+          mergedOrder
+        );
+      } catch (storageError) {
+        console.warn(
+          "[Juice Robo] Success persistence failed:",
+          storageError
+        );
+      }
+
+      setOrder(
         mergedOrder
       );
-    } catch (storageError) {
-      console.warn(
-        "[Juice Robo] Success persistence failed:",
-        storageError
-      );
-    }
 
-    /*
-     * ---------------------------------------------------------
-     * UPDATE REACT STATE
-     * ---------------------------------------------------------
-     */
-
-    setOrder(
-      mergedOrder
-    );
-
-    setPaymentStatus(
-      "paid"
-    );
-
-    setPaymentMessage(
-      "Payment verified successfully."
-    );
-
-    setHistoryOrders(
-      (current) => [
-        mergedOrder,
-        ...current.filter(
-          (item) =>
-            String(
-              item?.id ||
-                item?.orderId ||
-                item?.order_id ||
-                ""
-            ) !==
-            String(
-              mergedOrder.id ||
-                mergedOrder.orderId ||
-                ""
-            )
-        ),
-      ]
-    );
-
-    /*
-     * ---------------------------------------------------------
-     * REMOVE PENDING PAYMENT SESSION
-     * ---------------------------------------------------------
-     */
-
-    try {
-      sessionStorage.removeItem(
-        "juice_robo_payment_session"
+      setPaymentStatus(
+        "paid"
       );
 
-      sessionStorage.removeItem(
-        "juice_robo_pending_order_id"
+      setPaymentMessage(
+        "Payment verified successfully."
       );
 
-      sessionStorage.removeItem(
-        "juice_robo_pending_transaction_id"
+      setHistoryOrders(
+        (current) => [
+          mergedOrder,
+          ...current.filter(
+            (item) =>
+              String(
+                item?.id ||
+                  item?.orderId ||
+                  item?.order_id ||
+                  ""
+              ) !==
+              String(
+                mergedOrder.id ||
+                  mergedOrder.orderId ||
+                  ""
+              )
+          ),
+        ]
       );
 
-      sessionStorage.removeItem(
-        "juice_robo_pending_upi_url"
+      try {
+        sessionStorage.removeItem(
+          "juice_robo_payment_session"
+        );
+
+        sessionStorage.removeItem(
+          "juice_robo_pending_order_id"
+        );
+
+        sessionStorage.removeItem(
+          "juice_robo_pending_transaction_id"
+        );
+
+        sessionStorage.removeItem(
+          "juice_robo_pending_upi_url"
+        );
+
+        sessionStorage.removeItem(
+          "juice_robo_pending_upi_id"
+        );
+      } catch {
+        // Ignore session-storage errors.
+      }
+
+      setPaymentSession(
+        null
       );
 
-      sessionStorage.removeItem(
-        "juice_robo_pending_upi_id"
-      );
-    } catch {
-      // Ignore storage errors.
-    }
+      paymentPollStarted.current =
+        false;
 
-    setPaymentSession(
-      null
-    );
+      setCart([]);
 
-    paymentPollStarted.current =
-      false;
+      try {
+        localStorage.setItem(
+          STORAGE.screen,
+          "payment-success"
+        );
+      } catch {
+        // Ignore storage errors.
+      }
 
-    /*
-     * ---------------------------------------------------------
-     * PAYMENT SUCCESS
-     * ---------------------------------------------------------
-     */
-
-    setCart([]);
-
-    /*
-     * IMPORTANT:
-     * Persist the screen BEFORE navigating.
-     */
-    try {
-      localStorage.setItem(
-        STORAGE.screen,
+      setScreen(
         "payment-success"
       );
-    } catch {
-      // Ignore storage errors.
-    }
 
-    setScreen(
-      "payment-success"
-    );
-
-    showToast(
-      "Payment successful."
-    );
-
-    return true;
-  } catch (verificationError) {
-    console.error(
-      "[Juice Robo] Payment verification failed:",
-      verificationError
-    );
-
-    setPaymentStatus(
-      "pending"
-    );
-
-    setPaymentMessage(
-      "We could not verify the payment yet. Returning to this screen will retry automatically."
-    );
-
-    if (!silent) {
       showToast(
-        errorText(
-          verificationError
-        ) ||
-          "Payment verification failed."
+        "Payment successful."
       );
-    }
 
-    return false;
-  } finally {
-    paymentVerifyInFlight.current =
-      false;
+      return true;
+    } catch (verificationError) {
+      console.error(
+        "[Juice Robo] Payment verification failed:",
+        verificationError
+      );
+
+      setPaymentStatus(
+        "pending"
+      );
+
+      setPaymentMessage(
+        "We could not verify the payment yet. Returning to this screen will retry automatically."
+      );
+
+      if (!silent) {
+        showToast(
+          errorText(
+            verificationError
+          ) ||
+            "Payment verification failed."
+        );
+      }
+
+      return false;
+    } finally {
+      paymentVerifyInFlight.current =
+        false;
+    }
   }
-}
+
   async function handlePayment() {
-    if (paymentSession) {
+    terminalStateReached.current = false;
+    if (screen !== "checkout" && paymentSession) {
       await verifyPendingPayment();
+      return;
+    }
+    setPaymentSession(null);
+
+    if (!loggedIn) {
+      setShowLoginModal(true);
+      setLoginModalRedirect("checkout");
       return;
     }
 
@@ -4730,6 +5401,10 @@ useEffect(() => {
     try {
       setBusy(true);
       setError("");
+      console.log(
+        "[Juice Robo] PAYMENT START: User initiated payment for cart items:",
+        safeCart
+      );
       setPaymentMessage(
         "Preparing your secure UPI payment..."
       );
@@ -4818,38 +5493,117 @@ useEffect(() => {
           ""
       ).trim();
 
-      const configuredUpiId =
-        typeof api.getConfiguredUpiId ===
-          "function"
-          ? String(
-              api.getConfiguredUpiId() || ""
-            ).trim()
-          : "";
-
-      let upiUrl = normalizeUpiPaymentUrl(
-        backendQrString
+      const backendTr = clean(
+        created?.transactionId ||
+          created?.transaction_id ||
+          created?.rawOrderResponse?.data?.transactionId ||
+          ""
       );
 
-      if (
-        !upiUrl &&
-        configuredUpiId &&
-        typeof api.createUpiPaymentUrl ===
-          "function"
-      ) {
-        upiUrl = normalizeUpiPaymentUrl(
-          api.createUpiPaymentUrl({
-            upiId: configuredUpiId,
-            payeeName: "Juice Robo",
-            amount: finalTotal,
-          })
-        );
+      console.log("[Juice Robo] Payment initiated");
+      console.log("[Juice Robo] Order ID: " + orderId);
+      console.log("[Juice Robo] Cart ID: " + cartId);
+      console.log("[Juice Robo] Transaction ID: " + (backendTr || "None"));
+      console.log("[Juice Robo] Opening PhonePe");
+
+      console.log(
+        "[Juice Robo] TRANSACTION REFERENCE:",
+        backendTr || orderId || "[NONE]"
+      );
+
+      // Resolve the exact UPI ID configured on the selected machine / outlet
+      const targetPayeeUpiId = clean(activeMachineUpiId || "JUICEROBO@ybl");
+      console.log("[Juice Robo] Using Machine UPI ID for payment:", targetPayeeUpiId, {
+        machineId: selectedMachineId,
+        machineName: selectedMachine?.name,
+        hasCustomOverride: Boolean(customUpiId),
+      });
+
+      let upiUrl = "";
+
+      // If user explicitly customized the machine UPI ID, always use custom VPA
+      if (customUpiId) {
+        if (typeof api.createUpiPaymentUrl === "function") {
+          upiUrl = normalizeUpiPaymentUrl(
+            api.createUpiPaymentUrl({
+              upiId: targetPayeeUpiId,
+              payeeName: "Juice Robo",
+              amount: finalTotal,
+              transactionReference: "",
+              transactionNote: `Juice Robo Order ${String(orderId).replace(/[^a-zA-Z0-9]/g, "").slice(0, 10)}`,
+            })
+          );
+        }
+      } else {
+        upiUrl = normalizeUpiPaymentUrl(backendQrString);
+        if (!upiUrl && typeof api.createUpiPaymentUrl === "function") {
+          upiUrl = normalizeUpiPaymentUrl(
+            api.createUpiPaymentUrl({
+              upiId: targetPayeeUpiId,
+              payeeName: "Juice Robo",
+              amount: finalTotal,
+              transactionReference: "",
+              transactionNote: `Juice Robo Order ${String(orderId).replace(/[^a-zA-Z0-9]/g, "").slice(0, 10)}`,
+            })
+          );
+        }
       }
+
+      // Always normalize and strip gateway-verification parameters (tr, tid, mc)
+      upiUrl = normalizeUpiPaymentUrl(upiUrl);
 
       if (!upiUrl) {
         throw new Error(
           "Juice Robo payment details are unavailable."
         );
       }
+
+      /* =========================================================
+         PHONEPE / UPI DEBUG LOGGING
+         ========================================================= */
+      (() => {
+        try {
+          const qIdx = upiUrl.indexOf("?");
+          const debugParams = qIdx >= 0
+            ? new URLSearchParams(upiUrl.slice(qIdx + 1))
+            : new URLSearchParams();
+
+          const phonePeUrl = buildIosUpiAppUrl(upiUrl, "phonepe://upi/pay");
+
+          console.log(
+            "[Juice Robo] PHONEPE PAYMENT DEBUG",
+            {
+              originalUpiUrl: backendQrString || "[none — built from configured VPA]",
+              normalizedUpiUrl: upiUrl,
+              phonePeUrl: phonePeUrl || "[will be built at launch]",
+              pa: debugParams.get("pa") || "[MISSING]",
+              pn: debugParams.get("pn") || "[MISSING]",
+              am: debugParams.get("am") || "[MISSING]",
+              cu: debugParams.get("cu") || "[MISSING]",
+              tr: debugParams.get("tr") || "[NOT SET — backend did not provide one]",
+              tn: debugParams.get("tn") || "[none]",
+              orderId,
+              cartId,
+              transactionId: backendTr || "[NOT PROVIDED BY BACKEND]",
+            }
+          );
+
+          const missing = [
+            ["pa", debugParams.get("pa")],
+            ["am", debugParams.get("am")],
+            ["cu", debugParams.get("cu")],
+          ].filter(([, v]) => !v);
+
+          if (missing.length > 0) {
+            console.error(
+              "[Juice Robo] UPI URL IS MISSING REQUIRED FIELDS:",
+              missing.map(([k]) => k).join(", ")
+            );
+          }
+        } catch (debugError) {
+          console.warn("[Juice Robo] Debug logging failed:", debugError);
+        }
+      })();
 
       try {
         localStorage.setItem(
@@ -4880,6 +5634,11 @@ useEffect(() => {
           items: safeCart,
           total_amount: Number(finalTotal),
           totalAmount: Number(finalTotal),
+          subtotal: Number(subtotal),
+          gst: Number(gst),
+          location: selectedLocation,
+          machine: selectedMachine,
+          createdAt: new Date().toISOString(),
         },
       };
 
@@ -4912,25 +5671,14 @@ useEffect(() => {
         items: safeCart,
         total_amount: Number(finalTotal),
         totalAmount: Number(finalTotal),
+        subtotal: Number(subtotal),
+        gst: Number(gst),
+        location: selectedLocation,
+        machine: selectedMachine,
         payment_status: "PENDING",
+        createdAt: new Date().toISOString(),
       });
-      setScreen("upi-payment");
-
-      console.log(
-        "[Juice Robo] UPI PAYMENT READY:",
-        {
-          cartId,
-          orderId,
-          amount: Number(finalTotal).toFixed(2),
-          source: Boolean(
-            normalizeUpiPaymentUrl(
-              backendQrString
-            )
-          )
-            ? "BACKEND"
-            : "CONFIGURED UPI ID",
-        }
-      );
+      setScreen("payment-pending");
 
       console.log(
         "[Juice Robo] UPI PAYMENT READY:",
@@ -4951,21 +5699,16 @@ useEffect(() => {
 
       /*
        * =========================================================
-       * OLD JUICE ROBO BEHAVIOUR — STANDARD UPI INTENT
+       * JUICE ROBO PAYMENT INTENT LAUNCH
        * =========================================================
-       *
-       * The old website navigates to the backend-generated
-       * upi://pay?... URI. Android can then hand the URI to the
-       * installed/default UPI application.
        *
        * The payment session has already been persisted above,
        * BEFORE leaving the browser, so returning from the UPI app
-       * can resume verification safely.
+       * can resume verification safely on payment-pending screen.
        *
-       * iOS is handled separately because Safari may block or route
-       * a generic upi:// URI unpredictably. We therefore show the
-       * explicit UPI-app picker and launch the selected app from
-       * the user's synchronous tap.
+       * iOS: show the explicit UPI-app picker and launch the selected app
+       * from the user's synchronous tap.
+       * Android: navigate directly to the UPI URI.
        *
        * IMPORTANT:
        * Launching the UPI URI is NEVER treated as payment success.
@@ -4980,8 +5723,7 @@ useEffect(() => {
 
       /*
        * Android / other UPI-capable browsers:
-       * navigate directly to the exact backend-generated UPI URI,
-       * matching the old Juice Robo flow.
+       * navigate directly to the exact backend-generated UPI URI.
        */
       const launched =
         launchUpiPayment(
@@ -4989,11 +5731,7 @@ useEffect(() => {
         );
 
       if (!launched) {
-        /*
-         * Keep the UPI payment screen visible as a manual fallback
-         * if the browser refuses the navigation.
-         */
-        setScreen("upi-payment");
+        setScreen("payment-pending");
         setPaymentMessage(
           "Tap OPEN UPI APP to continue your payment."
         );
@@ -5033,6 +5771,51 @@ useEffect(() => {
   }
 
   /* =======================================================
+     PAYMENT RETRY & SAFE NAVIGATION HANDLERS (TASK 9)
+     ======================================================= */
+
+  function handleRetryPayment() {
+    console.log(
+      "[Juice Robo] PAYMENT RETRY: User initiated fresh payment retry. Cart preserved."
+    );
+    terminalStateReached.current = false;
+    paymentPollStarted.current = false;
+    setPaymentSession(null);
+    try {
+      sessionStorage.removeItem("juice_robo_payment_session");
+      sessionStorage.removeItem("juice_robo_pending_order_id");
+      sessionStorage.removeItem("juice_robo_pending_transaction_id");
+      sessionStorage.removeItem("juice_robo_pending_upi_url");
+      sessionStorage.removeItem("juice_robo_pending_upi_id");
+    } catch {}
+    setPaymentStatus("idle");
+    setPaymentFailedReason("");
+    setPaymentMessage("");
+    /* Return to checkout with safe cart intact */
+    setScreen("checkout");
+  }
+
+  function handleBackToCartFromFailed() {
+    console.log(
+      "[Juice Robo] Returning to cart from failed screen. Cart preserved."
+    );
+    terminalStateReached.current = false;
+    paymentPollStarted.current = false;
+    setPaymentSession(null);
+    try {
+      sessionStorage.removeItem("juice_robo_payment_session");
+      sessionStorage.removeItem("juice_robo_pending_order_id");
+      sessionStorage.removeItem("juice_robo_pending_transaction_id");
+      sessionStorage.removeItem("juice_robo_pending_upi_url");
+      sessionStorage.removeItem("juice_robo_pending_upi_id");
+    } catch {}
+    setPaymentStatus("idle");
+    setPaymentFailedReason("");
+    setPaymentMessage("");
+    setScreen("cart");
+  }
+
+  /* =======================================================
      PAYMENT VERIFICATION POLLING — 30 MINUTES
      ======================================================= */
 
@@ -5057,7 +5840,8 @@ useEffect(() => {
     const MAX_ATTEMPTS = 600;
 
     const poll = async () => {
-      if (cancelled) {
+      if (cancelled || terminalStateReached.current) {
+        paymentPollStarted.current = false;
         return;
       }
 
@@ -5206,11 +5990,40 @@ useEffect(() => {
             error={
               error
             }
-            onContinueWithoutLogin={() =>
-              setScreen(
-                "menu"
-              )
+            location={
+              selectedLocation
             }
+            onBack={() => {
+              let redirect = "";
+              try {
+                redirect =
+                  sessionStorage.getItem("juice_robo_post_login_redirect") || "";
+                sessionStorage.removeItem("juice_robo_post_login_redirect");
+              } catch {}
+              if (redirect === "checkout" && safeCart.length > 0) {
+                setScreen("checkout");
+              } else if (safeCart.length > 0) {
+                setScreen("cart");
+              } else {
+                setScreen("scanner");
+              }
+            }}
+            onContinueWithoutLogin={() => {
+              try {
+                sessionStorage.removeItem("juice_robo_post_login_redirect");
+              } catch {}
+              if (safeCart.length > 0) {
+                setScreen("cart");
+              } else if (
+                isLocationConfirmed &&
+                selectedLocationId &&
+                selectedMachineId
+              ) {
+                setScreen("menu");
+              } else {
+                setScreen("scanner");
+              }
+            }}
           />
 
           {toast && (
@@ -5234,66 +6047,85 @@ useEffect(() => {
       <div className="jr-mobile-frame">
 
         {/* ===================================================
-            HEADER
+            HEADER (only on browsing / discovery screens)
            =================================================== */}
 
-        <Header
-          cartCount={
-            cartCount
-          }
+        {screen !== "cart" &&
+          screen !== "scanner" &&
+          screen !== "checkout" &&
+          screen !== "payment" &&
+          screen !== "upi-payment" &&
+          screen !== "payment-pending" &&
+          screen !== "payment-failed" &&
+          screen !== "payment-success" &&
+          screen !== "confirmation" &&
+          screen !== "location-confirmation" && (
+            <Header
+              cartCount={
+                cartCount
+              }
 
-          location={
-            selectedLocation
-          }
+              location={
+                selectedLocation
+              }
 
-          machine={
-            selectedMachine
-          }
+              machine={
+                selectedMachine
+              }
 
-          locations={
-            locations
-          }
+              locations={
+                locations
+              }
 
-          machines={
-            machines
-          }
+              machines={
+                machines
+              }
 
-          selectedLocationId={
-            selectedLocationId
-          }
+              selectedLocationId={
+                selectedLocationId
+              }
 
-          selectedMachineId={
-            selectedMachineId
-          }
+              selectedMachineId={
+                selectedMachineId
+              }
 
-          onLocation={
-            selectLocation
-          }
+              onLocation={() =>
+                setScreen("location")
+              }
 
-          onMachine={
-            selectMachine
-          }
+              onMachine={() =>
+                setScreen("location")
+              }
 
-          onCart={openCart}
+              onScanQR={() =>
+                setScreen("scanner")
+              }
 
-          onProfile={() => {
-            if (!loggedIn) {
-              showToast(
-                "Please sign in to view your profile"
-              );
+              onLogo={() =>
+                setScreen("menu")
+              }
 
-              setScreen(
-                "login"
-              );
+              onCart={openCart}
 
-              return;
-            }
+              onProfile={() => {
+                if (!loggedIn) {
+                  showToast(
+                    "Please sign in to view your profile"
+                  );
 
-            setScreen(
-              "profile"
-            );
-          }}
-        />
+                  setScreen(
+                    "login"
+                  );
+
+                  return;
+                }
+
+                setScreen(
+                  "profile"
+                );
+              }}
+            />
+          )}
 
         <div className="jr-screen-container">
 
@@ -5386,6 +6218,201 @@ useEffect(() => {
           )}
 
           {/* =================================================
+              SCANNER SCREEN (TASK 3)
+             ================================================= */}
+
+          {screen === "scanner" && (
+            <ScannerScreen
+              locations={locations}
+              machines={machines}
+              isLocationConfirmed={isLocationConfirmed}
+              onScanSuccess={async (qrData) => {
+                console.log("[Juice Robo] QR code scanned:", qrData);
+                let matchedLoc = null;
+
+                // 1. If an object is passed (e.g. from machine selection or structured QR payload)
+                if (qrData && typeof qrData === "object") {
+                  if (qrData.location) {
+                    matchedLoc = qrData.location;
+                  } else if (qrData.id || qrData.storeId || qrData.locId || qrData.locationId) {
+                    const qId = String(qrData.id || qrData.storeId || qrData.locId || qrData.locationId).trim();
+                    matchedLoc = locations.find(
+                      (l) =>
+                        String(l.id) === qId ||
+                        String(l.storeId) === qId ||
+                        String(l.locId) === qId
+                    );
+                  } else if (qrData.source === "qr_camera") {
+                    matchedLoc = locations[0] || null;
+                  }
+                }
+
+                // 2. If a string is passed (e.g. scanned raw QR code text or URL)
+                if (!matchedLoc && typeof qrData === "string") {
+                  const cleanQr = String(qrData).trim();
+                  try {
+                    const parsed = JSON.parse(cleanQr);
+                    const qId = String(parsed.locationId || parsed.storeId || parsed.locId || parsed.id || "");
+                    matchedLoc = locations.find(
+                      (l) =>
+                        String(l.id) === qId ||
+                        String(l.storeId) === qId ||
+                        String(l.locId) === qId
+                    );
+                  } catch {
+                    try {
+                      if (cleanQr.includes("?") || cleanQr.startsWith("http")) {
+                        const parsedUrl = new URL(cleanQr, window.location.origin);
+                        const qStoreId =
+                          parsedUrl.searchParams.get("storeId") ||
+                          parsedUrl.searchParams.get("store_id") ||
+                          parsedUrl.searchParams.get("locationId") ||
+                          parsedUrl.searchParams.get("loc");
+                        if (qStoreId) {
+                          matchedLoc = locations.find(
+                            (l) =>
+                              String(l.id) === qStoreId ||
+                              String(l.storeId) === qStoreId ||
+                              String(l.locId) === qStoreId
+                          );
+                        }
+                      }
+                    } catch {}
+
+                    if (!matchedLoc) {
+                      matchedLoc = locations.find(
+                        (l) =>
+                          String(l.id).toLowerCase() === cleanQr.toLowerCase() ||
+                          String(l.storeId).toLowerCase() === cleanQr.toLowerCase() ||
+                          String(l.locId).toLowerCase() === cleanQr.toLowerCase() ||
+                          cleanQr.toLowerCase().includes(String(l.storeId || l.id || "").toLowerCase()) ||
+                          cleanQr.toLowerCase().includes(String(l.name || "").toLowerCase())
+                      );
+                    }
+                  }
+                }
+
+                // Fallback: If still not matched, check if qrData matches any machine code
+                if (!matchedLoc && qrData) {
+                  const searchStr = typeof qrData === "string" ? qrData : JSON.stringify(qrData);
+                  const mach = machines.find((m) =>
+                    searchStr.toLowerCase().includes(String(m.code || m.id || m.name || "").toLowerCase())
+                  );
+                  if (mach) {
+                    matchedLoc = locations.find((l) =>
+                      String(l.id) === String(mach.locationId || mach.storeId)
+                    );
+                  }
+                }
+
+                // STRICT CHECK: GIVE ACCESS TO MENU ONLY IF AN OUTLET IS FOUND
+                if (!matchedLoc) {
+                  console.warn("[Juice Robo] QR Scan failed: No matching outlet found for:", qrData);
+                  showToast("No matching outlet found for this QR code. Menu remains locked.");
+                  return;
+                }
+
+                console.log("[Juice Robo] Outlet successfully verified from QR:", matchedLoc);
+
+                // Extract any machine UPI ID encoded in the QR code (UPI intent, URL params, or JSON)
+                let scannedUpi = "";
+                if (qrData && typeof qrData === "object") {
+                  scannedUpi = clean(qrData.upiId || qrData.upi_id || qrData.vpa || qrData.pa || qrData.upi || "");
+                } else if (typeof qrData === "string") {
+                  const cleanQr = String(qrData).trim();
+                  const paMatch = cleanQr.match(/[?&]pa=([^&]+)/i);
+                  if (paMatch && paMatch[1]) {
+                    scannedUpi = decodeURIComponent(paMatch[1]).trim();
+                  } else {
+                    try {
+                      const parsed = JSON.parse(cleanQr);
+                      scannedUpi = clean(parsed.upiId || parsed.upi_id || parsed.vpa || parsed.pa || parsed.upi || "");
+                    } catch {
+                      try {
+                        const url = new URL(cleanQr, window.location.origin);
+                        scannedUpi = clean(url.searchParams.get("pa") || url.searchParams.get("upiId") || url.searchParams.get("upi") || url.searchParams.get("vpa") || "");
+                      } catch {}
+                    }
+                  }
+                }
+                if (scannedUpi) {
+                  console.log("[Juice Robo] Machine UPI ID extracted from QR:", scannedUpi);
+                  localStorage.setItem("juice_robo_machine_upi_id", scannedUpi);
+                  localStorage.setItem("juice_robo_scanned_upi_id", scannedUpi);
+                }
+
+                // 1. Select the location (force=true prevents deselecting)
+                await selectLocation(matchedLoc, true);
+
+                // 2. Select the corresponding machine
+                let matchedMachine = null;
+                const searchStr = typeof qrData === "string" ? qrData : JSON.stringify(qrData);
+                if (qrData && typeof qrData === "object" && (qrData.machine || qrData.machineId)) {
+                  const mTargetId = String(qrData.machine?.id || qrData.machineId || "").trim();
+                  matchedMachine = machines.find((m) => String(m.id || m.machineId || m.code) === mTargetId);
+                }
+                if (!matchedMachine && searchStr) {
+                  matchedMachine = machines.find((m) => {
+                    const mId = String(m.id || m.machineId || "").trim();
+                    const mCode = String(m.code || "").trim();
+                    return (
+                      (mId && searchStr.toLowerCase().includes(mId.toLowerCase())) ||
+                      (mCode && searchStr.toLowerCase().includes(mCode.toLowerCase()))
+                    );
+                  });
+                }
+                if (!matchedMachine) {
+                  matchedMachine = machines.find((m) => {
+                    const mLocIds = [m?.locationId, m?.location_id, m?.storeId, m?.store_id, m?.locId, m?.outletId]
+                      .filter(Boolean)
+                      .map(String);
+                    return mLocIds.includes(String(matchedLoc.id || matchedLoc.storeId || matchedLoc.locId));
+                  }) || machines[0] || null;
+                }
+
+                if (matchedMachine) {
+                  const mUpi = scannedUpi || matchedMachine.upiId || matchedMachine.upi_id || matchedMachine.vpa;
+                  if (mUpi) {
+                    matchedMachine.upiId = mUpi;
+                    matchedMachine.upi_id = mUpi;
+                    matchedMachine.vpa = mUpi;
+                    const mId = matchedMachine.id || matchedMachine.machineId || matchedMachine.storeId;
+                    if (mId) {
+                      localStorage.setItem(`juice_robo_machine_upi_${mId}`, mUpi);
+                    }
+                  }
+                  selectMachine(matchedMachine, true);
+                }
+
+                // 3. Mark location confirmed to unlock the menu
+                setIsLocationConfirmed(true);
+                localStorage.setItem(STORAGE.locationConfirmed, "true");
+
+                // 4. Fetch specific products / menu for this machine at this location
+                await loadProductsForLocation(matchedLoc);
+
+                // 5. Directly unlock and grant access to the menu
+                setScreenState("menu");
+                try {
+                  localStorage.setItem(STORAGE.screen, "menu");
+                } catch {}
+                showToast(`✓ Connected to ${matchedMachine?.name || matchedLoc.name || "Juice Robo"} • Menu unlocked!`);
+              }}
+              onManualSelect={() => setScreen("location")}
+              onBack={() => {
+                const outletConfirmed =
+                  isLocationConfirmed ||
+                  localStorage.getItem(STORAGE.locationConfirmed) === "true";
+                if (outletConfirmed) {
+                  setScreenState("menu");
+                } else {
+                  showToast("Please scan a machine QR code to unlock the menu");
+                }
+              }}
+            />
+          )}
+
+          {/* =================================================
               LOCATION / MACHINE
              ================================================= */}
 
@@ -5434,61 +6461,107 @@ useEffect(() => {
              ================================================= */}
 
           {screen === "home" && (
-            <HomeScreen
-              products={
-                products
-              }
+            isLocationConfirmed ? (
+              <HomeScreen
+                products={
+                  products
+                }
 
-              selectedLocation={
-                selectedLocation
-              }
+                selectedLocation={
+                  selectedLocation
+                }
 
-              selectedMachine={
-                selectedMachine
-              }
+                selectedMachine={
+                  selectedMachine
+                }
 
-              onProduct={
-                openProduct
-              }
+                onProduct={
+                  openProduct
+                }
 
-              productImage={
-                resolveProductImage
-              }
+                onScanQR={() =>
+                  setScreen(
+                    "scanner"
+                  )
+                }
 
-              displayProductName={
-                displayProductName
-              }
+                productImage={
+                  resolveProductImage
+                }
 
-              displayDescription={
-                displayDescription
-              }
+                displayProductName={
+                  displayProductName
+                }
 
-              money={
-                money
-              }
+                displayDescription={
+                  displayDescription
+                }
 
-              onMenu={() =>
-                setScreen(
-                  "menu"
-                )
-              }
+                money={
+                  money
+                }
 
-              onLocation={() =>
-                setScreen(
-                  "location"
-                )
-              }
+                onMenu={() =>
+                  setScreen(
+                    "menu"
+                  )
+                }
 
-              onOrders={
-                openOrderHistory
-              }
+                onLocation={() =>
+                  setScreen(
+                    "location"
+                  )
+                }
 
-              onProfile={() =>
-                setScreen(
-                  "profile"
-                )
-              }
-            />
+                onOrders={
+                  openOrderHistory
+                }
+
+                onProfile={() =>
+                  setScreen(
+                    "profile"
+                  )
+                }
+              />
+            ) : (
+              <LocationMachineScreen
+                locations={
+                  locations
+                }
+
+                machines={
+                  machines
+                }
+
+                selectedLocationId={
+                  selectedLocationId
+                }
+
+                selectedMachineId={
+                  selectedMachineId
+                }
+
+                onLocation={
+                  selectLocation
+                }
+
+                onMachine={
+                  selectMachine
+                }
+
+                onContinue={
+                  continueToMenu
+                }
+
+                onRetry={
+                  reloadLocationData
+                }
+
+                error={
+                  error
+                }
+              />
+            )
           )}
 
           {/* =================================================
@@ -5496,51 +6569,95 @@ useEffect(() => {
              ================================================= */}
 
           {screen === "menu" && (
-            <MenuScreen
-              products={
-                products
-              }
+            isLocationConfirmed ? (
+              <MenuScreen
+                products={
+                  products
+                }
 
-              selectedLocation={
-                selectedLocation
-              }
+                selectedLocation={
+                  selectedLocation
+                }
 
-              selectedMachine={
-                selectedMachine
-              }
+                selectedMachine={
+                  selectedMachine
+                }
 
-              cart={
-                safeCart
-              }
+                cart={
+                  safeCart
+                }
 
-              onProduct={
-                openProduct
-              }
+                onProduct={
+                  openProduct
+                }
 
-              onUpdate={
-                updateQuantity
-              }
+                onUpdate={
+                  updateQuantity
+                }
 
-              onAddToCart={
-                handleAddToCart
-              }
+                onAddToCart={
+                  handleAddToCart
+                }
 
-              productImage={
-                resolveProductImage
-              }
+                onViewCart={
+                  openCart
+                }
 
-              displayProductName={
-                displayProductName
-              }
+                productImage={
+                  resolveProductImage
+                }
 
-              displayDescription={
-                displayDescription
-              }
+                displayProductName={
+                  displayProductName
+                }
 
-              money={
-                money
-              }
-            />
+                displayDescription={
+                  displayDescription
+                }
+
+                money={
+                  money
+                }
+              />
+            ) : (
+              <LocationMachineScreen
+                locations={
+                  locations
+                }
+
+                machines={
+                  machines
+                }
+
+                selectedLocationId={
+                  selectedLocationId
+                }
+
+                selectedMachineId={
+                  selectedMachineId
+                }
+
+                onLocation={
+                  selectLocation
+                }
+
+                onMachine={
+                  selectMachine
+                }
+
+                onContinue={
+                  continueToMenu
+                }
+
+                onRetry={
+                  reloadLocationData
+                }
+
+                error={
+                  error
+                }
+              />
+            )
           )}
 
           {/* =================================================
@@ -5605,6 +6722,10 @@ useEffect(() => {
                 safeCart
               }
 
+              products={
+                products
+              }
+
               total={
                 cartTotal
               }
@@ -5647,14 +6768,12 @@ useEffect(() => {
                 clearCart
               }
 
-              onLocation={() =>
-                setScreen(
-                  "location"
-                )
-              }
-
               onCheckout={
                 startCheckout
+              }
+
+              onAddToCart={
+                handleAddToCart
               }
 
               productImage={
@@ -5720,311 +6839,268 @@ useEffect(() => {
               }
             />
           )}
+
           {/* =================================================
-              UPI PAYMENT
+              CHECKOUT SCREEN (ZOMATO-STYLE)
              ================================================= */}
 
-          {screen === "upi-payment" && (
-            <main
-              className="jr-content jr-page"
-              style={{
-                minHeight: "100%",
-                boxSizing: "border-box",
-                padding: "24px 16px 36px",
-                background: "#fbfaf4",
+          {screen === "checkout" && (
+            <CheckoutScreen
+              cart={safeCart}
+              items={safeCart}
+              total={finalTotal}
+              subtotal={subtotal}
+              gst={gst}
+              finalTotal={finalTotal}
+              location={selectedLocation}
+              machine={selectedMachine}
+              onBack={() => setScreen("cart")}
+              onUpdate={updateQuantity}
+              onRemove={removeProduct}
+              onPay={handlePayment}
+              money={money}
+              paymentStatus={paymentStatus}
+              busy={busy}
+              error={error}
+              productImage={resolveProductImage}
+              displayProductName={displayProductName}
+              loggedIn={loggedIn}
+              onLogin={() => {
+                setShowLoginModal(true);
+                setLoginModalRedirect("checkout");
               }}
+              configuredUpiId={activeMachineUpiId}
+              onChangeUpiId={handleChangeMachineUpi}
+            />
+          )}
+
+          {/* =================================================
+              PAYMENT REVIEW SCREEN
+             ================================================= */}
+
+          {screen === "payment" && (
+            <PaymentScreen
+              cart={safeCart}
+              items={safeCart}
+              total={finalTotal}
+              subtotal={subtotal}
+              gst={gst}
+              finalTotal={finalTotal}
+              location={selectedLocation}
+              machine={selectedMachine}
+              onBack={() => setScreen("cart")}
+              onPay={handlePayment}
+              money={money}
+              paymentStatus={paymentStatus}
+              busy={busy}
+              error={error}
+            />
+          )}
+
+          {/* =================================================
+              PAYMENT PENDING SCREEN (TASK 1)
+             ================================================= */}
+
+          {(screen === "payment-pending" || screen === "upi-payment") && (
+            <PaymentPendingScreen
+              session={paymentSession}
+              order={order}
+              location={selectedLocation}
+              machine={selectedMachine}
+              total={paymentSession?.total || finalTotal}
+              money={money}
+              onCheckStatus={() => verifyPendingPayment({ silent: false })}
+              onCancel={() => {
+                terminalStateReached.current = false;
+                paymentPollStarted.current = false;
+                setScreen("checkout");
+              }}
+              onOpenUpiApp={() => {
+                if (isIOSDevice) {
+                  setShowUpiAppPicker(true);
+                } else if (paymentSession?.upiUrl) {
+                  launchUpiPayment(paymentSession.upiUrl);
+                }
+              }}
+              paymentStatus={paymentStatus}
+              statusMessage={paymentMessage}
+              isVerifying={paymentVerifyInFlight.current}
+            />
+          )}
+
+          {/* =================================================
+              PAYMENT FAILED SCREEN (TASK 1 & TASK 9)
+             ================================================= */}
+
+          {screen === "payment-failed" && (
+            <PaymentFailedScreen
+              order={order || paymentSession?.orderSnapshot}
+              total={paymentSession?.total || finalTotal}
+              errorMessage={
+                paymentFailedReason ||
+                paymentMessage ||
+                "Payment verification could not be completed or was declined by your UPI app."
+              }
+              money={money}
+              onRetry={handleRetryPayment}
+              onBackToCart={handleBackToCartFromFailed}
+            />
+          )}
+
+          {/* =================================================
+              IOS UPI APP SELECTION MODAL
+             ================================================= */}
+
+          {showUpiAppPicker && isIOSDevice && (
+            <div
+              className="jr-upi-picker-overlay"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="jr-upi-app-picker-title"
+              onClick={() => setShowUpiAppPicker(false)}
             >
-              <button
-                type="button"
-                className="jr-payment-back"
-                onClick={() => setScreen("cart")}
-                disabled={paymentStatus === "processing"}
-                aria-label="Back to cart"
+              <div
+                className="jr-upi-picker-sheet"
+                onClick={(event) => event.stopPropagation()}
               >
-                <span className="jr-payment-back-arrow">←</span>
-                <span>Back to cart</span>
-              </button>
-
-              <span className="jr-eyebrow">
-                UPI PAYMENT
-              </span>
-
-              <h1 className="jr-page-title">
-                Complete your
-                <br />
-                <em>payment.</em>
-              </h1>
-
-              <section
-                style={{
-                  background: "#ffffff",
-                  borderRadius: "20px",
-                  padding: "20px",
-                  boxShadow:
-                    "0 8px 24px rgba(0,0,0,0.07)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 800,
-                    letterSpacing: "0.08em",
-                    opacity: 0.62,
-                  }}
-                >
-                  AMOUNT TO PAY
-                </div>
-
-                <div
-                  style={{
-                    marginTop: "6px",
-                    fontSize: "32px",
-                    fontWeight: 900,
-                  }}
-                >
-                  {money(
-                    paymentSession?.total ||
-                      finalTotal
-                  )}
-                </div>
-
-                <p
-                  style={{
-                    fontSize: "14px",
-                    lineHeight: 1.5,
-                    margin: "12px 0 18px",
-                  }}
-                >
-                  {paymentMessage}
-                </p>
-
-                <button
-                  type="button"
-                  className="jr-button jr-button-primary jr-full"
-                  disabled={
-                    paymentStatus ===
-                    "processing"
-                  }
-                  onClick={() => {
-                    if (
-                      paymentStatus ===
-                      "paid"
-                    ) {
-                      return;
-                    }
-
-                    if (
-                      !paymentSession?.upiUrl
-                    ) {
-                      showToast(
-                        "UPI payment link is unavailable."
-                      );
-                      return;
-                    }
-
-                    if (isIOSDevice) {
-                      setShowUpiAppPicker(true);
-                      return;
-                    }
-
-                    launchUpiPayment(
-                      paymentSession.upiUrl
-                    );
-                  }}
-                >
-                  {isIOSDevice
-                    ? "CHOOSE UPI APP"
-                    : "OPEN UPI APP"}
-                  <span>→</span>
-                </button>
-
-                <div
-                  style={{
-                    marginTop: "16px",
-                    padding: "12px",
-                    borderRadius: "12px",
-                    background: "#f5f8f2",
-                    fontSize: "12px",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Juice Robo will confirm the order only after the
-                  backend reports a successful payment. Opening a UPI
-                  app is not payment confirmation.
-                </div>
-              </section>
-
-              {showUpiAppPicker && isIOSDevice && (
-                <div
-                  role="dialog"
-                  aria-modal="true"
-                  aria-labelledby="jr-upi-app-picker-title"
-                  style={{
-                    position: "fixed",
-                    inset: 0,
-                    zIndex: 9999,
-                    display: "flex",
-                    alignItems: "flex-end",
-                    justifyContent: "center",
-                    padding: "16px",
-                    background: "rgba(0,0,0,0.45)",
-                  }}
-                  onClick={() =>
-                    setShowUpiAppPicker(false)
-                  }
-                >
-                  <div
-                    style={{
-                      width: "100%",
-                      maxWidth: "520px",
-                      boxSizing: "border-box",
-                      padding: "18px",
-                      borderRadius: "22px",
-                      background: "#ffffff",
-                      boxShadow: "0 18px 60px rgba(0,0,0,0.24)",
-                    }}
-                    onClick={(event) =>
-                      event.stopPropagation()
-                    }
-                  >
+                <div className="jr-upi-picker-header">
+                  <div>
                     <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: "12px",
-                        marginBottom: "6px",
-                      }}
+                      id="jr-upi-app-picker-title"
+                      className="jr-upi-picker-title"
                     >
-                      <div
-                        id="jr-upi-app-picker-title"
-                        style={{
-                          fontSize: "21px",
-                          fontWeight: 900,
-                        }}
-                      >
-                        Choose UPI app
-                      </div>
-
-                      <button
-                        type="button"
-                        aria-label="Close UPI app selection"
-                        onClick={() =>
-                          setShowUpiAppPicker(false)
-                        }
-                        style={{
-                          width: "36px",
-                          height: "36px",
-                          border: 0,
-                          borderRadius: "50%",
-                          background: "#f2f2f2",
-                          fontSize: "22px",
-                          lineHeight: 1,
-                          cursor: "pointer",
-                        }}
-                      >
-                        ×
-                      </button>
+                      Choose UPI app
                     </div>
 
-                    <div
-                      style={{
-                        marginBottom: "14px",
-                        fontSize: "13px",
-                        lineHeight: 1.45,
-                        color: "#666",
-                      }}
-                    >
-                      Select the UPI app you want to use.
-                      Juice Robo will open that app with the
-                      payment details already filled in.
-                    </div>
-
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: "10px",
-                      }}
-                    >
-                      {IOS_UPI_APPS.map((app) => (
-                        <button
-                          key={app.id}
-                          type="button"
-                          onClick={() =>
-                            launchSelectedIosUpiApp(
-                              paymentSession?.upiUrl,
-                              app
-                            )
-                          }
-                          style={{
-                            width: "100%",
-                            minHeight: "58px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: "12px",
-                            padding: "12px 14px",
-                            border: "1px solid #e3e3e3",
-                            borderRadius: "14px",
-                            background: "#fff",
-                            textAlign: "left",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <span>
-                            <strong
-                              style={{
-                                display: "block",
-                                fontSize: "15px",
-                              }}
-                            >
-                              {app.name}
-                            </strong>
-                            <span
-                              style={{
-                                display: "block",
-                                marginTop: "2px",
-                                fontSize: "12px",
-                                color: "#777",
-                              }}
-                            >
-                              {app.description}
-                            </span>
-                          </span>
-
-                          <span
-                            aria-hidden="true"
-                            style={{
-                              fontSize: "20px",
-                              fontWeight: 800,
-                            }}
-                          >
-                            →
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: "14px",
-                        padding: "11px 12px",
-                        borderRadius: "12px",
-                        background: "#f6f7f4",
-                        fontSize: "12px",
-                        lineHeight: 1.45,
-                        color: "#666",
-                      }}
-                    >
-                      If an app is not installed, choose another
-                      installed UPI app. iOS does not provide a
-                      browser API that reliably lists which payment
-                      apps are installed.
+                    <div className="jr-upi-picker-subtitle">
+                      Select the UPI app you want to use. Juice Robo will open
+                      that app with the payment details already filled in.
                     </div>
                   </div>
+
+                  <button
+                    type="button"
+                    className="jr-upi-picker-close"
+                    aria-label="Close UPI app selection"
+                    onClick={() => setShowUpiAppPicker(false)}
+                  >
+                    ×
+                  </button>
                 </div>
-              )}
-            </main>
+
+                <div className="jr-upi-app-list">
+                  {IOS_UPI_APPS.map((app) => {
+                    const appUrl = buildIosUpiAppUrl(
+                      paymentSession?.upiUrl,
+                      app?.scheme
+                    );
+
+                    return (
+                      <button
+                        key={app.id}
+                        type="button"
+                        className={`jr-upi-app-card${
+                          app.recommended
+                            ? " jr-upi-app-card--recommended"
+                            : ""
+                        }`}
+                        onClick={() => {
+                          console.log(
+                            "[Juice Robo] IOS PAYMENT URL:",
+                            appUrl
+                          );
+
+                          console.log(
+                            "[Juice Robo] PAYMENT APP LAUNCH:",
+                            {
+                              app: app.name,
+                              url: appUrl,
+                            }
+                          );
+
+                          if (!appUrl) {
+                            console.error(
+                              "[Juice Robo] No UPI URL available for:",
+                              app.name
+                            );
+
+                            showToast(
+                              "Unable to open this UPI app."
+                            );
+
+                            return;
+                          }
+
+                          /*
+                           * Mark the browser state as payment-pending before
+                           * leaving Safari. Backend verification remains the
+                           * only source of truth for payment success.
+                           */
+                          setShowUpiAppPicker(false);
+                          setPaymentStatus("pending");
+                          setPaymentMessage(
+                            "Complete payment in your UPI app and return to Juice Robo."
+                          );
+                          setScreen("payment-pending");
+
+                          /*
+                           * IMPORTANT:
+                           * Keep the custom-scheme navigation directly inside
+                           * the user's tap handler. Do not use setTimeout(),
+                           * promises, or an <a href> navigation here.
+                           */
+                          try {
+                            window.location.assign(appUrl);
+                          } catch (launchError) {
+                            console.error(
+                              "[Juice Robo] Selected iOS UPI app launch failed:",
+                              launchError
+                            );
+
+                            setPaymentMessage(
+                              "Unable to open the selected UPI app. Please try another UPI option."
+                            );
+                            showToast(
+                              "Unable to open the selected UPI app."
+                            );
+                          }
+                        }}
+                      >
+                        <span className="jr-upi-app-copy">
+                          <span className="jr-upi-app-title-row">
+                            <strong className="jr-upi-app-title">
+                              {app.name}
+                            </strong>
+
+                            {app.recommended && (
+                              <span className="jr-upi-recommended">
+                                RECOMMENDED
+                              </span>
+                            )}
+                          </span>
+
+                          <span className="jr-upi-app-description">
+                            {app.description}
+                          </span>
+                        </span>
+
+                        <span
+                          className="jr-upi-app-arrow"
+                          aria-hidden="true"
+                        >
+                          →
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="jr-upi-picker-help">
+                  If PhonePe is installed, tap PhonePe to pay directly. For
+                  other apps, select Google Pay, Paytm, BHIM, or Standard UPI.
+                </div>
+              </div>
+            </div>
           )}
 
           {/* =================================================
@@ -6068,11 +7144,14 @@ useEffect(() => {
           {screen === "payment-success" && (
             <PaymentSuccessScreen
               order={order}
-              location={selectedLocation}
-              machine={selectedMachine}
+              location={selectedLocation || order?.location}
+              machine={selectedMachine || order?.machine}
               money={money}
               onHome={() =>
                 setScreen("home")
+              }
+              onMenu={() =>
+                setScreen("menu")
               }
               onBack={() =>
                 setScreen("menu")
@@ -6092,7 +7171,13 @@ useEffect(() => {
           screen !== "history" &&
           screen !== "product" &&
           screen !== "confirmation" &&
+          screen !== "scanner" &&
+          screen !== "cart" &&
+          screen !== "checkout" &&
+          screen !== "payment" &&
           screen !== "payment-success" &&
+          screen !== "payment-pending" &&
+          screen !== "payment-failed" &&
           screen !== "upi-payment" && (
             <BottomNav
               screen={
@@ -6145,11 +7230,45 @@ useEffect(() => {
 
         {error &&
           screen !== "login" &&
+          screen !== "checkout" &&
           screen !== "payment" && (
             <div className="jr-global-error">
               {error}
             </div>
           )}
+        {/* ===================================================
+            LOGIN MODAL OVERLAY (IN-PLACE OVER CART)
+           =================================================== */}
+        {showLoginModal && (
+          <div
+            className="jr-login-modal-overlay"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowLoginModal(false);
+                setLoginModalRedirect("");
+              }
+            }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Sign in to continue to payment"
+          >
+            <div className="jr-login-modal-card">
+              <LoginScreen
+                isModal={true}
+                customer={customer}
+                setCustomer={setCustomer}
+                onLogin={handleLogin}
+                busy={busy}
+                error={error}
+                location={selectedLocation}
+                onClose={() => {
+                  setShowLoginModal(false);
+                  setLoginModalRedirect("");
+                }}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -6165,7 +7284,9 @@ function Header({
   machine,
   onCart,
   onLocation,
+  onLogo,
   onProfile,
+  onScanQR,
 }) {
   /* ---------------------------------------------------------
      CLEAN DISPLAY VALUES
@@ -6245,7 +7366,7 @@ function Header({
       <button
         type="button"
         className="jr-header-logo-button"
-        onClick={onLocation}
+        onClick={onLogo || onLocation}
         aria-label="Juice Robo"
       >
         <img
@@ -6353,6 +7474,38 @@ function Header({
          ===================================================== */}
 
       <div className="jr-header-actions">
+
+        {/* ===================================================
+            QR SCANNER
+           =================================================== */}
+
+        {onScanQR && (
+          <button
+            type="button"
+            className="jr-qr-button"
+            onClick={onScanQR}
+            aria-label="Scan Machine QR"
+            title="Scan Machine QR"
+          >
+            <svg
+              className="jr-header-action-icon"
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M3 9V5C3 3.89543 3.89543 3 5 3H9M15 3H19C20.1046 3 21 3.89543 21 5V9M21 15V19C21 20.1046 20.1046 21 19 21H15M9 21H5C3.89543 21 3 20.1046 3 19V15M7 7H10V10H7V7ZM14 7H17V10H14V7ZM7 14H10V17H7V14ZM14 14H17V17H14V14Z"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
 
         {/* ===================================================
             PROFILE
@@ -6532,26 +7685,13 @@ function BottomNav({
   };
 
   const labelStyle = {
-    margin:
-      "0",
-
-    padding:
-      "0",
-
-    fontSize:
-      "9px",
-
-    lineHeight:
-      "11px",
-
-    fontWeight:
-      800,
-
-    letterSpacing:
-      "0",
-
-    color:
-      "inherit",
+    margin: "2px 0 0",
+    padding: "0",
+    fontSize: "11px",
+    lineHeight: "14px",
+    fontWeight: 700,
+    letterSpacing: "0.2px",
+    color: "inherit",
   };
 
   function HomeIcon({
