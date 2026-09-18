@@ -239,6 +239,31 @@ function machineStatus(machine) {
   );
 }
 
+function resolveSchedule(source = {}) {
+  const schedule =
+    source?.schedule ??
+    source?.timing ??
+    source?.operatingHours ??
+    source?.availability ??
+    null;
+
+  const startTime =
+    schedule?.startTime ??
+    schedule?.start_time ??
+    source?.startTime ??
+    source?.start_time ??
+    null;
+
+  const endTime =
+    schedule?.endTime ??
+    schedule?.end_time ??
+    source?.endTime ??
+    source?.end_time ??
+    null;
+
+  return { schedule, startTime, endTime };
+}
+
 function PlusIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -283,6 +308,25 @@ export default function MenuScreen({
   const address = locationAddress(selectedLocation);
   const machine = machineName(selectedMachine);
   const status = machineStatus(selectedMachine);
+  const { startTime: locationStartTime, endTime: locationEndTime } = resolveSchedule(selectedLocation);
+  const { startTime: machineStartTime, endTime: machineEndTime } = resolveSchedule(selectedMachine);
+
+  // Diagnostic log verifying that all potential schedule sources and start times are null-safe
+  if (typeof window !== "undefined" && !window.__jr_startTimeLogged) {
+    window.__jr_startTimeLogged = true;
+    console.log("[Juice Robo] START TIME SOURCE:", {
+      selectedLocation,
+      selectedLocationSchedule: resolveSchedule(selectedLocation),
+      selectedMachine,
+      selectedMachineSchedule: resolveSchedule(selectedMachine),
+      productsCount: safeProducts.length,
+      productsSchedule: safeProducts.map((p) => ({
+        id: productId(p),
+        name: productName(p, displayProductName),
+        ...resolveSchedule(p),
+      })),
+    });
+  }
 
   const totalCartCount = (Array.isArray(cart) ? cart : []).reduce(
     (sum, item) =>
@@ -368,6 +412,7 @@ export default function MenuScreen({
         ) : (
           <div className="jr-menu-grid">
             {safeProducts.map((product, index) => {
+              const { schedule, startTime, endTime } = resolveSchedule(product);
               const name = productName(product, displayProductName);
               const description = productDescription(product, displayDescription);
               const price = productPrice(product);

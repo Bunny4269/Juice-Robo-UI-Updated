@@ -5,7 +5,9 @@
 .jr-scanner-screen {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   background-color: #0b1320;
   color: #ffffff;
   position: relative;
@@ -16,11 +18,12 @@
 .jr-scanner-header {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px 20px;
+  gap: 12px;
+  padding: 12px 16px;
   background: rgba(11, 19, 32, 0.95);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 10;
+  flex-shrink: 0;
 }
 
 .jr-scanner-back-btn {
@@ -28,8 +31,8 @@
   border: none;
   color: #ffffff;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -44,19 +47,20 @@
 
 .jr-scanner-header-text h1 {
   margin: 0;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: #ffffff;
 }
 
 .jr-scanner-header-text span {
-  font-size: 12px;
+  font-size: 11px;
   color: #94a3b8;
   display: block;
 }
 
 .jr-scanner-viewport {
   flex: 1;
+  min-height: 0;
   position: relative;
   display: flex;
   align-items: center;
@@ -78,17 +82,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
+  max-height: 100%;
+  justify-content: center;
+  padding: 4px 0;
 }
 
 .jr-scanner-target-box {
-  width: 250px;
-  height: 250px;
+  width: min(220px, 52vw);
+  height: min(220px, 52vw);
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
   border-radius: 16px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .jr-scanner-target-box .corner {
@@ -254,29 +262,112 @@
 
 .jr-scanner-instruction {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   color: #e2e8f0;
   background: rgba(15, 23, 42, 0.85);
-  padding: 6px 16px;
+  padding: 4px 14px;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(4px);
   letter-spacing: 0.2px;
+  flex-shrink: 0;
+}
+
+/* CAMERA SWITCH CONTROLS */
+.jr-scanner-switch-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  z-index: 15;
+  flex-shrink: 0;
+}
+
+.jr-scanner-switch-btn {
+  background: rgba(15, 23, 42, 0.88);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.jr-scanner-switch-btn:hover:not(:disabled) {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #22c55e;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.25);
+}
+
+.jr-scanner-switch-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.jr-scanner-switch-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.jr-scanner-camera-mode-tag {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  letter-spacing: 0.5px;
+}
+
+.jr-scanner-camera-notice {
+  background: rgba(30, 41, 59, 0.95);
+  color: #fcd34d;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes jr-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.jr-spin {
+  animation: jr-spin 0.85s linear infinite;
 }
 
 .jr-scanner-fallback-banner {
-  position: absolute;
-  bottom: 24px;
-  left: 20px;
-  right: 20px;
-  background: rgba(30, 41, 59, 0.92);
+  position: relative;
+  margin: 0 16px;
+  max-width: 320px;
+  background: rgba(30, 41, 59, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   z-index: 6;
+  backdrop-filter: blur(6px);
 }
 
 .jr-scanner-fallback-banner svg {
@@ -292,22 +383,53 @@
 }
 
 .jr-scanner-actions {
-  padding: 18px 20px 24px;
+  padding: 10px 16px max(14px, env(safe-area-inset-bottom, 14px));
   background: #0b1320;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   z-index: 10;
+  flex-shrink: 0;
+}
+
+.jr-scanner-machine-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+
+.jr-scanner-machine-picker label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #94a3b8;
+}
+
+.jr-scanner-outlet-dropdown {
+  background: #1e293b;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
 }
 
 .jr-scanner-scan-cta {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: #ffffff;
   border: none;
-  border-radius: 12px;
-  padding: 14px;
-  font-size: 14px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
   cursor: pointer;
@@ -316,6 +438,8 @@
   justify-content: center;
   box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
   transition: transform 0.15s, opacity 0.2s;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .jr-scanner-scan-cta:hover:not(:disabled) {
@@ -327,20 +451,55 @@
   cursor: not-allowed;
 }
 
-.jr-scanner-manual-btn {
-  background: rgba(34, 197, 94, 0.08);
-  color: #86efac;
-  border: 1px solid rgba(34, 197, 94, 0.32);
-  border-radius: 12px;
-  padding: 12px;
-  font-size: 13px;
+.jr-scanner-secondary-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.jr-scanner-photo-btn {
+  flex: 1;
+  min-height: 38px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
+  white-space: nowrap;
   transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.jr-scanner-photo-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.jr-scanner-manual-btn {
+  flex: 1;
+  min-height: 38px;
+  background: rgba(34, 197, 94, 0.08);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.32);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .jr-scanner-manual-btn:hover {
@@ -349,52 +508,32 @@
   border-color: rgba(34, 197, 94, 0.6);
 }
 
-.jr-scanner-machine-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 10px 14px;
-}
-
-.jr-scanner-machine-picker label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: #94a3b8;
-}
-
-.jr-scanner-outlet-dropdown {
-  background: #1e293b;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 13px;
-  font-weight: 500;
-  outline: none;
-  cursor: pointer;
-}
-
-.jr-scanner-photo-btn {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 12px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-
-.jr-scanner-photo-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
+@media screen and (max-height: 720px) {
+  .jr-scanner-header {
+    padding: 8px 14px;
+  }
+  .jr-scanner-header-text h1 {
+    font-size: 16px;
+  }
+  .jr-scanner-target-box {
+    width: min(190px, 46vw);
+    height: min(190px, 46vw);
+  }
+  .jr-scanner-frame-overlay {
+    gap: 7px;
+  }
+  .jr-scanner-actions {
+    padding: 8px 12px max(10px, env(safe-area-inset-bottom, 10px));
+    gap: 6px;
+  }
+  .jr-scanner-scan-cta {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  .jr-scanner-photo-btn,
+  .jr-scanner-manual-btn {
+    min-height: 34px;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
 }

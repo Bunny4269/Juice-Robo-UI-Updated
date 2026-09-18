@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "./PaymentFailedScreen.css";
 
 /* =========================================================
@@ -30,8 +31,14 @@ export default function PaymentFailedScreen({
   errorMessage,
   onRetry,
   onBackToCart,
+  onViewHistory,
   money,
+  configuredUpiId = "JUICEROBO@ybl",
+  onChangeUpiId,
 }) {
+  const [upiInput, setUpiInput] = useState(
+    configuredUpiId && configuredUpiId.toLowerCase() !== "juicerobo@ybl" ? configuredUpiId : ""
+  );
   const displayTotal = Number(total || order?.total_amount || order?.totalAmount || 0);
   const rawOrderId = String(order?.orderId || order?.order_id || order?.id || "").trim();
   const displayOrderId =
@@ -89,6 +96,48 @@ export default function PaymentFailedScreen({
               </span>
             </div>
           </div>
+
+          {/* Payee UPI ID Note & Quick Config */}
+          <div className="jr-failed-vpa-box">
+            <div className="jr-failed-vpa-title">
+              💡 Why did PhonePe show &quot;Verification Failed&quot;?
+            </div>
+            <p className="jr-failed-vpa-desc">
+              PhonePe and UPI verify the Payee UPI ID on the banking network before initiating payment.
+              Current Payee ID: <strong>{configuredUpiId || "JUICEROBO@ybl"}</strong>
+              {(!configuredUpiId || configuredUpiId.toLowerCase() === "juicerobo@ybl") && (
+                <span className="jr-failed-vpa-alert">
+                  ⚠️ <code>JUICEROBO@ybl</code> is a placeholder and is not an active bank account. Enter an active UPI ID below to test successfully.
+                </span>
+              )}
+            </p>
+            {typeof onChangeUpiId === "function" && (
+              <div className="jr-failed-vpa-form">
+                <input
+                  type="text"
+                  className="jr-failed-vpa-input"
+                  placeholder="Enter real UPI ID (e.g. yourname@ybl, yourname@oksbi)"
+                  value={upiInput}
+                  onChange={(e) => setUpiInput(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="jr-failed-vpa-save-btn"
+                  onClick={() => {
+                    const trimmed = upiInput.trim();
+                    if (trimmed) {
+                      onChangeUpiId(trimmed);
+                      if (typeof onRetry === "function") {
+                        onRetry();
+                      }
+                    }
+                  }}
+                >
+                  Save &amp; Pay Again
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ===================================================
@@ -111,6 +160,16 @@ export default function PaymentFailedScreen({
           >
             BACK TO CART
           </button>
+
+          {onViewHistory && (
+            <button
+              type="button"
+              className="jr-failed-history-btn"
+              onClick={onViewHistory}
+            >
+              📜 VIEW IN ORDER HISTORY
+            </button>
+          )}
 
           <p className="jr-failed-help-text">
             If money was debited from your bank account, NPCI and your bank will automatically reverse it within 24 to 48 hours.

@@ -517,6 +517,12 @@ export default function CheckoutScreen({
             )}
           </div>
 
+          {(!configuredUpiId || configuredUpiId.toLowerCase() === "juicerobo@ybl") && (
+            <div className="jr-zomato-vpa-notice">
+              <span>⚠️ <strong>JUICEROBO@ybl</strong> is a dummy ID. PhonePe will reject this with &quot;Something went wrong&quot;. Tap <strong>Change</strong> above to enter an active UPI ID.</span>
+            </div>
+          )}
+
           {showUpiEditor && typeof onChangeUpiId === "function" && (
             <div className="jr-zomato-upi-edit-box">
               <div className="jr-zomato-upi-edit-label">Custom Payee UPI ID (VPA):</div>

@@ -686,6 +686,22 @@
   flex-shrink: 0;
 }
 
+.jr-zomato-vpa-notice {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-left: 3px solid #f59e0b;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #92400e;
+}
+
+.jr-zomato-vpa-notice strong {
+  color: #78350f;
+}
+
 .jr-zomato-upi-edit-box {
   margin-top: 8px;
   padding: 10px 12px;

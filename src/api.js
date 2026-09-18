@@ -1646,7 +1646,7 @@ function buildUpiPaymentUrl({
   transactionReference = "",
   transactionNote = "Juice Robo Payment",
 } = {}) {
-  const safeUpiId = clean(upiId);
+  const safeUpiId = clean(upiId).toLowerCase();
   if (!safeUpiId) return "";
 
   const params = new URLSearchParams();
@@ -2670,9 +2670,9 @@ export const api = {
     if (!query) throw new Error("Invalid UPI payment link.");
 
     const schemes = {
-      phonepe: "phonepe://pay?",
-      phonepe_pay: "phonepe://pay?",
-      phonepe_upi: "phonepe://pay?",
+      phonepe: "phonepe://upi/pay?",
+      phonepe_pay: "phonepe://upi/pay?",
+      phonepe_upi: "phonepe://upi/pay?",
       gpay: "tez://upi/pay?",
       tez: "tez://upi/pay?",
       paytm: "paytmmp://pay?",

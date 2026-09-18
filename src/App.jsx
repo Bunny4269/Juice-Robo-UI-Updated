@@ -430,6 +430,114 @@ function migrateLegacyHistory() {
   }
 }
 
+function createFailedOrderObject(sessionOrOrder, reason = "Payment declined or could not be completed") {
+  const session = sessionOrOrder || {};
+  const snapshot = session.orderSnapshot || session;
+  const orderId =
+    session.orderId ||
+    session.order_id ||
+    session.id ||
+    snapshot.orderId ||
+    snapshot.order_id ||
+    snapshot.id ||
+    `JR-FAIL-${Date.now().toString().slice(-6)}`;
+  const cartId = session.cartId || session.cart_id || snapshot.cartId || snapshot.cart_id || "";
+  const total = Number(
+    session.total ??
+    session.total_amount ??
+    session.totalAmount ??
+    snapshot.total_amount ??
+    snapshot.totalAmount ??
+    snapshot.netBill ??
+    0
+  );
+  const items = Array.isArray(session.items) && session.items.length > 0
+    ? session.items
+    : Array.isArray(snapshot.items) && snapshot.items.length > 0
+      ? snapshot.items
+      : [];
+
+  return {
+    ...snapshot,
+    id: String(orderId),
+    orderId: String(orderId),
+    order_id: String(orderId),
+    orderNumber: String(orderId),
+    order_number: String(orderId),
+    cartId: String(cartId),
+    cart_id: String(cartId),
+    transactionId: session.transactionId || snapshot.transactionId || null,
+    transaction_id: session.transactionId || snapshot.transaction_id || null,
+    orderDate: snapshot.orderDate || snapshot.createdAt || new Date().toISOString(),
+    createdAt: snapshot.createdAt || new Date().toISOString(),
+    paymentStatus: "FAILED",
+    payment_status: "FAILED",
+    orderStatus: "FAILED",
+    order_status: "FAILED",
+    status: "FAILED",
+    failureReason: reason,
+    failure_reason: reason,
+    items: items,
+    total_amount: total,
+    totalAmount: total,
+    total: total,
+    subtotal: Number(session.subtotal ?? snapshot.subtotal ?? 0),
+    gst: Number(session.gst ?? snapshot.gst ?? 0),
+    location: session.location ?? snapshot.location ?? null,
+    machine: session.machine ?? snapshot.machine ?? null,
+  };
+}
+
+function recoverRecentFailedOrder() {
+  try {
+    const isPaid = sessionStorage.getItem("juice_robo_payment_confirmed") === "1";
+    if (isPaid) return null;
+
+    let session = null;
+    try {
+      const rawSession = sessionStorage.getItem("juice_robo_payment_session");
+      if (rawSession) {
+        session = JSON.parse(rawSession);
+      }
+    } catch {}
+
+    const orderId =
+      session?.orderId ||
+      session?.order_id ||
+      sessionStorage.getItem("juice_robo_pending_order_id") ||
+      localStorage.getItem("juice_robo_order_id");
+
+    if (!orderId) return null;
+
+    const currentHistory = getLocalPurchaseHistory();
+    const existingIndex = currentHistory.findIndex((item) => {
+      const id = String(
+        item?.orderId ?? item?.order_id ?? item?.id ?? item?.orderNumber ?? ""
+      );
+      return id === String(orderId);
+    });
+
+    if (existingIndex >= 0) {
+      const existing = currentHistory[existingIndex];
+      const status = String(existing?.paymentStatus || existing?.status || "").toUpperCase();
+      if (status.includes("SUCCESS") || status.includes("PAID")) {
+        return null;
+      }
+    }
+
+    const failedOrder = createFailedOrderObject(
+      session || { orderId, total: 0 },
+      "Payment verification failed or was cancelled"
+    );
+
+    savePurchaseToLocalHistory(failedOrder);
+    return failedOrder;
+  } catch (err) {
+    console.warn("[Juice Robo] Failed to recover recent failed order:", err);
+    return null;
+  }
+}
+
 function getOrderIdentifier(order) {
   if (!order || typeof order !== "object") return "";
   const candidates = [
@@ -1269,6 +1377,10 @@ export default function App() {
 
   const [paymentSession, setPaymentSession] =
     useState(() =>
+      readSessionJSON(
+        "juice_robo_payment_session",
+        null
+      ) ||
       readJSON(
         "juice_robo_payment_session",
         null
@@ -1277,10 +1389,8 @@ export default function App() {
 
   const [paymentStatus, setPaymentStatus] =
     useState(() =>
-      readJSON(
-        "juice_robo_payment_session",
-        null
-      )
+      (readSessionJSON("juice_robo_payment_session", null) ||
+       readJSON("juice_robo_payment_session", null))
         ? "pending"
         : "idle"
     );
@@ -1969,6 +2079,7 @@ export default function App() {
 
   useEffect(() => {
     migrateLegacyHistory();
+    recoverRecentFailedOrder();
     const localHistory = getLocalPurchaseHistory();
     if (Array.isArray(localHistory) && localHistory.length > 0) {
       setHistoryOrders(localHistory);
@@ -2009,31 +2120,40 @@ export default function App() {
 
       const localOrders = getLocalPurchaseHistory();
 
+      // Put localOrders first so local purchase history (including recent failed orders)
+      // takes priority over backend cache for pending/failed items
       const combined = [
-        ...backendOrders,
         ...localOrders,
+        ...backendOrders,
       ];
 
       const deduplicatedOrders = deduplicateOrders(combined);
 
+      // Sort with newest orders first
+      const sortedOrders = [...deduplicatedOrders].sort((a, b) => {
+        const timeA = new Date(a?.orderDate || a?.createdAt || a?.order_date || a?.created_at || 0).getTime();
+        const timeB = new Date(b?.orderDate || b?.createdAt || b?.order_date || b?.created_at || 0).getTime();
+        return timeB - timeA;
+      });
+
       console.log(
         "[Juice Robo] Merged order history:",
-        deduplicatedOrders
+        sortedOrders
       );
 
       setHistoryOrders(
-        deduplicatedOrders
+        sortedOrders
       );
 
       try {
         writeJSON(
           ordersKey(user),
-          deduplicatedOrders
+          sortedOrders
         );
 
         writeJSON(
           STORAGE.orders,
-          deduplicatedOrders
+          sortedOrders
         );
       } catch (storageError) {
         console.warn(
@@ -2042,7 +2162,7 @@ export default function App() {
         );
       }
 
-      return deduplicatedOrders;
+      return sortedOrders;
     } catch (historyError) {
       console.error(
         "[Juice Robo] ORDER HISTORY LOAD FAILED:",
@@ -2080,6 +2200,9 @@ export default function App() {
       return;
     }
 
+    // Recover any interrupted or failed payment session before showing history
+    recoverRecentFailedOrder();
+
     /*
      * Show the history screen immediately using whatever is already
      * available locally, then refresh it from the backend.
@@ -2110,6 +2233,31 @@ export default function App() {
     }
 
     showToast("Order history cleared");
+  }
+
+  function recordFailedOrderToHistory(sessionData, reason = "Payment declined or could not be completed") {
+    try {
+      const targetSession = sessionData || paymentSession || readJSON("juice_robo_payment_session", null);
+      if (!targetSession) return null;
+
+      const failedOrder = createFailedOrderObject(targetSession, reason);
+      console.log("[Juice Robo] Recording failed order to history:", failedOrder);
+
+      const updatedHistory = savePurchaseToLocalHistory(failedOrder);
+      setHistoryOrders(updatedHistory);
+
+      try {
+        writeJSON(ordersKey(user), updatedHistory);
+        writeJSON(STORAGE.orders, updatedHistory);
+      } catch (e) {
+        console.warn("[Juice Robo] Failed to sync failed order to user storage:", e);
+      }
+
+      return failedOrder;
+    } catch (err) {
+      console.warn("[Juice Robo] Failed to record failed order to history:", err);
+      return null;
+    }
   }
 
   /* =======================================================
@@ -4518,6 +4666,12 @@ useEffect(() => {
       recommended: true,
     },
     {
+      id: "phonepe_upi",
+      name: "PhonePe (UPI Intent)",
+      scheme: "phonepe://upi/pay",
+      description: "Alternative PhonePe UPI intent route",
+    },
+    {
       id: "gpay",
       name: "Google Pay",
       scheme: "tez://upi/pay",
@@ -4564,15 +4718,34 @@ useEffect(() => {
         const params = new URLSearchParams(raw.slice(qIndex + 1));
 
         // CRITICAL FIX FOR PHONEPE "Verification Failed":
-        // PhonePe strictly checks `tr` (Transaction Reference) and `tid` (Terminal ID)
-        // against its Payment Gateway database. When an unregistered client/backend
-        // transaction reference is present, PhonePe rejects the payment intent with
-        // the exact modal dialog: "Verification Failed".
-        // Removing `tr`, `tid`, and `mc` allows PhonePe to process the intent as a
-        // standard direct UPI payment.
-        params.delete("tr");
-        params.delete("tid");
-        params.delete("mc");
+        // PhonePe strictly checks `tr` (Transaction Reference), `tid` (Terminal ID),
+        // `mc` (Merchant Category), and merchant tracking keys against its Payment Gateway
+        // database. When an unregistered client/backend transaction reference is present,
+        // PhonePe rejects the payment intent with the modal: "Verification Failed".
+        // Removing all merchant gateway parameters allows PhonePe to process the intent
+        // as a standard direct UPI payment.
+        const gatewayParams = [
+          "tr",
+          "tid",
+          "mc",
+          "mid",
+          "msf",
+          "mode",
+          "orgid",
+          "sign",
+          "url",
+          "merchantcode",
+          "terminalid",
+        ];
+        gatewayParams.forEach((key) => {
+          params.delete(key);
+          params.delete(key.toUpperCase());
+        });
+
+        const pa = params.get("pa");
+        if (pa) {
+          params.set("pa", pa.trim().toLowerCase());
+        }
 
         if (!params.get("cu")) {
           params.set("cu", "INR");
@@ -5118,6 +5291,9 @@ useEffect(() => {
               : "Payment could not be completed or was declined by your UPI app.";
           setPaymentFailedReason(failMsg);
           setPaymentMessage(failMsg);
+
+          // Save failed order to local purchase history so it appears in History screen
+          recordFailedOrderToHistory(session, failMsg);
 
           /*
            * Retain cart contents on failure so user does not have to re-add items!
@@ -5683,6 +5859,59 @@ useEffect(() => {
     }
   }
 
+  function handleSimulatePaymentSuccess() {
+    terminalStateReached.current = true;
+    paymentPollStarted.current = false;
+    const session = readJSON("juice_robo_payment_session", null) || paymentSession;
+    const currentOrder = session?.orderSnapshot || order || {};
+
+    const rawCode =
+      session?.collectionCode ||
+      currentOrder?.collectionCode ||
+      currentOrder?.collection_code ||
+      String(Math.floor(1000 + Math.random() * 9000));
+
+    const code = String(rawCode).replace(/\D/g, "").slice(0, 4).padStart(4, "0");
+
+    const purchaseHistoryOrder = {
+      ...currentOrder,
+      id: currentOrder?.id || currentOrder?.orderId || session?.orderId || `JR-${Date.now().toString().slice(-6)}`,
+      orderId: currentOrder?.orderId || session?.orderId || `JR-${Date.now().toString().slice(-6)}`,
+      cartId: currentOrder?.cartId || session?.cartId || `CART-${Date.now().toString().slice(-6)}`,
+      orderNumber: currentOrder?.orderNumber || currentOrder?.orderId || session?.orderId,
+      orderDate: new Date().toISOString(),
+      paymentStatus: "SUCCESS",
+      orderStatus: "SUCCESS",
+      items: Array.isArray(currentOrder?.items) && currentOrder.items.length ? currentOrder.items : safeCart,
+      subtotal: Number(currentOrder?.subtotal ?? subtotal ?? 0),
+      gst: Number(currentOrder?.gst ?? gst ?? 0),
+      total_amount: Number(currentOrder?.total_amount ?? currentOrder?.totalAmount ?? session?.total ?? finalTotal ?? 0),
+      location: currentOrder?.location ?? selectedLocation ?? null,
+      machine: currentOrder?.machine ?? selectedMachine ?? null,
+      collectionCode: code,
+      collection_code: code,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      sessionStorage.setItem(STORAGE.paymentCollectionCode, code);
+      sessionStorage.setItem("juice_robo_payment_confirmed", "1");
+      sessionStorage.setItem("juice_robo_success_order_id", String(purchaseHistoryOrder.orderId));
+      sessionStorage.setItem(STORAGE.paymentSuccess, JSON.stringify(purchaseHistoryOrder));
+      writeJSON(STORAGE.paymentSuccess, purchaseHistoryOrder);
+    } catch {}
+
+    const updatedHistory = savePurchaseToLocalHistory(purchaseHistoryOrder);
+    setHistoryOrders(updatedHistory);
+    setOrder(purchaseHistoryOrder);
+    setPaymentStatus("paid");
+    setPaymentMessage("Payment verified successfully (Dev Simulation).");
+    setCart([]);
+    setPaymentSession(null);
+    setScreen("payment-success");
+    showToast("Payment simulated successfully! Pickup code ready.");
+  }
+
   async function handlePayment() {
     terminalStateReached.current = false;
     if (screen !== "checkout" && paymentSession) {
@@ -5968,8 +6197,16 @@ useEffect(() => {
           "juice_robo_payment_session",
           JSON.stringify(session)
         );
+        localStorage.setItem(
+          "juice_robo_payment_session",
+          JSON.stringify(session)
+        );
 
         sessionStorage.setItem(
+          "juice_robo_pending_order_id",
+          orderId
+        );
+        localStorage.setItem(
           "juice_robo_pending_order_id",
           orderId
         );
@@ -7234,6 +7471,10 @@ useEffect(() => {
               onCancel={() => {
                 terminalStateReached.current = false;
                 paymentPollStarted.current = false;
+                recordFailedOrderToHistory(
+                  paymentSession,
+                  "Payment cancelled by user"
+                );
                 setScreen("checkout");
               }}
               onOpenUpiApp={() => {
@@ -7243,6 +7484,10 @@ useEffect(() => {
                   launchUpiPayment(paymentSession.upiUrl);
                 }
               }}
+              onChooseUpiApp={() => {
+                setShowUpiAppPicker(true);
+              }}
+              onSimulateSuccess={handleSimulatePaymentSuccess}
               paymentStatus={paymentStatus}
               statusMessage={paymentMessage}
               isVerifying={paymentVerifyInFlight.current}
@@ -7265,6 +7510,9 @@ useEffect(() => {
               money={money}
               onRetry={handleRetryPayment}
               onBackToCart={handleBackToCartFromFailed}
+              onViewHistory={openOrderHistory}
+              configuredUpiId={activeMachineUpiId}
+              onChangeUpiId={handleChangeMachineUpi}
             />
           )}
 
@@ -7309,112 +7557,134 @@ useEffect(() => {
                   </button>
                 </div>
 
-                <div className="jr-upi-app-list">
-                  {IOS_UPI_APPS.map((app) => {
-                    const appUrl = buildIosUpiAppUrl(
-                      paymentSession?.upiUrl,
-                      app?.scheme
-                    );
+                {(() => {
+                  const resolvedSession =
+                    paymentSession ||
+                    readSessionJSON("juice_robo_payment_session", null) ||
+                    readJSON("juice_robo_payment_session", null);
 
-                    return (
-                      <button
-                        key={app.id}
-                        type="button"
-                        className={`jr-upi-app-card${
-                          app.recommended
-                            ? " jr-upi-app-card--recommended"
-                            : ""
-                        }`}
-                        onClick={() => {
-                          console.log(
-                            "[Juice Robo] IOS PAYMENT URL:",
-                            appUrl
-                          );
+                  let safeUpiUrl = resolvedSession?.upiUrl || order?.qrString || "";
+                  if (!safeUpiUrl || !normalizeUpiPaymentUrl(safeUpiUrl)) {
+                    if (typeof api.createUpiPaymentUrl === "function") {
+                      try {
+                        safeUpiUrl = normalizeUpiPaymentUrl(
+                          api.createUpiPaymentUrl({
+                            upiId: activeMachineUpiId || "JUICEROBO@ybl",
+                            payeeName: "Juice Robo",
+                            amount: resolvedSession?.total || finalTotal || 10,
+                            transactionNote: `Juice Robo Order ${String(resolvedSession?.orderId || order?.orderId || "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 10)}`,
+                          })
+                        );
+                      } catch {}
+                    }
+                  }
 
-                          console.log(
-                            "[Juice Robo] PAYMENT APP LAUNCH:",
-                            {
-                              app: app.name,
-                              url: appUrl,
-                            }
-                          );
+                  return (
+                    <div className="jr-upi-app-list">
+                      {IOS_UPI_APPS.map((app) => {
+                        const appUrl = buildIosUpiAppUrl(
+                          safeUpiUrl,
+                          app?.scheme
+                        );
 
-                          if (!appUrl) {
-                            console.error(
-                              "[Juice Robo] No UPI URL available for:",
-                              app.name
-                            );
+                        return (
+                          <button
+                            key={app.id}
+                            type="button"
+                            className={`jr-upi-app-card${
+                              app.recommended
+                                ? " jr-upi-app-card--recommended"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              let finalUrl = appUrl;
+                              if (!finalUrl) {
+                                finalUrl = buildIosUpiAppUrl(safeUpiUrl, app?.scheme);
+                              }
+                              if (!finalUrl && app?.scheme && safeUpiUrl.includes("?")) {
+                                finalUrl = `${String(app.scheme).replace(/\?$/, "")}?${safeUpiUrl.slice(safeUpiUrl.indexOf("?") + 1)}`;
+                              }
 
-                            showToast(
-                              "Unable to open this UPI app."
-                            );
+                              console.log(
+                                "[Juice Robo] IOS PAYMENT URL:",
+                                finalUrl
+                              );
 
-                            return;
-                          }
+                              console.log(
+                                "[Juice Robo] PAYMENT APP LAUNCH:",
+                                {
+                                  app: app.name,
+                                  url: finalUrl,
+                                }
+                              );
 
-                          /*
-                           * Mark the browser state as payment-pending before
-                           * leaving Safari. Backend verification remains the
-                           * only source of truth for payment success.
-                           */
-                          setShowUpiAppPicker(false);
-                          setPaymentStatus("pending");
-                          setPaymentMessage(
-                            "Complete payment in your UPI app and return to Juice Robo."
-                          );
-                          setScreen("payment-pending");
+                              if (!finalUrl) {
+                                console.error(
+                                  "[Juice Robo] No UPI URL available for:",
+                                  app.name
+                                );
 
-                          /*
-                           * IMPORTANT:
-                           * Keep the custom-scheme navigation directly inside
-                           * the user's tap handler. Do not use setTimeout(),
-                           * promises, or an <a href> navigation here.
-                           */
-                          try {
-                            window.location.assign(appUrl);
-                          } catch (launchError) {
-                            console.error(
-                              "[Juice Robo] Selected iOS UPI app launch failed:",
-                              launchError
-                            );
+                                showToast(
+                                  "Unable to open this UPI app."
+                                );
 
-                            setPaymentMessage(
-                              "Unable to open the selected UPI app. Please try another UPI option."
-                            );
-                            showToast(
-                              "Unable to open the selected UPI app."
-                            );
-                          }
-                        }}
-                      >
-                        <span className="jr-upi-app-copy">
-                          <span className="jr-upi-app-title-row">
-                            <strong className="jr-upi-app-title">
-                              {app.name}
-                            </strong>
+                                return;
+                              }
 
-                            {app.recommended && (
-                              <span className="jr-upi-recommended">
-                                RECOMMENDED
+                              setShowUpiAppPicker(false);
+                              setPaymentStatus("pending");
+                              setPaymentMessage(
+                                "Complete payment in your UPI app and return to Juice Robo."
+                              );
+                              setScreen("payment-pending");
+
+                              try {
+                                window.location.assign(finalUrl);
+                              } catch (launchError) {
+                                console.error(
+                                  "[Juice Robo] Selected iOS UPI app launch failed:",
+                                  launchError
+                                );
+
+                                setPaymentMessage(
+                                  "Unable to open the selected UPI app. Please try another UPI option."
+                                );
+                                showToast(
+                                  "Unable to open the selected UPI app."
+                                );
+                              }
+                            }}
+                          >
+                            <span className="jr-upi-app-copy">
+                              <span className="jr-upi-app-title-row">
+                                <strong className="jr-upi-app-title">
+                                  {app.name}
+                                </strong>
+
+                                {app.recommended && (
+                                  <span className="jr-upi-recommended">
+                                    RECOMMENDED
+                                  </span>
+                                )}
                               </span>
-                            )}
-                          </span>
 
-                          <span className="jr-upi-app-description">
-                            {app.description}
-                          </span>
-                        </span>
+                              <span className="jr-upi-app-description">
+                                {app.description}
+                              </span>
+                            </span>
 
-                        <span
-                          className="jr-upi-app-arrow"
-                          aria-hidden="true"
-                        >
-                          →
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                            <span
+                              className="jr-upi-app-arrow"
+                              aria-hidden="true"
+                            >
+                              →
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
 
                 <div className="jr-upi-picker-help">
                   If PhonePe is installed, tap PhonePe to pay directly. For

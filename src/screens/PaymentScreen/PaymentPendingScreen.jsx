@@ -24,6 +24,8 @@ export default function PaymentPendingScreen({
   onCheckStatus,
   onCancel,
   onOpenUpiApp,
+  onChooseUpiApp,
+  onSimulateSuccess,
   paymentStatus = "pending",
   statusMessage = "",
   isVerifying = false,
@@ -135,6 +137,16 @@ export default function PaymentPendingScreen({
             </button>
           )}
 
+          {typeof onChooseUpiApp === "function" && (
+            <button
+              type="button"
+              className="jr-pending-choose-app-btn"
+              onClick={onChooseUpiApp}
+            >
+              <span>⚡ Choose UPI App (PhonePe / GPay / Paytm)</span>
+            </button>
+          )}
+
           <button
             type="button"
             className="jr-pending-check-btn"
@@ -143,6 +155,16 @@ export default function PaymentPendingScreen({
           >
             <span>{activeVerifying ? "Verifying Payment..." : "⚡ Check Status Now"}</span>
           </button>
+
+          {typeof onSimulateSuccess === "function" && (
+            <button
+              type="button"
+              className="jr-pending-simulate-btn"
+              onClick={onSimulateSuccess}
+            >
+              <span>🧪 Simulate Payment Success (Dev Test)</span>
+            </button>
+          )}
 
           {typeof onCancel === "function" && (
             <button

@@ -35,6 +35,28 @@ function QrCodeIcon() {
   );
 }
 
+function CameraFlipIcon({ className = "" }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M20 10c0-4.418-3.582-8-8-8s-8 3.582-8 8c0 2.062.783 3.942 2.072 5.364" />
+      <path d="M4 14c0 4.418 3.582 8 8 8s8-3.582 8-8c0-2.062-.783-3.942-2.072-5.364" />
+      <polyline points="1 10 4 7 7 10" />
+      <polyline points="23 14 20 17 17 14" />
+    </svg>
+  );
+}
+
 export default function ScannerScreen({
   locations = [],
   machines = [],
@@ -56,38 +78,125 @@ export default function ScannerScreen({
   const [permissionStatus, setPermissionStatus] = useState("prompt");
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState("");
+  const [cameraNotice, setCameraNotice] = useState("");
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const [isProcessingScan, setIsProcessingScan] = useState(false);
   const [selectedMachineIndex, setSelectedMachineIndex] = useState(0);
 
+  // Camera switching states: 'environment' (rear) | 'user' (front)
+  const [cameraFacing, setCameraFacing] = useState("environment");
+  const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
+  const [hasMultipleCameras, setHasMultipleCameras] = useState(null);
+
   const activeOutlet = locations[selectedMachineIndex] || locations[0] || null;
 
-  const isLocalhost =
-    typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-  const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
-  const isInsecureContext = !isHttps && !isLocalhost;
-
-  function stopCamera() {
+  // Stop active media stream tracks
+  function stopCameraTracks() {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+      try {
+        streamRef.current.getTracks().forEach((track) => {
+          track.stop();
+        });
+      } catch (trackErr) {
+        console.warn("[Juice Robo] Track stop warning:", trackErr);
+      }
       streamRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }
+
+  function stopCamera() {
+    stopCameraTracks();
     setCameraActive(false);
   }
 
-  async function requestCameraAccess(userTriggered = false) {
-    if (isInsecureContext) {
-      setPermissionStatus("insecure");
-      setCameraError(
-        "iOS Safari requires HTTPS to access the live camera. Switch to secure HTTPS or take a photo below."
-      );
-      return;
+  // Core stream starter with facingMode support & device enumeration fallback
+  async function startCameraStream(targetFacing = "environment") {
+    const constraints = {
+      video: {
+        facingMode: { ideal: targetFacing },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+      audio: false,
+    };
+
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (idealErr) {
+      console.warn("[Juice Robo] facingMode ideal failed, checking fallback:", idealErr);
+      // Fallback: inspect device list to pick appropriate video device
+      if (navigator?.mediaDevices?.enumerateDevices) {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = devices.filter((d) => d.kind === "videoinput");
+          if (videoDevices.length > 0) {
+            let matchedDevice = null;
+            if (targetFacing === "user") {
+              matchedDevice =
+                videoDevices.find((d) => /front|user|face/i.test(d.label || "")) ||
+                videoDevices[0];
+            } else {
+              matchedDevice =
+                videoDevices.find((d) => /back|rear|environment/i.test(d.label || "")) ||
+                videoDevices[videoDevices.length - 1];
+            }
+
+            if (matchedDevice?.deviceId) {
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                  deviceId: { exact: matchedDevice.deviceId },
+                  width: { ideal: 1280 },
+                  height: { ideal: 720 },
+                },
+                audio: false,
+              });
+            }
+          }
+        } catch (enumErr) {
+          console.warn("[Juice Robo] Device enumeration fallback warning:", enumErr);
+        }
+      }
+
+      // Last fallback: generic video stream
+      if (!stream) {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
     }
 
+    streamRef.current = stream;
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      try {
+        await videoRef.current.play();
+      } catch (playErr) {
+        console.warn("[Juice Robo] Video play notice:", playErr);
+      }
+    }
+
+    setCameraActive(true);
+    setPermissionStatus("granted");
+    setCameraError("");
+
+    // Detect if device supports multiple cameras
+    try {
+      if (navigator?.mediaDevices?.enumerateDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoCount = devices.filter((d) => d.kind === "videoinput").length;
+        setHasMultipleCameras(videoCount > 1);
+      }
+    } catch (e) {}
+
+    return stream;
+  }
+
+  async function requestCameraAccess(userTriggered = false, targetFacing = cameraFacing) {
     if (!navigator?.mediaDevices?.getUserMedia) {
       setPermissionStatus("unsupported");
-      setCameraError("Camera is not supported in this browser context. Please use 'Take Photo' below.");
+      setCameraError("");
       return;
     }
 
@@ -95,23 +204,7 @@ export default function ScannerScreen({
     setCameraError("");
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
-
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(() => {});
-      }
-      setCameraActive(true);
-      setPermissionStatus("granted");
-      setCameraError("");
+      await startCameraStream(targetFacing);
 
       // Record granted permission locally
       try {
@@ -154,6 +247,52 @@ export default function ScannerScreen({
     }
   }
 
+  // Camera toggle handler: cleans up existing stream, checks devices, and switches facing mode
+  async function handleToggleCamera() {
+    if (isSwitchingCamera || isProcessingScan || !cameraActive) return;
+
+    setIsSwitchingCamera(true);
+    setCameraNotice("");
+
+    // Check available cameras if enumerateDevices is available
+    try {
+      if (navigator?.mediaDevices?.enumerateDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter((d) => d.kind === "videoinput");
+        if (videoDevices.length <= 1) {
+          setCameraNotice("Only one camera is available on this device");
+          setHasMultipleCameras(false);
+          setIsSwitchingCamera(false);
+          setTimeout(() => setCameraNotice(""), 3500);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("[Juice Robo] enumerateDevices check notice:", e);
+    }
+
+    const nextFacing = cameraFacing === "environment" ? "user" : "environment";
+
+    // Clean up current stream tracks completely before requesting new camera
+    stopCameraTracks();
+
+    try {
+      await startCameraStream(nextFacing);
+      setCameraFacing(nextFacing);
+    } catch (switchErr) {
+      console.warn("[Juice Robo] Camera toggle failed, attempting fallback to previous mode:", switchErr);
+      try {
+        await startCameraStream(cameraFacing);
+      } catch (fallbackErr) {
+        console.error("[Juice Robo] Camera recovery failed:", fallbackErr);
+        setCameraError("Failed to switch camera. Tap 'Try Camera Again'.");
+        setCameraActive(false);
+      }
+    } finally {
+      setIsSwitchingCamera(false);
+    }
+  }
+
   /* One-time camera permission check on mount:
    * - If granted: start camera stream directly without prompting.
    * - If denied: do NOT auto-trigger getUserMedia; show instructions + manual retry.
@@ -162,11 +301,6 @@ export default function ScannerScreen({
    */
   useEffect(() => {
     let mounted = true;
-
-    if (isInsecureContext) {
-      setPermissionStatus("insecure");
-      return;
-    }
 
     let hasRequested = false;
     let isGranted = false;
@@ -192,7 +326,7 @@ export default function ScannerScreen({
 
     // 2. If previously granted: open camera directly.
     if (isGranted) {
-      requestCameraAccess(false);
+      requestCameraAccess(false, "environment");
       return;
     }
 
@@ -201,7 +335,7 @@ export default function ScannerScreen({
       try {
         localStorage.setItem(CAMERA_REQUESTED_KEY, "true");
       } catch {}
-      requestCameraAccess(true);
+      requestCameraAccess(true, "environment");
       return;
     }
 
@@ -215,8 +349,9 @@ export default function ScannerScreen({
   }, []);
 
   // Frame analysis with jsQR for cross-browser QR detection
+  // Pauses automatically during camera switching or scan processing and resumes on completion
   useEffect(() => {
-    if (!cameraActive || isProcessingScan) return;
+    if (!cameraActive || isProcessingScan || isSwitchingCamera) return;
     let animId = null;
     let cancelled = false;
 
@@ -224,7 +359,7 @@ export default function ScannerScreen({
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
     function analyzeFrame() {
-      if (cancelled || isProcessingScan) return;
+      if (cancelled || isProcessingScan || isSwitchingCamera) return;
 
       const video = videoRef.current;
       if (video && video.readyState >= 2 && video.videoWidth > 0) {
@@ -255,7 +390,7 @@ export default function ScannerScreen({
       cancelled = true;
       if (animId) clearTimeout(animId);
     };
-  }, [cameraActive, isProcessingScan]);
+  }, [cameraActive, isProcessingScan, isSwitchingCamera]);
 
   function handleTriggerScan(data) {
     if (isProcessingScan) return;
@@ -309,11 +444,6 @@ export default function ScannerScreen({
     }
   }
 
-  function handleSwitchToHttps() {
-    const httpsUrl = `https://${window.location.host}${window.location.pathname}${window.location.search}`;
-    window.location.href = httpsUrl;
-  }
-
   return (
     <main className="jr-scanner-screen">
       {/* HEADER */}
@@ -356,66 +486,29 @@ export default function ScannerScreen({
             ) : (
               /* PERMISSION PROMPT INSIDE VIEWFINDER */
               <div className="jr-scanner-permission-box">
-                {permissionStatus === "insecure" ? (
+                {permissionStatus === "unsupported" ? (
                   <>
-                    <div className="jr-scanner-permission-icon">🔒</div>
-                    <h3 className="jr-scanner-permission-title">HTTPS Connection Required</h3>
+                    <div className="jr-scanner-permission-icon">📸</div>
+                    <h3 className="jr-scanner-permission-title">Live Camera Unavailable</h3>
                     <p className="jr-scanner-permission-desc">
-                      iOS Safari requires HTTPS to access the live camera. Tap below to switch or take a photo:
+                      Live camera streaming requires HTTPS. Use the button below to take a photo of the QR code or select a machine.
                     </p>
-                    <button
-                      type="button"
-                      className="jr-scanner-permission-action-btn"
-                      onClick={handleSwitchToHttps}
-                    >
-                      <span>🔒 Switch to Secure HTTPS</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="jr-scanner-permission-secondary-btn"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      📸 Take Photo (Works on HTTP)
-                    </button>
                   </>
                 ) : permissionStatus === "denied" ? (
                   <>
                     <div className="jr-scanner-permission-icon denied">🚫</div>
                     <h3 className="jr-scanner-permission-title">Camera Blocked</h3>
                     <p className="jr-scanner-permission-desc">
-                      Camera access was denied. Tap 'aA' in Safari address bar or 🔒 in Chrome &gt; Website Settings &gt; Camera &gt; Allow, then tap Retry.
+                      Camera permission was denied. Tap 🔒 in Chrome &gt; Permissions &gt; Camera &gt; Allow, then tap Try Camera Again.
                     </p>
-                    <button
-                      type="button"
-                      className="jr-scanner-permission-action-btn"
-                      onClick={() => requestCameraAccess(true)}
-                      disabled={isRequestingPermission}
-                    >
-                      <span>🔄 {isRequestingPermission ? "Checking..." : "Try Camera Again"}</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="jr-scanner-permission-secondary-btn"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      📸 Take Photo Instead
-                    </button>
                   </>
                 ) : (
                   <>
                     <div className="jr-scanner-permission-icon">📷</div>
                     <h3 className="jr-scanner-permission-title">Camera Permission</h3>
                     <p className="jr-scanner-permission-desc">
-                      Juice Robo needs camera permission to scan the QR code on the machine.
+                      Juice Robo needs camera permission to scan machine QR codes. Tap Allow Camera below.
                     </p>
-                    <button
-                      type="button"
-                      className="jr-scanner-permission-action-btn"
-                      onClick={() => requestCameraAccess(true)}
-                      disabled={isRequestingPermission}
-                    >
-                      <span>📹 {isRequestingPermission ? "Requesting..." : "Allow Camera"}</span>
-                    </button>
                   </>
                 )}
               </div>
@@ -427,14 +520,44 @@ export default function ScannerScreen({
               ? "Align machine QR code inside the frame"
               : "Allow camera permission or take photo to scan"}
           </p>
-        </div>
 
-        {cameraError && permissionStatus !== "insecure" && permissionStatus !== "denied" && (
-          <div className="jr-scanner-fallback-banner">
-            <QrCodeIcon />
-            <p>{cameraError}</p>
-          </div>
-        )}
+          {/* CAMERA SWITCH BUTTON & NOTIFICATION */}
+          {cameraActive && (
+            <div className="jr-scanner-switch-container">
+              <button
+                type="button"
+                className="jr-scanner-switch-btn"
+                onClick={handleToggleCamera}
+                disabled={isSwitchingCamera || isProcessingScan}
+                aria-label={`Switch camera. Current: ${cameraFacing === "environment" ? "Rear" : "Front"}`}
+                title={
+                  hasMultipleCameras === false
+                    ? "Only one camera is available on this device"
+                    : "Switch between rear and front camera"
+                }
+              >
+                <CameraFlipIcon className={isSwitchingCamera ? "jr-spin" : ""} />
+                <span>{isSwitchingCamera ? "Switching..." : "Switch Camera"}</span>
+                <span className="jr-scanner-camera-mode-tag">
+                  {cameraFacing === "environment" ? "Rear" : "Front"}
+                </span>
+              </button>
+
+              {cameraNotice && (
+                <div className="jr-scanner-camera-notice" role="status">
+                  <span>ℹ️ {cameraNotice}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {cameraError && permissionStatus !== "denied" && permissionStatus !== "unsupported" && (
+            <div className="jr-scanner-fallback-banner">
+              <QrCodeIcon />
+              <p>{cameraError}</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* FOOTER ACTIONS */}
@@ -460,13 +583,14 @@ export default function ScannerScreen({
 
         {/* PRIMARY CTA */}
         {!cameraActive ? (
-          permissionStatus === "insecure" ? (
+          permissionStatus === "unsupported" ? (
             <button
               type="button"
               className="jr-scanner-scan-cta"
-              onClick={handleSwitchToHttps}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessingScan}
             >
-              <span>🔒 SWITCH TO HTTPS FOR LIVE CAMERA</span>
+              <span>📸 TAKE PHOTO OF MACHINE QR</span>
             </button>
           ) : permissionStatus === "denied" ? (
             <button
@@ -498,7 +622,7 @@ export default function ScannerScreen({
           </button>
         )}
 
-        {/* PHOTO CAPTURE / UPLOAD QR */}
+        {/* PHOTO CAPTURE / UPLOAD QR (Fallback when camera is active or when camera permission is requested) */}
         <input
           ref={fileInputRef}
           type="file"
@@ -507,23 +631,28 @@ export default function ScannerScreen({
           style={{ display: "none" }}
           onChange={handlePhotoCapture}
         />
-        <button
-          type="button"
-          className="jr-scanner-photo-btn"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isProcessingScan}
-        >
-          <span>📸 Take Photo of Machine QR</span>
-        </button>
+        {/* SECONDARY ACTIONS (Side by side row to fit mobile screens perfectly) */}
+        <div className="jr-scanner-secondary-row">
+          {permissionStatus !== "unsupported" && (
+            <button
+              type="button"
+              className="jr-scanner-photo-btn"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessingScan}
+            >
+              <span>📸 Take Photo</span>
+            </button>
+          )}
 
-        <button
-          type="button"
-          className="jr-scanner-manual-btn"
-          onClick={onManualSelect}
-          disabled={isProcessingScan}
-        >
-          <span>📍 Select Location &amp; Machine Manually</span>
-        </button>
+          <button
+            type="button"
+            className="jr-scanner-manual-btn"
+            onClick={onManualSelect}
+            disabled={isProcessingScan}
+          >
+            <span>📍 Select Manually</span>
+          </button>
+        </div>
       </footer>
     </main>
   );
