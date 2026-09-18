@@ -54,6 +54,9 @@ const STORAGE = {
   paymentCollectionCode: "juice_robo_collection_code",
 };
 
+const LOCAL_PURCHASE_HISTORY_KEY =
+  "juice_robo_purchase_history";
+
 const GST_RATE = 0.05;
 
 const EMPTY_CUSTOMER = {
@@ -303,14 +306,184 @@ function readCart(user) {
   );
 }
 
+/* =========================================================
+   REUSABLE PURCHASE HISTORY HELPERS & PERSISTENCE
+   ========================================================= */
+
+function getLocalPurchaseHistory() {
+  try {
+    const raw = localStorage.getItem(
+      LOCAL_PURCHASE_HISTORY_KEY
+    );
+
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+
+    return Array.isArray(parsed)
+      ? parsed
+      : [];
+  } catch (error) {
+    console.warn(
+      "[Juice Robo] Failed to read local purchase history:",
+      error
+    );
+
+    return [];
+  }
+}
+
+function savePurchaseToLocalHistory(purchase) {
+  try {
+    const currentHistory =
+      getLocalPurchaseHistory();
+
+    const purchaseId =
+      String(
+        purchase?.id ??
+        purchase?.orderId ??
+        purchase?.order_id ??
+        purchase?.orderNumber ??
+        purchase?.transactionId ??
+        purchase?.transaction_id ??
+        ""
+      );
+
+    const updatedHistory = [
+      purchase,
+      ...currentHistory.filter((item) => {
+        const existingId =
+          String(
+            item?.id ??
+            item?.orderId ??
+            item?.order_id ??
+            item?.orderNumber ??
+            item?.transactionId ??
+            item?.transaction_id ??
+            ""
+          );
+
+        return existingId !== purchaseId;
+      }),
+    ];
+
+    localStorage.setItem(
+      LOCAL_PURCHASE_HISTORY_KEY,
+      JSON.stringify(updatedHistory)
+    );
+
+    return updatedHistory;
+  } catch (error) {
+    console.warn(
+      "[Juice Robo] Failed to save purchase history:",
+      error
+    );
+
+    return getLocalPurchaseHistory();
+  }
+}
+
+function clearLocalPurchaseHistory() {
+  localStorage.removeItem(
+    LOCAL_PURCHASE_HISTORY_KEY
+  );
+}
+
+function migrateLegacyHistory() {
+  try {
+    const legacyRaw = localStorage.getItem("juice_robo_last_successful_order");
+    if (!legacyRaw) return;
+    const legacyOrder = JSON.parse(legacyRaw);
+    if (legacyOrder && typeof legacyOrder === "object") {
+      const current = getLocalPurchaseHistory();
+      const legacyId = String(
+        legacyOrder?.id ??
+        legacyOrder?.orderId ??
+        legacyOrder?.order_id ??
+        legacyOrder?.orderNumber ??
+        legacyOrder?.transactionId ??
+        legacyOrder?.transaction_id ??
+        ""
+      );
+      if (legacyId) {
+        const exists = current.some((item) => {
+          const itemId = String(
+            item?.id ??
+            item?.orderId ??
+            item?.order_id ??
+            item?.orderNumber ??
+            item?.transactionId ??
+            item?.transaction_id ??
+            ""
+          );
+          return itemId === legacyId;
+        });
+        if (!exists) {
+          savePurchaseToLocalHistory(legacyOrder);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn("[Juice Robo] Failed to migrate legacy history:", error);
+  }
+}
+
+function getOrderIdentifier(order) {
+  if (!order || typeof order !== "object") return "";
+  const candidates = [
+    order?.id,
+    order?.orderId,
+    order?.order_id,
+    order?.orderNumber,
+    order?.order_number,
+    order?.transactionId,
+    order?.transaction_id,
+  ];
+  for (const c of candidates) {
+    if (c !== undefined && c !== null && String(c).trim() !== "") {
+      return String(c).trim();
+    }
+  }
+  return "";
+}
+
+function deduplicateOrders(orders = []) {
+  if (!Array.isArray(orders)) return [];
+  const seen = new Set();
+  const result = [];
+
+  for (const order of orders) {
+    if (!order || typeof order !== "object") continue;
+    const identifier = getOrderIdentifier(order);
+    if (identifier) {
+      if (!seen.has(identifier)) {
+        seen.add(identifier);
+        result.push(order);
+      }
+    } else {
+      result.push(order);
+    }
+  }
+
+  return result;
+}
+
 function readOrders(user) {
+  migrateLegacyHistory();
+  const local = getLocalPurchaseHistory();
+  if (Array.isArray(local) && local.length > 0) {
+    return local;
+  }
+
   const scoped =
     readJSON(
       ordersKey(user),
       null
     );
 
-  if (Array.isArray(scoped)) {
+  if (Array.isArray(scoped) && scoped.length > 0) {
     return scoped;
   }
 
@@ -1049,11 +1222,16 @@ export default function App() {
     );
 
   const [historyOrders, setHistoryOrders] =
-    useState(() =>
-      readOrders(
+    useState(() => {
+      migrateLegacyHistory();
+      const localHistory = getLocalPurchaseHistory();
+      if (Array.isArray(localHistory) && localHistory.length > 0) {
+        return localHistory;
+      }
+      return readOrders(
         getStoredUser()
-      )
-    );
+      );
+    });
 
   const [selectedProduct, setSelectedProduct] =
     useState(null);
@@ -1786,67 +1964,76 @@ export default function App() {
   }, []);
 
   /* =======================================================
-    ORDER HISTORY
-    ======================================================= */
+     LOAD LOCAL HISTORY WHEN APP STARTS
+     ======================================================= */
 
-  async function openOrderHistory() {
-    if (!loggedIn) {
-      showToast(
-        "Please sign in to view your order history"
-      );
-
-      setScreen("login");
-      return;
+  useEffect(() => {
+    migrateLegacyHistory();
+    const localHistory = getLocalPurchaseHistory();
+    if (Array.isArray(localHistory) && localHistory.length > 0) {
+      setHistoryOrders(localHistory);
     }
 
-    /*
-    * Show the history screen immediately using whatever is already
-    * available locally, then refresh it from the authoritative
-    * Juice Robo backend.
-    */
-    setScreen("history");
+    if (loggedIn) {
+      refreshOrders();
+    }
+  }, [loggedIn]);
 
+  /* =======================================================
+     ORDER HISTORY (BACKEND + LOCAL PERSISTENCE)
+     ======================================================= */
+
+  async function refreshOrders() {
     try {
       console.log(
         "[Juice Robo] Loading order history from backend..."
       );
 
-      const backendOrders =
-        await api.orders();
-
-      const safeBackendOrders =
-        Array.isArray(backendOrders)
-          ? backendOrders.filter(Boolean)
+      let backendOrders = [];
+      try {
+        const response = await api.orders();
+        backendOrders = Array.isArray(response)
+          ? response.filter(Boolean)
           : [];
 
+        console.log(
+          "[Juice Robo] ORDER HISTORY LOADED:",
+          backendOrders
+        );
+      } catch (backendErr) {
+        console.warn(
+          "[Juice Robo] Backend order history request failed, preserving local history:",
+          backendErr
+        );
+      }
+
+      const localOrders = getLocalPurchaseHistory();
+
+      const combined = [
+        ...backendOrders,
+        ...localOrders,
+      ];
+
+      const deduplicatedOrders = deduplicateOrders(combined);
+
       console.log(
-        "[Juice Robo] ORDER HISTORY LOADED:",
-        safeBackendOrders
+        "[Juice Robo] Merged order history:",
+        deduplicatedOrders
       );
 
-      /*
-      * Backend is the source of truth.
-      *
-      * If the backend returned orders, use them.
-      * If it returned an empty list, keep the screen empty.
-      */
       setHistoryOrders(
-        safeBackendOrders
+        deduplicatedOrders
       );
 
-      /*
-      * Persist the refreshed history locally so it is available
-      * immediately the next time the screen opens.
-      */
       try {
         writeJSON(
           ordersKey(user),
-          safeBackendOrders
+          deduplicatedOrders
         );
 
         writeJSON(
           STORAGE.orders,
-          safeBackendOrders
+          deduplicatedOrders
         );
       } catch (storageError) {
         console.warn(
@@ -1854,17 +2041,21 @@ export default function App() {
           storageError
         );
       }
+
+      return deduplicatedOrders;
     } catch (historyError) {
       console.error(
         "[Juice Robo] ORDER HISTORY LOAD FAILED:",
         historyError
       );
 
-      /*
-      * Keep locally stored orders if the backend is temporarily
-      * unavailable.
-      */
-      if (
+      const localOrders = getLocalPurchaseHistory();
+      if (localOrders.length > 0) {
+        setHistoryOrders(localOrders);
+        showToast(
+          "Showing saved order history"
+        );
+      } else if (
         Array.isArray(historyOrders) &&
         historyOrders.length > 0
       ) {
@@ -1878,16 +2069,41 @@ export default function App() {
       }
     }
   }
+
+  async function openOrderHistory() {
+    if (!loggedIn) {
+      showToast(
+        "Please sign in to view your order history"
+      );
+
+      setScreen("login");
+      return;
+    }
+
+    /*
+     * Show the history screen immediately using whatever is already
+     * available locally, then refresh it from the backend.
+     */
+    setScreen("history");
+    await refreshOrders();
+  }
+
   function clearOrderHistory() {
     setHistoryOrders([]);
 
     try {
+      clearLocalPurchaseHistory();
+
       localStorage.removeItem(
         ordersKey(user)
       );
 
       localStorage.removeItem(
         STORAGE.orders
+      );
+
+      localStorage.removeItem(
+        "juice_robo_last_successful_order"
       );
     } catch {
       // Ignore storage errors.
@@ -5249,8 +5465,133 @@ useEffect(() => {
         );
       }
 
+      /* ---------------------------------------------------------
+         NORMALIZED PURCHASE HISTORY ORDER
+         --------------------------------------------------------- */
+
+      const purchaseHistoryOrder = {
+        ...mergedOrder,
+
+        id:
+          mergedOrder?.id ??
+          mergedOrder?.orderId ??
+          mergedOrder?.order_id ??
+          mergedOrder?.orderNumber,
+
+        orderId:
+          mergedOrder?.orderId ??
+          mergedOrder?.order_id ??
+          mergedOrder?.id,
+
+        transactionId:
+          mergedOrder?.transactionId ??
+          mergedOrder?.transaction_id ??
+          null,
+
+        orderNumber:
+          mergedOrder?.orderNumber ??
+          mergedOrder?.order_number ??
+          null,
+
+        orderDate:
+          mergedOrder?.orderDate ??
+          mergedOrder?.order_date ??
+          mergedOrder?.createdAt ??
+          mergedOrder?.created_at ??
+          new Date().toISOString(),
+
+        paymentStatus:
+          "SUCCESS",
+
+        orderStatus:
+          mergedOrder?.orderStatus ??
+          mergedOrder?.status ??
+          "SUCCESS",
+
+        items:
+          Array.isArray(mergedOrder?.items)
+            ? mergedOrder.items
+            : safeCart,
+
+        subtotal:
+          Number(
+            mergedOrder?.subtotal ??
+            subtotal ??
+            0
+          ),
+
+        gst:
+          Number(
+            mergedOrder?.gst ??
+            gst ??
+            0
+          ),
+
+        total_amount:
+          Number(
+            mergedOrder?.total_amount ??
+            mergedOrder?.totalAmount ??
+            finalTotal ??
+            0
+          ),
+
+        location:
+          mergedOrder?.location ??
+          selectedLocation ??
+          null,
+
+        machine:
+          mergedOrder?.machine ??
+          selectedMachine ??
+          null,
+
+        createdAt:
+          mergedOrder?.createdAt ??
+          mergedOrder?.created_at ??
+          new Date().toISOString(),
+      };
+
+      console.log(
+        "[Juice Robo] Saving verified purchase to history:",
+        purchaseHistoryOrder
+      );
+
+      const updatedHistory =
+        savePurchaseToLocalHistory(
+          purchaseHistoryOrder
+        );
+
+      console.log(
+        "[Juice Robo] Local purchase history:",
+        updatedHistory
+      );
+
+      try {
+        localStorage.setItem(
+          "juice_robo_last_successful_order",
+          JSON.stringify(purchaseHistoryOrder)
+        );
+        writeJSON(
+          ordersKey(user),
+          updatedHistory
+        );
+        writeJSON(
+          STORAGE.orders,
+          updatedHistory
+        );
+      } catch (storageError) {
+        console.warn(
+          "[Juice Robo] Legacy storage sync failed:",
+          storageError
+        );
+      }
+
+      setHistoryOrders(
+        updatedHistory
+      );
+
       setOrder(
-        mergedOrder
+        purchaseHistoryOrder
       );
 
       setPaymentStatus(
@@ -5259,26 +5600,6 @@ useEffect(() => {
 
       setPaymentMessage(
         "Payment verified successfully."
-      );
-
-      setHistoryOrders(
-        (current) => [
-          mergedOrder,
-          ...current.filter(
-            (item) =>
-              String(
-                item?.id ||
-                  item?.orderId ||
-                  item?.order_id ||
-                  ""
-              ) !==
-              String(
-                mergedOrder.id ||
-                  mergedOrder.orderId ||
-                  ""
-              )
-          ),
-        ]
       );
 
       try {
