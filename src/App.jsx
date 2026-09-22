@@ -16,6 +16,7 @@ import HistoryScreen from "./screens/HistoryScreen/HistoryScreen";
 import ProfileScreen from "./screens/ProfileScreen/ProfileScreen";
 import PaymentSuccessScreen from "./screens/PaymentSuccessScreen/PaymentSuccessScreen";
 
+import juiceRoboLogo from "./assets/juice-robo-logo.png";
 const ASSET_BASE =
   `${import.meta.env.BASE_URL}assets/`;
 
@@ -6142,13 +6143,16 @@ function Header({
   cartCount,
   location,
   machine,
+  locations = [],
+  machines = [],
+  selectedLocationId,
+  selectedMachineId,
   onCart,
   onLocation,
+  onMachine,
   onProfile,
 }) {
-  /* ---------------------------------------------------------
-     CLEAN DISPLAY VALUES
-     --------------------------------------------------------- */
+  const [openSelector, setOpenSelector] = useState(null);
 
   const cleanText = (value) =>
     String(value ?? "")
@@ -6156,6 +6160,48 @@ function Header({
       .replace(/\bnull\b/gi, "")
       .replace(/\s+/g, " ")
       .trim();
+
+  const getLocationId = (item) =>
+    String(
+      item?.id ??
+        item?.storeId ??
+        item?.store_id ??
+        item?.locId ??
+        item?.locationId ??
+        item?.location_id ??
+        item?.outletId ??
+        item?.outlet_id ??
+        ""
+    );
+
+  const getMachineId = (item) =>
+    String(
+      item?.id ??
+        item?.machineId ??
+        item?.machine_id ??
+        ""
+    );
+
+  const getMachineLocationIds = (item) =>
+    [
+      item?.locationId,
+      item?.location_id,
+      item?.storeId,
+      item?.store_id,
+      item?.locId,
+      item?.location?.id,
+      item?.store?.id,
+      item?.outletId,
+      item?.outlet_id,
+      item?.outlet?.id,
+    ]
+      .filter(
+        (value) =>
+          value !== undefined &&
+          value !== null &&
+          value !== ""
+      )
+      .map(String);
 
   const locationName =
     cleanText(
@@ -6167,15 +6213,14 @@ function Header({
         location?.outlet_name
     ) || "Choose location";
 
-  const locationAddress =
-    cleanText(
-      location?.address ||
-        location?.locAddress ||
-        location?.location ||
-        location?.description ||
-        location?.outletDesc ||
-        location?.storeAddress
-    );
+  const locationAddress = cleanText(
+    location?.address ||
+      location?.locAddress ||
+      location?.location ||
+      location?.description ||
+      location?.outletDesc ||
+      location?.storeAddress
+  );
 
   const machineName =
     cleanText(
@@ -6185,38 +6230,70 @@ function Header({
         machine?.machineCode ||
         machine?.machine_code ||
         machine?.code
-    );
+    ) || "Choose machine";
 
-  const machineStatus =
-    cleanText(
-      machine?.status ||
-        machine?.machineStatus ||
-        machine?.machine_status ||
-        machine?.availabilityStatus ||
-        machine?.availability_status
-    );
+  const machineStatus = cleanText(
+    machine?.status ||
+      machine?.machineStatus ||
+      machine?.machine_status ||
+      machine?.availabilityStatus ||
+      machine?.availability_status
+  );
 
-  const secondaryText =
-    machineName ||
-    locationAddress ||
-    "Select a collection point";
+  const locationMachines = Array.isArray(machines)
+    ? machines.filter((item) => {
+        const relationIds = getMachineLocationIds(item);
 
-  const secondaryWithStatus =
-    machineName && machineStatus
-      ? `${machineName} · ${machineStatus}`
-      : secondaryText;
+        if (!relationIds.length || !selectedLocationId) {
+          return true;
+        }
 
-  /* ---------------------------------------------------------
-     CORRECT LOGO
-     public/assets/app_logo.jpg
-     --------------------------------------------------------- */
+        return relationIds.includes(
+          String(selectedLocationId)
+        );
+      })
+    : [];
+  const logoSrc = juiceRoboLogo;
 
-  const logoSrc =
-    `${ASSET_BASE}app_logo.jpg`;
+  const selectStyle = {
+    appearance: "none",
+    WebkitAppearance: "none",
+    border: "1px solid #e6e9e3",
+    background: "#f8faf6",
+    color: "#222222",
+    cursor: "pointer",
+    padding: "7px 22px 7px 8px",
+    margin: "0",
+    borderRadius: "9px",
+    minWidth: "0",
+    width: "100%",
+    fontSize: "9px",
+    lineHeight: "12px",
+    fontWeight: 700,
+    fontFamily:
+      "Poppins, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+    outline: "none",
+    textOverflow: "ellipsis",
+  };
+
+  const selectorLabelStyle = {
+    margin: "0 0 2px 3px",
+    fontSize: "7px",
+    lineHeight: "9px",
+    fontWeight: 800,
+    letterSpacing: "0.08em",
+    color: "#7b8179",
+    textTransform: "uppercase",
+  };
 
   return (
-    <header className="jr-header">
-
+    <header
+      className="jr-header"
+      style={{
+        gap: "5px",
+        alignItems: "center",
+      }}
+    >
       {/* =====================================================
           JUICE ROBO LOGO
          ===================================================== */}
@@ -6224,7 +6301,7 @@ function Header({
       <button
         type="button"
         className="jr-header-logo-button"
-        onClick={onLocation}
+        onClick={onProfile}
         aria-label="Juice Robo"
       >
         <img
@@ -6236,107 +6313,368 @@ function Header({
       </button>
 
       {/* =====================================================
-          LOCATION / MACHINE
+          LOCATION + MACHINE SELECTORS
          ===================================================== */}
 
-      <button
-        type="button"
-        className="jr-header-location"
-        onClick={onLocation}
-        aria-label={
-          `Change collection location. Current location: ${locationName}`
-        }
+      <div
+        className="jr-header-selector-group"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "5px",
+          flex: "1 1 auto",
+          minWidth: 0,
+          position: "relative",
+          zIndex: 1000,
+        }}
       >
-
-        {/* LOCATION ICON */}
-
-        <span
-          className="jr-location-pin"
-          aria-hidden="true"
+        {/* LOCATION BUTTON */}
+        <div
+          className="jr-header-selector"
+          style={{
+            position: "relative",
+            flex: "1 1 0",
+            minWidth: 0,
+            maxWidth: "130px",
+          }}
         >
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
+          <button
+            type="button"
+            className="jr-header-selector-button"
+            onClick={() =>
+              setOpenSelector((current) =>
+                current === "location" ? null : "location"
+              )
+            }
+            aria-haspopup="listbox"
+            aria-expanded={openSelector === "location"}
+            aria-label={`Select location. Current location: ${locationName}`}
+            style={{
+              width: "100%",
+              minWidth: 0,
+              border: 0,
+              background: "transparent",
+              padding: "2px 3px",
+              margin: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "4px",
+              textAlign: "left",
+              cursor: "pointer",
+              color: "#222",
+            }}
           >
-            <path
-              d="M12 21C12 21 19 14.7 19 9.5C19 5.91 15.87 3 12 3C8.13 3 5 5.91 5 9.5C5 14.7 12 21 12 21Z"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <span style={{ minWidth: 0, display: "block" }}>
+              <span style={selectorLabelStyle}>LOCATION</span>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "9px",
+                  lineHeight: "11px",
+                  fontWeight: 800,
+                  color: "#222",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+                title={locationAddress || locationName}
+              >
+                {locationName}
+              </span>
+            </span>
 
-            <circle
-              cx="12"
-              cy="9.5"
-              r="2.5"
-              fill="currentColor"
-            />
-          </svg>
-        </span>
+            <span
+              aria-hidden="true"
+              style={{
+                fontSize: "9px",
+                color: "#777",
+                flexShrink: 0,
+                transform:
+                  openSelector === "location"
+                    ? "rotate(180deg)"
+                    : "none",
+                transition: "transform 0.15s ease",
+              }}
+            >
+              ▼
+            </span>
+          </button>
 
-        {/* LOCATION / MACHINE TEXT */}
+          {openSelector === "location" && (
+            <div
+              role="listbox"
+              aria-label="Locations"
+              style={{
+                position: "absolute",
+                top: "calc(100% + 6px)",
+                left: 0,
+                right: 0,
+                minWidth: "180px",
+                maxHeight: "240px",
+                overflowY: "auto",
+                padding: "5px",
+                borderRadius: "12px",
+                background: "#ffffff",
+                border: "1px solid #e5e8e2",
+                boxShadow: "0 10px 28px rgba(0,0,0,0.14)",
+                zIndex: 9999,
+              }}
+            >
+              {locations.length === 0 ? (
+                <div
+                  style={{
+                    padding: "10px",
+                    fontSize: "11px",
+                    color: "#777",
+                  }}
+                >
+                  No locations available
+                </div>
+              ) : (
+                locations.map((item, index) => {
+                  const id = getLocationId(item);
+                  const name =
+                    cleanText(
+                      item?.name ||
+                        item?.storeName ||
+                        item?.outletName ||
+                        item?.locationName ||
+                        item?.store_name ||
+                        item?.outlet_name
+                    ) || `Location ${index + 1}`;
 
-        <span className="jr-header-location-copy">
+                  const address = cleanText(
+                    item?.address ||
+                      item?.locAddress ||
+                      item?.location ||
+                      item?.description ||
+                      item?.outletDesc ||
+                      item?.storeAddress
+                  );
 
-          <small>
-            COLLECT FROM
-          </small>
+                  return (
+                    <button
+                      key={id || `location-${index}`}
+                      type="button"
+                      onClick={() => {
+                        onLocation?.(item);
+                        setOpenSelector(null);
+                      }}
+                      style={{
+                        width: "100%",
+                        border: 0,
+                        borderRadius: "9px",
+                        background:
+                          String(selectedLocationId) === String(id)
+                            ? "#eef8f1"
+                            : "transparent",
+                        padding: "9px 10px",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        color: "#222",
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "block",
+                          fontSize: "11px",
+                          fontWeight: 800,
+                        }}
+                      >
+                        {name}
+                      </span>
+                      {address && (
+                        <span
+                          style={{
+                            display: "block",
+                            marginTop: "2px",
+                            fontSize: "9px",
+                            lineHeight: "12px",
+                            color: "#777",
+                          }}
+                        >
+                          {address}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
 
-          <strong
-            title={locationName}
-          >
-            {locationName}
-          </strong>
-
-          <span
-            title={secondaryWithStatus}
-          >
-            {secondaryWithStatus}
-          </span>
-
-        </span>
-
-        {/* CHEVRON */}
-
-        <span
-          className="jr-header-chevron"
-          aria-hidden="true"
+        {/* MACHINE BUTTON */}
+        <div
+          className="jr-header-selector"
+          style={{
+            position: "relative",
+            flex: "1 1 0",
+            minWidth: 0,
+            maxWidth: "130px",
+          }}
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
+          <button
+            type="button"
+            className="jr-header-selector-button"
+            onClick={() => {
+              if (locationMachines.length === 0) return;
+              setOpenSelector((current) =>
+                current === "machine" ? null : "machine"
+              );
+            }}
+            disabled={!selectedLocationId || locationMachines.length === 0}
+            aria-haspopup="listbox"
+            aria-expanded={openSelector === "machine"}
+            aria-label={`Select machine. Current machine: ${machineName}`}
+            style={{
+              width: "100%",
+              minWidth: 0,
+              border: 0,
+              background: "transparent",
+              padding: "2px 3px",
+              margin: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "4px",
+              textAlign: "left",
+              cursor:
+                !selectedLocationId || locationMachines.length === 0
+                  ? "not-allowed"
+                  : "pointer",
+              color: "#222",
+              opacity:
+                !selectedLocationId || locationMachines.length === 0
+                  ? 0.55
+                  : 1,
+            }}
           >
-            <path
-              d="M7 10L12 15L17 10"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </span>
+            <span style={{ minWidth: 0, display: "block" }}>
+              <span style={selectorLabelStyle}>MACHINE</span>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "9px",
+                  lineHeight: "11px",
+                  fontWeight: 800,
+                  color: "#222",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+                title={machineStatus || machineName}
+              >
+                {machineName}
+              </span>
+            </span>
 
-      </button>
+            <span
+              aria-hidden="true"
+              style={{
+                fontSize: "9px",
+                color: "#777",
+                flexShrink: 0,
+                transform:
+                  openSelector === "machine"
+                    ? "rotate(180deg)"
+                    : "none",
+                transition: "transform 0.15s ease",
+              }}
+            >
+              ▼
+            </span>
+          </button>
+
+          {openSelector === "machine" && (
+            <div
+              role="listbox"
+              aria-label="Machines"
+              style={{
+                position: "absolute",
+                top: "calc(100% + 6px)",
+                left: 0,
+                right: 0,
+                minWidth: "180px",
+                maxHeight: "240px",
+                overflowY: "auto",
+                padding: "5px",
+                borderRadius: "12px",
+                background: "#ffffff",
+                border: "1px solid #e5e8e2",
+                boxShadow: "0 10px 28px rgba(0,0,0,0.14)",
+                zIndex: 9999,
+              }}
+            >
+              {locationMachines.map((item, index) => {
+                const id = getMachineId(item);
+                const name =
+                  cleanText(
+                    item?.name ||
+                      item?.machineName ||
+                      item?.machine_name ||
+                      item?.machineCode ||
+                      item?.machine_code ||
+                      item?.code
+                  ) || `Machine ${index + 1}`;
+
+                return (
+                  <button
+                    key={id || `machine-${index}`}
+                    type="button"
+                    onClick={() => {
+                      onMachine?.(item);
+                      setOpenSelector(null);
+                    }}
+                    style={{
+                      width: "100%",
+                      border: 0,
+                      borderRadius: "9px",
+                      background:
+                        String(selectedMachineId) === String(id)
+                          ? "#eef8f1"
+                          : "transparent",
+                      padding: "9px 10px",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      color: "#222",
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: "block",
+                        fontSize: "11px",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {name}
+                    </span>
+                    {item?.status && (
+                      <span
+                        style={{
+                          display: "block",
+                          marginTop: "2px",
+                          fontSize: "9px",
+                          color: "#777",
+                        }}
+                      >
+                        {cleanText(item.status)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* =====================================================
           HEADER ACTIONS
          ===================================================== */}
 
       <div className="jr-header-actions">
-
-        {/* ===================================================
-            PROFILE
-           =================================================== */}
-
         <button
           type="button"
           className="jr-profile-button"
@@ -6365,10 +6703,6 @@ function Header({
             />
           </svg>
         </button>
-
-        {/* ===================================================
-            CART
-           =================================================== */}
 
         <button
           type="button"
@@ -6417,11 +6751,8 @@ function Header({
               {cartCount}
             </span>
           )}
-
         </button>
-
       </div>
-
     </header>
   );
 }
