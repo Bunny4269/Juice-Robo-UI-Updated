@@ -12,11 +12,7 @@ export default function LoginScreen({
   onLogin,
   busy = false,
   error = "",
-  location,
-  onBack,
   onContinueWithoutLogin,
-  isModal = false,
-  onClose,
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -177,23 +173,9 @@ export default function LoginScreen({
     }
   }
 
-  const Wrapper = isModal ? "div" : "main";
-  const wrapperClass = isModal ? "jr-login-modal-inner" : "jr-login-screen";
-
   return (
-    <Wrapper className={wrapperClass}>
+    <main className="jr-login-screen">
       <section className="jr-login-container">
-        {/* CLOSE BUTTON (MODAL ONLY) */}
-        {isModal && typeof onClose === "function" && (
-          <button
-            type="button"
-            className="jr-login-modal-close-btn"
-            onClick={onClose}
-            aria-label="Close sign in dialog"
-          >
-            ✕
-          </button>
-        )}
 
         {/* LOGO */}
         <div className="jr-login-logo-container">
@@ -205,40 +187,22 @@ export default function LoginScreen({
         </div>
 
         {/* INTRO */}
-        {isModal ? (
-          <div className="jr-login-copy jr-login-copy--modal">
-            <span className="jr-login-eyebrow">
-              CONTINUE TO PAYMENT
-            </span>
-            <h1>Sign In</h1>
-            <p>
-              Please log in to complete payment. Your cart remains intact.
-            </p>
-          </div>
-        ) : (
-          <div className="jr-login-copy">
-            {location?.name && (
-              <div className="jr-login-outlet-badge">
-                <span className="jr-login-outlet-dot" />
-                <span>Connected: <strong>{location.name}</strong></span>
-              </div>
-            )}
+        <div className="jr-login-copy">
+          <span className="jr-login-eyebrow">
+            FRESH JUICE · READY WHEN YOU ARE
+          </span>
 
-            <span className="jr-login-eyebrow">
-              FRESH JUICE · READY WHEN YOU ARE
-            </span>
+          <h1>
+            Welcome
+            <br />
+            <em>back.</em>
+          </h1>
 
-            <h1>
-              Welcome
-              <br />
-              <em>back.</em>
-            </h1>
-
-            <p>
-              Sign in to unlock the menu &amp; order fresh juice.
-            </p>
-          </div>
-        )}
+          <p>
+            Sign in to continue your
+            Juice Robo experience.
+          </p>
+        </div>
 
         {/* FORM */}
         <form
@@ -433,45 +397,22 @@ export default function LoginScreen({
           </button>
         </form>
 
-        {/* CONTINUE WITHOUT LOGIN (ONLY IF EXPLICITLY PERMITTED AND NOT MODAL) */}
-        {!isModal && typeof onContinueWithoutLogin === "function" && (
-          <>
-            <button
-              type="button"
-              className="jr-continue-without-login"
-              onClick={handleContinueWithoutLogin}
-              disabled={busy}
-            >
-              CONTINUE WITHOUT LOGIN
-            </button>
-            <p className="jr-login-guest-note">
-              Browse the menu and manage your cart freely. Sign in when you are ready to pay.
-            </p>
-          </>
-        )}
+        {/* CONTINUE WITHOUT LOGIN */}
+        <button
+          type="button"
+          className="jr-continue-without-login"
+          onClick={
+            handleContinueWithoutLogin
+          }
+          disabled={busy}
+        >
+          CONTINUE WITHOUT LOGIN
+        </button>
 
-        {/* RESCAN QR BUTTON (NOT MODAL) */}
-        {!isModal && typeof onBack === "function" && (
-          <button
-            type="button"
-            className="jr-login-rescan-btn"
-            onClick={onBack}
-            disabled={busy}
-          >
-            ← Rescan Machine QR Code
-          </button>
-        )}
-
-        {/* CANCEL & RETURN TO CART (MODAL ONLY) */}
-        {isModal && typeof onClose === "function" && (
-          <button
-            type="button"
-            className="jr-login-modal-cancel-btn"
-            onClick={onClose}
-          >
-            Cancel &amp; Return to Cart
-          </button>
-        )}
+        <p className="jr-login-guest-note">
+          Browse the menu first. Sign in when
+          you are ready to add items to your cart.
+        </p>
 
         {/* SECURITY NOTE */}
         <div className="jr-login-note">
@@ -488,6 +429,6 @@ export default function LoginScreen({
         </div>
 
       </section>
-    </Wrapper>
+    </main>
   );
 }

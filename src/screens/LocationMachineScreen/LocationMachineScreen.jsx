@@ -538,7 +538,7 @@ export default function LocationMachineScreen({
           aria-disabled={!canContinue}
         >
           <span className="jr-location-continue-label">
-            CONFIRM LOCATION &amp; CONTINUE
+            CONTINUE TO MENU
           </span>
 
           {/* CSS arrow — NO SVG / NO TEXT GLYPH */}

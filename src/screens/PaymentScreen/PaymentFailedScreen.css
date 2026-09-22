@@ -1,311 +1,188 @@
 /* =========================================================
-   JUICE ROBO — PAYMENT FAILED SCREEN STYLES
-   Matches demo PaymentStatus failure UI (_failed border, times-circle)
+   PAYMENT FAILED SCREEN — Juice Robo
+   Clear failure UI with helpful recovery options
    ========================================================= */
 
 .jr-payment-failed-page {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
   min-height: 100%;
-  box-sizing: border-box;
-  padding: 30px 16px calc(60px + env(safe-area-inset-bottom, 24px));
-  background: #fbfaf4;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: #1b1e19;
-  -webkit-font-smoothing: antialiased;
+  background: var(--jr-cream-alt, #f5f5ef);
+  padding: 28px 16px calc(100px + env(safe-area-inset-bottom, 0px));
 }
 
 .jr-payment-failed-content {
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  box-sizing: border-box;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
-/* =========================================================
-   1. DEMO ADAPTED FAILED STATUS BOX (_success _failed)
-   ========================================================= */
+/* ============== FAILED BOX / ICON ============== */
 
 .jr-demo-failed-box {
   width: 100%;
-  box-sizing: border-box;
-  background: #ffffff;
-  border-radius: 20px;
-  border: 1px solid #fee2e2;
-  border-bottom: 4px solid #dc2626 !important;
-  box-shadow: 0 15px 30px rgba(220, 38, 38, 0.08);
-  padding: 36px 24px 28px;
-  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  text-align: center;
+  padding: 32px 24px 24px;
+  background: var(--jr-white, #fff);
+  border: 1px solid rgba(220,38,38,0.15);
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(220,38,38,0.08);
+  margin-bottom: 16px;
 }
 
 .jr-demo-failed-icon {
-  width: 64px;
-  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
-  background: #fef2f2;
-  color: #dc2626;
-  display: grid;
-  place-items: center;
-  font-size: 36px;
-  margin-bottom: 4px;
+  background: var(--jr-error-light, #fef2f2);
+  color: var(--jr-error, #dc2626);
+  margin-bottom: 20px;
+  box-shadow: 0 0 0 10px rgba(220,38,38,0.06), 0 0 0 20px rgba(220,38,38,0.03);
+}
+
+.jr-demo-failed-icon svg {
+  width: 44px !important;
+  height: 44px !important;
 }
 
 .jr-demo-failed-title {
-  margin: 0;
-  color: #111827;
-  font-size: 26px;
+  font-family: 'Manrope', sans-serif;
+  font-size: clamp(22px, 5vw, 28px);
   font-weight: 900;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  color: var(--jr-dark, #161c19);
+  letter-spacing: -0.3px;
+  margin-bottom: 8px;
 }
 
 .jr-demo-failed-subtitle {
-  margin: 0;
-  color: #6b7280;
   font-size: 14px;
-  line-height: 1.5;
-  max-width: 360px;
+  line-height: 1.6;
+  color: var(--jr-gray-dark, #4a5250);
+  max-width: 280px;
+  margin-bottom: 14px;
 }
 
-.jr-failed-reason-pill {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: #fff1f2;
-  border: 1px solid #fecdd3;
-  color: #be123c;
-  font-size: 12px;
-  font-weight: 700;
-  margin-top: 4px;
+.jr-failed-amount {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 18px;
+  border-radius: 9999px;
+  background: var(--jr-error-light, #fef2f2);
+  border: 1.5px solid rgba(220,38,38,0.15);
+  color: var(--jr-error, #dc2626);
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
 }
 
-/* =========================================================
-   2. ORDER SUMMARY CONTEXT
-   ========================================================= */
+/* ============== INFO CARD ============== */
 
-.jr-failed-order-summary {
+.jr-failed-info-card {
   width: 100%;
-  box-sizing: border-box;
-  padding: 16px 18px;
+  padding: 14px 16px;
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
   border-radius: 14px;
-  background: #f9fafb;
-  border: 1px solid #f3f4f6;
+  margin-bottom: 20px;
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: 10px;
 }
 
-.jr-failed-summary-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
+.jr-failed-info-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  line-height: 1.2;
 }
 
-.jr-failed-summary-label {
-  color: #6b7280;
-  font-weight: 600;
-}
-
-.jr-failed-summary-value {
-  color: #111827;
-  font-weight: 800;
-}
-
-/* =========================================================
-   2B. PAYEE VPA EXPLANATION & CONFIG
-   ========================================================= */
-
-.jr-failed-vpa-box {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  text-align: left;
-}
-
-.jr-failed-vpa-title {
-  color: #92400e;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.jr-failed-vpa-desc {
-  margin: 0;
-  color: #78350f;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.jr-failed-vpa-alert {
+.jr-failed-info-body strong {
   display: block;
-  margin-top: 5px;
-  color: #b45309;
-  font-weight: 600;
-}
-
-.jr-failed-vpa-alert code {
-  background: rgba(0, 0, 0, 0.06);
-  padding: 1px 4px;
-  border-radius: 4px;
-  font-family: inherit;
-}
-
-.jr-failed-vpa-form {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.jr-failed-vpa-input {
-  flex: 1;
-  min-width: 0;
-  height: 40px;
-  padding: 0 12px;
-  border: 1.5px solid #d97706;
-  border-radius: 10px;
-  background: #ffffff;
   font-size: 13px;
-  color: #111827;
-  box-sizing: border-box;
+  font-weight: 700;
+  color: var(--jr-dark, #161c19);
+  margin-bottom: 4px;
 }
 
-.jr-failed-vpa-input:focus {
-  outline: none;
-  border-color: #b45309;
-  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+.jr-failed-info-body p {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--jr-gray-dark, #4a5250);
 }
 
-.jr-failed-vpa-save-btn {
-  flex: 0 0 auto;
-  height: 40px;
-  padding: 0 14px;
-  border: none;
-  border-radius: 10px;
-  background: #d97706;
-  color: #ffffff;
-  font-size: 12.5px;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.12s ease;
-}
-
-.jr-failed-vpa-save-btn:hover {
-  background: #b45309;
-}
-
-.jr-failed-vpa-save-btn:active {
-  transform: scale(0.98);
-}
-
-/* =========================================================
-   3. ACTION BUTTONS (TRY AGAIN & BACK TO CART)
-   ========================================================= */
+/* ============== ACTIONS ============== */
 
 .jr-failed-actions {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 4px;
+  gap: 10px;
 }
 
 .jr-failed-try-again-btn {
   width: 100%;
-  min-height: 52px;
-  box-sizing: border-box;
+  padding: 15px 24px;
+  border: none;
+  border-radius: 14px;
+  background: var(--jr-green, #2a7d4f);
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 4px 16px rgba(42,125,79,0.3);
+  transition: background 150ms ease, transform 120ms ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px 20px;
-  border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
-  color: #ffffff;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  box-shadow: 0 8px 22px rgba(46, 125, 50, 0.28);
-  transition: transform 0.12s ease;
+}
+
+.jr-failed-try-again-btn:hover {
+  background: var(--jr-green-hover, #236642);
 }
 
 .jr-failed-try-again-btn:active {
   transform: scale(0.98);
 }
 
-.jr-failed-back-cart-btn {
+.jr-failed-buy-more-btn {
   width: 100%;
-  min-height: 48px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 20px;
-  border: 1.5px solid #d1d5db;
+  padding: 13px 20px;
+  border: 1.5px solid var(--jr-border, #e3e8e3);
   border-radius: 14px;
-  background: #ffffff;
-  color: #374151;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 800;
+  background: transparent;
+  color: var(--jr-gray-dark, #4a5250);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-  transition: background 0.12s ease;
-}
-
-.jr-failed-back-cart-btn:active {
-  background: #f9fafb;
-}
-
-.jr-failed-history-btn {
-  width: 100%;
-  min-height: 48px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: 1.5px solid #287c4b;
-  border-radius: 14px;
-  background: #f4faf6;
-  color: #287c4b;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(40, 124, 75, 0.08);
-  transition: all 0.12s ease;
-}
-
-.jr-failed-history-btn:hover {
-  background: #eaf7ef;
-}
-
-.jr-failed-history-btn:active {
-  transform: scale(0.98);
-}
-
-.jr-failed-help-text {
-  font-size: 11.5px;
-  color: #9ca3af;
+  touch-action: manipulation;
+  transition: background 150ms ease, border-color 150ms ease;
   text-align: center;
-  line-height: 1.45;
-  margin: 4px 0 0;
+}
+
+.jr-failed-buy-more-btn:hover {
+  background: var(--jr-light-gray, #eeeeea);
+  border-color: var(--jr-gray-light, #9ea89f);
+}
+
+/* Footer note */
+.jr-failed-footer-note {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--jr-gray-light, #9ea89f);
+  text-align: center;
+  line-height: 1.4;
 }

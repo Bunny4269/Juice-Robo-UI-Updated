@@ -1,780 +1,599 @@
 /* =========================================================
-   JUICE ROBO — PRODUCTION PAYMENT SUCCESS SCREEN CSS
-   Modern, high-contrast, responsive mobile & desktop styles.
+   JUICE ROBO — DEDICATED PAYMENT SUCCESS SCREEN STYLES
    ========================================================= */
 
-:root {
-  --jr-success-green: #15803d;
-  --jr-success-green-dark: #0f3d2e;
-  --jr-success-green-light: #22c55e;
-  --jr-success-green-subtle: #f0fdf4;
-  --jr-success-green-border: #bbf7d0;
-  --jr-success-bg: #f8faf8;
-  --jr-success-card-bg: #ffffff;
-  --jr-success-text-main: #0f172a;
-  --jr-success-text-muted: #64748b;
-  --jr-success-border: #e2e8f0;
+.jr-payment-success-page {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px 16px 80px;
 }
 
-.jr-success-page {
+.jr-payment-success-content {
   width: 100%;
-  min-height: 100vh;
-  box-sizing: border-box;
-  padding: 16px 16px calc(48px + env(safe-area-inset-bottom, 0px));
-  background: var(--jr-success-bg);
-  color: var(--jr-success-text-main);
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  max-width: 520px;
+  max-width: 480px;
   margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
 /* =========================================================
-   1. TOP APP BAR
+   ANIMATION & HERO HEADING
    ========================================================= */
 
-.jr-success-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 0 16px;
+.jr-payment-success-animation {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 4px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
 }
 
-.jr-success-topbar-brand {
+.jr-payment-success-gif {
+  width: 120px;
+  height: 120px;
+  max-width: 120px;
+  max-height: 120px;
+  object-fit: contain;
+  display: block;
+}
+
+.jr-payment-success-eyebrow {
+  color: #2e8650;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.jr-payment-success-content h1 {
+  margin: 0;
+  color: #171717;
+  font-size: 32px;
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-align: center;
+}
+
+.jr-payment-success-content h1 em {
+  color: #2e8650;
+  font-style: normal;
+}
+
+.jr-payment-success-message {
+  max-width: 380px;
+  margin: 0;
+  color: #555852;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* =========================================================
+   COLLECTION CODE CARD
+   ========================================================= */
+
+.jr-payment-success-code-card {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px 18px;
+  border: 1.5px solid #cfe1d1;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(46, 134, 80, 0.07);
+  text-align: center;
+}
+
+.jr-payment-success-code-card-empty {
+  border-color: #e5e7eb;
+  background: #fafaf7;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.jr-payment-success-code-heading {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
-.jr-success-brand-logo {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  object-fit: cover;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
-.jr-success-brand-name {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--jr-success-green-dark);
-}
-
-.jr-success-topbar-badge {
+.jr-payment-success-check {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #047857;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  justify-content: center;
+  border-radius: 50%;
+  background: #2e8650;
+  color: #ffffff;
 }
 
-.jr-success-pulse-dot {
+.jr-payment-success-code-label {
+  color: #232723;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.jr-payment-success-code-digits {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 16px 0 12px;
+}
+
+.jr-payment-success-digit {
+  width: 58px;
+  height: 64px;
+  min-width: 58px;
+  min-height: 64px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #2e8650;
+  border-radius: 12px;
+  background: #f4faf4;
+  color: #1b5e36;
+  font-family: "JetBrains Mono", monospace, inherit;
+  font-size: 32px;
+  line-height: 1;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 6px rgba(46, 134, 80, 0.08);
+}
+
+.jr-payment-success-digit-empty {
+  border-color: #d1d5db;
+  background: #f3f4f6;
+  color: #9ca3af;
+  box-shadow: none;
+}
+
+.jr-payment-success-code-message {
+  margin: 0 auto;
+  max-width: 360px;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.jr-payment-success-safe-note {
+  margin: 10px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* =========================================================
+   BOOKING & OUTLET DETAILS CARD
+   ========================================================= */
+
+.jr-payment-success-details-card {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 18px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.jr-payment-success-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f2f0;
+}
+
+.jr-payment-success-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #171717;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.jr-payment-success-header-title svg {
+  color: #2e8650;
+}
+
+.jr-payment-success-order-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #374151;
+  font-family: "JetBrains Mono", monospace, inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.jr-payment-success-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-start;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.jr-payment-success-status-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: #10b981;
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
-  animation: jr-pulse 2s infinite;
 }
 
-@keyframes jr-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
-  }
-  70% {
-    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-  }
-}
-
-/* =========================================================
-   2. CELEBRATION HERO
-   ========================================================= */
-
-.jr-success-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-bottom: 22px;
-}
-
-.jr-success-icon-wrapper {
-  position: relative;
-  width: 76px;
-  height: 76px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 14px;
-}
-
-.jr-success-icon-glow {
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0) 70%);
-  animation: jr-glow-pulse 2.5s ease-in-out infinite;
-}
-
-@keyframes jr-glow-pulse {
-  0%, 100% { transform: scale(0.95); opacity: 0.7; }
-  50% { transform: scale(1.1); opacity: 1; }
-}
-
-.jr-success-icon-circle {
-  position: relative;
-  z-index: 1;
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-  display: grid;
-  place-items: center;
-  color: #ffffff;
-  box-shadow: 0 8px 24px -4px rgba(22, 163, 74, 0.4);
-}
-
-.jr-success-check-svg {
-  width: 36px;
-  height: 36px;
-}
-
-.jr-success-hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #15803d;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
-}
-
-.jr-success-title {
-  margin: 4px 0 6px;
-  font-size: clamp(24px, 6.5vw, 30px);
-  font-weight: 900;
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-  color: var(--jr-success-green-dark);
-}
-
-.jr-success-subtitle {
-  margin: 0 0 12px;
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--jr-success-text-muted);
-  max-width: 330px;
-}
-
-.jr-success-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #64748b;
-}
-
-.jr-success-order-id-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
-  border-radius: 6px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  color: #334155;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: "JetBrains Mono", monospace;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.jr-success-order-id-chip:hover {
-  background: #e2e8f0;
-}
-
-.jr-success-order-id-chip small {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--jr-success-green);
-  text-transform: uppercase;
-}
-
-.jr-success-meta-dot {
-  color: #cbd5e1;
-}
-
-.jr-success-time {
-  font-size: 12px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-/* =========================================================
-   3. HERO 4-DIGIT DISPENSER PIN CARD
-   ========================================================= */
-
-.jr-success-pin-card {
-  position: relative;
-  background: #ffffff;
-  border: 2px solid #22c55e;
-  border-radius: 20px;
-  padding: 18px 16px 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 10px 25px -5px rgba(34, 197, 94, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
-  text-align: center;
-  overflow: hidden;
-}
-
-.jr-success-pin-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, #10b981 0%, #22c55e 50%, #4ade80 100%);
-}
-
-.jr-success-pin-header {
+/* Location & Machine block */
+.jr-payment-success-location-block {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 16px;
-  text-align: left;
-}
-
-.jr-success-pin-label-group {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.jr-success-pin-icon {
-  font-size: 20px;
-  line-height: 1;
-  padding: 6px;
-  border-radius: 10px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-}
-
-.jr-success-pin-title {
-  display: block;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  color: var(--jr-success-green-dark);
-}
-
-.jr-success-pin-desc {
-  margin: 3px 0 0;
-  font-size: 12px;
-  line-height: 1.35;
-  color: var(--jr-success-text-muted);
-}
-
-.jr-success-pin-status-pill {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: #dcfce7;
-  color: #15803d;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-}
-
-.jr-success-status-beacon {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #16a34a;
-}
-
-.jr-success-digits-container {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin: 6px 0 16px;
-}
-
-.jr-success-digit-box {
-  width: 58px;
-  height: 66px;
-  display: grid;
-  place-items: center;
-  border: 2px solid #bbf7d0;
+  gap: 12px;
+  padding: 14px;
   border-radius: 14px;
-  background: #f0fdf4;
-  color: #0f3d2e;
-  font-family: "JetBrains Mono", Inter, monospace;
-  font-size: 34px;
-  font-weight: 900;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02), 0 3px 8px rgba(34, 197, 94, 0.08);
+  background: #fafaf8;
+  border: 1px solid #f0f2ec;
 }
 
-.jr-success-digit-box.placeholder {
-  border-color: #e2e8f0;
-  background: #f8fafc;
-  color: #94a3b8;
-}
-
-.jr-success-copy-pin-btn {
-  width: 100%;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 16px;
-  border: 1px solid #16a34a;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #15803d;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(22, 163, 74, 0.08);
-}
-
-.jr-success-copy-pin-btn:hover {
-  background: #f0fdf4;
-}
-
-.jr-success-copy-pin-btn:active {
-  transform: scale(0.98);
-}
-
-.jr-success-copy-pin-btn.copied {
-  background: #15803d;
-  color: #ffffff;
-  border-color: #15803d;
-}
-
-.jr-success-pin-note {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 12px;
-  font-size: 12px;
-  color: #64748b;
-  line-height: 1.35;
-}
-
-.jr-success-note-icon {
-  font-size: 14px;
-}
-
-/* =========================================================
-   4. 3-STEP COLLECTION GUIDE
-   ========================================================= */
-
-.jr-success-steps-card {
-  background: #ffffff;
-  border: 1px solid var(--jr-success-border);
-  border-radius: 18px;
-  padding: 16px;
-  margin-bottom: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
-
-.jr-success-section-title {
-  margin: 0 0 14px;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: #475569;
-  text-transform: uppercase;
-}
-
-.jr-success-steps-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.jr-success-step-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.jr-success-step-num {
-  width: 26px;
-  height: 26px;
+.jr-payment-success-loc-icon {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
   border-radius: 50%;
-  background: #dcfce7;
-  color: #15803d;
-  font-size: 13px;
-  font-weight: 800;
+  background: #e8f3ea;
+  color: #2e8650;
   display: grid;
   place-items: center;
-  flex-shrink: 0;
   margin-top: 2px;
 }
 
-.jr-success-step-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.jr-success-step-text strong {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.jr-success-step-text span {
-  font-size: 12.5px;
-  color: #64748b;
-  line-height: 1.35;
-}
-
-/* =========================================================
-   5. DISPENSER LOCATION CARD
-   ========================================================= */
-
-.jr-success-location-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: #ffffff;
-  border: 1px solid var(--jr-success-border);
-  border-radius: 18px;
-  padding: 16px;
-  margin-bottom: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
-
-.jr-success-location-icon-wrapper {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #15803d;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-
-.jr-success-location-info {
+.jr-payment-success-loc-info {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  min-width: 0;
 }
 
-.jr-success-location-tag {
-  font-size: 11px;
+.jr-payment-success-loc-label {
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #64748b;
+  color: #6b7280;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.jr-success-location-name {
+.jr-payment-success-loc-name {
   font-size: 15px;
   font-weight: 800;
-  color: #0f172a;
+  color: #171717;
+  line-height: 1.25;
 }
 
-.jr-success-machine-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+.jr-payment-success-loc-address {
   font-size: 12px;
-  font-weight: 600;
-  color: #15803d;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.jr-payment-success-machine-pill {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2e8650;
+}
+
+/* Items Section */
+.jr-payment-success-items-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.jr-payment-success-items-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+}
+
+.jr-payment-success-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jr-payment-success-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #f0f2f0;
+}
+
+.jr-payment-success-item-row:last-child {
+  border-bottom: none;
+}
+
+.jr-payment-success-item-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jr-payment-success-item-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.jr-payment-success-item-qty {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.jr-payment-success-item-price {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+}
+
+/* Total Row */
+.jr-payment-success-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1.5px solid #f0f2f0;
+}
+
+.jr-payment-success-total-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #4b5563;
+  letter-spacing: 0.05em;
+}
+
+.jr-payment-success-gst-note {
+  display: block;
+  font-size: 11px;
+  color: #9ca3af;
   margin-top: 2px;
 }
 
-.jr-success-machine-indicator {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #22c55e;
-}
-
-.jr-success-location-address {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: #64748b;
-  line-height: 1.35;
+.jr-payment-success-total-amount {
+  font-size: 22px;
+  font-weight: 900;
+  color: #15803d;
+  letter-spacing: -0.02em;
 }
 
 /* =========================================================
-   6. DIGITAL RECEIPT CARD
+   ACTIONS
    ========================================================= */
 
-.jr-success-receipt-card {
-  background: #ffffff;
-  border: 1px solid var(--jr-success-border);
-  border-radius: 18px;
-  padding: 16px;
-  margin-bottom: 18px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
-
-.jr-success-receipt-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.jr-success-receipt-title {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: #475569;
-  text-transform: uppercase;
-}
-
-.jr-success-receipt-count {
-  font-size: 12px;
-  font-weight: 600;
-  color: #64748b;
-}
-
-.jr-success-items-list {
+.jr-payment-success-actions {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: 4px;
 }
 
-.jr-success-item-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 6px 0;
-}
-
-.jr-success-item-img {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  object-fit: cover;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  flex-shrink: 0;
-}
-
-.jr-success-item-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.jr-success-item-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0f172a;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.jr-success-item-qty {
-  font-size: 12px;
-  color: #64748b;
-}
-
-.jr-success-item-price {
-  font-size: 14px;
-  font-weight: 800;
-  color: #0f172a;
-  font-family: Inter, sans-serif;
-  flex-shrink: 0;
-}
-
-.jr-success-receipt-divider {
-  height: 1px;
-  background: #e2e8f0;
-  margin: 14px 0;
-}
-
-.jr-success-bill-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.jr-success-bill-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13.5px;
-  color: #64748b;
-}
-
-.jr-success-bill-row.total {
-  font-size: 16px;
-  font-weight: 800;
-  color: #0f172a;
-  padding-top: 6px;
-  border-top: 1px dashed #cbd5e1;
-}
-
-.jr-success-bill-total-amount {
-  font-size: 18px;
-  color: var(--jr-success-green);
-}
-
-.jr-success-payment-method-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 6px;
-  padding-top: 8px;
-  border-top: 1px solid #f1f5f9;
-  font-size: 12.5px;
-  color: #64748b;
-}
-
-.jr-success-payment-verified-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: #ecfdf5;
-  color: #047857;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-/* =========================================================
-   7. ACTION CONTROLS
-   ========================================================= */
-
-.jr-success-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.jr-success-order-more-btn {
+.jr-payment-success-primary-button,
+.jr-payment-success-history-button,
+.jr-payment-success-home-button {
   width: 100%;
   min-height: 52px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 14px 20px;
   border-radius: 14px;
-  border: 0;
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-  color: #ffffff;
   font-family: inherit;
-  font-size: 16px;
+  font-size: 13px;
+  line-height: 1;
   font-weight: 800;
+  letter-spacing: 0.05em;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
-  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.jr-success-order-more-btn:active {
-  transform: scale(0.98);
+.jr-payment-success-primary-button {
+  border: 1.5px solid #2e8650;
+  background: #2e8650;
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(46, 134, 80, 0.22);
 }
 
-.jr-success-history-btn {
-  width: 100%;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border-radius: 14px;
-  border: 1.5px solid #cbd5e1;
+.jr-payment-success-primary-button:hover {
+  background: #277444;
+  border-color: #277444;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(46, 134, 80, 0.28);
+}
+
+.jr-payment-success-history-button {
+  border: 1.5px solid #d1d5db;
   background: #ffffff;
-  color: #334155;
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  color: #1f2937;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.jr-success-history-btn:active {
-  background: #f8fafc;
-  transform: scale(0.98);
+.jr-payment-success-history-button:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+  transform: translateY(-1px);
 }
 
-.jr-success-home-link {
-  width: 100%;
-  min-height: 38px;
+.jr-payment-success-home-button {
+  border: 1.5px solid transparent;
   background: transparent;
-  border: 0;
-  color: #64748b;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: #4b5563;
+  min-height: 44px;
+}
+
+.jr-payment-success-home-button:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.jr-payment-success-primary-button:active,
+.jr-payment-success-history-button:active,
+.jr-payment-success-home-button:active {
+  transform: translateY(0);
+}
+
+.jr-payment-success-primary-button:focus-visible,
+.jr-payment-success-history-button:focus-visible,
+.jr-payment-success-home-button:focus-visible {
+  outline: 3px solid rgba(46, 134, 80, 0.35);
+  outline-offset: 2px;
 }
 
 /* =========================================================
-   8. FOOTER ASSISTANCE
+   TABLET & DESKTOP SCREENS
    ========================================================= */
 
-.jr-success-footer-note {
-  text-align: center;
-  padding: 8px 12px;
-}
-
-.jr-success-footer-note p {
-  margin: 0;
-  font-size: 12px;
-  color: #94a3b8;
-  line-height: 1.45;
-}
-
-.jr-success-footer-note strong {
-  color: #475569;
-}
-
-/* =========================================================
-   RESPONSIVE (TINY PHONES <= 360px)
-   ========================================================= */
-
-@media (max-width: 360px) {
-  .jr-success-digit-box {
-    width: 48px;
-    height: 56px;
-    font-size: 28px;
+@media screen and (min-width: 600px) {
+  .jr-payment-success-page {
+    padding: 32px 24px 90px;
   }
-  .jr-success-digits-container {
+
+  .jr-payment-success-content {
+    max-width: 520px;
+    gap: 20px;
+  }
+
+  .jr-payment-success-animation,
+  .jr-payment-success-gif {
+    width: 140px;
+    height: 140px;
+    max-width: 140px;
+    max-height: 140px;
+  }
+
+  .jr-payment-success-content h1 {
+    font-size: 36px;
+  }
+
+  .jr-payment-success-message {
+    font-size: 14px;
+  }
+
+  .jr-payment-success-code-card {
+    padding: 24px 22px;
+  }
+
+  .jr-payment-success-digit {
+    width: 64px;
+    height: 70px;
+    min-width: 64px;
+    min-height: 70px;
+    font-size: 36px;
+  }
+
+  .jr-payment-success-details-card {
+    padding: 22px 24px;
+  }
+}
+
+/* =========================================================
+   SMALL PHONES (<380px)
+   ========================================================= */
+
+@media screen and (max-width: 380px) {
+  .jr-payment-success-page {
+    padding: 16px 12px 64px;
+  }
+
+  .jr-payment-success-content h1 {
+    font-size: 26px;
+  }
+
+  .jr-payment-success-code-digits {
     gap: 6px;
+  }
+
+  .jr-payment-success-digit {
+    width: 48px;
+    height: 54px;
+    min-width: 48px;
+    min-height: 54px;
+    font-size: 26px;
+    border-radius: 10px;
+  }
+
+  .jr-payment-success-primary-button,
+  .jr-payment-success-history-button {
+    min-height: 48px;
+    font-size: 12px;
+  }
+}
+
+/* =========================================================
+   IPHONE SAFE AREA
+   ========================================================= */
+
+@supports (padding: max(0px)) {
+  @media screen and (max-width: 600px) {
+    .jr-payment-success-page {
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+      padding-bottom: max(80px, env(safe-area-inset-bottom, 0px));
+    }
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .jr-payment-success-page *,
+  .jr-payment-success-page *::before,
+  .jr-payment-success-page *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }

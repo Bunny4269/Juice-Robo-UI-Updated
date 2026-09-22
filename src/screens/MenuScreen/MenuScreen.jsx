@@ -1,293 +1,412 @@
+import { useMemo, useState, useCallback } from "react";
 import "./MenuScreen.css";
 
+/*
+ * Juice Robo Menu
+ *
+ * CART CONTRACT
+ * -------------
+ * The backend cart is keyed by variantId.
+ *
+ * +:
+ *   onAddToCart(product, variant, absoluteQuantity)
+ *
+ * -:
+ *   onUpdate(variantId, absoluteQuantity)
+ *
+ * RESPONSIVE LAYOUT
+ * -----------------
+ * Device type is NOT detected in this component.
+ *
+ * Layout/responsiveness is handled entirely by CSS.
+ * This allows the UI to expand naturally up to 1300px
+ * without incorrectly treating a resized desktop browser
+ * as a mobile device.
+ *
+ * The component does not hardcode product names, prices,
+ * outlet names, machine names, IDs, or API data.
+ */
+
 function clean(value) {
-  return String(value ?? "")
+  if (value === undefined || value === null) return "";
+  return String(value).replace(/^"|"$/g, "").trim();
+}
+
+function sanitizeText(value) {
+  return clean(value)
     .replace(/\bundefined\b/gi, "")
     .replace(/\bnull\b/gi, "")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function firstDefined(...values) {
-  return values.find(
-    (value) =>
-      value !== undefined &&
-      value !== null &&
-      value !== ""
+function isUsableText(value) {
+  if (!value) return false;
+  const str = sanitizeText(value);
+  const lower = str.toLowerCase();
+  return (
+    str !== "" &&
+    lower !== "undefined" &&
+    lower !== "null" &&
+    lower !== "juice" &&
+    lower !== "full" &&
+    lower !== "item"
   );
 }
 
-function number(value, fallback = 0) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
+function getProductCategory(product = {}) {
+  // 1. Check explicit category fields
+  const candidates = [
+    product?.category,
+    product?.categoryName,
+    product?.category_name,
+    product?.catName,
+    product?.productCategory,
+    product?.product_category,
+    product?.itemCategory,
+    product?.item_category,
+    product?.group,
+    product?.itemGroup,
+    product?.item_group,
+    product?.productType,
+    product?.product_type,
+    product?.type,
+    product?._variant?.category,
+    product?._variant?.productType,
+  ];
+
+  for (const candidate of candidates) {
+    if (isUsableText(candidate)) {
+      return sanitizeText(candidate);
+    }
+  }
+
+  // 2. Derive from product text (name, description, variants)
+  const variants = Array.isArray(product?.lstVariants)
+    ? product.lstVariants
+    : Array.isArray(product?.variants)
+    ? product.variants
+    : [];
+
+  const text = [
+    product?.name,
+    product?.itemName,
+    product?.productName,
+    product?.product_name,
+    product?.title,
+    product?.desc,
+    product?.description,
+    ...variants.map((v) => v?.variantName),
+    ...variants.map((v) => v?.variantDesc),
+    ...variants.map((v) => v?.itemName),
+    ...variants.map((v) => v?.sizeML),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (text.includes("disinfection")) {
+    return "Disinfection";
+  }
+
+  if (text.includes("ginger") && text.includes("lemon")) {
+    return "Ginger Lemon";
+  }
+
+  if (text.includes("ginger")) {
+    return "Ginger";
+  }
+
+  if (text.includes("lemon")) {
+    return "Lemon";
+  }
+
+  if (text.includes("plain") || text.includes("classic")) {
+    return "Classic";
+  }
+
+  if (text.includes("sugarcane")) {
+    return "Sugarcane Juice";
+  }
+
+  const rawName = sanitizeText(product?.name || product?.itemName || product?.productName);
+  if (isUsableText(rawName)) {
+    return rawName;
+  }
+
+  return "Juices";
 }
 
-function productId(product = {}) {
-  return firstDefined(
-    product?.id,
-    product?.productId,
-    product?.product_id,
-    product?.itemId,
-    product?.item_id,
-    product?.variantId,
-    product?.variant_id
-  );
+function toPositiveId(value) {
+  const id = Number(value);
+
+  return Number.isFinite(id) && id > 0
+    ? id
+    : null;
 }
 
-function variantsOf(product = {}) {
-  if (Array.isArray(product?.lstVariants)) return product.lstVariants;
-  if (Array.isArray(product?.variants)) return product.variants;
-  if (Array.isArray(product?.productVariants)) return product.productVariants;
+function getVariants(product = {}) {
+  if (Array.isArray(product?.lstVariants)) {
+    return product.lstVariants.filter(Boolean);
+  }
+
+  if (Array.isArray(product?.variants)) {
+    return product.variants.filter(Boolean);
+  }
+
   return [];
 }
 
-function variantId(product = {}) {
-  const variants = variantsOf(product);
-  const first = variants[0] || {};
-  return firstDefined(
-    product?.variantId,
-    product?.variant_id,
-    first?.variantId,
-    first?.variant_id,
-    first?.id,
-    productId(product)
+function getVariantId(product = {}, variant = null) {
+  const value =
+    variant?.variantId ??
+    variant?.variant_id ??
+    variant?.id ??
+    product?.variantId ??
+    product?.variant_id ??
+    product?.id;
+
+  return toPositiveId(value);
+}
+
+function isAvailable(value) {
+  return (
+    value?.isAvailable !== false &&
+    value?.is_available !== false
+  );
+}
+
+function getDefaultVariant(product = {}) {
+  const variants = getVariants(product);
+
+  if (!variants.length) {
+    return null;
+  }
+
+  return (
+    variants.find(isAvailable) ??
+    variants.find(
+      (variant) =>
+        clean(
+          variant?.variantName ??
+          variant?.name
+        ).toLowerCase() === "full"
+    ) ??
+    variants[0]
+  );
+}
+
+function productCartId(product = {}) {
+  return getVariantId(
+    product,
+    getDefaultVariant(product)
+  );
+}
+
+function cartItemVariantId(item = {}) {
+  const nestedVariant =
+    item?._variant ??
+    item?.variant ??
+    null;
+
+  return getVariantId(
+    item,
+    nestedVariant
+  );
+}
+
+function readQuantity(value) {
+  const quantity = Number(value);
+
+  if (!Number.isFinite(quantity)) {
+    return 0;
+  }
+
+  return Math.max(
+    0,
+    Math.floor(quantity)
   );
 }
 
 function quantityForProduct(cart, product) {
-  const ids = new Set(
-    [
-      productId(product),
-      variantId(product),
-      ...variantsOf(product).flatMap((item) => [
-        item?.id,
-        item?.variantId,
-        item?.variant_id,
-      ]),
-    ]
-      .filter((value) => value !== undefined && value !== null && value !== "")
-      .map(String)
-  );
+  const targetVariantId =
+    productCartId(product);
 
-  return (Array.isArray(cart) ? cart : []).reduce((total, item) => {
-    const itemIds = [
-      item?.id,
-      item?.itemId,
-      item?.item_id,
-      item?.productId,
-      item?.product_id,
-      item?.variantId,
-      item?.variant_id,
-      item?.productVariantId,
-      item?.product_variant_id,
-      item?.itemVariantId,
-      item?.item_variant_id,
-      item?.variant?.id,
-      item?.variant?.variantId,
-    ]
-      .filter((value) => value !== undefined && value !== null && value !== "")
-      .map(String);
-
-    if (!itemIds.some((id) => ids.has(id))) return total;
-
-    return total + Math.max(
-      0,
-      Math.floor(
-        number(
-          firstDefined(
-            item?.quantity,
-            item?.qty,
-            item?.count,
-            item?.itemQuantity,
-            item?.item_quantity
-          ),
-          0
-        )
-      )
-    );
-  }, 0);
-}
-
-function productName(product, displayProductName) {
-  if (typeof displayProductName === "function") {
-    const value = clean(displayProductName(product));
-    if (value) return value;
+  if (targetVariantId === null) {
+    return 0;
   }
 
-  return clean(
-    firstDefined(
-      product?.displayName,
-      product?.name,
-      product?.itemName,
-      product?.productName,
-      product?.product_name,
-      product?.title
-    )
-  ) || "Juice";
-}
+  const items =
+    Array.isArray(cart)
+      ? cart
+      : [];
 
-function productDescription(product, displayDescription) {
-  if (typeof displayDescription === "function") {
-    const value = clean(displayDescription(product));
-    if (value) return value;
-  }
-
-  return clean(
-    firstDefined(
-      product?.description,
-      product?.shortDescription,
-      product?.short_description,
-      product?.itemDescription
-    )
+  const item = items.find(
+    (entry) =>
+      cartItemVariantId(entry) ===
+      targetVariantId
   );
-}
 
-function productPrice(product) {
-  const variants = variantsOf(product);
-  const first = variants[0] || {};
-
-  return number(
-    firstDefined(
-      first?.sellingPrice,
-      first?.selling_price,
-      first?.price,
-      product?.sellingPrice,
-      product?.selling_price,
-      product?.price,
-      product?.unitPrice,
-      product?.unit_price
-    ),
+  return readQuantity(
+    item?.quantity ??
+    item?.qty ??
     0
   );
 }
 
-function imageCandidates(product, productImage) {
+function displayName(
+  product,
+  resolver
+) {
+  if (typeof resolver === "function") {
+    const resolved = sanitizeText(
+      resolver(product)
+    );
+
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  const raw = sanitizeText(
+    product?.displayName ??
+    product?.name ??
+    product?.productName ??
+    product?.itemName
+  );
+
+  return raw || "Juice";
+}
+
+function displayDescription(
+  product,
+  resolver
+) {
+  if (typeof resolver === "function") {
+    const resolved = sanitizeText(
+      resolver(product)
+    );
+
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  return sanitizeText(
+    product?.description ??
+    product?.desc
+  );
+}
+
+function productPrice(product) {
+  const variant =
+    getDefaultVariant(product);
+
+  const values = [
+    variant?.unitPrice,
+    variant?.unit_price,
+    variant?.price,
+
+    product?.unitPrice,
+    product?.unit_price,
+    product?.sellingPrice,
+    product?.selling_price,
+    product?.price,
+    product?.amount,
+  ];
+
+  for (const value of values) {
+    if (
+      value === undefined ||
+      value === null ||
+      value === ""
+    ) {
+      continue;
+    }
+
+    const amount = Number(value);
+
+    if (Number.isFinite(amount)) {
+      return amount;
+    }
+  }
+
+  return 0;
+}
+
+function imageCandidates(
+  product,
+  resolver
+) {
   const values = [];
 
-  if (typeof productImage === "function") {
+  if (typeof resolver === "function") {
     try {
-      values.push(productImage(product));
-    } catch {
-      // Ignore image resolver errors.
+      values.push(
+        resolver(product)
+      );
+    } catch (error) {
+      console.warn(
+        "[Juice Robo] Product image resolver failed:",
+        error
+      );
     }
   }
 
   values.push(
-    product?.imageUrl,
     product?.image_url,
+    product?.imageUrl,
     product?.image,
-    product?.imagePath,
-    product?.image_path,
+    product?.photo,
+    product?.productPhoto,
     product?.productImage,
-    product?.product_image,
-    product?.thumbnail
+    product?.outletPhoto
   );
 
-  return [...new Set(
-    values
-      .map((value) => clean(value))
-      .filter(Boolean)
-  )];
+  const seen = new Set();
+
+  return values
+    .map(clean)
+    .filter((value) => {
+      if (!value || seen.has(value)) {
+        return false;
+      }
+
+      seen.add(value);
+      return true;
+    });
 }
 
-function locationName(location) {
-  return clean(
-    firstDefined(
-      location?.outletName,
-      location?.locationName,
-      location?.storeName,
-      location?.name,
-      location?.outlet?.name,
-      location?.location?.name,
-      location?.store?.name
-    )
-  ) || "Choose location";
+function moneyValue(
+  value,
+  formatter
+) {
+  if (typeof formatter === "function") {
+    return formatter(value);
+  }
+
+  return `₹${Number(
+    value || 0
+  ).toLocaleString("en-IN")}`;
 }
 
-function locationAddress(location) {
-  return clean(
-    firstDefined(
-      location?.address,
-      location?.locationAddress,
-      location?.storeAddress,
-      location?.location
-    )
-  );
-}
-
-function machineName(machine) {
-  return clean(
-    firstDefined(
-      machine?.machineName,
-      machine?.machine_name,
-      machine?.name,
-      machine?.machineCode,
-      machine?.machine_code,
-      machine?.code
-    )
-  ) || "Choose machine";
-}
-
-function machineStatus(machine) {
-  return clean(
-    firstDefined(
-      machine?.status,
-      machine?.machineStatus,
-      machine?.machine_status,
-      machine?.availability
-    )
-  );
-}
-
-function resolveSchedule(source = {}) {
-  const schedule =
-    source?.schedule ??
-    source?.timing ??
-    source?.operatingHours ??
-    source?.availability ??
-    null;
-
-  const startTime =
-    schedule?.startTime ??
-    schedule?.start_time ??
-    source?.startTime ??
-    source?.start_time ??
-    null;
-
-  const endTime =
-    schedule?.endTime ??
-    schedule?.end_time ??
-    source?.endTime ??
-    source?.end_time ??
-    null;
-
-  return { schedule, startTime, endTime };
-}
-
-function PlusIcon() {
+function productKey(
+  product,
+  index
+) {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
+    product?.id ??
+    product?.productId ??
+    product?.product_id ??
+    productCartId(product) ??
+    `product-${index}`
   );
 }
 
-function MinusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 12h14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
 
-function PinIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M20 10.2c0 5.2-8 10.8-8 10.8S4 15.4 4 10.2a8 8 0 1 1 16 0Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  );
-}
+/* =========================================================
+   MENU SCREEN
+   ========================================================= */
 
 export default function MenuScreen({
   products = [],
@@ -297,252 +416,831 @@ export default function MenuScreen({
   onProduct,
   onUpdate,
   onAddToCart,
-  onViewCart,
+  productImage,
+  displayProductName,
+  displayDescription:
+    displayDescriptionResolver,
+  money,
+}) {
+
+  /* =======================================================
+     PRODUCTS
+     ======================================================= */
+
+  const safeProducts = useMemo(
+    () =>
+      Array.isArray(products)
+        ? products.filter(Boolean)
+        : [],
+    [products]
+  );
+
+
+  /* =======================================================
+     LOCATION
+     ======================================================= */
+
+  const locationName =
+    clean(
+      selectedLocation?.name ??
+      selectedLocation?.storeName ??
+      selectedLocation?.outletName ??
+      selectedLocation?.locationName
+    ) || "Selected location";
+
+  const locationAddress =
+    clean(
+      selectedLocation?.address ??
+      selectedLocation?.outletDesc ??
+      selectedLocation?.location ??
+      selectedLocation?.description
+    );
+
+
+  /* =======================================================
+     MACHINE
+     ======================================================= */
+
+  const machineName =
+    clean(
+      selectedMachine?.name ??
+      selectedMachine?.machineName ??
+      selectedMachine?.machine_name ??
+      selectedMachine?.machineCode ??
+      selectedMachine?.machine_code
+    ) || "Juice Robo Machine";
+
+
+  /* =======================================================
+     CATEGORIES / FLAVORS
+     ======================================================= */
+
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  const categories = useMemo(() => {
+    if (!safeProducts.length) return [];
+
+    const categoryMap = new Map();
+
+    safeProducts.forEach((product) => {
+      const category = getProductCategory(product);
+      if (isUsableText(category)) {
+        const count = (categoryMap.get(category) || 0) + 1;
+        categoryMap.set(category, count);
+      }
+    });
+
+    if (categoryMap.size === 0) return [];
+
+    const pills = [
+      { id: "all", label: "All", count: safeProducts.length }
+    ];
+
+    categoryMap.forEach((count, label) => {
+      pills.push({
+        id: label.toLowerCase().replace(/\s+/g, "-"),
+        label,
+        count,
+      });
+    });
+
+    return pills;
+  }, [safeProducts]);
+
+  const visibleProducts = useMemo(() => {
+    if (selectedCategory === "all" || !categories.length) {
+      return safeProducts;
+    }
+
+    const activeCatObj = categories.find((c) => c.id === selectedCategory);
+    if (!activeCatObj) return safeProducts;
+
+    const catLabel = activeCatObj.label.toLowerCase();
+
+    return safeProducts.filter((product) => {
+      const category = getProductCategory(product).toLowerCase();
+      return category === catLabel;
+    });
+  }, [safeProducts, selectedCategory, categories]);
+
+  /* =======================================================
+     PRODUCT SELECT
+     ======================================================= */
+
+  const handleProductSelect =
+    useCallback(
+      (product) => {
+        if (
+          typeof onProduct === "function"
+        ) {
+          onProduct(product);
+        }
+      },
+      [onProduct]
+    );
+
+
+  /* =======================================================
+     RENDER
+     ======================================================= */
+
+  return (
+    <main className="jr-content jr-menu-page">
+
+      {/* ===================================================
+          WELCOME / HERO
+          =================================================== */}
+
+      <section className="jr-welcome jr-menu-welcome">
+
+        <div className="jr-welcome-copy">
+
+          <span className="jr-eyebrow">
+            FRESHLY MADE
+          </span>
+
+          <h1>
+            Your favourite
+            <br />
+            <em>juice, your way.</em>
+          </h1>
+
+          <p>
+            Pick your juice, choose your quantity and
+            collect it fresh from your Juice Robo machine.
+          </p>
+
+        </div>
+
+        <div
+          className="jr-welcome-icon"
+          aria-hidden="true"
+        >
+          🧃
+        </div>
+
+      </section>
+
+
+      {/* ===================================================
+          SELECTED MACHINE
+          =================================================== */}
+
+      <section
+        className="jr-selected-machine-banner"
+        aria-label="Current collection point"
+      >
+
+        <div
+          className="jr-selected-machine-icon"
+          aria-hidden="true"
+        >
+          📍
+        </div>
+
+        <div className="jr-selected-machine-copy">
+
+          <small>
+            COLLECTING FROM
+          </small>
+
+          <strong>
+            {locationAddress ||
+              locationName}
+          </strong>
+
+          <span>
+            {machineName}
+
+            {selectedMachine?.status
+              ? ` · ${selectedMachine.status}`
+              : ""}
+          </span>
+
+        </div>
+
+      </section>
+
+
+      {/* ===================================================
+          MENU SECTION
+          =================================================== */}
+
+      <section className="jr-menu-section">
+
+        <div className="jr-section-heading">
+
+          <div className="jr-section-heading-copy">
+
+            <span className="jr-section-eyebrow">
+              AVAILABLE JUICES
+            </span>
+
+            <h2>
+              What are you craving?
+            </h2>
+
+          </div>
+
+          <span
+            className="jr-count"
+            aria-label={`${visibleProducts.length} juices available`}
+          >
+            {visibleProducts.length}
+          </span>
+
+        </div>
+
+
+        <p className="jr-section-subtitle">
+          Choose your favourite fresh juice.
+        </p>
+
+
+        {/* =================================================
+            CATEGORY / FLAVOR NAVIGATION
+            ================================================= */}
+
+        {categories.length > 1 && (
+          <nav className="jr-category-nav" aria-label="Juice categories">
+            <div className="jr-category-pills">
+              {categories.map((cat) => {
+                const isActive = selectedCategory === cat.id;
+
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    className={`jr-category-pill${
+                      isActive ? " is-active" : ""
+                    }`}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    aria-pressed={isActive}
+                  >
+                    <span>{cat.label}</span>
+                    {typeof cat.count === "number" && (
+                      <small className="jr-category-pill-count">
+                        {cat.count}
+                      </small>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        )}
+
+
+        {/* =================================================
+            PRODUCT GRID
+            ================================================= */}
+
+        <div className="jr-products">
+
+          {safeProducts.length === 0 ? (
+
+            <div className="jr-products-empty">
+
+              <span aria-hidden="true">
+                🧃
+              </span>
+
+              <strong>
+                No juices available
+              </strong>
+
+              <p>
+                No available products were returned by
+                the Juice Robo Products API.
+              </p>
+
+            </div>
+
+          ) : visibleProducts.length === 0 ? (
+
+            <div className="jr-products-empty">
+
+              <span aria-hidden="true">
+                🔍
+              </span>
+
+              <strong>
+                No juices in this category
+              </strong>
+
+              <p>
+                Try selecting another category or view all juices.
+              </p>
+
+              <button
+                type="button"
+                className="jr-category-reset-btn"
+                onClick={() => setSelectedCategory("all")}
+              >
+                View all juices
+              </button>
+
+            </div>
+
+          ) : (
+
+            visibleProducts.map(
+              (product, index) => (
+
+                <ProductCard
+                  key={productKey(
+                    product,
+                    index
+                  )}
+                  product={product}
+                  cart={cart}
+                  onSelect={
+                    handleProductSelect
+                  }
+                  onUpdate={onUpdate}
+                  onAddToCart={
+                    onAddToCart
+                  }
+                  productImage={
+                    productImage
+                  }
+                  displayProductName={
+                    displayProductName
+                  }
+                  displayDescription={
+                    displayDescriptionResolver
+                  }
+                  money={money}
+                />
+
+              )
+            )
+
+          )}
+
+        </div>
+
+      </section>
+
+    </main>
+  );
+}
+
+
+/* =========================================================
+   PRODUCT CARD
+   ========================================================= */
+
+function ProductCard({
+  product,
+  cart,
+  onSelect,
+  onUpdate,
+  onAddToCart,
   productImage,
   displayProductName,
   displayDescription,
   money,
 }) {
-  const safeProducts = Array.isArray(products) ? products : [];
-  const location = locationName(selectedLocation);
-  const address = locationAddress(selectedLocation);
-  const machine = machineName(selectedMachine);
-  const status = machineStatus(selectedMachine);
-  const { startTime: locationStartTime, endTime: locationEndTime } = resolveSchedule(selectedLocation);
-  const { startTime: machineStartTime, endTime: machineEndTime } = resolveSchedule(selectedMachine);
 
-  // Diagnostic log verifying that all potential schedule sources and start times are null-safe
-  if (typeof window !== "undefined" && !window.__jr_startTimeLogged) {
-    window.__jr_startTimeLogged = true;
-    console.log("[Juice Robo] START TIME SOURCE:", {
-      selectedLocation,
-      selectedLocationSchedule: resolveSchedule(selectedLocation),
-      selectedMachine,
-      selectedMachineSchedule: resolveSchedule(selectedMachine),
-      productsCount: safeProducts.length,
-      productsSchedule: safeProducts.map((p) => ({
-        id: productId(p),
-        name: productName(p, displayProductName),
-        ...resolveSchedule(p),
-      })),
-    });
+  const [
+    imageIndex,
+    setImageIndex,
+  ] = useState(0);
+
+
+  /* =======================================================
+     PRODUCT DATA
+     ======================================================= */
+
+  const name =
+    displayName(
+      product,
+      displayProductName
+    );
+
+  const description =
+    displayDescription(
+      product,
+      displayDescription
+    );
+
+  const price =
+    productPrice(product);
+
+
+  /* =======================================================
+     PRODUCT IMAGES
+     ======================================================= */
+
+  const candidates =
+    useMemo(
+      () =>
+        imageCandidates(
+          product,
+          productImage
+        ),
+      [
+        product,
+        productImage,
+      ]
+    );
+
+
+  /* =======================================================
+     CART
+     ======================================================= */
+
+  const quantity =
+    quantityForProduct(
+      cart,
+      product
+    );
+
+  const variant =
+    getDefaultVariant(
+      product
+    );
+
+  const variantId =
+    getVariantId(
+      product,
+      variant
+    );
+
+
+  /* =======================================================
+     AVAILABILITY
+     ======================================================= */
+
+  const available =
+    isAvailable(product) &&
+    isAvailable(variant);
+
+
+  /* =======================================================
+     PRODUCT SELECTION
+     ======================================================= */
+
+  const selectProduct =
+    useCallback(
+      () => {
+        if (
+          typeof onSelect ===
+          "function"
+        ) {
+          onSelect(product);
+        }
+      },
+      [
+        onSelect,
+        product,
+      ]
+    );
+
+
+  /* =======================================================
+     KEYBOARD ACCESSIBILITY
+     ======================================================= */
+
+  const handleCardKeyDown =
+    useCallback(
+      (event) => {
+
+        if (
+          event.key !== "Enter" &&
+          event.key !== " "
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+
+        selectProduct();
+      },
+      [selectProduct]
+    );
+
+
+  /* =======================================================
+     IMAGE ERROR / FALLBACK
+     ======================================================= */
+
+  const handleImageError =
+    useCallback(
+      () => {
+
+        setImageIndex(
+          (current) => {
+
+            const next =
+              current + 1;
+
+            return next <
+              candidates.length
+              ? next
+              : current;
+          }
+        );
+
+      },
+      [candidates.length]
+    );
+
+
+  /* =======================================================
+     ADD TO CART
+     ======================================================= */
+
+  async function handlePlus(
+    event
+  ) {
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!available) {
+      return;
+    }
+
+    if (
+      typeof onAddToCart !==
+      "function"
+    ) {
+
+      console.error(
+        "[Juice Robo] MenuScreen: onAddToCart is not connected."
+      );
+
+      return;
+    }
+
+    if (!variantId) {
+
+      console.error(
+        "[Juice Robo] Product has no valid variantId:",
+        product
+      );
+
+      return;
+    }
+
+    const nextQuantity =
+      Math.max(
+        1,
+        quantity + 1
+      );
+
+    try {
+
+      await onAddToCart(
+        product,
+        variant,
+        nextQuantity
+      );
+
+    } catch (error) {
+
+      console.error(
+        "[Juice Robo] Menu + failed:",
+        error
+      );
+
+    }
   }
 
-  const totalCartCount = (Array.isArray(cart) ? cart : []).reduce(
-    (sum, item) =>
-      sum +
+
+  /* =======================================================
+     REMOVE FROM CART
+     ======================================================= */
+
+  async function handleMinus(
+    event
+  ) {
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (
+      quantity <= 0 ||
+      typeof onUpdate !==
+        "function" ||
+      !variantId
+    ) {
+      return;
+    }
+
+    const nextQuantity =
       Math.max(
         0,
-        Math.floor(
-          Number(
-            item?.quantity ?? item?.qty ?? item?.count ?? 1
-          )
-        )
-      ),
-    0
-  );
+        quantity - 1
+      );
 
-  const totalCartAmount = (Array.isArray(cart) ? cart : []).reduce(
-    (sum, item) => {
-      const price = Number(
-        item?.price ??
-        item?.unitPrice ??
-        item?.unit_price ??
-        item?.sellingPrice ??
-        item?.selling_price ??
-        0
+    try {
+
+      await onUpdate(
+        variantId,
+        nextQuantity
       );
-      const qty = Math.max(
-        1,
-        Math.floor(
-          Number(
-            item?.quantity ?? item?.qty ?? item?.count ?? 1
-          )
-        )
+
+    } catch (error) {
+
+      console.error(
+        "[Juice Robo] Menu - failed:",
+        error
       );
-      return sum + price * qty;
-    },
-    0
-  );
+
+    }
+  }
+
+
+  /* =======================================================
+     CURRENT IMAGE
+     ======================================================= */
+
+  const image =
+    candidates[imageIndex] || "";
+
+
+  /* =======================================================
+     RENDER PRODUCT CARD
+     ======================================================= */
 
   return (
-    <main className="jr-content jr-page jr-menu-page">
-      <section className="jr-menu-hero">
-        <div className="jr-menu-hero-copy">
-          <div className="jr-menu-hero-tags">
-            <span className="jr-menu-eyebrow">🌱 100% PURE SUGARCANE</span>
-            <span className="jr-menu-tag-pill">⚡ Crushed Fresh Live</span>
-          </div>
-          <h1>
-            Fresh Cold-Pressed,
-            <br />
-            <em>made right here.</em>
-          </h1>
-          <p>
-            Pure natural sugarcane • Zero added water • Contactless robot dispensing.
-          </p>
-        </div>
-      </section>
+    <article
+      className={`jr-product-card${
+        quantity > 0
+          ? " jr-product-card-in-cart"
+          : ""
+      }${!available ? " jr-product-card-unavailable" : ""}`}
+    >
 
-      <div className="jr-menu-outlet-chip">
-        <span className="jr-menu-outlet-dot" />
-        <span className="jr-menu-outlet-name">
-          Dispensing at <strong>{location}</strong>
-        </span>
-        {status && <span className="jr-menu-outlet-status">● {status}</span>}
+      {/* =================================================
+          PRODUCT IMAGE
+          ================================================= */}
+
+      <div
+        className="jr-product-image-wrap"
+        role="button"
+        tabIndex={0}
+        onClick={
+          selectProduct
+        }
+        onKeyDown={
+          handleCardKeyDown
+        }
+        aria-label={`View details for ${name}`}
+      >
+
+        {image ? (
+
+          <img
+            src={image}
+            alt={name}
+            className="jr-product-image"
+            loading="lazy"
+            decoding="async"
+            onError={
+              handleImageError
+            }
+          />
+
+        ) : (
+
+          <div
+            className="jr-product-image-placeholder"
+            aria-hidden="true"
+          >
+            🧃
+          </div>
+
+        )}
+
+
+        {!available ? (
+          <span className="jr-fresh-badge jr-badge-unavailable">
+            Sold Out
+          </span>
+        ) : (
+          <span className="jr-fresh-badge">
+            <i />
+            FRESH
+          </span>
+        )}
+
       </div>
 
-      <section className="jr-menu-products-section">
-        <div className="jr-menu-section-head">
-          <div>
-            <span className="jr-menu-section-eyebrow">AVAILABLE JUICES</span>
-            <h2>What are you craving?</h2>
-          </div>
-          <span className="jr-menu-count">{safeProducts.length}</span>
-        </div>
 
-        <p className="jr-menu-subtitle">Choose your favourite fresh juice.</p>
+      {/* =================================================
+          PRODUCT INFORMATION
+          ================================================= */}
 
-        {safeProducts.length === 0 ? (
-          <div className="jr-menu-empty">
-            <div className="jr-menu-empty-icon">J</div>
-            <strong>No juices available</strong>
-            <p>No available products were returned by the Juice Robo API.</p>
-          </div>
-        ) : (
-          <div className="jr-menu-grid">
-            {safeProducts.map((product, index) => {
-              const { schedule, startTime, endTime } = resolveSchedule(product);
-              const name = productName(product, displayProductName);
-              const description = productDescription(product, displayDescription);
-              const price = productPrice(product);
-              const quantity = quantityForProduct(cart, product);
-              const images = imageCandidates(product, productImage);
-              const id = variantId(product);
+      <div className="jr-product-info">
 
-              const add = (event) => {
-                event.stopPropagation();
-                if (typeof onAddToCart === "function") {
-                  onAddToCart(product, variantsOf(product)[0], 1);
-                }
-              };
-
-              const decrease = (event) => {
-                event.stopPropagation();
-                if (typeof onUpdate !== "function" || id === undefined || id === null) return;
-                onUpdate(id, Math.max(0, quantity - 1));
-              };
-
-              const increase = (event) => {
-                event.stopPropagation();
-                if (quantity === 0) {
-                  if (typeof onAddToCart === "function") {
-                    onAddToCart(product, variantsOf(product)[0], 1);
-                  }
-                  return;
-                }
-                if (typeof onUpdate !== "function" || id === undefined || id === null) return;
-                onUpdate(id, quantity + 1);
-              };
-
-              return (
-                <article
-                  className={`jr-menu-product ${quantity > 0 ? "in-cart" : ""}`}
-                  key={productId(product) ?? `product-${index}`}
-                  onClick={() => onProduct?.(product)}
-                >
-                  <div className="jr-menu-product-media">
-                    {images.length ? (
-                      <img
-                        src={images[0]}
-                        alt={name}
-                        className="jr-menu-product-image"
-                        onError={(event) => {
-                          const current = Number(event.currentTarget.dataset.imageIndex || 0);
-                          const next = current + 1;
-                          event.currentTarget.dataset.imageIndex = String(next);
-                          if (images[next]) event.currentTarget.src = images[next];
-                          else event.currentTarget.style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <div className="jr-menu-product-placeholder" aria-hidden="true">J</div>
-                    )}
-                    <span className="jr-menu-fresh-badge">
-                      <i /> FRESH
-                    </span>
-                  </div>
-
-                  <div className="jr-menu-product-body">
-                    <div className="jr-menu-product-top">
-                      <div>
-                        <h3>{name}</h3>
-                        {description && <p>{description}</p>}
-                      </div>
-                      <strong>
-                        {typeof money === "function" ? money(price) : `₹${price}`}
-                      </strong>
-                    </div>
-
-                    {quantity === 0 ? (
-                      <button type="button" className="jr-menu-add" onClick={add}>
-                        <span>Add to cart</span>
-                        <PlusIcon />
-                      </button>
-                    ) : (
-                      <div className="jr-menu-quantity" onClick={(event) => event.stopPropagation()}>
-                        <button type="button" onClick={decrease} aria-label={`Decrease ${name}`}>
-                          <MinusIcon />
-                        </button>
-                        <strong>{quantity}</strong>
-                        <button type="button" onClick={increase} aria-label={`Increase ${name}`}>
-                          <PlusIcon />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {totalCartCount > 0 && (
-        <aside
-          className="jr-menu-floating-bar"
-          onClick={() => {
-            if (typeof onViewCart === "function") onViewCart();
-          }}
+        <div
+          className="jr-product-main"
           role="button"
           tabIndex={0}
-          aria-label="View Cart"
+          onClick={
+            selectProduct
+          }
+          onKeyDown={
+            handleCardKeyDown
+          }
+          aria-label={`View ${name} details`}
         >
-          <div className="jr-menu-floating-info">
-            <span className="jr-menu-floating-badge">
-              🛒 {totalCartCount} {totalCartCount === 1 ? "Item" : "Items"}
-            </span>
-            <span className="jr-menu-floating-sep">•</span>
-            <strong className="jr-menu-floating-price">
-              {typeof money === "function"
-                ? money(totalCartAmount)
-                : `₹${totalCartAmount.toFixed(2)}`}
+
+          <h3>
+            {name}
+          </h3>
+
+          {description ? (
+            <p>
+              {description}
+            </p>
+          ) : null}
+
+        </div>
+
+
+        {/* ===============================================
+            PRICE + QUANTITY
+            =============================================== */}
+
+        <div className="jr-product-bottom">
+
+          <strong className="jr-product-price">
+            {moneyValue(
+              price,
+              money
+            )}
+          </strong>
+
+
+          <div
+            className="jr-product-quantity"
+            role="group"
+            aria-label={`${name} quantity`}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+
+            {/* -------------------------------------------
+                DECREASE
+                ------------------------------------------- */}
+
+            <button
+              type="button"
+              className="jr-quantity-minus"
+              onClick={
+                handleMinus
+              }
+              disabled={
+                quantity <= 0
+              }
+              aria-label={`Decrease ${name} quantity`}
+            >
+              −
+            </button>
+
+
+            {/* -------------------------------------------
+                QUANTITY
+                ------------------------------------------- */}
+
+            <strong
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {quantity}
             </strong>
+
+
+            {/* -------------------------------------------
+                INCREASE
+                ------------------------------------------- */}
+
+            <button
+              type="button"
+              className="jr-quantity-plus"
+              onClick={
+                handlePlus
+              }
+              disabled={
+                !available
+              }
+              aria-label={`Increase ${name} quantity`}
+            >
+              +
+            </button>
+
           </div>
 
-          <button
-            type="button"
-            className="jr-menu-floating-cta"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (typeof onViewCart === "function") onViewCart();
-            }}
-          >
-            <span>VIEW CART</span>
-            <span className="jr-menu-floating-arrow" aria-hidden="true">→</span>
-          </button>
-        </aside>
-      )}
-    </main>
+        </div>
+
+      </div>
+
+    </article>
   );
 }

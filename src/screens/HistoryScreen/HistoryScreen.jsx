@@ -808,24 +808,6 @@ export default function HistoryScreen({
                         </div>
                       )}
 
-                      {/* =================================
-                          FAILURE REASON NOTE
-                         ================================= */}
-
-                      {status === "FAILED" && (order?.failureReason || order?.failure_reason) && (
-                        <div className="jr-order-row jr-order-failure-row">
-
-                          <span style={{ color: "#d93025" }}>
-                            Status Note
-                          </span>
-
-                          <strong style={{ color: "#d93025", fontSize: "12px", textAlign: "right", maxWidth: "65%" }}>
-                            {order?.failureReason || order?.failure_reason}
-                          </strong>
-
-                        </div>
-                      )}
-
 
                       {/* =================================
                           QUANTITY

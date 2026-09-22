@@ -1,601 +1,643 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import "./PaymentSuccessScreen.css";
 
 /* =========================================================
-   JUICE ROBO — PRODUCTION PAYMENT SUCCESS SCREEN
-   Real verified payment & dispenser collection screen.
-   Features:
-   - Animated payment success celebration badge
-   - High-contrast 4-digit dispenser collection PIN card
-   - One-tap PIN copy with visual feedback
-   - Location & dispenser machine verification details
-   - Itemized order receipt with juice images and GST breakdown
-   - 3-step physical collection walkthrough
-   - Direct CTA buttons: "Order Another Juice" & "View Orders"
+   JUICE ROBO — DEDICATED PAYMENT SUCCESS SCREEN
+
+   Displays confirmed booking details after payment verification:
+   - 4-Digit Collection Code for machine pickup
+   - Order Number & Payment Status
+   - Collection Location & Machine Name
+   - Ordered Items Breakdown
+   - Total Amount Paid (GST inclusive)
+   - Navigation options to continue / return to app
    ========================================================= */
 
 function clean(value) {
-  return String(value ?? "")
-    .replace(/\bundefined\b/gi, "")
-    .replace(/\bnull\b/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function number(value, fallback = 0) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
+  return String(value ?? "").trim();
 }
 
 function formatMoney(value, money) {
-  if (typeof money === "function") return money(value);
-  const val = number(value);
-  return `₹${val.toLocaleString("en-IN", {
-    minimumFractionDigits: val % 1 === 0 ? 0 : 2,
+  if (typeof money === "function") {
+    return money(value);
+  }
+
+  const numeric = Number(value || 0);
+  return `₹${numeric.toLocaleString("en-IN", {
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   })}`;
 }
 
-function resolveItemImage(item) {
-  const direct =
-    item?.imageUrl ||
-    item?.image_url ||
-    item?.image ||
-    item?.imagePath ||
-    item?.image_path ||
-    item?.productImage ||
-    item?.product_image ||
-    item?.thumbnail ||
-    item?.variantPhoto;
-
-  if (direct && typeof direct === "string" && direct.trim() && !direct.includes("undefined")) {
-    return direct;
-  }
-
-  const name = clean(
-    item?.displayName ||
-    item?.name ||
-    item?.productName ||
-    item?.product_name ||
-    item?.title ||
-    ""
-  ).toLowerCase();
-
-  if (name.includes("ginger") && name.includes("lemon")) {
-    return "/assets/ginger-lemon-juice.jpg";
-  }
-  if (name.includes("ginger")) {
-    return "/assets/ginger-juice.jpg";
-  }
-  if (name.includes("lemon")) {
-    return "/assets/lemon-juice.jpg";
-  }
-  return "/assets/plain-juice.jpg";
-}
-
-function getCollectionCode(order) {
+function getCollectionCode(order = {}) {
   const candidates = [
+    order?.collection_code,
+    order?.collectionCode,
+    order?.collection_pin,
+    order?.collectionPin,
     order?.orderPin,
     order?.order_pin,
-    order?.collectionCode,
-    order?.collection_code,
-    order?.collectionPin,
-    order?.collection_pin,
     order?.pickupCode,
     order?.pickup_code,
+
     order?.data?.collection_code,
+    order?.data?.collectionCode,
+    order?.data?.collection_pin,
+    order?.data?.collectionPin,
     order?.data?.orderPin,
+    order?.data?.order_pin,
+    order?.data?.pickupCode,
+    order?.data?.pickup_code,
+
+    order?.data?.order?.collection_code,
+    order?.data?.order?.collectionCode,
+    order?.data?.order?.orderPin,
+
     order?.result?.collection_code,
+    order?.result?.collectionCode,
+    order?.result?.collection_pin,
+    order?.result?.collectionPin,
     order?.result?.orderPin,
+    order?.result?.order_pin,
+    order?.result?.pickupCode,
+    order?.result?.pickup_code,
   ];
 
-  for (const c of candidates) {
-    const str = clean(c);
-    if (/^\d{4}$/.test(str)) return str;
-    const match = str.match(/\b(\d{4})\b/);
-    if (match?.[1]) return match[1];
+  for (const candidate of candidates) {
+    const raw = clean(candidate);
+    if (!raw) continue;
+
+    if (/^\d{4}$/.test(raw)) {
+      return raw;
+    }
+
+    const match = raw.match(/\b(\d{4})\b/);
+    if (match?.[1] && /^\d{4}$/.test(match[1])) {
+      return match[1];
+    }
+
+    // Handle numeric codes that lost leading zeros (e.g. 482 -> 0482)
+    if (/^\d{1,3}$/.test(raw)) {
+      return raw.padStart(4, "0");
+    }
   }
 
+  // Restore stored collection code from storage if available
   try {
-    const s1 = clean(sessionStorage.getItem("juice_robo_payment_collection_code"));
-    if (/^\d{4}$/.test(s1)) return s1;
-    const s2 = clean(sessionStorage.getItem("juice_robo_collection_code"));
-    if (/^\d{4}$/.test(s2)) return s2;
-  } catch {}
+    const storedCode =
+      sessionStorage.getItem("juice_robo_collection_code") ||
+      localStorage.getItem("juice_robo_collection_code");
 
-  // Fallback to numeric digits from orderId
-  const rawId = clean(order?.orderId || order?.order_id || order?.id || "");
-  const numOnly = rawId.replace(/\D/g, "");
-  if (numOnly.length >= 4) {
-    return numOnly.slice(-4);
+    const cleanedStored = clean(storedCode);
+    if (/^\d{4}$/.test(cleanedStored)) {
+      return cleanedStored;
+    }
+    if (/^\d{1,3}$/.test(cleanedStored)) {
+      return cleanedStored.padStart(4, "0");
+    }
+  } catch {
+    // Ignore storage errors.
   }
 
   return "";
 }
 
+function getOrderNumber(order = {}) {
+  const num = clean(
+    order?.orderNumber ||
+      order?.order_number ||
+      order?.orderId ||
+      order?.order_id ||
+      order?.id ||
+      order?.rawOrderResponse?.data?.orderNumber ||
+      order?.rawOrderResponse?.data?.orderId
+  );
+
+  return num || "";
+}
+
+function getLocationName(order = {}, location = {}) {
+  return (
+    clean(
+      order?.location?.name ||
+        order?.location?.locationName ||
+        order?.location?.storeName ||
+        order?.locationName ||
+        location?.name ||
+        location?.locationName ||
+        location?.storeName
+    ) || "Juice Robo Outlet"
+  );
+}
+
+function getLocationAddress(order = {}, location = {}) {
+  return (
+    clean(
+      order?.location?.address ||
+        order?.location?.locationAddress ||
+        order?.location?.storeAddress ||
+        order?.locationAddress ||
+        location?.address ||
+        location?.locationAddress ||
+        location?.storeAddress
+    ) || ""
+  );
+}
+
+function getMachineName(order = {}, machine = {}) {
+  return (
+    clean(
+      order?.machine?.name ||
+        order?.machine?.machineName ||
+        order?.machine?.code ||
+        order?.machine?.machineCode ||
+        order?.machineName ||
+        order?.machineCode ||
+        machine?.name ||
+        machine?.machineName ||
+        machine?.code ||
+        machine?.machineCode
+    ) || "Juice Robo Machine"
+  );
+}
+
+function getItems(order = {}) {
+  if (Array.isArray(order?.items) && order.items.length > 0) {
+    return order.items;
+  }
+  if (Array.isArray(order?.orderItems) && order.orderItems.length > 0) {
+    return order.orderItems;
+  }
+  if (Array.isArray(order?.order_items) && order.order_items.length > 0) {
+    return order.order_items;
+  }
+  if (Array.isArray(order?.cartItems) && order.cartItems.length > 0) {
+    return order.cartItems;
+  }
+  return [];
+}
+
+function getItemName(item = {}) {
+  return (
+    clean(
+      item?.displayName ||
+        item?.name ||
+        item?.product_name ||
+        item?.productName ||
+        item?.itemName ||
+        item?.title
+    )
+      .replace(/\bundefined\b/gi, "")
+      .replace(/\bnull\b/gi, "")
+      .replace(/\s+/g, " ")
+      .trim() || "Sugarcane Juice"
+  );
+}
+
+function getItemQuantity(item = {}) {
+  const quantity = Number(
+    item?.quantity ??
+      item?.qty ??
+      item?.count ??
+      1
+  );
+
+  return Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+}
+
+function getItemUnitPrice(item = {}) {
+  const directPrice = Number(
+    item?.unitPrice ??
+      item?.unit_price ??
+      item?.price ??
+      item?.sellingPrice ??
+      item?.selling_price
+  );
+
+  if (Number.isFinite(directPrice) && directPrice >= 0) {
+    return directPrice;
+  }
+
+  const quantity = getItemQuantity(item);
+  const subtotal = Number(
+    item?.subtotal ??
+      item?.subTotal ??
+      item?.total ??
+      item?.lineTotal ??
+      item?.line_total
+  );
+
+  if (Number.isFinite(subtotal) && subtotal >= 0 && quantity > 0) {
+    return subtotal / quantity;
+  }
+
+  return 0;
+}
+
+function getItemSubtotal(item = {}) {
+  const direct = Number(
+    item?.subtotal ??
+      item?.subTotal ??
+      item?.total ??
+      item?.lineTotal ??
+      item?.line_total
+  );
+
+  if (Number.isFinite(direct) && direct >= 0) {
+    return direct;
+  }
+
+  return getItemUnitPrice(item) * getItemQuantity(item);
+}
+
+function getTotalPaid(order = {}, items = []) {
+  const direct = Number(
+    order?.total_amount ??
+      order?.totalAmount ??
+      order?.total ??
+      order?.netBill ??
+      order?.grandTotal ??
+      order?.grand_total
+  );
+
+  if (Number.isFinite(direct) && direct > 0) {
+    return direct;
+  }
+
+  return items.reduce((sum, item) => sum + getItemSubtotal(item), 0);
+}
+
+/* =========================================================
+   ICONS & MEDIA
+   ========================================================= */
+
+function PaymentSuccessGif() {
+  const gifSrc = `${import.meta.env.BASE_URL}assets/Payment-successful.gif`;
+
+  return (
+    <div className="jr-payment-success-animation" aria-hidden="true">
+      <img
+        src={gifSrc}
+        alt=""
+        className="jr-payment-success-gif"
+        draggable="false"
+      />
+    </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="m5 12 4 4L19 6"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function LocationPinIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <circle cx="12" cy="9" r="2.5" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function ReceiptIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 3v18l3-1.5 3 1.5 3-1.5 3 1.5 3-1.5 1-1V3H5Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M3 10.5 12 3l9 7.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5.5 9.5V21h13V9.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.5 21v-6h5v6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function HistoryIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M3 12a9 9 0 1 0 3-6.7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M3 4v5h5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 7v5l3 2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 12h14M13 6l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/* =========================================================
+   MAIN COMPONENT
+   ========================================================= */
+
 export default function PaymentSuccessScreen({
   order = {},
   location,
   machine,
+  money,
   onHome,
-  onMenu,
   onBack,
   onHistory,
-  money,
 }) {
-  const [copiedPin, setCopiedPin] = useState(false);
-  const [copiedOrderId, setCopiedOrderId] = useState(false);
+  const collectionCode = useMemo(() => getCollectionCode(order), [order]);
+  const hasCollectionCode = Boolean(collectionCode);
 
-  // Restore from storage if order is incomplete
-  const safeOrder = useMemo(() => {
-    if (order && (order.orderId || order.id || order.collectionCode || order.items)) {
-      return order;
+  const digits = useMemo(() => {
+    return collectionCode ? collectionCode.split("") : ["—", "—", "—", "—"];
+  }, [collectionCode]);
+
+  const orderNumber = useMemo(() => getOrderNumber(order), [order]);
+  const locationName = useMemo(() => getLocationName(order, location), [order, location]);
+  const locationAddress = useMemo(() => getLocationAddress(order, location), [order, location]);
+  const machineName = useMemo(() => getMachineName(order, machine), [order, machine]);
+  const items = useMemo(() => getItems(order), [order]);
+  const totalPaid = useMemo(() => getTotalPaid(order, items), [order, items]);
+
+  const itemCount = useMemo(() => {
+    return items.reduce((sum, item) => sum + getItemQuantity(item), 0);
+  }, [items]);
+
+  const handleContinue = () => {
+    if (typeof onBack === "function") {
+      onBack();
+    } else if (typeof onHome === "function") {
+      onHome();
     }
-    try {
-      const stored =
-        sessionStorage.getItem("juice_robo_payment_success") ||
-        localStorage.getItem("juice_robo_payment_success") ||
-        sessionStorage.getItem("juice_robo_last_order");
-      return stored ? JSON.parse(stored) : order;
-    } catch {
-      return order;
-    }
-  }, [order]);
-
-  const code = getCollectionCode(safeOrder);
-  const digits = code ? code.split("") : ["—", "—", "—", "—"];
-
-  const rawOrderId = clean(
-    safeOrder?.orderId ||
-    safeOrder?.order_id ||
-    safeOrder?.id ||
-    safeOrder?.transactionId ||
-    safeOrder?.transaction_id ||
-    "ORD"
-  );
-  const displayOrderId =
-    rawOrderId.length > 14
-      ? `JR-${rawOrderId.replace(/[^a-zA-Z0-9]/g, "").slice(-6).toUpperCase()}`
-      : `#${rawOrderId.toUpperCase()}`;
-
-  const items = Array.isArray(safeOrder?.items)
-    ? safeOrder.items
-    : Array.isArray(safeOrder?.orderItems)
-    ? safeOrder.orderItems
-    : Array.isArray(safeOrder?.order_items)
-    ? safeOrder.order_items
-    : [];
-
-  const total = number(
-    safeOrder?.totalAmount ??
-    safeOrder?.total_amount ??
-    safeOrder?.netBill ??
-    safeOrder?.net_bill ??
-    safeOrder?.total ??
-    (items.length > 0
-      ? items.reduce(
-          (sum, it) =>
-            sum +
-            number(it.price || it.sellingPrice || it.unitPrice || 0) *
-              number(it.quantity || it.qty || 1),
-          0
-        )
-      : 0)
-  );
-
-  const subtotal = number(
-    safeOrder?.subtotal ??
-    safeOrder?.subTotal ??
-    (items.length > 0
-      ? items.reduce(
-          (sum, it) =>
-            sum +
-            number(it.price || it.sellingPrice || it.unitPrice || 0) *
-              number(it.quantity || it.qty || 1),
-          0
-        )
-      : total)
-  );
-
-  const gst = number(safeOrder?.gst ?? (total > subtotal ? total - subtotal : 0));
-
-  const locationTitle = clean(
-    location?.name ||
-    location?.outletName ||
-    location?.locationName ||
-    location?.storeName ||
-    safeOrder?.location?.name ||
-    safeOrder?.locationName ||
-    safeOrder?.locName ||
-    "Juice Robo Outlet"
-  );
-
-  const locationAddress = clean(
-    location?.address ||
-    location?.locationAddress ||
-    location?.storeAddress ||
-    safeOrder?.location?.address ||
-    safeOrder?.locationAddress ||
-    "On-site Fresh Juicer"
-  );
-
-  const machineTitle = clean(
-    machine?.name ||
-    machine?.machineName ||
-    machine?.code ||
-    safeOrder?.machine?.name ||
-    safeOrder?.machineName ||
-    "Sugarcane Juicer #1"
-  );
-
-  const orderDate = useMemo(() => {
-    try {
-      const d = safeOrder?.createdAt ? new Date(safeOrder.createdAt) : new Date();
-      return d.toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch {
-      return "Today";
-    }
-  }, [safeOrder?.createdAt]);
-
-  async function handleCopyPin() {
-    if (!code) return;
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopiedPin(true);
-      setTimeout(() => setCopiedPin(false), 2200);
-    } catch {
-      // Ignore clipboard fallback
-    }
-  }
-
-  async function handleCopyOrderId() {
-    if (!rawOrderId) return;
-    try {
-      await navigator.clipboard.writeText(rawOrderId);
-      setCopiedOrderId(true);
-      setTimeout(() => setCopiedOrderId(false), 2000);
-    } catch {}
-  }
-
-  const handleOrderMore = onMenu || onBack || onHome;
+  };
 
   return (
-    <main className="jr-content jr-page jr-success-page" aria-live="polite">
-      {/* ===================================================
-          1. TOP APP BAR / BRANDING
-         =================================================== */}
-      <header className="jr-success-topbar">
-        <div className="jr-success-topbar-brand">
-          <img
-            src="/assets/juice-robo-logo.jpg"
-            alt="Juice Robo"
-            className="jr-success-brand-logo"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
-          <span className="jr-success-brand-name">Juice Robo</span>
-        </div>
-        <div className="jr-success-topbar-badge">
-          <span className="jr-success-pulse-dot" />
-          <span>ORDER CONFIRMED</span>
-        </div>
-      </header>
+    <main className="jr-content jr-page jr-payment-success-page">
+      <section
+        className="jr-payment-success-content"
+        aria-labelledby="payment-success-title"
+      >
+        {/* ===================================================
+            ANIMATION & HERO HEADING
+           =================================================== */}
+        <PaymentSuccessGif />
 
-      {/* ===================================================
-          2. CELEBRATION HERO
-         =================================================== */}
-      <section className="jr-success-hero">
-        <div className="jr-success-icon-wrapper">
-          <div className="jr-success-icon-glow" />
-          <div className="jr-success-icon-circle">
-            <svg
-              className="jr-success-check-svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-        </div>
+        <span className="jr-payment-success-eyebrow">
+          PAYMENT CONFIRMED
+        </span>
 
-        <div className="jr-success-hero-badge">
-          <span>✓ UPI PAYMENT CONFIRMED</span>
-        </div>
-
-        <h1 className="jr-success-title">
-          Payment Successful!
+        <h1 id="payment-success-title">
+          Payment
+          <br />
+          <em>successful!</em>
         </h1>
 
-        <p className="jr-success-subtitle">
-          Your sugarcane juice is queued and ready to pour at the dispenser.
+        <p className="jr-payment-success-message">
+          Your order has been verified and confirmed. Enter your pickup code at the machine to collect your fresh juice.
         </p>
 
-        <div className="jr-success-meta-row">
-          <button
-            type="button"
-            className="jr-success-order-id-chip"
-            onClick={handleCopyOrderId}
-            title="Click to copy Order ID"
-          >
-            <span>{displayOrderId}</span>
-            <small>{copiedOrderId ? "Copied!" : "Copy"}</small>
-          </button>
-          <span className="jr-success-meta-dot">•</span>
-          <span className="jr-success-time">{orderDate}</span>
-        </div>
-      </section>
-
-      {/* ===================================================
-          3. HERO 4-DIGIT MACHINE PIN CARD
-         =================================================== */}
-      <section className={`jr-success-pin-card ${code ? "ready" : "pending"}`}>
-        <div className="jr-success-pin-header">
-          <div className="jr-success-pin-label-group">
-            <span className="jr-success-pin-icon">🔑</span>
-            <div>
-              <strong className="jr-success-pin-title">DISPENSER COLLECTION PIN</strong>
-              <p className="jr-success-pin-desc">
-                Punch this 4-digit code on the Juice Robo machine screen
-              </p>
-            </div>
-          </div>
-          <span className="jr-success-pin-status-pill">
-            <span className="jr-success-status-beacon" />
-            READY
-          </span>
-        </div>
-
-        <div className="jr-success-digits-container" aria-label={`Collection PIN: ${code || "Pending"}`}>
-          {digits.map((digit, index) => (
-            <div key={index} className={`jr-success-digit-box ${digit === "—" ? "placeholder" : ""}`}>
-              <span className="jr-success-digit-char">{digit}</span>
-            </div>
-          ))}
-        </div>
-
-        {code && (
-          <button
-            type="button"
-            className={`jr-success-copy-pin-btn ${copiedPin ? "copied" : ""}`}
-            onClick={handleCopyPin}
-          >
-            {copiedPin ? (
-              <>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span>PIN Copied to Clipboard!</span>
-              </>
-            ) : (
-              <>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                <span>Copy 4-Digit PIN</span>
-              </>
-            )}
-          </button>
-        )}
-
-        <div className="jr-success-pin-note">
-          <span className="jr-success-note-icon">💡</span>
-          <span>
-            Please keep this code ready when standing in front of the dispenser.
-          </span>
-        </div>
-      </section>
-
-      {/* ===================================================
-          4. 3-STEP COLLECTION GUIDE
-         =================================================== */}
-      <section className="jr-success-steps-card">
-        <h3 className="jr-success-section-title">
-          <span>HOW TO COLLECT YOUR JUICE</span>
-        </h3>
-
-        <div className="jr-success-steps-list">
-          <div className="jr-success-step-item">
-            <div className="jr-success-step-num">1</div>
-            <div className="jr-success-step-text">
-              <strong>Walk to the Dispenser</strong>
-              <span>Head over to {locationTitle}</span>
-            </div>
-          </div>
-
-          <div className="jr-success-step-item">
-            <div className="jr-success-step-num">2</div>
-            <div className="jr-success-step-text">
-              <strong>Punch in your 4-digit PIN</strong>
-              <span>Type <strong>{code || "your code"}</strong> on the machine screen</span>
-            </div>
-          </div>
-
-          <div className="jr-success-step-item">
-            <div className="jr-success-step-num">3</div>
-            <div className="jr-success-step-text">
-              <strong>Freshly Crushed &amp; Poured</strong>
-              <span>Place your cup in the tray and enjoy freshly cold-pressed juice!</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===================================================
-          5. DISPENSER LOCATION DETAILS CARD
-         =================================================== */}
-      <section className="jr-success-location-card">
-        <div className="jr-success-location-icon-wrapper">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-        </div>
-        <div className="jr-success-location-info">
-          <span className="jr-success-location-tag">COLLECTION POINT</span>
-          <strong className="jr-success-location-name">{locationTitle}</strong>
-          <span className="jr-success-machine-pill">
-            <span className="jr-success-machine-indicator" />
-            {machineTitle}
-          </span>
-          {locationAddress && (
-            <p className="jr-success-location-address">{locationAddress}</p>
-          )}
-        </div>
-      </section>
-
-      {/* ===================================================
-          6. DIGITAL RECEIPT & ORDER SUMMARY
-         =================================================== */}
-      <section className="jr-success-receipt-card">
-        <div className="jr-success-receipt-header">
-          <span className="jr-success-receipt-title">ORDER SUMMARY</span>
-          <span className="jr-success-receipt-count">
-            {items.reduce((s, it) => s + number(it.quantity || it.qty || 1), 0) || 1} Item(s)
-          </span>
-        </div>
-
-        {items.length > 0 ? (
-          <div className="jr-success-items-list">
-            {items.map((item, idx) => {
-              const itemName = clean(
-                item.displayName ||
-                item.name ||
-                item.productName ||
-                item.product_name ||
-                item.title ||
-                "Sugarcane Juice"
-              );
-              const qty = number(item.quantity || item.qty || 1);
-              const itemPrice = number(item.price || item.sellingPrice || item.unitPrice || 0);
-              const lineTotal = itemPrice * qty;
-              const imgSrc = resolveItemImage(item);
-
-              return (
-                <div key={item.id || item.productId || idx} className="jr-success-item-row">
-                  <img
-                    src={imgSrc}
-                    alt={itemName}
-                    className="jr-success-item-img"
-                    onError={(e) => {
-                      e.currentTarget.src = "/assets/plain-juice.jpg";
-                    }}
-                  />
-                  <div className="jr-success-item-info">
-                    <strong className="jr-success-item-name">{itemName}</strong>
-                    <span className="jr-success-item-qty">Qty: {qty}</span>
-                  </div>
-                  <strong className="jr-success-item-price">
-                    {formatMoney(lineTotal, money)}
-                  </strong>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="jr-success-item-row">
-            <img
-              src="/assets/plain-juice.jpg"
-              alt="Sugarcane Juice"
-              className="jr-success-item-img"
-            />
-            <div className="jr-success-item-info">
-              <strong className="jr-success-item-name">Sugarcane Juice</strong>
-              <span className="jr-success-item-qty">Qty: 1</span>
-            </div>
-            <strong className="jr-success-item-price">
-              {formatMoney(total, money)}
-            </strong>
-          </div>
-        )}
-
-        <div className="jr-success-receipt-divider" />
-
-        <div className="jr-success-bill-breakdown">
-          <div className="jr-success-bill-row">
-            <span>Item Subtotal</span>
-            <span>{formatMoney(subtotal, money)}</span>
-          </div>
-
-          {gst > 0 && (
-            <div className="jr-success-bill-row">
-              <span>GST (Included)</span>
-              <span>{formatMoney(gst, money)}</span>
-            </div>
-          )}
-
-          <div className="jr-success-bill-row total">
-            <strong>Amount Paid</strong>
-            <strong className="jr-success-bill-total-amount">
-              {formatMoney(total, money)}
-            </strong>
-          </div>
-
-          <div className="jr-success-payment-method-row">
-            <span>Payment Method</span>
-            <span className="jr-success-payment-verified-pill">
-              ✓ UPI Auto-Verified
+        {/* ===================================================
+            4-DIGIT COLLECTION CODE CARD
+           =================================================== */}
+        <section
+          className={
+            hasCollectionCode
+              ? "jr-payment-success-code-card"
+              : "jr-payment-success-code-card jr-payment-success-code-card-empty"
+          }
+          aria-label="Collection code"
+        >
+          <div className="jr-payment-success-code-heading">
+            <span className="jr-payment-success-check">
+              <CheckIcon />
+            </span>
+            <span className="jr-payment-success-code-label">
+              YOUR 4-DIGIT COLLECTION CODE
             </span>
           </div>
+
+          <div
+            className="jr-payment-success-code-digits"
+            aria-label={
+              hasCollectionCode
+                ? `Your collection code is ${collectionCode}`
+                : "Collection code is being generated"
+            }
+          >
+            {digits.map((digit, index) => (
+              <span
+                key={`${digit}-${index}`}
+                className={
+                  hasCollectionCode
+                    ? "jr-payment-success-digit"
+                    : "jr-payment-success-digit jr-payment-success-digit-empty"
+                }
+              >
+                {digit}
+              </span>
+            ))}
+          </div>
+
+          <p className="jr-payment-success-code-message">
+            {hasCollectionCode
+              ? "Enter this code on your Juice Robo machine to collect your juice."
+              : "Your collection code will appear here once ready by the machine."}
+          </p>
+
+          {hasCollectionCode && (
+            <p className="jr-payment-success-safe-note">
+              Keep this code safe until collection.
+            </p>
+          )}
+        </section>
+
+        {/* ===================================================
+            BOOKING & OUTLET DETAILS
+           =================================================== */}
+        <section className="jr-payment-success-details-card" aria-label="Booking Details">
+          {/* Order Reference Row */}
+          <div className="jr-payment-success-card-header">
+            <div className="jr-payment-success-header-title">
+              <ReceiptIcon />
+              <span>BOOKING SUMMARY</span>
+            </div>
+            {orderNumber && (
+              <span className="jr-payment-success-order-tag">
+                #{orderNumber}
+              </span>
+            )}
+          </div>
+
+          {/* Payment Status Badge */}
+          <div className="jr-payment-success-status-badge">
+            <span className="jr-payment-success-status-dot" />
+            <span>Paid via UPI • Confirmed</span>
+          </div>
+
+          {/* Location & Machine */}
+          <div className="jr-payment-success-location-block">
+            <div className="jr-payment-success-loc-icon">
+              <LocationPinIcon />
+            </div>
+            <div className="jr-payment-success-loc-info">
+              <small className="jr-payment-success-loc-label">COLLECT FROM</small>
+              <strong className="jr-payment-success-loc-name">{locationName}</strong>
+              {locationAddress && (
+                <span className="jr-payment-success-loc-address">{locationAddress}</span>
+              )}
+              <span className="jr-payment-success-machine-pill">
+                Machine: {machineName}
+              </span>
+            </div>
+          </div>
+
+          {/* Items Breakdown */}
+          {items.length > 0 && (
+            <div className="jr-payment-success-items-section">
+              <div className="jr-payment-success-items-header">
+                <span>ORDER ITEMS</span>
+                <span>
+                  {itemCount} {itemCount === 1 ? "item" : "items"}
+                </span>
+              </div>
+
+              <div className="jr-payment-success-items-list">
+                {items.map((item, idx) => {
+                  const qty = getItemQuantity(item);
+                  const subtotal = getItemSubtotal(item);
+                  const name = getItemName(item);
+
+                  return (
+                    <div
+                      key={item?.id || item?.productId || item?.cartItemId || idx}
+                      className="jr-payment-success-item-row"
+                    >
+                      <div className="jr-payment-success-item-info">
+                        <span className="jr-payment-success-item-name">{name}</span>
+                        <span className="jr-payment-success-item-qty">× {qty}</span>
+                      </div>
+                      <strong className="jr-payment-success-item-price">
+                        {formatMoney(subtotal, money)}
+                      </strong>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Total Amount Row */}
+          <div className="jr-payment-success-total-row">
+            <div>
+              <span className="jr-payment-success-total-label">TOTAL PAID</span>
+              <small className="jr-payment-success-gst-note">Inclusive of 5% GST</small>
+            </div>
+            <strong className="jr-payment-success-total-amount">
+              {formatMoney(totalPaid, money)}
+            </strong>
+          </div>
+        </section>
+
+        {/* ===================================================
+            ACTION BUTTONS (RETURN / CONTINUE OPTIONS)
+           =================================================== */}
+        <div className="jr-payment-success-actions">
+          <button
+            type="button"
+            className="jr-payment-success-primary-button"
+            onClick={handleContinue}
+          >
+            <span>BACK TO MENU / ORDER MORE</span>
+            <ArrowRightIcon />
+          </button>
+
+          {typeof onHistory === "function" && (
+            <button
+              type="button"
+              className="jr-payment-success-history-button"
+              onClick={onHistory}
+            >
+              <HistoryIcon />
+              <span>VIEW ORDER HISTORY</span>
+            </button>
+          )}
+
+          {typeof onHome === "function" && (
+            <button
+              type="button"
+              className="jr-payment-success-home-button"
+              onClick={onHome}
+            >
+              <HomeIcon />
+              <span>GO TO HOME</span>
+            </button>
+          )}
         </div>
       </section>
-
-      {/* ===================================================
-          7. ACTION CONTROLS
-         =================================================== */}
-      <div className="jr-success-actions">
-        {handleOrderMore && (
-          <button
-            type="button"
-            className="jr-success-order-more-btn"
-            onClick={handleOrderMore}
-          >
-            <span>🧃 Order Another Juice</span>
-          </button>
-        )}
-
-        {typeof onHistory === "function" && (
-          <button
-            type="button"
-            className="jr-success-history-btn"
-            onClick={onHistory}
-          >
-            <span>📜 View All Orders</span>
-          </button>
-        )}
-
-        {typeof onHome === "function" && (
-          <button
-            type="button"
-            className="jr-success-home-link"
-            onClick={onHome}
-          >
-            Return to Home
-          </button>
-        )}
-      </div>
-
-      {/* ===================================================
-          8. FOOTER ASSISTANCE
-         =================================================== */}
-      <footer className="jr-success-footer-note">
-        <p>
-          Need help? Contact Juice Robo on-site assistant or call customer care with your Order ID: <strong>{displayOrderId}</strong>.
-        </p>
-      </footer>
     </main>
   );
 }

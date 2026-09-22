@@ -4,7 +4,10 @@ import "./ScannerScreen.css";
 
 /* =========================================================
    JUICE ROBO — QR SCANNER SCREEN
-   Flow: Scan QR -> Select Location / Outlet -> Select Juice -> Cart -> Checkout
+   Two identification methods only:
+   1. Scan QR using device camera
+   2. Manually select machine/location
+   NO image upload. NO "Machine to Scan" dropdown.
    ========================================================= */
 
 function ArrowBackIcon() {
@@ -17,20 +20,6 @@ function ArrowBackIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </svg>
-  );
-}
-
-function QrCodeIcon() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2" />
-      <rect x="14" y="14" width="3" height="3" fill="currentColor" />
-      <rect x="18" y="14" width="3" height="3" fill="currentColor" />
-      <rect x="14" y="18" width="3" height="3" fill="currentColor" />
-      <rect x="18" y="18" width="3" height="3" fill="currentColor" />
     </svg>
   );
 }
@@ -67,28 +56,28 @@ export default function ScannerScreen({
 }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
-  const fileInputRef = useRef(null);
 
   // Persistent permission keys (one-time request per device)
   const CAMERA_REQUESTED_KEY = "juice_robo_camera_permission_requested";
   const CAMERA_GRANTED_KEY = "juice_robo_camera_permission_granted";
   const CAMERA_DENIED_KEY = "juice_robo_camera_permission_denied";
 
-  // Permission & camera states: 'prompt' | 'granted' | 'denied' | 'insecure' | 'unsupported'
+  // Permission & camera states: 'prompt' | 'granted' | 'denied' | 'unsupported'
   const [permissionStatus, setPermissionStatus] = useState("prompt");
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState("");
+  const [scanFeedback, setScanFeedback] = useState("");
   const [cameraNotice, setCameraNotice] = useState("");
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const [isProcessingScan, setIsProcessingScan] = useState(false);
-  const [selectedMachineIndex, setSelectedMachineIndex] = useState(0);
 
   // Camera switching states: 'environment' (rear) | 'user' (front)
   const [cameraFacing, setCameraFacing] = useState("environment");
   const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
   const [hasMultipleCameras, setHasMultipleCameras] = useState(null);
 
-  const activeOutlet = locations[selectedMachineIndex] || locations[0] || null;
+  // Cooldown to prevent duplicate scan processing on rapid camera frames
+  const lastScanTimestampRef = useRef(0);
 
   // Stop active media stream tracks
   function stopCameraTracks() {
@@ -128,7 +117,6 @@ export default function ScannerScreen({
       stream = await navigator.mediaDevices.getUserMedia(constraints);
     } catch (idealErr) {
       console.warn("[Juice Robo] facingMode ideal failed, checking fallback:", idealErr);
-      // Fallback: inspect device list to pick appropriate video device
       if (navigator?.mediaDevices?.enumerateDevices) {
         try {
           const devices = await navigator.mediaDevices.enumerateDevices();
@@ -196,7 +184,7 @@ export default function ScannerScreen({
   async function requestCameraAccess(userTriggered = false, targetFacing = cameraFacing) {
     if (!navigator?.mediaDevices?.getUserMedia) {
       setPermissionStatus("unsupported");
-      setCameraError("");
+      setCameraError("Camera streaming is unavailable on this device or browser. Please select location manually.");
       return;
     }
 
@@ -206,7 +194,6 @@ export default function ScannerScreen({
     try {
       await startCameraStream(targetFacing);
 
-      // Record granted permission locally
       try {
         localStorage.setItem(CAMERA_REQUESTED_KEY, "true");
         localStorage.setItem(CAMERA_GRANTED_KEY, "true");
@@ -215,7 +202,7 @@ export default function ScannerScreen({
         console.warn("[Juice Robo] Failed to save camera granted flag:", storageErr);
       }
     } catch (err) {
-      console.warn("[Juice Robo] Camera request notice:", err?.name, err?.message);
+      console.warn("[Juice Robo] Camera request error:", err?.name, err?.message);
       stopCamera();
 
       try {
@@ -229,11 +216,11 @@ export default function ScannerScreen({
         } catch {}
         setPermissionStatus("denied");
         setCameraError(
-          "Camera permission was denied. Tap 'aA' in Safari address bar or the lock icon in Chrome > Website Settings > Camera > Allow, then tap Try Camera Again."
+          "Camera permission was denied. Please allow camera access in your browser settings, or select your location manually."
         );
       } else if (err?.name === "NotFoundError" || err?.name === "DevicesNotFoundError") {
         setPermissionStatus("unsupported");
-        setCameraError("No camera device was found on this device.");
+        setCameraError("No camera device was found on this device. Please select your location manually.");
       } else {
         setPermissionStatus(userTriggered ? "denied" : "prompt");
         setCameraError(
@@ -247,14 +234,13 @@ export default function ScannerScreen({
     }
   }
 
-  // Camera toggle handler: cleans up existing stream, checks devices, and switches facing mode
+  // Camera toggle handler
   async function handleToggleCamera() {
     if (isSwitchingCamera || isProcessingScan || !cameraActive) return;
 
     setIsSwitchingCamera(true);
     setCameraNotice("");
 
-    // Check available cameras if enumerateDevices is available
     try {
       if (navigator?.mediaDevices?.enumerateDevices) {
         const devices = await navigator.mediaDevices.enumerateDevices();
@@ -272,15 +258,13 @@ export default function ScannerScreen({
     }
 
     const nextFacing = cameraFacing === "environment" ? "user" : "environment";
-
-    // Clean up current stream tracks completely before requesting new camera
     stopCameraTracks();
 
     try {
       await startCameraStream(nextFacing);
       setCameraFacing(nextFacing);
     } catch (switchErr) {
-      console.warn("[Juice Robo] Camera toggle failed, attempting fallback to previous mode:", switchErr);
+      console.warn("[Juice Robo] Camera toggle failed, returning to previous:", switchErr);
       try {
         await startCameraStream(cameraFacing);
       } catch (fallbackErr) {
@@ -293,15 +277,8 @@ export default function ScannerScreen({
     }
   }
 
-  /* One-time camera permission check on mount:
-   * - If granted: start camera stream directly without prompting.
-   * - If denied: do NOT auto-trigger getUserMedia; show instructions + manual retry.
-   * - If first visit: request permission once.
-   * - If previously requested but dismissed: show prompt UI with manual allow button.
-   */
+  // Permission check and auto-start on mount
   useEffect(() => {
-    let mounted = true;
-
     let hasRequested = false;
     let isGranted = false;
     let isDenied = false;
@@ -314,23 +291,19 @@ export default function ScannerScreen({
       console.warn("[Juice Robo] localStorage unavailable for camera flags:", e);
     }
 
-    // 1. If previously denied: DO NOT trigger getUserMedia automatically.
-    // Display instructions with manual retry button.
     if (isDenied) {
       setPermissionStatus("denied");
       setCameraError(
-        "Camera permission was denied. Tap 'aA' in Safari address bar or lock icon in Chrome > Website Settings > Camera > Allow, then tap Try Camera Again."
+        "Camera permission was denied. Please allow camera access in your browser settings, or select your location manually."
       );
       return;
     }
 
-    // 2. If previously granted: open camera directly.
     if (isGranted) {
       requestCameraAccess(false, "environment");
       return;
     }
 
-    // 3. First time opening scanner on this device: prompt once.
     if (!hasRequested) {
       try {
         localStorage.setItem(CAMERA_REQUESTED_KEY, "true");
@@ -339,17 +312,26 @@ export default function ScannerScreen({
       return;
     }
 
-    // 4. Previously prompted, neither granted nor denied: do not auto-prompt.
     setPermissionStatus("prompt");
 
     return () => {
-      mounted = false;
       stopCamera();
     };
   }, []);
 
-  // Frame analysis with jsQR for cross-browser QR detection
-  // Pauses automatically during camera switching or scan processing and resumes on completion
+  // Ensure stream plays on video element whenever camera becomes active
+  useEffect(() => {
+    if (cameraActive && streamRef.current && videoRef.current) {
+      if (videoRef.current.srcObject !== streamRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+      }
+      videoRef.current.play().catch((err) => {
+        console.warn("[Juice Robo] Video play notice:", err);
+      });
+    }
+  }, [cameraActive]);
+
+  // Real-time frame analysis with jsQR for cross-browser QR detection
   useEffect(() => {
     if (!cameraActive || isProcessingScan || isSwitchingCamera) return;
     let animId = null;
@@ -360,6 +342,13 @@ export default function ScannerScreen({
 
     function analyzeFrame() {
       if (cancelled || isProcessingScan || isSwitchingCamera) return;
+
+      const now = Date.now();
+      // Enforce 1.5s cooldown after an invalid scan attempt
+      if (now - lastScanTimestampRef.current < 1500) {
+        animId = setTimeout(analyzeFrame, 200);
+        return;
+      }
 
       const video = videoRef.current;
       if (video && video.readyState >= 2 && video.videoWidth > 0) {
@@ -381,10 +370,10 @@ export default function ScannerScreen({
         }
       }
 
-      animId = setTimeout(analyzeFrame, 250);
+      animId = setTimeout(analyzeFrame, 200);
     }
 
-    animId = setTimeout(analyzeFrame, 300);
+    animId = setTimeout(analyzeFrame, 250);
 
     return () => {
       cancelled = true;
@@ -392,55 +381,36 @@ export default function ScannerScreen({
     };
   }, [cameraActive, isProcessingScan, isSwitchingCamera]);
 
-  function handleTriggerScan(data) {
+  // Process and validate scanned QR code
+  async function handleTriggerScan(data) {
     if (isProcessingScan) return;
+    const rawData = String(data || "").trim();
+    if (!rawData) return;
+
+    lastScanTimestampRef.current = Date.now();
     setIsProcessingScan(true);
+    setCameraError("");
+    setScanFeedback("Verifying QR code...");
 
-    stopCamera();
-
-    const payload = data || (activeOutlet ? { location: activeOutlet } : { source: "qr_camera" });
-    console.log("[Juice Robo] QR Scan completed with payload:", payload);
-
-    setTimeout(() => {
-      setIsProcessingScan(false);
-      if (typeof onScanSuccess === "function") {
-        onScanSuccess(payload);
-      }
-    }, 350);
-  }
-
-  // Handle Photo Capture using jsQR directly
-  async function handlePhotoCapture(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsProcessingScan(true);
     try {
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = img.naturalWidth || img.width;
-        canvas.height = img.naturalHeight || img.height;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imgData.data, imgData.width, imgData.height);
-        if (code && code.data) {
-          handleTriggerScan(code.data);
-        } else {
-          handleTriggerScan(activeOutlet ? { location: activeOutlet } : { source: "qr_camera" });
+      if (typeof onScanSuccess === "function") {
+        const result = await onScanSuccess(rawData);
+        // If handler explicitly returned false, treat as unverified
+        if (result === false) {
+          setCameraError("Invalid Juice Robo QR code. Please scan the QR code displayed on the machine.");
+          setScanFeedback("");
+          setIsProcessingScan(false);
+          return;
         }
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        handleTriggerScan(activeOutlet ? { location: activeOutlet } : { source: "qr_camera" });
-      };
-      img.src = objectUrl;
+      }
+      // On success, stop camera and clear feedback
+      setScanFeedback("Machine verified! Loading menu...");
+      stopCamera();
     } catch (err) {
-      console.warn("[Juice Robo] Photo QR parse notice:", err);
-      handleTriggerScan(activeOutlet ? { location: activeOutlet } : { source: "qr_camera" });
+      console.warn("[Juice Robo] Scan processing error:", err);
+      setCameraError("Invalid Juice Robo QR code. Please scan the QR code displayed on the machine.");
+      setScanFeedback("");
+      setIsProcessingScan(false);
     }
   }
 
@@ -457,25 +427,26 @@ export default function ScannerScreen({
           <ArrowBackIcon />
         </button>
         <div className="jr-scanner-header-text">
+          <span className="jr-scanner-eyebrow">JUICE ROBO</span>
           <h1>Scan Machine QR</h1>
-          <span>Point camera at any Juice Robo machine to order</span>
+          <p className="jr-scanner-subtitle">
+            Scan the QR code displayed on the Juice Robo machine
+          </p>
         </div>
       </header>
 
       {/* VIEWFINDER AREA */}
       <div className="jr-scanner-viewport">
-        {cameraActive && (
-          <video
-            ref={videoRef}
-            className="jr-scanner-video"
-            autoPlay
-            playsInline
-            muted
-          />
-        )}
-
         <div className="jr-scanner-frame-overlay">
           <div className="jr-scanner-target-box">
+            <video
+              ref={videoRef}
+              className={`jr-scanner-video ${cameraActive ? "active" : "hidden"}`}
+              autoPlay
+              playsInline
+              muted
+            />
+
             <span className="corner top-left" />
             <span className="corner top-right" />
             <span className="corner bottom-left" />
@@ -484,14 +455,14 @@ export default function ScannerScreen({
             {cameraActive ? (
               <div className="jr-scanner-laser-line" />
             ) : (
-              /* PERMISSION PROMPT INSIDE VIEWFINDER */
+              /* PERMISSION PROMPT / STATE BOX INSIDE VIEWFINDER */
               <div className="jr-scanner-permission-box">
                 {permissionStatus === "unsupported" ? (
                   <>
-                    <div className="jr-scanner-permission-icon">📸</div>
-                    <h3 className="jr-scanner-permission-title">Live Camera Unavailable</h3>
+                    <div className="jr-scanner-permission-icon">📷</div>
+                    <h3 className="jr-scanner-permission-title">Camera Unavailable</h3>
                     <p className="jr-scanner-permission-desc">
-                      Live camera streaming requires HTTPS. Use the button below to take a photo of the QR code or select a machine.
+                      Camera streaming is not available on this browser. Please select your location manually.
                     </p>
                   </>
                 ) : permissionStatus === "denied" ? (
@@ -499,7 +470,7 @@ export default function ScannerScreen({
                     <div className="jr-scanner-permission-icon denied">🚫</div>
                     <h3 className="jr-scanner-permission-title">Camera Blocked</h3>
                     <p className="jr-scanner-permission-desc">
-                      Camera permission was denied. Tap 🔒 in Chrome &gt; Permissions &gt; Camera &gt; Allow, then tap Try Camera Again.
+                      Camera permission was denied. Please allow camera access in your browser settings, or select your location manually.
                     </p>
                   </>
                 ) : (
@@ -516,12 +487,14 @@ export default function ScannerScreen({
           </div>
 
           <p className="jr-scanner-instruction">
-            {cameraActive
+            {isProcessingScan
+              ? scanFeedback || "Processing scan..."
+              : cameraActive
               ? "Align machine QR code inside the frame"
-              : "Allow camera permission or take photo to scan"}
+              : "Allow camera permission to scan machine QR"}
           </p>
 
-          {/* CAMERA SWITCH BUTTON & NOTIFICATION */}
+          {/* CAMERA SWITCH BUTTON */}
           {cameraActive && (
             <div className="jr-scanner-switch-container">
               <button
@@ -551,10 +524,10 @@ export default function ScannerScreen({
             </div>
           )}
 
-          {cameraError && permissionStatus !== "denied" && permissionStatus !== "unsupported" && (
-            <div className="jr-scanner-fallback-banner">
-              <QrCodeIcon />
-              <p>{cameraError}</p>
+          {/* SCAN ERROR BANNER (e.g. Invalid QR Code) */}
+          {cameraError && (
+            <div className="jr-scanner-error-banner" role="alert">
+              <span>⚠️ {cameraError}</span>
             </div>
           )}
         </div>
@@ -562,37 +535,9 @@ export default function ScannerScreen({
 
       {/* FOOTER ACTIONS */}
       <footer className="jr-scanner-actions">
-        {/* OUTLET SELECTOR FOR QR SCAN */}
-        {locations.length > 0 && (
-          <div className="jr-scanner-machine-picker">
-            <label htmlFor="jr-scanner-outlet-select">MACHINE QR TO SCAN:</label>
-            <select
-              id="jr-scanner-outlet-select"
-              value={selectedMachineIndex}
-              onChange={(e) => setSelectedMachineIndex(Number(e.target.value))}
-              className="jr-scanner-outlet-dropdown"
-            >
-              {locations.map((loc, idx) => (
-                <option key={loc.id || loc.storeId || idx} value={idx}>
-                  {loc.name || `Machine #${loc.id || idx + 1}`} ({loc.address || "Juice Robo"})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* PRIMARY CTA */}
-        {!cameraActive ? (
-          permissionStatus === "unsupported" ? (
-            <button
-              type="button"
-              className="jr-scanner-scan-cta"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isProcessingScan}
-            >
-              <span>📸 TAKE PHOTO OF MACHINE QR</span>
-            </button>
-          ) : permissionStatus === "denied" ? (
+        {/* CAMERA PERMISSION BUTTONS WHEN NOT ACTIVE */}
+        {!cameraActive && (
+          permissionStatus === "denied" ? (
             <button
               type="button"
               className="jr-scanner-scan-cta"
@@ -601,7 +546,7 @@ export default function ScannerScreen({
             >
               <span>{isRequestingPermission ? "CHECKING PERMISSION..." : "🔄 TRY CAMERA AGAIN"}</span>
             </button>
-          ) : (
+          ) : permissionStatus === "prompt" ? (
             <button
               type="button"
               className="jr-scanner-scan-cta"
@@ -610,49 +555,23 @@ export default function ScannerScreen({
             >
               <span>{isRequestingPermission ? "REQUESTING PERMISSION..." : "📷 ALLOW CAMERA"}</span>
             </button>
-          )
-        ) : (
-          <button
-            type="button"
-            className="jr-scanner-scan-cta"
-            onClick={() => handleTriggerScan()}
-            disabled={isProcessingScan}
-          >
-            <span>{isProcessingScan ? "VERIFYING OUTLET..." : "⚡ SCAN MACHINE QR"}</span>
-          </button>
+          ) : null
         )}
 
-        {/* PHOTO CAPTURE / UPLOAD QR (Fallback when camera is active or when camera permission is requested) */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          style={{ display: "none" }}
-          onChange={handlePhotoCapture}
-        />
-        {/* SECONDARY ACTIONS (Side by side row to fit mobile screens perfectly) */}
-        <div className="jr-scanner-secondary-row">
-          {permissionStatus !== "unsupported" && (
-            <button
-              type="button"
-              className="jr-scanner-photo-btn"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isProcessingScan}
-            >
-              <span>📸 Take Photo</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            className="jr-scanner-manual-btn"
-            onClick={onManualSelect}
-            disabled={isProcessingScan}
-          >
-            <span>📍 Select Manually</span>
-          </button>
+        {/* OR DIVIDER */}
+        <div className="jr-scanner-or-divider" aria-hidden="true">
+          <span>OR</span>
         </div>
+
+        {/* SELECT LOCATION MANUALLY (ALWAYS ACCESSIBLE ALTERNATIVE) */}
+        <button
+          type="button"
+          className="jr-scanner-manual-btn"
+          onClick={onManualSelect}
+          disabled={isProcessingScan}
+        >
+          <span>📍 Select Location Manually</span>
+        </button>
       </footer>
     </main>
   );

@@ -329,6 +329,12 @@
 
 .jr-profile-field input {
   width: 100% !important;
+
+  /* Profile details are view-only. */
+  pointer-events: none !important;
+  cursor: default !important;
+  caret-color: transparent !important;
+  user-select: text !important;
   height: 34px !important;
   min-height: 34px !important;
 
@@ -360,10 +366,8 @@
 }
 
 .jr-profile-field input:focus {
-  border-color: #79ad87 !important;
-
-  box-shadow:
-    0 0 0 2px rgba(47, 128, 80, .10) !important;
+  border-color: #e0e3dc !important;
+  box-shadow: none !important;
 }
 
 .jr-profile-form-error {
@@ -389,6 +393,8 @@
    ========================================================= */
 
 .jr-profile-save {
+  display: none !important;
+
   width: 100% !important;
   height: 38px !important;
   min-height: 38px !important;
@@ -892,7 +898,6 @@
 .jr-profile-back:focus-visible,
 .jr-profile-orders-button:focus-visible,
 .jr-profile-logout:focus-visible,
-.jr-profile-save:focus-visible,
 .jr-profile-field input:focus-visible {
   outline: 2px solid rgba(38, 128, 79, .35) !important;
   outline-offset: 2px !important;
@@ -909,4 +914,32 @@
   .jr-profile-save {
     transition: none !important;
   }
+}
+
+
+/* =========================================================
+   VIEW-ONLY PROFILE OVERRIDE
+   ========================================================= */
+
+/* No profile editing action is shown. */
+.jr-profile-save,
+.jr-profile-edit,
+.jr-profile-edit-button {
+  display: none !important;
+}
+
+/* Profile fields are display-only. */
+.jr-profile-field input {
+  pointer-events: none !important;
+  cursor: default !important;
+  caret-color: transparent !important;
+}
+
+/* Keep profile details visually normal rather than looking disabled. */
+.jr-profile-field input:disabled,
+.jr-profile-field input[readonly] {
+  opacity: 1 !important;
+  color: #222222 !important;
+  -webkit-text-fill-color: #222222 !important;
+  background: #fffefa !important;
 }

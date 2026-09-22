@@ -148,7 +148,6 @@ export default function CheckoutScreen({
   onUpdate,
   onRemove,
   onPay,
-  onSimulatePay,
   money,
   busy = false,
   error = "",
@@ -157,8 +156,6 @@ export default function CheckoutScreen({
   displayProductName,
   loggedIn = true,
   onLogin,
-  configuredUpiId = "JUICEROBO@ybl",
-  onChangeUpiId,
 }) {
   const safeCart = Array.isArray(items)
     ? items
@@ -167,8 +164,6 @@ export default function CheckoutScreen({
     : [];
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("upi");
-  const [showUpiEditor, setShowUpiEditor] = useState(false);
-  const [upiInputValue, setUpiInputValue] = useState(configuredUpiId || "JUICEROBO@ybl");
 
   /* =======================================================
      ITEM HELPERS
@@ -245,8 +240,12 @@ export default function CheckoutScreen({
   }, 0);
 
   const roundedGross = Math.round((grossTotal + Number.EPSILON) * 100) / 100;
-  const subtotal = Math.round((roundedGross / (1 + GST_RATE) + Number.EPSILON) * 100) / 100;
-  const gstAmount = Math.round((roundedGross - subtotal + Number.EPSILON) * 100) / 100;
+  const grossTotalPaise = Math.round(roundedGross * 100);
+  const gstPaise = Math.round((grossTotalPaise * 5) / 105);
+  const subtotalPaise = grossTotalPaise - gstPaise;
+
+  const subtotal = subtotalPaise / 100;
+  const gstAmount = gstPaise / 100;
   const finalTotal = roundedGross;
 
   const itemCount = safeCart.reduce(
@@ -274,14 +273,6 @@ export default function CheckoutScreen({
         location?.location ||
         location?.description
     ) || "Select collection point";
-
-  const machineName =
-    clean(
-      machine?.name ||
-        machine?.machineName ||
-        machine?.machine_name ||
-        machine?.code
-    ) || "Smart Dispensing Unit";
 
   const isProcessing =
     busy ||
@@ -320,26 +311,23 @@ export default function CheckoutScreen({
       {/* ---------------------------------------------------
           1. TOP NAVIGATION HEADER
          --------------------------------------------------- */}
-      <header className="jr-zomato-nav-header">
+      <div className="jr-zomato-checkout-content">
         <button
           type="button"
-          className="jr-zomato-back-btn"
+          className="jr-checkout-back-link"
           onClick={onBack}
           disabled={isProcessing}
           aria-label="Back to cart"
         >
-          <ArrowBackIcon />
+          <span aria-hidden="true">←</span>
+          <span>Back to cart</span>
         </button>
 
-        <div className="jr-zomato-header-text">
-          <h1>Checkout</h1>
-          <span className="jr-zomato-header-subtitle">
-            {locationName} · {itemCount} {itemCount === 1 ? "Item" : "Items"}
-          </span>
+        <div className="jr-checkout-page-heading">
+          <span className="jr-checkout-eyebrow">YOUR ORDER</span>
+          <h1>Your <span>checkout.</span></h1>
+          <p>{itemCount} {itemCount === 1 ? "item" : "items"} ready for payment.</p>
         </div>
-      </header>
-
-      <div className="jr-zomato-checkout-content">
         {/* ---------------------------------------------------
             2. ORDER SUMMARY / ITEMS WITH LIVE STEPPERS
            --------------------------------------------------- */}
@@ -494,73 +482,6 @@ export default function CheckoutScreen({
             </label>
           </div>
 
-          {/* Machine Payee VPA Info & Quick Change */}
-          <div className="jr-zomato-payee-info">
-            <div className="jr-zomato-payee-text">
-              <span className="jr-zomato-payee-label">Machine Payee VPA:</span>
-              <span className="jr-zomato-payee-vpa">{configuredUpiId || "JUICEROBO@ybl"}</span>
-            </div>
-            {typeof onChangeUpiId === "function" && (
-              <button
-                type="button"
-                className="jr-zomato-change-upi-btn"
-                onClick={() => {
-                  if (!showUpiEditor) {
-                    setUpiInputValue(configuredUpiId || "JUICEROBO@ybl");
-                  }
-                  setShowUpiEditor((prev) => !prev);
-                }}
-                title="Change or verify Payee UPI ID for this machine"
-              >
-                {showUpiEditor ? "Close" : "Change"}
-              </button>
-            )}
-          </div>
-
-          {(!configuredUpiId || configuredUpiId.toLowerCase() === "juicerobo@ybl") && (
-            <div className="jr-zomato-vpa-notice">
-              <span>⚠️ <strong>JUICEROBO@ybl</strong> is a dummy ID. PhonePe will reject this with &quot;Something went wrong&quot;. Tap <strong>Change</strong> above to enter an active UPI ID.</span>
-            </div>
-          )}
-
-          {showUpiEditor && typeof onChangeUpiId === "function" && (
-            <div className="jr-zomato-upi-edit-box">
-              <div className="jr-zomato-upi-edit-label">Custom Payee UPI ID (VPA):</div>
-              <div className="jr-zomato-upi-input-group">
-                <input
-                  type="text"
-                  className="jr-zomato-upi-input"
-                  placeholder="e.g. merchant@ybl or yourname@oksbi"
-                  value={upiInputValue}
-                  onChange={(e) => setUpiInputValue(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="jr-zomato-upi-save-btn"
-                  onClick={() => {
-                    onChangeUpiId(upiInputValue.trim());
-                    setShowUpiEditor(false);
-                  }}
-                >
-                  Save
-                </button>
-              </div>
-              <div className="jr-zomato-upi-quick-pills">
-                <span className="jr-zomato-upi-quick-title">Quick VPAs:</span>
-                <button
-                  type="button"
-                  className="jr-zomato-quick-btn"
-                  onClick={() => {
-                    setUpiInputValue("JUICEROBO@ybl");
-                    onChangeUpiId("JUICEROBO@ybl");
-                    setShowUpiEditor(false);
-                  }}
-                >
-                  JUICEROBO@ybl
-                </button>
-              </div>
-            </div>
-          )}
 
           <div className="jr-zomato-security-badge">
             <ShieldCheckIcon />
@@ -635,8 +556,8 @@ export default function CheckoutScreen({
                 {isProcessing
                   ? "PREPARING PAYMENT..."
                   : !loggedIn
-                  ? "CONTINUE TO PAYMENT"
-                  : "PAY NOW"}
+                  ? "LOGIN TO PAY"
+                  : "PROCEED TO PAYMENT"}
               </span>
               <span className="jr-zomato-cta-arrow" aria-hidden="true">
                 {isProcessing ? "⏳" : "→"}

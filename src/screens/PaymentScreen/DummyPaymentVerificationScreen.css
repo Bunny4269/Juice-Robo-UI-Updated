@@ -1,0 +1,244 @@
+/* =========================================================
+   JUICE ROBO — DUMMY PAYMENT VERIFICATION SCREEN STYLES
+   ========================================================= */
+
+.jr-dummy-verification-page {
+  padding: 24px 16px;
+  background-color: var(--jr-cream, #faf9f1);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.jr-dummy-verification-content {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 1. DEV / TEST BADGE */
+.jr-dummy-test-badge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+.jr-dummy-test-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+  padding: 6px 14px;
+  border-radius: var(--jr-radius-full, 9999px);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.jr-dummy-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  display: inline-block;
+  animation: jr-dummy-pulse 2s infinite;
+}
+
+@keyframes jr-dummy-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.jr-dummy-test-note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #78716c;
+  line-height: 1.4;
+}
+
+/* 2. HEADER */
+.jr-dummy-header {
+  text-align: center;
+}
+
+.jr-dummy-title {
+  margin: 0 0 6px;
+  font-family: var(--jr-font-heading, "Manrope", sans-serif);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--jr-dark, #172019);
+}
+
+.jr-dummy-subtitle {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #57534e;
+}
+
+/* 3. ORDER CARD */
+.jr-dummy-order-card {
+  background: #ffffff;
+  border: 1px solid var(--jr-border, #e9e9e4);
+  border-radius: var(--jr-radius-lg, 16px);
+  padding: 18px;
+  box-shadow: var(--jr-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.06));
+}
+
+.jr-dummy-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--jr-border, #e9e9e4);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.jr-dummy-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--jr-dark, #172019);
+}
+
+.jr-dummy-status-pill {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: #eef2ff;
+  color: #3730a3;
+  padding: 4px 10px;
+  border-radius: 9999px;
+}
+
+.jr-dummy-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.jr-dummy-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+}
+
+.jr-dummy-detail-label {
+  color: #78716c;
+}
+
+.jr-dummy-detail-value {
+  color: var(--jr-dark, #172019);
+  font-family: "JetBrains Mono", monospace, sans-serif;
+  font-size: 0.88rem;
+  word-break: break-all;
+  max-width: 65%;
+  text-align: right;
+}
+
+.jr-dummy-detail-row.total-row {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--jr-border, #e9e9e4);
+}
+
+.jr-dummy-detail-row.total-row .jr-dummy-detail-label {
+  font-weight: 700;
+  color: var(--jr-dark, #172019);
+  font-size: 0.95rem;
+}
+
+.jr-dummy-detail-value.amount-value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--jr-green, #287f46);
+  font-family: var(--jr-font-heading, "Manrope", sans-serif);
+}
+
+.jr-dummy-detail-value.status-value {
+  color: #d97706;
+  font-weight: 700;
+}
+
+/* 4. TEST ACTION BUTTONS */
+.jr-dummy-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.jr-dummy-btn {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: var(--jr-radius-full, 9999px);
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.jr-dummy-btn:hover {
+  transform: translateY(-1px);
+}
+
+.jr-dummy-btn:active {
+  transform: translateY(1px);
+}
+
+.jr-dummy-btn--success {
+  background: var(--jr-green, #287f46);
+  color: #ffffff;
+}
+
+.jr-dummy-btn--success:hover {
+  background: var(--jr-green-hover, #226b3b);
+  box-shadow: 0 4px 12px rgba(40, 127, 70, 0.25);
+}
+
+.jr-dummy-btn--failure {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.jr-dummy-btn--failure:hover {
+  background: #b91c1c;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.jr-dummy-btn-icon {
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.jr-dummy-btn-cancel {
+  background: transparent;
+  border: 1px solid #d6d3d1;
+  color: #78716c;
+  padding: 10px 16px;
+  border-radius: var(--jr-radius-full, 9999px);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.15s ease;
+}
+
+.jr-dummy-btn-cancel:hover {
+  background: #f5f5f4;
+  color: #44403c;
+}

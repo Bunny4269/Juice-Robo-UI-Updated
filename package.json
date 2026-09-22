@@ -6,12 +6,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "tunnel": "cloudflared tunnel --url http://localhost:5174",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "jsqr": "^1.4.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

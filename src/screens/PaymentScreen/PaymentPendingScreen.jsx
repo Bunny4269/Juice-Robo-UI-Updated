@@ -21,11 +21,10 @@ export default function PaymentPendingScreen({
   location,
   machine,
   money,
+  launchError = "",
   onCheckStatus,
   onCancel,
   onOpenUpiApp,
-  onChooseUpiApp,
-  onSimulateSuccess,
   paymentStatus = "pending",
   statusMessage = "",
   isVerifying = false,
@@ -88,6 +87,17 @@ export default function PaymentPendingScreen({
             : statusMessage || message || "Complete payment in your UPI app. Juice Robo is checking the backend for confirmation."}
         </p>
 
+        {/* Launch Error / Notice Banner */}
+        {launchError && (
+          <div className="jr-pending-launch-alert" role="alert">
+            <span className="jr-pending-launch-alert-icon">⚠️</span>
+            <div className="jr-pending-launch-alert-content">
+              <strong>UPI App Notice</strong>
+              <p>{launchError}</p>
+            </div>
+          </div>
+        )}
+
         {/* ===================================================
             3. ORDER DETAILS CARD
            =================================================== */}
@@ -128,23 +138,63 @@ export default function PaymentPendingScreen({
            =================================================== */}
         <div className="jr-payment-pending-actions">
           {typeof onOpenUpiApp === "function" && (
-            <button
-              type="button"
-              className="jr-pending-reopen-btn"
-              onClick={onOpenUpiApp}
-            >
-              <span>📱 Open in PhonePe / UPI App</span>
-            </button>
-          )}
+            <div className="jr-pending-upi-apps">
+              <div className="jr-pending-upi-heading">
+                <strong>Continue with your UPI app</strong>
+                <span>Choose an installed payment app</span>
+              </div>
 
-          {typeof onChooseUpiApp === "function" && (
-            <button
-              type="button"
-              className="jr-pending-choose-app-btn"
-              onClick={onChooseUpiApp}
-            >
-              <span>⚡ Choose UPI App (PhonePe / GPay / Paytm)</span>
-            </button>
+              <div className="jr-pending-upi-app-list">
+                <button
+                  type="button"
+                  className="jr-pending-reopen-btn jr-pending-reopen-btn--phonepe"
+                  onClick={() => onOpenUpiApp({
+                    id: "phonepe",
+                    name: "PhonePe",
+                    scheme: "phonepe://pay",
+                  })}
+                >
+                  <span className="jr-pending-upi-app-icon jr-pending-upi-app-icon--phonepe">पे</span>
+                  <span>Open PhonePe</span>
+                  <span className="jr-pending-upi-arrow">→</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="jr-pending-reopen-btn jr-pending-reopen-btn--gpay"
+                  onClick={() => onOpenUpiApp({
+                    id: "googlepay",
+                    name: "Google Pay",
+                    scheme: "gpay://upi/pay",
+              androidScheme: "tez://upi/pay",
+                  })}
+                >
+                  <span className="jr-pending-upi-app-icon jr-pending-upi-app-icon--gpay">G</span>
+                  <span>Open Google Pay</span>
+                  <span className="jr-pending-upi-arrow">→</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="jr-pending-reopen-btn"
+                  onClick={() => onOpenUpiApp({ id: "paytm", name: "Paytm", scheme: "paytmmp://pay" })}
+                >
+                  <span className="jr-pending-upi-app-icon">P</span>
+                  <span>Open Paytm</span>
+                  <span className="jr-pending-upi-arrow">→</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="jr-pending-reopen-btn"
+                  onClick={() => onOpenUpiApp({ id: "bhim", name: "BHIM", scheme: "bhim://upi/pay" })}
+                >
+                  <span className="jr-pending-upi-app-icon">B</span>
+                  <span>Open BHIM</span>
+                  <span className="jr-pending-upi-arrow">→</span>
+                </button>
+              </div>
+            </div>
           )}
 
           <button
@@ -156,15 +206,6 @@ export default function PaymentPendingScreen({
             <span>{activeVerifying ? "Verifying Payment..." : "⚡ Check Status Now"}</span>
           </button>
 
-          {typeof onSimulateSuccess === "function" && (
-            <button
-              type="button"
-              className="jr-pending-simulate-btn"
-              onClick={onSimulateSuccess}
-            >
-              <span>🧪 Simulate Payment Success (Dev Test)</span>
-            </button>
-          )}
 
           {typeof onCancel === "function" && (
             <button

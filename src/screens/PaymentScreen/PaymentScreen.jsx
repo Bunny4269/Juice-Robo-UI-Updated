@@ -1,100 +1,178 @@
 import "./PaymentScreen.css";
 
+/* =========================================================
+   JUICE ROBO — PAYMENT SCREEN
+   Pre-payment review only. No invoice/receipt is shown here.
+   GST is inclusive at 5%.
+   ========================================================= */
+
 function clean(value) {
-  return String(value ?? "").replace(/\s+/g, " ").trim();
+  return String(value ?? "").trim();
 }
 
-function number(value, fallback = 0) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
+function formatMoney(value, money) {
+  if (typeof money === "function") {
+    return money(value);
+  }
+
+  return `₹${Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
-function moneyValue(value, money) {
-  if (typeof money === "function") return money(value);
-  return `₹${number(value).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-}
+/* =========================================================
+   ITEM HELPERS
+   ========================================================= */
 
-function itemName(item) {
-  return clean(
-    item?.displayName ??
-    item?.name ??
-    item?.itemName ??
-    item?.productName ??
-    item?.product_name ??
-    item?.title
-  ) || "Juice";
-}
-
-function itemQuantity(item) {
-  return Math.max(1, Math.floor(number(item?.quantity ?? item?.qty ?? item?.count, 1)));
-}
-
-function itemTotal(item) {
-  const direct = number(
-    item?.subtotal ??
-    item?.subTotal ??
-    item?.lineTotal ??
-    item?.line_total ??
-    item?.total,
-    NaN
+function getItemName(item = {}) {
+  return (
+    clean(
+      item?.displayName ||
+        item?.name ||
+        item?.itemName ||
+        item?.productName ||
+        item?.product_name ||
+        item?.title
+    )
+      .replace(/\bundefined\b/gi, "")
+      .replace(/\bnull\b/gi, "")
+      .replace(/\s+/g, " ")
+      .trim() ||
+    "Sugarcane Juice"
   );
-  if (Number.isFinite(direct)) return direct;
+}
 
-  return number(
+function getItemQuantity(item = {}) {
+  const quantity = Number(
+    item?.quantity ??
+      item?.qty ??
+      item?.count ??
+      1
+  );
+
+  return Number.isFinite(quantity) && quantity > 0
+    ? quantity
+    : 1;
+}
+
+function getItemUnitPrice(item = {}) {
+  const directPrice = Number(
     item?.unitPrice ??
-    item?.unit_price ??
-    item?.price ??
-    item?.sellingPrice ??
-    item?.selling_price,
-    0
-  ) * itemQuantity(item);
+      item?.unit_price ??
+      item?.price ??
+      item?.sellingPrice ??
+      item?.selling_price
+  );
+
+  if (
+    Number.isFinite(directPrice) &&
+    directPrice >= 0
+  ) {
+    return directPrice;
+  }
+
+  const quantity = getItemQuantity(item);
+
+  const subtotal = Number(
+    item?.subtotal ??
+      item?.subTotal ??
+      item?.total ??
+      item?.lineTotal ??
+      item?.line_total
+  );
+
+  if (
+    Number.isFinite(subtotal) &&
+    subtotal >= 0 &&
+    quantity > 0
+  ) {
+    return subtotal / quantity;
+  }
+
+  return 0;
 }
 
-function locationName(location) {
-  return clean(
-    location?.outletName ??
-    location?.locationName ??
-    location?.storeName ??
-    location?.name
-  ) || "Choose location";
-}
+function getItemSubtotal(item = {}) {
+  const direct = Number(
+    item?.subtotal ??
+      item?.subTotal ??
+      item?.total ??
+      item?.lineTotal ??
+      item?.line_total
+  );
 
-function locationAddress(location) {
-  return clean(
-    location?.address ??
-    location?.locationAddress ??
-    location?.storeAddress ??
-    location?.location
+  if (
+    Number.isFinite(direct) &&
+    direct >= 0
+  ) {
+    return direct;
+  }
+
+  return (
+    getItemUnitPrice(item) *
+    getItemQuantity(item)
   );
 }
 
-function machineName(machine) {
-  return clean(
-    machine?.machineName ??
-    machine?.machine_name ??
-    machine?.name ??
-    machine?.machineCode ??
-    machine?.machine_code
-  ) || "Choose machine";
+/* =========================================================
+   ICONS
+   ========================================================= */
+
+function ShieldIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 3 19 6v5c0 4.6-2.9 8.2-7 10-4.1-1.8-7-5.4-7-10V6l7-3Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+
+      <path
+        d="m9 12 2 2 4-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function LocationIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M20 10.2c0 5.2-8 10.8-8 10.8S4 15.4 4 10.2a8 8 0 1 1 16 0Z" fill="none" stroke="currentColor" strokeWidth="1.8"/>
-      <circle cx="12" cy="10" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.8"/>
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+
+      <circle
+        cx="12"
+        cy="9"
+        r="2.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
     </svg>
   );
 }
 
-function ShieldIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 3 19 6v5c0 4.6-2.9 8.2-7 10-4.1-1.8-7-5.4-7-10V6l7-3Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-      <path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-}
+/* =========================================================
+   MAIN
+   ========================================================= */
 
 export default function PaymentScreen({
   cart = [],
@@ -110,109 +188,457 @@ export default function PaymentScreen({
   paymentStatus,
   busy,
   error,
+  paymentMethod,
 }) {
-  const safeItems = Array.isArray(items) ? items : Array.isArray(cart) ? cart : [];
-  const safeTotal = number(finalTotal ?? total, 0);
+  const safeCart = Array.isArray(items)
+    ? items
+    : Array.isArray(cart)
+    ? cart
+    : [];
 
-  const calculatedItemsTotal = safeItems.reduce((sum, item) => sum + itemTotal(item), 0);
-  const itemsTotal = number(total ?? calculatedItemsTotal, calculatedItemsTotal);
-  const gstAmount = number(gst, 0);
+  /* =======================================================
+     ITEM TOTALS
+     ======================================================= */
 
-  const processing =
-    Boolean(busy) ||
+  const itemCount = safeCart.reduce(
+    (sum, item) =>
+      sum + getItemQuantity(item),
+    0
+  );
+
+  const calculatedItemTotal =
+    safeCart.reduce(
+      (sum, item) =>
+        sum + getItemSubtotal(item),
+      0
+    );
+
+  /* =======================================================
+     GST-INCLUSIVE TOTAL
+
+     Cart:
+       Subtotal = ₹0.95
+       GST 5%   = ₹0.05
+       Total    = ₹1.00
+
+     Therefore, when total includes GST:
+
+       taxable subtotal = total / 1.05
+       GST               = total - subtotal
+     ======================================================= */
+
+  const amount =
+    Number(
+      finalTotal ??
+        total ??
+        calculatedItemTotal
+    ) || 0;
+
+  const roundedAmount =
+    Math.round(
+      (amount + Number.EPSILON) * 100
+    ) / 100;
+
+  const calculatedSubtotal =
+    Math.round(
+      (
+        roundedAmount / 1.05 +
+        Number.EPSILON
+      ) * 100
+    ) / 100;
+
+  const gstAmount =
+    Math.round(
+      (
+        roundedAmount -
+        calculatedSubtotal +
+        Number.EPSILON
+      ) * 100
+    ) / 100;
+
+  /* =======================================================
+     LOCATION
+     ======================================================= */
+
+  const locationName =
+    clean(
+      location?.name ||
+        location?.storeName ||
+        location?.locationName ||
+        location?.outletName
+    ) || "ICICI Bank";
+
+  const locationAddress =
+    clean(
+      location?.address ||
+        location?.locationAddress ||
+        location?.storeAddress ||
+        location?.location
+    ) || "ICICI Tower, Hyderabad";
+
+  /* =======================================================
+     MACHINE
+     ======================================================= */
+
+  const machineName =
+    clean(
+      machine?.name ||
+        machine?.machineName ||
+        machine?.machineCode ||
+        machine?.machine_code
+    ) || "ICICI Bank";
+
+  /* =======================================================
+     PAYMENT
+     ======================================================= */
+
+  const paymentMode =
+    clean(
+      paymentMethod ||
+        location?.paymentMethod
+    ) || "UPI";
+
+  const isProcessing =
+    busy ||
     paymentStatus === "processing" ||
     paymentStatus === "PROCESSING";
 
   return (
     <main className="jr-content jr-page jr-payment-page">
-      <button type="button" className="jr-payment-back" onClick={onBack} disabled={processing}>
-        ← Back to order
+
+      {/* =================================================
+          BACK
+         ================================================= */}
+
+      <button
+        className="jr-payment-back"
+        onClick={onBack}
+        type="button"
+        disabled={isProcessing}
+      >
+        ← Back to cart
       </button>
 
+      {/* =================================================
+          HEADER
+        ================================================= */}
+
       <header className="jr-payment-header">
-        <span className="jr-payment-eyebrow">PAYMENT</span>
+
+        <span className="jr-payment-eyebrow">
+          UPI PAYMENT
+        </span>
+
         <h1>
-          Almost
+          Complete your
           <br />
-          <em>there.</em>
+          <em>payment.</em>
         </h1>
-        <p>Review your order and complete secure payment.</p>
+
+        <p>
+          Complete payment in your UPI app. We will
+          verify it with Juice Robo.
+        </p>
+
       </header>
 
-      <section className="jr-payment-collection">
-        <div className="jr-payment-collection-icon"><LocationIcon /></div>
-        <div>
-          <span>COLLECT FROM</span>
-          <strong>{locationName(location)}</strong>
-          {locationAddress(location) && <small>{locationAddress(location)}</small>}
-          <small>Machine: {machineName(machine)}</small>
+      {/* =================================================
+          COLLECTION CARD
+         ================================================= */}
+
+      <section className="jr-payment-collection-card">
+
+        <div className="jr-payment-location-icon">
+          <LocationIcon />
         </div>
+
+        <div className="jr-payment-location-copy">
+
+          <small>
+            COLLECT FROM
+          </small>
+
+          <strong>
+            {locationName}
+          </strong>
+
+          <span>
+            {locationAddress}
+          </span>
+
+          <span>
+            Machine: {machineName}
+          </span>
+
+        </div>
+
       </section>
 
+      {/* =================================================
+          ORDER SUMMARY
+         ================================================= */}
+
       <section className="jr-payment-summary">
-        <div className="jr-payment-summary-head">
-          <span>ORDER SUMMARY</span>
-          <strong>{safeItems.length} {safeItems.length === 1 ? "item" : "items"}</strong>
+
+        <div className="jr-payment-section-heading">
+
+          <div>
+            <h2>
+              ORDER SUMMARY
+            </h2>
+
+            <span>
+              Review your selected items
+            </span>
+          </div>
+
+          <strong>
+            {itemCount}{" "}
+            {itemCount === 1
+              ? "ITEM"
+              : "ITEMS"}
+          </strong>
+
         </div>
+
+        {/* ---------------------------------------------
+            ITEM TABLE HEADER
+           --------------------------------------------- */}
+
+        {safeCart.length > 0 && (
+          <div className="jr-payment-item-header">
+
+            <span>
+              ITEM
+            </span>
+
+            <span>
+              QTY
+            </span>
+
+            <span>
+              PRICE
+            </span>
+
+            <span>
+              TOTAL
+            </span>
+
+          </div>
+        )}
+
+        {/* ---------------------------------------------
+            ITEMS
+           --------------------------------------------- */}
 
         <div className="jr-payment-items">
-          {safeItems.map((item, index) => (
-            <div className="jr-payment-item" key={item?.id ?? item?.variantId ?? index}>
-              <div>
-                <strong>{itemName(item)}</strong>
-                <span>× {itemQuantity(item)}</span>
-              </div>
-              <strong>{moneyValue(itemTotal(item), money)}</strong>
+
+          {safeCart.length === 0 ? (
+
+            <div className="jr-payment-empty">
+              No items in your order.
             </div>
-          ))}
+
+          ) : (
+
+            safeCart.map((item, index) => {
+
+              const quantity =
+                getItemQuantity(item);
+
+              const unitPrice =
+                getItemUnitPrice(item);
+
+              const subtotal =
+                getItemSubtotal(item);
+
+              return (
+                <div
+                  className="jr-payment-item"
+                  key={
+                    item?.id ||
+                    item?.cartItemId ||
+                    item?.productId ||
+                    index
+                  }
+                >
+
+                  <div className="jr-payment-item-name">
+
+                    <strong>
+                      {getItemName(item)}
+                    </strong>
+
+                  </div>
+
+                  <span className="jr-payment-item-qty">
+                    × {quantity}
+                  </span>
+
+                  <span className="jr-payment-item-unit">
+                    {formatMoney(
+                      unitPrice,
+                      money
+                    )}
+                  </span>
+
+                  <strong className="jr-payment-item-total">
+                    {formatMoney(
+                      subtotal,
+                      money
+                    )}
+                  </strong>
+
+                </div>
+              );
+            })
+          )}
+
         </div>
 
-        <div className="jr-payment-row">
-          <span>Items total</span>
-          <strong>{moneyValue(itemsTotal, money)}</strong>
-        </div>
-
-        <div className="jr-payment-row">
-          <span>GST 5%</span>
-          <strong>{moneyValue(gstAmount, money)}</strong>
-        </div>
+        {/* ---------------------------------------------
+            PRICE BREAKDOWN
+           --------------------------------------------- */}
 
         <div className="jr-payment-divider" />
 
-        <div className="jr-payment-total">
-          <div>
-            <span>TOTAL</span>
-            <small>Inclusive of 5% GST</small>
+        <div className="jr-payment-breakdown">
+
+          <div className="jr-payment-price-row">
+
+            <span>
+              Item subtotal
+            </span>
+
+            <strong>
+              {formatMoney(
+                calculatedSubtotal,
+                money
+              )}
+            </strong>
+
           </div>
-          <strong>{moneyValue(safeTotal, money)}</strong>
+
+          <div className="jr-payment-price-row">
+
+            <span>
+              GST
+              <small>
+                5%
+              </small>
+            </span>
+
+            <strong>
+              {formatMoney(
+                gstAmount,
+                money
+              )}
+            </strong>
+
+          </div>
+
         </div>
+
+        {/* ---------------------------------------------
+            GRAND TOTAL
+           --------------------------------------------- */}
+
+        <div className="jr-payment-total-row">
+
+          <div>
+
+            <span>
+              TOTAL PAYABLE
+            </span>
+
+            <small>
+              Inclusive of 5% GST
+            </small>
+
+          </div>
+
+          <strong>
+            {formatMoney(
+              roundedAmount,
+              money
+            )}
+          </strong>
+
+        </div>
+
       </section>
 
-      <section className="jr-payment-secure">
-        <div className="jr-payment-secure-icon"><ShieldIcon /></div>
-        <div>
-          <strong>Pay securely online</strong>
-          <p>Your payment is securely processed through UPI. After successful payment, Juice Robo will generate your 4-digit collection code.</p>
+      {/* =================================================
+          SECURE PAYMENT INFO
+         ================================================= */}
+
+      <section className="jr-payment-secure-card">
+
+        <div className="jr-payment-secure-icon">
+          <ShieldIcon />
         </div>
+
+        <div>
+
+          <strong>
+            Pay securely online
+          </strong>
+
+          <p>
+            Your payment is securely processed
+            through UPI. After successful payment,
+            Juice Robo will provide your collection
+            code.
+          </p>
+
+        </div>
+
       </section>
+
+      {/* =================================================
+          PAYMENT BUTTON
+         ================================================= */}
 
       <button
+        className="jr-payment-pay-button"
         type="button"
-        className="jr-payment-pay"
         onClick={onPay}
-        disabled={processing || safeTotal <= 0}
+        disabled={
+          isProcessing ||
+          safeCart.length === 0
+        }
       >
-        <span>{processing ? "Starting payment..." : "PAY"}</span>
-        <strong>{moneyValue(safeTotal, money)} →</strong>
+
+        <span>
+          {isProcessing
+            ? "PROCESSING PAYMENT..."
+            : "PROCEED TO PAY"}
+        </span>
+
+        <strong>
+          →
+        </strong>
+
       </button>
 
-      <p className="jr-payment-note">🔒 Secure payment · Your payment details are protected</p>
+      {/* =================================================
+          SECURITY NOTE
+         ================================================= */}
+
+      <p className="jr-payment-security-note">
+        Secure payment · Your payment details are protected
+      </p>
+
+      {/* =================================================
+          ERROR
+         ================================================= */}
 
       {error && (
-        <div className="jr-payment-error" role="alert">
-          {clean(error)}
+        <div className="jr-payment-error">
+          {error}
         </div>
       )}
+
     </main>
   );
 }

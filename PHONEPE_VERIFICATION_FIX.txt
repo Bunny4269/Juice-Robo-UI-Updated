@@ -1,0 +1,24 @@
+JUICE ROBO - PHONEPE VERIFICATION FIX
+
+Issue:
+PhonePe was being launched with the app-specific URI prefix:
+phonepe://upi/pay?
+
+Fix:
+PhonePe is now launched with:
+phonepe://pay?
+
+Google Pay remains:
+tez://upi/pay?
+
+The generic UPI payload is still generated from the configured VITE_JR_UPI_ID.
+No backend changes were made.
+Payment success is still determined only by backend verification.
+
+Updated files:
+- src/api.js
+- src/App.jsx
+- src/screens/PaymentScreen/PaymentScreen.jsx
+- src/screens/PaymentScreen/PaymentPendingScreen.jsx
+
+The project ZIP does not include package.json, so npm run build could not be executed from this archive.

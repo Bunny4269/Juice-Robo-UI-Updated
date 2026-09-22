@@ -1,131 +1,17 @@
 import "./CartScreen.css";
 
-function clean(value) {
-  return String(value ?? "").replace(/\s+/g, " ").trim();
-}
-
-function number(value, fallback = 0) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function moneyValue(value, money) {
-  if (typeof money === "function") return money(value);
-  return `₹${number(value).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-}
-
-function itemName(item, displayProductName) {
-  if (typeof displayProductName === "function") {
-    const value = clean(displayProductName(item));
-    if (value) return value;
-  }
-  return clean(
-    item?.displayName ??
-    item?.name ??
-    item?.itemName ??
-    item?.productName ??
-    item?.product_name ??
-    item?.title
-  ) || "Juice";
-}
-
-function itemQuantity(item) {
-  return Math.max(
-    1,
-    Math.floor(
-      number(
-        item?.quantity ??
-        item?.qty ??
-        item?.count ??
-        item?.itemQuantity ??
-        item?.item_quantity,
-        1
-      )
-    )
-  );
-}
-
-function itemPrice(item) {
-  return number(
-    item?.unitPrice ??
-    item?.unit_price ??
-    item?.price ??
-    item?.sellingPrice ??
-    item?.selling_price ??
-    item?.variant?.price ??
-    0
-  );
-}
-
-function itemTotal(item) {
-  const direct = number(
-    item?.subtotal ??
-    item?.subTotal ??
-    item?.lineTotal ??
-    item?.line_total ??
-    item?.total,
-    NaN
-  );
-  return Number.isFinite(direct) ? direct : itemPrice(item) * itemQuantity(item);
-}
-
-function itemImage(item, productImage, displayProductName) {
-  if (typeof productImage === "function") {
-    try {
-      const value = clean(productImage(item));
-      if (value) return value;
-    } catch {}
-  }
-  return clean(
-    item?.imageUrl ??
-    item?.image_url ??
-    item?.image ??
-    item?.productImage ??
-    item?.product_image
-  );
-}
-
-function locationName(location) {
-  return clean(
-    location?.outletName ??
-    location?.locationName ??
-    location?.storeName ??
-    location?.name
-  ) || "Choose location";
-}
-
-function machineName(machine) {
-  return clean(
-    machine?.machineName ??
-    machine?.machine_name ??
-    machine?.name ??
-    machine?.machineCode ??
-    machine?.machine_code
-  ) || "Choose machine";
-}
-
-function CartIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 5h2l1.6 10h9.7L19 8H7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="9" cy="19" r="1.3" fill="currentColor"/>
-      <circle cx="16" cy="19" r="1.3" fill="currentColor"/>
-    </svg>
-  );
-}
+/* =========================================================
+   JUICE ROBO — CART SCREEN
+   GST = 12%
+   ========================================================= */
 
 export default function CartScreen({
   cart = [],
-  total,
-  subtotal,
-  gst,
-  finalTotal,
   location,
   machine,
   onBack,
   onUpdate,
   onRemove,
-  onClear,
   onLocation,
   onCheckout,
   productImage,
@@ -133,168 +19,498 @@ export default function CartScreen({
   money,
 }) {
   const items = Array.isArray(cart) ? cart : [];
-  const safeFinalTotal = number(finalTotal, number(total, 0));
-  const safeSubtotal = number(subtotal, safeFinalTotal);
-  const safeGst = number(gst, 0);
+
+  /* =======================================================
+     HELPERS
+     ======================================================= */
+
+  function getName(item) {
+    if (typeof displayProductName === "function") {
+      return displayProductName(item);
+    }
+
+    return (
+      item?.displayName ||
+      item?.name ||
+      item?.productName ||
+      item?.product_name ||
+      "Sugarcane Juice"
+    );
+  }
+
+  function getImage(item) {
+    if (item?.image) {
+      return item.image;
+    }
+
+    if (item?.image_url) {
+      return item.image_url;
+    }
+
+    if (item?.imageUrl) {
+      return item.imageUrl;
+    }
+
+    if (typeof productImage === "function") {
+      return productImage(item);
+    }
+
+    return "";
+  }
+
+  function getPrice(item) {
+    return Number(
+      item?.price ??
+        item?.unitPrice ??
+        item?.sellingPrice ??
+        item?.selling_price ??
+        0
+    );
+  }
+
+  function getQuantity(item) {
+    return Math.max(
+      1,
+      Number(item?.quantity || 1)
+    );
+  }
+
+  function formatMoney(value) {
+    if (typeof money === "function") {
+      return money(value);
+    }
+
+    return `₹${Number(value || 0).toLocaleString(
+      "en-IN",
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }
+    )}`;
+  }
+
+  /* =======================================================
+     TOTALS
+     ======================================================= */
+
+  const subtotal = items.reduce(
+    (sum, item) =>
+      sum +
+      getPrice(item) *
+        getQuantity(item),
+    0
+  );
+
+  const GST_RATE = 0.12;
+
+  const gst = subtotal * GST_RATE;
+
+  const grandTotal = subtotal + gst;
+
+  const itemCount = items.reduce(
+    (sum, item) =>
+      sum + getQuantity(item),
+    0
+  );
+
+  /* =======================================================
+     EMPTY CART
+     ======================================================= */
+
+  if (!items.length) {
+    return (
+      <main className="jr-content jr-page jr-cart-page">
+
+        <button
+          type="button"
+          className="jr-cart-back"
+          onClick={onBack}
+        >
+          ← Back to menu
+        </button>
+
+        <div className="jr-cart-empty">
+
+          <div className="jr-cart-empty-icon">
+            🛒
+          </div>
+
+          <span className="jr-eyebrow">
+            YOUR ORDER
+          </span>
+
+          <h1>
+            Your cart is
+            <br />
+            <em>empty.</em>
+          </h1>
+
+          <p>
+            Pick something fresh from the menu
+            and add it to your order.
+          </p>
+
+          <button
+            type="button"
+            className="jr-cart-primary-button"
+            onClick={onBack}
+          >
+            CONTINUE SHOPPING
+            <span>→</span>
+          </button>
+
+        </div>
+
+      </main>
+    );
+  }
+
+  /* =======================================================
+     CART
+     ======================================================= */
 
   return (
     <main className="jr-content jr-page jr-cart-page">
-      <button type="button" className="jr-cart-back" onClick={onBack}>
+
+      {/* =================================================
+          BACK
+         ================================================= */}
+
+      <button
+        type="button"
+        className="jr-cart-back"
+        onClick={onBack}
+      >
         ← Back to menu
       </button>
 
-      <header className="jr-cart-header">
-        <div>
-          <span className="jr-cart-eyebrow">YOUR ORDER</span>
-          <h1>Your <em>cart.</em></h1>
-          <p>{items.length} {items.length === 1 ? "item" : "items"} ready for checkout.</p>
+
+      {/* =================================================
+          PAGE HEADER
+         ================================================= */}
+
+      <div className="jr-cart-heading">
+
+        <span className="jr-eyebrow">
+          YOUR ORDER
+        </span>
+
+        <h1>
+          Your
+          <br />
+          <em>cart.</em>
+        </h1>
+
+      </div>
+
+
+      {/* =================================================
+          COLLECTION LOCATION
+         ================================================= */}
+
+      <section className="jr-cart-location-card">
+
+        <div className="jr-cart-location-icon">
+          📍
         </div>
-        <div className="jr-cart-header-actions">
-          {items.length > 0 && (
-            <button
-              type="button"
-              className="jr-cart-header-clear"
-              onClick={onClear}
-              aria-label="Clear all items in cart"
-            >
-              Clear cart
-            </button>
+
+        <div className="jr-cart-location-copy">
+
+          <small>
+            COLLECT FROM
+          </small>
+
+          <strong>
+            {location?.name ||
+              "Juice Robo location"}
+          </strong>
+
+          {location?.address && (
+            <span>
+              {location.address}
+            </span>
           )}
-          <div className="jr-cart-header-icon"><CartIcon /></div>
+
+          {machine?.name && (
+            <span>
+              Machine: {machine.name}
+            </span>
+          )}
+
         </div>
-      </header>
 
-      {items.length === 0 ? (
-        <section className="jr-cart-empty">
-          <div className="jr-cart-empty-icon"><CartIcon /></div>
-          <h2>Your cart is empty</h2>
-          <p>Add a fresh juice from the menu to continue.</p>
-          <button type="button" onClick={onBack}>Browse menu</button>
-        </section>
-      ) : (
-        <>
-          <section className="jr-cart-items">
-            <div className="jr-cart-section-title">
-              <span>SELECTED JUICES</span>
-              <strong>{items.length}</strong>
-            </div>
+        <button
+          type="button"
+          className="jr-cart-change-button"
+          onClick={onLocation}
+        >
+          CHANGE
+        </button>
 
-            {items.map((item, index) => {
-              const name = itemName(item, displayProductName);
-              const quantity = itemQuantity(item);
-              const price = itemPrice(item);
-              const lineTotal = itemTotal(item);
-              const image = itemImage(item, productImage, displayProductName);
-              const id =
-                item?.variantId ??
-                item?.variant_id ??
-                item?.productVariantId ??
-                item?.product_variant_id ??
-                item?.itemId ??
-                item?.item_id ??
-                item?.id;
+      </section>
 
-              return (
-                <article className="jr-cart-item" key={id ?? `cart-${index}`}>
-                  <div className="jr-cart-item-image">
-                    {image ? (
-                      <img
-                        src={image}
-                        alt={name}
-                        onError={(event) => {
-                          event.currentTarget.style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <span>J</span>
-                    )}
+
+      {/* =================================================
+          ITEM COUNT
+         ================================================= */}
+
+      <div className="jr-cart-items-header">
+
+        <span>
+          {itemCount}{" "}
+          {itemCount === 1
+            ? "ITEM"
+            : "ITEMS"}
+        </span>
+
+        <button
+          type="button"
+          onClick={onBack}
+        >
+          + Add more
+        </button>
+
+      </div>
+
+
+      {/* =================================================
+          CART ITEMS
+         ================================================= */}
+
+      <section className="jr-cart-items">
+
+        {items.map((item, index) => {
+
+          const price = getPrice(item);
+          const quantity = getQuantity(item);
+          const lineTotal =
+            price * quantity;
+
+          const image = getImage(item);
+          const name = getName(item);
+
+          const variant =
+            item?.variantName ||
+            item?.variant_name ||
+            "";
+
+          return (
+            <article
+              className="jr-cart-item"
+              key={`${item?.id || index}-${variant}`}
+            >
+
+              {/* IMAGE */}
+
+              <div className="jr-cart-item-image">
+
+                {image ? (
+                  <img
+                    src={image}
+                    alt={name}
+                    onError={(event) => {
+                      event.currentTarget.style.display =
+                        "none";
+                    }}
+                  />
+                ) : (
+                  <div className="jr-cart-image-placeholder">
+                    🧃
                   </div>
+                )}
 
-                  <div className="jr-cart-item-main">
-                    <div className="jr-cart-item-head">
-                      <div>
-                        <h2>{name}</h2>
-                        <span>{moneyValue(price, money)} each</span>
-                      </div>
-                      <strong>{moneyValue(lineTotal, money)}</strong>
-                    </div>
-
-                    <div className="jr-cart-item-actions">
-                      <div className="jr-cart-stepper">
-                        <button
-                          type="button"
-                          aria-label={`Decrease ${name}`}
-                          onClick={() => {
-                            if (quantity <= 1) onRemove?.(id);
-                            else onUpdate?.(id, quantity - 1);
-                          }}
-                        >−</button>
-                        <strong>{quantity}</strong>
-                        <button
-                          type="button"
-                          aria-label={`Increase ${name}`}
-                          onClick={() => onUpdate?.(id, quantity + 1)}
-                        >+</button>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="jr-cart-remove"
-                        onClick={() => onRemove?.(id)}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </section>
-
-          <section className="jr-cart-collection">
-            <div className="jr-cart-collection-mark">⌖</div>
-            <div>
-              <span>COLLECT FROM</span>
-              <strong>{locationName(location)}</strong>
-              <small>{machineName(machine)}</small>
-            </div>
-            <button type="button" onClick={onLocation}>Change</button>
-          </section>
-
-          <section className="jr-cart-summary">
-            <div className="jr-cart-summary-head">
-              <span>ORDER SUMMARY</span>
-              <strong>{items.length} {items.length === 1 ? "item" : "items"}</strong>
-            </div>
-
-            <div className="jr-cart-row">
-              <span>Items total</span>
-              <strong>{moneyValue(safeSubtotal, money)}</strong>
-            </div>
-            <div className="jr-cart-row">
-              <span>GST 5%</span>
-              <strong>{moneyValue(safeGst, money)}</strong>
-            </div>
-
-            <div className="jr-cart-divider" />
-
-            <div className="jr-cart-total-row">
-              <div>
-                <span>TOTAL</span>
-                <small>Inclusive of 5% GST</small>
               </div>
-              <strong>{moneyValue(safeFinalTotal, money)}</strong>
-            </div>
-          </section>
 
-          <div className="jr-cart-actions">
-            <button type="button" className="jr-cart-checkout" onClick={onCheckout}>
-              <span>Continue to payment</span>
-              <strong>→</strong>
-            </button>
+
+              {/* INFO */}
+
+              <div className="jr-cart-item-info">
+
+                <span className="jr-cart-item-type">
+                  FRESH JUICE
+                </span>
+
+                <h2>
+                  {name}
+                </h2>
+
+                {variant && (
+                  <span className="jr-cart-item-variant">
+                    {variant}
+                  </span>
+                )}
+
+                <div className="jr-cart-item-bottom">
+
+                  <strong className="jr-cart-item-price">
+                    {formatMoney(price)}
+                  </strong>
+
+
+                  {/* QUANTITY */}
+
+                  <div className="jr-cart-quantity">
+
+                    <button
+                      type="button"
+                      aria-label="Decrease quantity"
+                      onClick={() =>
+                        onUpdate?.(
+                          item.id,
+                          quantity - 1
+                        )
+                      }
+                    >
+                      −
+                    </button>
+
+                    <strong>
+                      {quantity}
+                    </strong>
+
+                    <button
+                      type="button"
+                      aria-label="Increase quantity"
+                      onClick={() =>
+                        onUpdate?.(
+                          item.id,
+                          quantity + 1
+                        )
+                      }
+                    >
+                      +
+                    </button>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              {/* RIGHT SIDE */}
+
+              <div className="jr-cart-item-right">
+
+                <strong>
+                  {formatMoney(lineTotal)}
+                </strong>
+
+                <button
+                  type="button"
+                  className="jr-cart-remove"
+                  onClick={() =>
+                    onRemove?.(item.id)
+                  }
+                  aria-label={`Remove ${name}`}
+                >
+                  ×
+                </button>
+
+              </div>
+
+            </article>
+          );
+        })}
+
+      </section>
+
+
+      {/* =================================================
+          ORDER SUMMARY
+         ================================================= */}
+
+      <section className="jr-cart-summary">
+
+        <div className="jr-cart-summary-heading">
+          <span className="jr-eyebrow">
+            ORDER SUMMARY
+          </span>
+
+          <strong>
+            {itemCount}{" "}
+            {itemCount === 1
+              ? "item"
+              : "items"}
+          </strong>
+        </div>
+
+
+        {/* SUBTOTAL */}
+
+        <div className="jr-summary-row">
+
+          <span>
+            Subtotal
+          </span>
+
+          <strong>
+            {formatMoney(subtotal)}
+          </strong>
+
+        </div>
+
+
+        {/* GST */}
+
+        <div className="jr-summary-row">
+
+          <span>
+            GST
+            <small>
+              {" "}12%
+            </small>
+          </span>
+
+          <strong>
+            {formatMoney(gst)}
+          </strong>
+
+        </div>
+
+
+        <div className="jr-summary-divider" />
+
+
+        {/* TOTAL */}
+
+        <div className="jr-summary-total">
+
+          <div>
+            <span>
+              TOTAL
+            </span>
+
+            <small>
+              Inclusive of 12% GST
+            </small>
           </div>
-        </>
-      )}
+
+          <strong>
+            {formatMoney(grandTotal)}
+          </strong>
+
+        </div>
+
+
+        {/* CHECKOUT */}
+
+        <button
+          type="button"
+          className="jr-cart-checkout"
+          onClick={onCheckout}
+        >
+          <span>
+            PROCEED TO PAYMENT
+          </span>
+
+          <b>
+            →
+          </b>
+        </button>
+
+      </section>
+
     </main>
   );
 }
