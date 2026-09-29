@@ -1,0 +1,2114 @@
+/* =========================================================
+   JUICE ROBO — MENU SCREEN
+   FULL RESPONSIVE MENU CSS
+
+   IMPORTANT:
+   - Menu layout is fluid.
+   - No viewport width is used by JavaScript for device detection.
+   - Header compatibility styles are included because the Header
+     component is rendered immediately above MenuScreen.
+   ========================================================= */
+
+/* =========================================================
+   GLOBAL MENU / HEADER SAFETY
+   ========================================================= */
+
+.jr-menu-page,
+.jr-menu-page *,
+.jr-header,
+.jr-header * {
+  box-sizing: border-box;
+}
+
+.jr-menu-page {
+  --jr-page-x: clamp(8px, 3.2vw, 18px);
+  --jr-gap: clamp(8px, 2.5vw, 14px);
+  --jr-radius: clamp(12px, 3.5vw, 20px);
+
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 100%;
+  margin: 0;
+
+  padding:
+    clamp(10px, 3vw, 20px)
+    var(--jr-page-x)
+    calc(clamp(18px, 4vw, 28px) + env(safe-area-inset-bottom, 0px));
+
+  background: #fbfaf3;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* =========================================================
+   HEADER COMPATIBILITY
+   Fixes the header appearing as unstyled/native text.
+   These classes match the Header JSX used by App.jsx.
+   ========================================================= */
+
+.jr-header {
+  position: relative;
+  z-index: 1000;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+  padding: 7px 10px;
+
+  background: #ffffff;
+  border-bottom: 1px solid #eeeeee;
+
+  overflow: visible;
+}
+
+.jr-header-location {
+  min-width: 0;
+  flex: 1 1 auto;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+  padding: 0;
+  margin: 0;
+
+  border: 0;
+  background: transparent;
+  color: #151515;
+
+  text-align: left;
+  font: inherit;
+
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.jr-header-location:hover,
+.jr-header-location:active {
+  background: transparent;
+}
+
+.jr-header-location:focus {
+  outline: none;
+}
+
+.jr-header-location:focus-visible {
+  outline: 2px solid #f07800;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.jr-location-pin {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+
+  flex: 0 0 30px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #dcebdd;
+  border-radius: 50%;
+
+  background: #edf7ed;
+  color: #287f46;
+
+  font-size: 9px;
+  line-height: 1;
+}
+
+.jr-header-location-copy {
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  gap: 1px;
+
+  overflow: hidden;
+}
+
+.jr-header-location-copy small {
+  display: block;
+
+  min-width: 0;
+  max-width: 100%;
+
+  margin: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #999999;
+
+  font-size: 6.5px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.jr-header-location-copy strong {
+  display: block;
+
+  min-width: 0;
+  max-width: 100%;
+
+  margin: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #151515;
+
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 850;
+}
+
+.jr-header-location-copy span {
+  display: block;
+
+  min-width: 0;
+  max-width: 100%;
+
+  margin: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #888888;
+
+  font-size: 7px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.jr-header-chevron {
+  flex: 0 0 auto;
+
+  width: 14px;
+  min-width: 14px;
+
+  display: grid;
+  place-items: center;
+
+  margin-left: 2px;
+
+  color: #777777;
+
+  font-size: 14px;
+  line-height: 1;
+}
+
+.jr-header-actions {
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+.jr-profile-button,
+.jr-cart-button {
+  position: relative;
+
+  flex: 0 0 34px;
+
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+
+  padding: 0;
+  margin: 0;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #eeeae3;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #287f46;
+
+  box-shadow: 0 3px 10px rgba(30, 25, 45, 0.07);
+
+  font: inherit;
+  line-height: 1;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jr-profile-button:hover,
+.jr-cart-button:hover {
+  background: #fbfdf9;
+  border-color: #dfe9df;
+  color: #176a39;
+}
+
+.jr-profile-button:active,
+.jr-cart-button:active {
+  transform: scale(0.94);
+}
+
+.jr-profile-button:focus,
+.jr-cart-button:focus {
+  outline: none;
+}
+
+.jr-profile-button:focus-visible,
+.jr-cart-button:focus-visible {
+  outline: 2px solid #f07800;
+  outline-offset: 2px;
+}
+
+.jr-header-action-icon {
+  width: 18px;
+  height: 18px;
+
+  display: block;
+  flex: 0 0 auto;
+}
+
+.jr-cart-badge {
+  position: absolute;
+
+  top: -5px;
+  right: -5px;
+
+  min-width: 16px;
+  height: 16px;
+
+  padding: 0 4px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+
+  background: #f07800;
+  color: #ffffff;
+
+  font-size: 7px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+/* =========================================================
+   WELCOME
+   ========================================================= */
+
+.jr-menu-welcome {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+
+  gap: clamp(8px, 3vw, 18px);
+
+  padding: clamp(14px, 4vw, 25px);
+  margin: 0 0 clamp(9px, 2.8vw, 14px);
+
+  border-radius: var(--jr-radius);
+
+  background:
+    linear-gradient(
+      135deg,
+      #edf7e9 0%,
+      #f5f8e9 55%,
+      #fff8e9 100%
+    );
+
+  position: relative;
+  overflow: hidden;
+}
+
+.jr-menu-welcome::after {
+  content: "";
+
+  position: absolute;
+
+  width: clamp(90px, 24vw, 155px);
+  aspect-ratio: 1;
+
+  right: clamp(-70px, -8vw, -35px);
+  top: clamp(-70px, -10vw, -35px);
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.38);
+
+  pointer-events: none;
+}
+
+.jr-welcome-copy {
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.jr-welcome-copy .jr-eyebrow,
+.jr-menu-page > .jr-eyebrow,
+.jr-section-heading .jr-eyebrow {
+  display: block;
+
+  margin: 0;
+
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.jr-welcome-copy .jr-eyebrow {
+  margin-bottom: clamp(5px, 1.5vw, 8px);
+
+  color: #2d7d4d;
+  font-size: clamp(7px, 2vw, 10px);
+}
+
+.jr-welcome-copy h1 {
+  margin: 0;
+
+  color: #153123;
+
+  font-size: clamp(22px, 7vw, 38px);
+  line-height: 0.97;
+  font-weight: 950;
+  letter-spacing: clamp(-1.1px, -0.25vw, -0.5px);
+
+  overflow-wrap: anywhere;
+}
+
+.jr-welcome-copy h1 em {
+  color: #2e7e4b;
+  font-style: italic;
+  font-weight: 950;
+}
+
+.jr-welcome-copy p {
+  width: 100%;
+  max-width: 40ch;
+
+  margin: clamp(7px, 2vw, 11px) 0 0;
+
+  color: #6f776f;
+
+  font-size: clamp(8px, 2.35vw, 12px);
+  line-height: 1.42;
+  font-weight: 500;
+}
+
+.jr-welcome-icon {
+  width: clamp(44px, 14vw, 78px);
+  min-width: clamp(44px, 14vw, 78px);
+  aspect-ratio: 1;
+
+  display: grid;
+  place-items: center;
+
+  position: relative;
+  z-index: 1;
+
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.66);
+
+  box-shadow: 0 7px 22px rgba(54, 91, 57, 0.08);
+
+  font-size: clamp(21px, 7vw, 40px);
+  line-height: 1;
+}
+
+/* =========================================================
+   SELECTED COLLECTION POINT
+   ========================================================= */
+
+.jr-selected-machine-banner {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+
+  gap: clamp(7px, 2.5vw, 11px);
+
+  padding: clamp(7px, 2.2vw, 10px);
+  margin: 0 0 clamp(12px, 3.5vw, 18px);
+
+  border: 1px solid #e2e8df;
+  border-radius: clamp(10px, 3vw, 15px);
+
+  background: #ffffff;
+
+  box-shadow: 0 4px 13px rgba(36, 61, 41, 0.035);
+
+  color: inherit;
+  text-align: left;
+}
+
+.jr-selected-machine-icon {
+  width: clamp(30px, 9vw, 38px);
+  min-width: clamp(30px, 9vw, 38px);
+  aspect-ratio: 1;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: clamp(8px, 2.5vw, 11px);
+
+  background: #eef7ed;
+  color: #2f8150;
+
+  font-size: clamp(12px, 4vw, 17px);
+}
+
+.jr-selected-machine-copy {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.jr-selected-machine-copy small,
+.jr-selected-machine-copy strong,
+.jr-selected-machine-copy span {
+  min-width: 0;
+  max-width: 100%;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jr-selected-machine-copy small {
+  color: #919991;
+
+  font-size: clamp(6px, 1.7vw, 9px);
+  line-height: 1.1;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.jr-selected-machine-copy strong {
+  color: #24342b;
+
+  font-size: clamp(9px, 2.8vw, 13px);
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.jr-selected-machine-copy span {
+  color: #7f8780;
+
+  font-size: clamp(7px, 2.1vw, 10px);
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+/* =========================================================
+   SECTION HEADING
+   ========================================================= */
+
+.jr-menu-section {
+  width: 100%;
+  min-width: 0;
+}
+
+.jr-section-heading {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+
+  gap: 8px;
+}
+
+.jr-section-heading > div {
+  min-width: 0;
+}
+
+.jr-section-heading .jr-eyebrow {
+  margin-bottom: clamp(3px, 1vw, 6px);
+
+  color: #ee7900;
+  font-size: clamp(6px, 1.8vw, 9px);
+}
+
+.jr-section-heading h2 {
+  margin: 0;
+
+  color: #202b24;
+
+  font-size: clamp(17px, 5.5vw, 26px);
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: clamp(-0.7px, -0.2vw, -0.3px);
+
+  overflow-wrap: anywhere;
+}
+
+.jr-count {
+  width: clamp(25px, 7.5vw, 34px);
+  min-width: clamp(25px, 7.5vw, 34px);
+  aspect-ratio: 1;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #edf7ec;
+  color: #2e7e4b;
+
+  font-size: clamp(8px, 2.5vw, 12px);
+  line-height: 1;
+  font-weight: 900;
+}
+
+.jr-section-subtitle {
+  width: 100%;
+
+  margin:
+    clamp(5px, 1.7vw, 8px)
+    0
+    clamp(9px, 2.8vw, 14px);
+
+  color: #8a918b;
+
+  font-size: clamp(8px, 2.25vw, 11px);
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+/* =========================================================
+   PRODUCT GRID
+   ========================================================= */
+
+/* =========================================================
+   PRODUCT GRID (FOOD DELIVERY LAYOUT)
+   ========================================================= */
+
+.jr-products {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr));
+  gap: clamp(14px, 3.2vw, 24px);
+  align-items: stretch;
+}
+
+/* =========================================================
+   PRODUCT CARD (FOOD DELIVERY STYLE)
+   ========================================================= */
+
+.jr-product-card,
+.jr-food-card {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 0;
+  margin: 0;
+
+  border: 1.5px solid #e7ebe7;
+  border-radius: clamp(14px, 3.5vw, 20px);
+
+  background: #ffffff;
+  color: #1f271f;
+
+  font-family: inherit;
+  text-align: left;
+  outline: none;
+
+  overflow: hidden;
+
+  box-shadow: 0 4px 18px rgba(32, 55, 38, 0.05);
+
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease,
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.jr-product-card:hover,
+.jr-food-card:hover {
+  border-color: #bcd9c1;
+  box-shadow: 0 10px 28px rgba(32, 55, 38, 0.09);
+  transform: translateY(-2px);
+}
+
+.jr-product-card:active,
+.jr-food-card:active {
+  transform: translateY(0);
+}
+
+.jr-product-card-in-cart,
+.jr-food-card--selected {
+  border-color: #287f46;
+  box-shadow: 0 6px 20px rgba(40, 127, 70, 0.12);
+}
+
+.jr-product-card-unavailable,
+.jr-food-card--unavailable {
+  opacity: 0.72;
+}
+
+/* =========================================================
+   1. PRODUCT MEDIA / IMAGE
+   ========================================================= */
+
+.jr-product-image-wrap,
+.jr-food-card__media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  min-height: 160px;
+  max-height: 220px;
+  min-width: 0;
+
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  background: linear-gradient(135deg, #f5f9f4 0%, #edf6ee 100%);
+  border-bottom: 1px solid #f0f4ef;
+  overflow: hidden;
+}
+
+.jr-product-image,
+.jr-food-card__image {
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  display: block;
+
+  object-fit: cover;
+  object-position: center;
+
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.jr-product-card:hover .jr-product-image,
+.jr-food-card:hover .jr-food-card__image {
+  transform: scale(1.04);
+}
+
+.jr-product-image-placeholder,
+.jr-food-card__placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #287f46;
+}
+
+.jr-fallback-juice-icon {
+  width: clamp(40px, 12vw, 56px);
+  height: clamp(40px, 12vw, 56px);
+}
+
+/* Badges */
+.jr-food-card__badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.jr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.jr-badge--fresh,
+.jr-fresh-badge {
+  background: rgba(255, 255, 255, 0.94);
+  color: #287f46;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.jr-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #287f46;
+  display: inline-block;
+}
+
+.jr-badge--soldout {
+  background: rgba(220, 53, 69, 0.92);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================================================
+   2. PRODUCT INFORMATION
+   ========================================================= */
+
+.jr-product-info,
+.jr-food-card__content {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
+  padding: clamp(12px, 3vw, 16px);
+  gap: 8px;
+}
+
+/* Header row: Name on left, ADD / counter on right */
+.jr-food-card__header-row {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jr-product-main,
+.jr-food-card__title-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.jr-food-card__title,
+.jr-product-info h3 {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+
+  color: #1a241b;
+  font-size: clamp(14.5px, 3.2vw, 17px);
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+
+  word-break: break-word;
+}
+
+/* Action button area */
+.jr-food-card__action-wrap {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+/* =========================================================
+   ADD BUTTON (ZOMATO-STYLE, JUICE ROBO GREEN)
+   ========================================================= */
+
+.jr-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 84px;
+  height: 35px;
+  padding: 0 16px;
+
+  border: 1.5px solid #287f46;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #287f46;
+
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  box-shadow: 0 2px 6px rgba(40, 127, 70, 0.12);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
+}
+
+.jr-add-btn:hover:not(:disabled) {
+  background: #287f46;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(40, 127, 70, 0.25);
+  transform: translateY(-1px);
+}
+
+.jr-add-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.jr-add-btn:focus-visible {
+  outline: 2px solid #287f46;
+  outline-offset: 2px;
+}
+
+.jr-add-btn--disabled {
+  border-color: #d8ded8;
+  color: #9aa49a;
+  background: #f4f6f4;
+  cursor: not-allowed;
+  box-shadow: none;
+  font-size: 11px;
+}
+
+/* =========================================================
+   QUANTITY COUNTER: [-] {qty} [+]
+   ========================================================= */
+
+.jr-qty-counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+
+  min-width: 90px;
+  height: 35px;
+
+  border-radius: 9px;
+  background: #287f46;
+  color: #ffffff;
+
+  box-shadow: 0 3px 10px rgba(40, 127, 70, 0.26);
+  overflow: hidden;
+  user-select: none;
+}
+
+.jr-qty-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+
+  border: none;
+  background: transparent;
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1;
+
+  cursor: pointer;
+  outline: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: background-color 0.14s ease;
+}
+
+.jr-qty-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.jr-qty-btn:active {
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.jr-qty-value {
+  flex: 1 1 auto;
+  min-width: 22px;
+
+  text-align: center;
+  color: #ffffff;
+
+  font-size: 13.5px;
+  font-weight: 850;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+   DESCRIPTION
+   ========================================================= */
+
+.jr-food-card__desc,
+.jr-product-info p {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+
+  color: #647065;
+  font-size: clamp(11.5px, 2.4vw, 13px);
+  line-height: 1.45;
+  font-weight: 450;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   PRICE ROW
+   ========================================================= */
+
+.jr-product-bottom,
+.jr-food-card__price-row {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.jr-food-card__price-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.jr-product-price,
+.jr-food-card__price {
+  min-width: 0;
+  color: #162418;
+
+  font-size: clamp(16px, 3.4vw, 19px);
+  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.jr-food-card__tax-info {
+  color: #828e83;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* =========================================================
+   EMPTY / LOADING STATE
+   ========================================================= */
+
+.jr-products-empty {
+  grid-column: 1 / -1;
+
+  width: 100%;
+  min-width: 0;
+  min-height: clamp(150px, 45vw, 220px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: clamp(18px, 6vw, 30px);
+
+  border: 1px dashed #dfe3db;
+  border-radius: clamp(12px, 3vw, 16px);
+
+  background: #ffffff;
+
+  text-align: center;
+}
+
+.jr-products-empty > span {
+  font-size: clamp(28px, 9vw, 40px);
+  line-height: 1;
+}
+
+.jr-products-empty strong {
+  color: #29362e;
+
+  font-size: clamp(11px, 3vw, 14px);
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.jr-products-empty p {
+  width: min(100%, 32ch);
+
+  margin: 0;
+
+  color: #929991;
+
+  font-size: clamp(8px, 2.2vw, 10px);
+  line-height: 1.4;
+}
+
+/* =========================================================
+   VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 359px) {
+  .jr-menu-page {
+    --jr-page-x: 7px;
+    --jr-gap: 7px;
+  }
+
+  .jr-header {
+    padding: 6px 8px;
+  }
+
+  .jr-location-pin {
+    width: 29px;
+    height: 29px;
+    min-width: 29px;
+    flex-basis: 29px;
+  }
+
+  .jr-header-location-copy strong {
+    font-size: 9px;
+  }
+
+  .jr-header-location-copy span {
+    font-size: 6.5px;
+  }
+
+  .jr-profile-button,
+  .jr-cart-button {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    flex-basis: 32px;
+    border-radius: 9px;
+  }
+
+  .jr-menu-welcome {
+    gap: 7px;
+    padding: 12px;
+  }
+
+  .jr-welcome-copy h1 {
+    font-size: clamp(20px, 7vw, 24px);
+  }
+
+  .jr-welcome-copy p {
+    font-size: 7.5px;
+  }
+
+  .jr-welcome-icon {
+    width: 43px;
+    min-width: 43px;
+    font-size: 20px;
+  }
+
+  .jr-products {
+    grid-template-columns: 1fr;
+  }
+
+  .jr-product-info {
+    padding: 10px 12px;
+  }
+
+  .jr-food-card__title,
+  .jr-product-info h3 {
+    font-size: 14px;
+  }
+
+  .jr-food-card__desc,
+  .jr-product-info p {
+    font-size: 11.5px;
+  }
+
+  .jr-add-btn {
+    min-width: 76px;
+    height: 33px;
+    font-size: 12px;
+  }
+
+  .jr-qty-counter {
+    min-width: 82px;
+    height: 33px;
+  }
+
+  .jr-product-price,
+  .jr-food-card__price {
+    font-size: 15px;
+  }
+}
+
+/* =========================================================
+   WIDER PHONES
+   ========================================================= */
+
+@media (min-width: 430px) and (max-width: 599px) {
+  .jr-products {
+    gap: clamp(12px, 3vw, 16px);
+  }
+
+  .jr-product-image-wrap {
+    aspect-ratio: 16 / 10;
+  }
+
+  .jr-food-card__title,
+  .jr-product-info h3 {
+    font-size: 16px;
+  }
+
+  .jr-food-card__desc,
+  .jr-product-info p {
+    font-size: 12.5px;
+  }
+}
+
+/* =========================================================
+   SHORT PORTRAIT PHONES
+   ========================================================= */
+
+@media (orientation: portrait) and (max-height: 700px) {
+  .jr-menu-page {
+    padding-top: 8px;
+  }
+
+  .jr-menu-welcome {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .jr-welcome-copy p {
+    margin-top: 6px;
+  }
+
+  .jr-selected-machine-banner {
+    margin-bottom: 10px;
+  }
+
+  .jr-section-subtitle {
+    margin-bottom: 9px;
+  }
+
+  .jr-product-image-wrap {
+    aspect-ratio: 1.28 / 1;
+  }
+}
+
+/* =========================================================
+   LANDSCAPE SMARTPHONES
+   ========================================================= */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .jr-menu-page {
+    padding-top: 7px;
+    padding-bottom: 12px;
+  }
+
+  .jr-menu-welcome {
+    padding-top: 9px;
+    padding-bottom: 9px;
+    margin-bottom: 7px;
+  }
+
+  .jr-welcome-copy h1 {
+    font-size: clamp(19px, 5vw, 29px);
+  }
+
+  .jr-welcome-copy p {
+    margin-top: 5px;
+    font-size: clamp(7px, 1.7vw, 9px);
+  }
+
+  .jr-welcome-icon {
+    width: clamp(38px, 10vw, 54px);
+    min-width: clamp(38px, 10vw, 54px);
+    font-size: clamp(18px, 5vw, 27px);
+  }
+
+  .jr-selected-machine-banner {
+    margin-bottom: 7px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .jr-section-subtitle {
+    margin-top: 3px;
+    margin-bottom: 6px;
+  }
+
+  .jr-product-image-wrap {
+    aspect-ratio: 1.35 / 1;
+  }
+
+  .jr-product-info {
+    padding-top: 5px;
+    padding-bottom: 6px;
+  }
+
+  .jr-product-info p {
+    margin-top: 2px;
+    margin-bottom: 4px;
+  }
+}
+
+/* =========================================================
+   SAFE AREA
+   ========================================================= */
+
+@supports (padding: max(0px)) {
+  .jr-menu-page {
+    padding-left: max(
+      var(--jr-page-x),
+      env(safe-area-inset-left, 0px)
+    );
+
+    padding-right: max(
+      var(--jr-page-x),
+      env(safe-area-inset-right, 0px)
+    );
+
+    padding-bottom: max(
+      clamp(18px, 4vw, 28px),
+      env(safe-area-inset-bottom, 0px)
+    );
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY / MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .jr-product-card,
+  .jr-product-image,
+  .jr-quantity-control,
+  .jr-quantity-button,
+  .jr-profile-button,
+  .jr-cart-button {
+    transition: none !important;
+  }
+}
+
+
+/* =========================================================
+   FINAL LANDSCAPE PRODUCT CARD FIX
+   ---------------------------------------------------------
+   Keep product cards compact in phone landscape mode.
+   Four products fit cleanly across wider landscape
+   viewports without oversized cards or vertical overflow.
+   ========================================================= */
+
+@media screen and (orientation: landscape) and (max-height: 600px) {
+
+  .jr-menu-page {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    padding-top: 7px;
+    padding-bottom: 10px;
+  }
+
+  .jr-products {
+    width: 100%;
+    min-width: 0;
+
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+
+    align-items: stretch;
+  }
+
+  .jr-product-card {
+    min-width: 0;
+    width: 100%;
+
+    border-radius: 12px;
+
+    box-shadow: 0 3px 10px rgba(32, 55, 38, 0.045);
+  }
+
+  .jr-product-image-wrap {
+    width: 100%;
+    aspect-ratio: 1.45 / 1;
+
+    padding: 5px;
+  }
+
+  .jr-product-info {
+    min-width: 0;
+
+    padding:
+      6px
+      7px
+      7px;
+  }
+
+  .jr-product-info h3 {
+    font-size: clamp(10px, 1.8vw, 13px);
+    line-height: 1.1;
+  }
+
+  .jr-product-info p {
+    margin-top: 2px;
+    margin-bottom: 4px;
+
+    font-size: clamp(7px, 1.35vw, 9px);
+    line-height: 1.25;
+
+    -webkit-line-clamp: 2;
+  }
+
+  .jr-product-footer {
+    min-height: 26px;
+    gap: 5px;
+  }
+
+  .jr-product-price {
+    font-size: clamp(10px, 1.8vw, 14px);
+  }
+
+  .jr-quantity-control {
+    width: 62px;
+    min-width: 62px;
+    max-width: 62px;
+
+    height: 25px;
+  }
+
+  .jr-quantity-button {
+    font-size: 12px;
+  }
+
+  .jr-quantity-value {
+    min-width: 18px;
+    font-size: 9px;
+  }
+
+  .jr-fresh-badge {
+    left: 5px;
+    top: 5px;
+
+    padding: 3px 5px;
+
+    font-size: 6px;
+  }
+}
+
+/* Narrow landscape phones: three columns gives the cards
+   enough horizontal space for readable names and controls. */
+@media screen and (orientation: landscape)
+  and (max-height: 600px)
+  and (max-width: 700px) {
+
+  .jr-products {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .jr-product-image-wrap {
+    aspect-ratio: 1.35 / 1;
+  }
+
+  .jr-product-info h3 {
+    font-size: 10px;
+  }
+
+  .jr-product-info p {
+    font-size: 7px;
+  }
+
+  .jr-product-price {
+    font-size: 10px;
+  }
+
+  .jr-quantity-control {
+    width: 58px;
+    min-width: 58px;
+    max-width: 58px;
+    height: 24px;
+  }
+}
+
+/* Very wide landscape: prevent cards from becoming
+   excessively wide. */
+@media screen and (orientation: landscape)
+  and (min-width: 1000px)
+  and (max-height: 700px) {
+
+  .jr-products {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .jr-product-card {
+    max-width: 260px;
+    justify-self: center;
+  }
+}
+
+/* =========================================================
+   PERMANENT JSX CLASS COMPATIBILITY FIX
+   ---------------------------------------------------------
+   MenuScreen.jsx uses these exact classes:
+     jr-category-nav
+     jr-category-pills
+     jr-category-pill
+     jr-category-pill-count
+     jr-product-bottom
+     jr-product-quantity
+     jr-quantity-minus
+     jr-quantity-plus
+
+   These rules intentionally use the JSX class names instead
+   of the older jr-product-footer / jr-quantity-control names.
+   ========================================================= */
+
+.jr-menu-page .jr-category-nav {
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.jr-menu-page .jr-category-nav::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.jr-menu-page .jr-category-pills {
+  width: max-content;
+  min-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jr-menu-page .jr-category-pill {
+  flex: 0 0 auto;
+  min-width: 0;
+  height: 29px;
+  min-height: 29px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid #dfe4dc;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #4f584f;
+  font-family: inherit;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 2px 7px rgba(32, 55, 38, .035);
+  transition: background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
+}
+
+.jr-menu-page .jr-category-pill:hover {
+  border-color: #cbd9cd;
+  background: #f6faf5;
+}
+
+.jr-menu-page .jr-category-pill:active {
+  transform: scale(.97);
+}
+
+.jr-menu-page .jr-category-pill.is-active {
+  border-color: #2f8050;
+  background: #2f8050;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(47, 128, 80, .16);
+}
+
+.jr-menu-page .jr-category-pill-count {
+  min-width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #edf5eb;
+  color: #2f8050;
+  font-size: 7px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.jr-menu-page .jr-category-pill.is-active .jr-category-pill-count {
+  background: rgba(255, 255, 255, .20);
+  color: #ffffff;
+}
+
+.jr-menu-page .jr-category-reset-btn {
+  height: 34px;
+  min-height: 34px;
+  margin-top: 4px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 999px;
+  background: #2f8050;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Exact JSX footer class */
+.jr-menu-page .jr-product-bottom {
+  width: 100%;
+  min-width: 0;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  margin: auto 0 0;
+  padding: 0;
+}
+
+/* Exact JSX quantity class */
+.jr-menu-page .jr-product-quantity {
+  flex: 0 0 auto;
+  width: 64px;
+  min-width: 64px;
+  height: 27px;
+  min-height: 27px;
+  display: grid;
+  grid-template-columns: 1fr 22px 1fr;
+  align-items: center;
+  padding: 2px;
+  border: 1px solid #c9dfcc;
+  border-radius: 999px;
+  background: #f2f9f1;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.jr-menu-page .jr-product-quantity button {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 21px;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #2f8050;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 900;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jr-menu-page .jr-product-quantity button:hover:not(:disabled) {
+  background: rgba(47, 128, 80, .10);
+}
+
+.jr-menu-page .jr-product-quantity button:active:not(:disabled) {
+  transform: scale(.88);
+}
+
+.jr-menu-page .jr-product-quantity button:disabled {
+  color: #aeb9af;
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.jr-menu-page .jr-product-quantity strong {
+  width: 22px;
+  min-width: 22px;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  color: #245f39;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Landscape: match the 829 × 440 type of viewport in the screenshot. */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  .jr-menu-page .jr-category-nav {
+    margin-bottom: 7px;
+  }
+
+  .jr-menu-page .jr-category-pills {
+    gap: 5px;
+  }
+
+  .jr-menu-page .jr-category-pill {
+    height: 26px;
+    min-height: 26px;
+    padding: 0 9px;
+    font-size: 8px;
+  }
+
+  .jr-menu-page .jr-category-pill-count {
+    min-width: 13px;
+    height: 13px;
+    font-size: 6px;
+  }
+
+  .jr-menu-page .jr-product-bottom {
+    min-height: 25px;
+    gap: 4px;
+  }
+
+  .jr-menu-page .jr-product-quantity {
+    width: 60px;
+    min-width: 60px;
+    height: 24px;
+    min-height: 24px;
+    grid-template-columns: 1fr 20px 1fr;
+    padding: 1px;
+  }
+
+  .jr-menu-page .jr-product-quantity strong {
+    width: 20px;
+    min-width: 20px;
+    font-size: 9px;
+  }
+
+  .jr-menu-page .jr-product-quantity button {
+    min-height: 20px;
+    font-size: 13px;
+  }
+}
+
+/* Very narrow landscape phones */
+@media screen and (orientation: landscape) and (max-height: 600px) and (max-width: 700px) {
+  .jr-menu-page .jr-product-bottom {
+    gap: 3px;
+  }
+
+  .jr-menu-page .jr-product-quantity {
+    width: 56px;
+    min-width: 56px;
+    height: 23px;
+    min-height: 23px;
+    grid-template-columns: 1fr 19px 1fr;
+  }
+
+  .jr-menu-page .jr-product-quantity strong {
+    width: 19px;
+    min-width: 19px;
+    font-size: 8px;
+  }
+
+  .jr-menu-page .jr-product-quantity button {
+    font-size: 12px;
+  }
+}
+
+/* Keep the real JSX footer/quantity classes responsive in portrait too. */
+@media screen and (max-width: 430px) {
+  .jr-menu-page .jr-product-bottom {
+    gap: 4px;
+  }
+
+  .jr-menu-page .jr-product-quantity {
+    width: 62px;
+    min-width: 62px;
+    height: 26px;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .jr-menu-page .jr-category-pill {
+    height: 27px;
+    min-height: 27px;
+    padding: 0 8px;
+    font-size: 8px;
+  }
+
+  .jr-menu-page .jr-product-quantity {
+    width: 56px;
+    min-width: 56px;
+    height: 24px;
+  }
+}
+
+
+/* =========================================================
+   FINAL JUICE ROBO LAYOUT
+   Bottom navigation + zero dead scroll space
+   ========================================================= */
+
+/*
+ * The content area and bottom navigation are siblings in the
+ * app viewport. The navigation is part of the layout instead
+ * of overlaying the page with position: fixed.
+ */
+.jr-screen-container {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Menu is the only scrolling region. */
+.jr-screen-container .jr-menu-page {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+
+  margin: 0 !important;
+
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+
+  /*
+   * No artificial bottom clearance.
+   * The navigation consumes its own layout height below.
+   */
+  padding-bottom: 12px !important;
+
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  box-sizing: border-box !important;
+}
+
+.jr-screen-container .jr-menu-page::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Cart uses the same single-scroll-region model. */
+.jr-screen-container .jr-cart-page {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+
+  margin: 0 !important;
+
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+
+  padding-bottom: 12px !important;
+
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  box-sizing: border-box !important;
+}
+
+.jr-screen-container .jr-cart-page::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* =========================================================
+   BOTTOM NAV — COMPLETE REWRITE
+   ========================================================= */
+
+.jr-screen-container .jr-bottom-nav {
+  position: relative !important;
+  inset: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  top: auto !important;
+  transform: none !important;
+
+  flex: 0 0 60px !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 60px !important;
+  min-height: 60px !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+
+  margin: 0 !important;
+  padding: 4px 8px !important;
+
+  box-sizing: border-box !important;
+  overflow: visible !important;
+
+  background: #ffffff !important;
+  border-top: 1px solid #e6e6e0 !important;
+  box-shadow: 0 -2px 10px rgba(20, 35, 25, 0.06) !important;
+
+  z-index: 20 !important;
+}
+
+/* Each navigation item occupies exactly half the bar. */
+.jr-screen-container .jr-bottom-nav > button {
+  width: 100% !important;
+  height: 52px !important;
+  min-height: 52px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  display: grid !important;
+  grid-template-rows: 24px 13px !important;
+  align-content: center !important;
+  justify-items: center !important;
+  align-items: center !important;
+  row-gap: 2px !important;
+
+  border: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Icon container */
+.jr-screen-container .jr-bottom-nav > button > span,
+.jr-screen-container .jr-bottom-nav .jr-nav-cart-icon {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  position: relative !important;
+  align-self: center !important;
+  justify-self: center !important;
+
+  line-height: 1 !important;
+}
+
+/* SVG icons */
+.jr-screen-container .jr-bottom-nav > button > span svg,
+.jr-screen-container .jr-bottom-nav .jr-nav-cart-icon svg {
+  width: 21px !important;
+  height: 21px !important;
+
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Labels */
+.jr-screen-container .jr-bottom-nav > button small {
+  width: auto !important;
+  height: 13px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  display: block !important;
+
+  font-size: 9px !important;
+  line-height: 13px !important;
+  font-weight: 700 !important;
+
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+/* Cart badge */
+.jr-screen-container .jr-nav-cart-badge {
+  position: absolute !important;
+  top: -3px !important;
+  right: -5px !important;
+
+  min-width: 14px !important;
+  height: 14px !important;
+  padding: 0 3px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  border-radius: 999px !important;
+  box-sizing: border-box !important;
+
+  font-size: 8px !important;
+  line-height: 14px !important;
+}
+
+/* =========================================================
+   LANDSCAPE — COMPACT NAV
+   ========================================================= */
+
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  .jr-screen-container .jr-bottom-nav {
+    flex-basis: 52px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+
+    padding: 2px 8px !important;
+  }
+
+  .jr-screen-container .jr-bottom-nav > button {
+    height: 48px !important;
+    min-height: 48px !important;
+
+    grid-template-rows: 21px 10px !important;
+    row-gap: 1px !important;
+  }
+
+  .jr-screen-container .jr-bottom-nav > button > span,
+  .jr-screen-container .jr-bottom-nav .jr-nav-cart-icon {
+    width: 21px !important;
+    height: 21px !important;
+    min-width: 21px !important;
+    min-height: 21px !important;
+  }
+
+  .jr-screen-container .jr-bottom-nav > button > span svg,
+  .jr-screen-container .jr-bottom-nav .jr-nav-cart-icon svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .jr-screen-container .jr-bottom-nav > button small {
+    height: 10px !important;
+    font-size: 8px !important;
+    line-height: 10px !important;
+  }
+
+  .jr-screen-container .jr-menu-page,
+  .jr-screen-container .jr-cart-page {
+    padding-bottom: 8px !important;
+  }
+}
+
+/* =========================================================
+   VERY SHORT LANDSCAPE
+   ========================================================= */
+
+@media screen and (orientation: landscape) and (max-height: 420px) {
+  .jr-screen-container .jr-bottom-nav {
+    flex-basis: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+  }
+
+  .jr-screen-container .jr-bottom-nav > button {
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .jr-screen-container .jr-menu-page,
+  .jr-screen-container .jr-cart-page {
+    padding-bottom: 5px !important;
+  }
+}
+
+/* =========================================================
+   REMOVE LEGACY BOTTOM CLEARANCE
+   ========================================================= */
+
+.jr-screen-container .jr-menu-page,
+.jr-screen-container .jr-cart-page {
+  scroll-padding-bottom: 0 !important;
+}
+
+/* Prevent the document itself from becoming a second scroll area. */
+html,
+body,
+#root {
+  max-width: 100%;
+  min-height: 100%;
+}
+
+body {
+  overflow: hidden !important;
+}

@@ -1,0 +1,1419 @@
+/* =========================================================
+   JUICE ROBO — CONFIRMATION SCREEN
+   RESPONSIVE PORTRAIT + LANDSCAPE
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.jr-confirmation-page {
+  width: 100%;
+  min-height: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding:
+    16px
+    10px
+    88px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  background: #fbfaf3;
+
+  color: #171717;
+
+  font-family:
+    Inter,
+    Poppins,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.jr-confirmation-page::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* =========================================================
+   SUCCESS ICON
+   ========================================================= */
+
+.jr-confirmation-success-icon {
+  width: clamp(55px, 15vw, 66px);
+  height: clamp(55px, 15vw, 66px);
+
+  flex: 0 0 auto;
+
+  display: grid;
+  place-items: center;
+
+  margin:
+    3px
+    0
+    11px;
+
+  border-radius: 20px;
+
+  background: #e7f1e2;
+
+  color: #2d8550;
+
+  font-size: clamp(27px, 7vw, 32px);
+  line-height: 1;
+
+  font-weight: 950;
+
+  box-shadow:
+    0 5px 15px
+    rgba(45, 133, 80, 0.08);
+}
+
+
+/* =========================================================
+   HEADING
+   ========================================================= */
+
+.jr-confirmation-heading {
+  width: 100%;
+
+  text-align: center;
+
+  margin:
+    0
+    0
+    11px;
+}
+
+.jr-confirmation-eyebrow {
+  display: block;
+
+  margin:
+    0
+    0
+    5px;
+
+  color: #ee7900;
+
+  font-size: clamp(6px, 1.7vw, 8px);
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+.jr-confirmation-heading h1 {
+  margin: 0;
+
+  color: #111111;
+
+  font-size: clamp(24px, 6vw, 31px);
+  line-height: 0.93;
+
+  font-weight: 950;
+
+  letter-spacing: -0.055em;
+}
+
+.jr-confirmation-heading h1 em {
+  color: #2f8750;
+
+  font-style: normal;
+}
+
+.jr-confirmation-heading p {
+  max-width: 310px;
+
+  margin:
+    7px
+    auto
+    0;
+
+  color: #858581;
+
+  font-size: clamp(7px, 1.9vw, 9px);
+  line-height: 1.4;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   ORDER NUMBER
+   ========================================================= */
+
+.jr-confirmation-order-number {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin:
+    0
+    0
+    8px;
+
+  padding:
+    10px
+    10px;
+
+  border-radius: 10px;
+
+  background: #2e8250;
+
+  color: #ffffff;
+
+  box-shadow:
+    0 7px 15px
+    rgba(46, 130, 80, 0.14);
+}
+
+.jr-confirmation-order-number span {
+  color: rgba(255, 255, 255, 0.72);
+
+  font-size: clamp(5px, 1.4vw, 7px);
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+}
+
+.jr-confirmation-order-number strong {
+  margin-top: 5px;
+
+  color: #ffffff;
+
+  font-size: clamp(16px, 4.2vw, 19px);
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: 0.045em;
+
+  word-break: break-word;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   LOCATION CARD
+   ========================================================= */
+
+.jr-confirmation-location-card {
+  width: 100%;
+
+  min-height: 55px;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  margin:
+    0
+    0
+    8px;
+
+  padding:
+    7px
+    8px;
+
+  border:
+    1px solid
+    #e6e5de;
+
+  border-radius: 9px;
+
+  background: #fffefa;
+}
+
+.jr-confirmation-card-icon {
+  width: 30px;
+  height: 30px;
+
+  min-width: 30px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+
+  background: #eff7ed;
+
+  font-size: 12px;
+  line-height: 1;
+}
+
+.jr-confirmation-location-copy {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.jr-confirmation-location-copy small {
+  color: #999995;
+
+  font-size: 5px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.jr-confirmation-location-copy strong {
+  overflow: hidden;
+
+  color: #191919;
+
+  font-size: clamp(8px, 2vw, 10px);
+  line-height: 1;
+
+  font-weight: 900;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.jr-confirmation-location-copy span {
+  display: block;
+
+  overflow: hidden;
+
+  color: #888884;
+
+  font-size: clamp(5.5px, 1.45vw, 7px);
+  line-height: 1;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   ORDER ITEMS CARD
+   ========================================================= */
+
+.jr-confirmation-items-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  margin:
+    0
+    0
+    8px;
+
+  padding:
+    9px;
+
+  border:
+    1px solid
+    #e6e5de;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+}
+
+.jr-confirmation-section-heading {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin:
+    0
+    0
+    7px;
+}
+
+.jr-confirmation-section-heading h2 {
+  margin: 0;
+
+  color: #3a3a3a;
+
+  font-size: clamp(8px, 2vw, 10px);
+  line-height: 1;
+
+  font-weight: 800;
+}
+
+.jr-confirmation-section-heading span {
+  color: #9a9a95;
+
+  font-size: clamp(5px, 1.4vw, 7px);
+  line-height: 1;
+}
+
+
+/* =========================================================
+   ITEMS
+   ========================================================= */
+
+.jr-confirmation-items {
+  width: 100%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.jr-confirmation-item {
+  width: 100%;
+
+  min-width: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+}
+
+.jr-confirmation-item-name {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+
+  align-items: baseline;
+
+  gap: 4px;
+}
+
+.jr-confirmation-item-name strong {
+  max-width: 100%;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: #333333;
+
+  font-size: clamp(7px, 1.8vw, 9px);
+  line-height: 1.2;
+
+  font-weight: 750;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.jr-confirmation-item-name span {
+  flex: 0 0 auto;
+
+  color: #92928d;
+
+  font-size: clamp(5.5px, 1.4vw, 7px);
+  line-height: 1;
+}
+
+.jr-confirmation-item > strong {
+  flex: 0 0 auto;
+
+  color: #292929;
+
+  font-size: clamp(7px, 1.8vw, 9px);
+  line-height: 1;
+
+  font-weight: 850;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   TOTAL
+   ========================================================= */
+
+.jr-confirmation-total-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  margin:
+    0
+    0
+    7px;
+
+  padding:
+    10px;
+
+  border:
+    1px solid
+    #e6e5de;
+
+  border-radius: 10px;
+
+  background: #fffefa;
+}
+
+.jr-confirmation-total-card span {
+  color: #656560;
+
+  font-size: clamp(7px, 1.8vw, 9px);
+  line-height: 1;
+
+  font-weight: 850;
+}
+
+.jr-confirmation-total-card strong {
+  color: #2d8450;
+
+  font-size: clamp(15px, 4vw, 18px);
+  line-height: 1;
+
+  font-weight: 950;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   STATUS CARD
+   ========================================================= */
+
+.jr-confirmation-status-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 8px;
+
+  margin:
+    0
+    0
+    8px;
+
+  padding:
+    8px
+    9px;
+
+  border:
+    1px solid
+    #e6e5de;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+}
+
+.jr-confirmation-status-card > div {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.jr-confirmation-status-card > div + div {
+  padding-left: 8px;
+
+  border-left:
+    1px solid
+    #e8e8e4;
+}
+
+.jr-confirmation-status-card span {
+  color: #999995;
+
+  font-size: clamp(5px, 1.35vw, 7px);
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.07em;
+}
+
+.jr-confirmation-status-card strong {
+  overflow: hidden;
+
+  color: #333333;
+
+  font-size: clamp(7px, 1.75vw, 9px);
+  line-height: 1.1;
+
+  font-weight: 900;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.jr-confirmation-status-card .jr-confirmation-paid {
+  color: #2d8450;
+}
+
+
+/* =========================================================
+   COLLECTION CODE
+   ========================================================= */
+
+.jr-collection-code-card {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  margin:
+    0
+    0
+    8px;
+
+  padding:
+    10px
+    9px;
+
+  border:
+    1px solid
+    #f1ddb0;
+
+  border-radius: 10px;
+
+  background: #fff6df;
+
+  text-align: center;
+}
+
+.jr-collection-code-card.jr-collection-code-active {
+  border-color: rgba(55, 137, 82, 0.18);
+
+  background: #edf6e9;
+}
+
+.jr-collection-code-eyebrow {
+  color: #d87900;
+
+  font-size: clamp(5px, 1.4vw, 7px);
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: 0.09em;
+}
+
+.jr-collection-code-active
+.jr-collection-code-eyebrow {
+  color: #2e8050;
+}
+
+.jr-collection-code-value {
+  margin:
+    6px
+    0
+    4px;
+
+  color: #292929;
+
+  font-size: clamp(22px, 6vw, 28px);
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: 0.16em;
+}
+
+.jr-collection-code-card p {
+  max-width: 300px;
+
+  margin: 0;
+
+  color: #777771;
+
+  font-size: clamp(5.5px, 1.45vw, 7px);
+  line-height: 1.35;
+
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   PRIMARY ACTION
+   ========================================================= */
+
+.jr-confirmation-primary-button {
+  width: 100%;
+
+  height: 39px;
+
+  min-height: 39px;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  padding:
+    0
+    11px;
+
+  border: 0;
+
+  border-radius: 8px;
+
+  background: #2e8650;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: clamp(7px, 1.8vw, 9px);
+  line-height: 1;
+
+  font-weight: 950;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 13px
+    rgba(46, 134, 80, 0.15);
+
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease;
+}
+
+.jr-confirmation-primary-button:hover {
+  background: #287747;
+}
+
+.jr-confirmation-primary-button:active {
+  transform: translateY(1px);
+}
+
+.jr-confirmation-primary-button strong {
+  font-size: 14px;
+
+  font-weight: 400;
+}
+
+
+/* =========================================================
+   SECONDARY ACTION
+   ========================================================= */
+
+.jr-confirmation-secondary-button {
+  width: 100%;
+
+  height: 34px;
+
+  min-height: 34px;
+
+  box-sizing: border-box;
+
+  margin-top: 6px;
+
+  padding: 0;
+
+  border:
+    1px solid
+    #e0e0db;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #2e8050;
+
+  font-family: inherit;
+
+  font-size: clamp(6.5px, 1.7vw, 8px);
+  line-height: 1;
+
+  font-weight: 900;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease;
+}
+
+.jr-confirmation-secondary-button:hover {
+  background: #f7faf5;
+}
+
+.jr-confirmation-secondary-button:active {
+  transform: translateY(1px);
+}
+
+
+/* =========================================================
+   SMALL PORTRAIT
+   ========================================================= */
+
+@media (max-width: 390px) {
+
+  .jr-confirmation-page {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .jr-confirmation-heading h1 {
+    font-size: 24px;
+  }
+
+  .jr-confirmation-item-name strong {
+    max-width: 190px;
+  }
+
+  .jr-collection-code-value {
+    font-size: 23px;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL PORTRAIT
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+  .jr-confirmation-page {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .jr-confirmation-success-icon {
+    width: 55px;
+    height: 55px;
+
+    margin-bottom: 9px;
+  }
+
+  .jr-confirmation-heading h1 {
+    font-size: 22px;
+  }
+
+  .jr-confirmation-heading p {
+    max-width: 250px;
+  }
+
+  .jr-confirmation-item-name strong {
+    max-width: 155px;
+  }
+
+  .jr-collection-code-value {
+    font-size: 21px;
+  }
+}
+
+
+/* =========================================================
+   SHORT PORTRAIT
+   ========================================================= */
+
+@media (orientation: portrait) and (max-height: 700px) {
+
+  .jr-confirmation-page {
+    padding-top: 10px;
+  }
+
+  .jr-confirmation-success-icon {
+    width: 52px;
+    height: 52px;
+
+    margin-bottom: 8px;
+
+    font-size: 25px;
+  }
+
+  .jr-confirmation-heading {
+    margin-bottom: 8px;
+  }
+
+  .jr-confirmation-heading p {
+    margin-top: 5px;
+  }
+
+  .jr-confirmation-order-number {
+    padding:
+      8px
+      9px;
+  }
+
+  .jr-confirmation-location-card {
+    min-height: 50px;
+
+    margin-bottom: 6px;
+  }
+
+  .jr-confirmation-items-card {
+    margin-bottom: 6px;
+
+    padding: 8px;
+  }
+
+  .jr-confirmation-total-card {
+    padding:
+      8px
+      9px;
+  }
+
+  .jr-confirmation-status-card {
+    margin-bottom: 6px;
+
+    padding:
+      7px
+      8px;
+  }
+
+  .jr-collection-code-card {
+    margin-bottom: 6px;
+
+    padding:
+      8px
+      9px;
+  }
+
+  .jr-collection-code-value {
+    margin:
+      5px
+      0
+      3px;
+  }
+}
+
+
+/* =========================================================
+   LANDSCAPE
+   ========================================================= */
+
+@media (orientation: landscape) {
+
+  .jr-confirmation-page {
+    width: 100%;
+
+    min-height: 100%;
+
+    padding:
+      7px
+      clamp(16px, 4vw, 50px)
+      60px;
+  }
+
+  .jr-confirmation-success-icon {
+    width: 43px;
+    height: 43px;
+
+    margin:
+      0
+      0
+      5px;
+
+    border-radius: 13px;
+
+    font-size: 22px;
+  }
+
+  .jr-confirmation-heading {
+    margin-bottom: 6px;
+  }
+
+  .jr-confirmation-eyebrow {
+    margin-bottom: 3px;
+
+    font-size: clamp(5px, 1.4vh, 7px);
+  }
+
+  .jr-confirmation-heading h1 {
+    font-size: clamp(18px, 4.5vh, 25px);
+  }
+
+  .jr-confirmation-heading p {
+    max-width: 400px;
+
+    margin-top: 4px;
+
+    font-size: clamp(5.5px, 1.45vh, 7px);
+  }
+
+  .jr-confirmation-order-number {
+    margin-bottom: 5px;
+
+    padding:
+      6px
+      9px;
+
+    border-radius: 8px;
+  }
+
+  .jr-confirmation-order-number span {
+    font-size: clamp(4px, 1.1vh, 6px);
+  }
+
+  .jr-confirmation-order-number strong {
+    margin-top: 3px;
+
+    font-size: clamp(12px, 3vh, 16px);
+  }
+
+  .jr-confirmation-location-card {
+    min-height: 39px;
+
+    margin-bottom: 5px;
+
+    padding:
+      5px
+      7px;
+
+    gap: 7px;
+
+    border-radius: 8px;
+  }
+
+  .jr-confirmation-card-icon {
+    width: 25px;
+    height: 25px;
+
+    min-width: 25px;
+
+    border-radius: 6px;
+
+    font-size: 10px;
+  }
+
+  .jr-confirmation-location-copy {
+    gap: 1px;
+  }
+
+  .jr-confirmation-location-copy small {
+    font-size: 4px;
+  }
+
+  .jr-confirmation-location-copy strong {
+    font-size: clamp(6px, 1.55vh, 8px);
+  }
+
+  .jr-confirmation-location-copy span {
+    font-size: clamp(4.5px, 1.15vh, 6px);
+  }
+
+  .jr-confirmation-items-card {
+    margin-bottom: 5px;
+
+    padding: 7px;
+
+    border-radius: 8px;
+  }
+
+  .jr-confirmation-section-heading {
+    margin-bottom: 4px;
+  }
+
+  .jr-confirmation-section-heading h2 {
+    font-size: clamp(6px, 1.55vh, 8px);
+  }
+
+  .jr-confirmation-section-heading span {
+    font-size: clamp(4.5px, 1.15vh, 6px);
+  }
+
+  .jr-confirmation-items {
+    gap: 3px;
+  }
+
+  .jr-confirmation-item-name strong {
+    font-size: clamp(5.5px, 1.45vh, 7px);
+  }
+
+  .jr-confirmation-item-name span {
+    font-size: clamp(4.5px, 1.1vh, 6px);
+  }
+
+  .jr-confirmation-item > strong {
+    font-size: clamp(5.5px, 1.45vh, 7px);
+  }
+
+  .jr-confirmation-total-card {
+    margin-bottom: 5px;
+
+    padding:
+      7px
+      9px;
+
+    border-radius: 8px;
+  }
+
+  .jr-confirmation-total-card span {
+    font-size: clamp(5.5px, 1.4vh, 7px);
+  }
+
+  .jr-confirmation-total-card strong {
+    font-size: clamp(12px, 3vh, 16px);
+  }
+
+  .jr-confirmation-status-card {
+    margin-bottom: 5px;
+
+    padding:
+      6px
+      8px;
+
+    border-radius: 8px;
+  }
+
+  .jr-confirmation-status-card > div {
+    gap: 2px;
+  }
+
+  .jr-confirmation-status-card > div + div {
+    padding-left: 7px;
+  }
+
+  .jr-confirmation-status-card span {
+    font-size: clamp(4px, 1.05vh, 5.5px);
+  }
+
+  .jr-confirmation-status-card strong {
+    font-size: clamp(5.5px, 1.4vh, 7px);
+  }
+
+  .jr-collection-code-card {
+    margin-bottom: 5px;
+
+    padding:
+      7px
+      9px;
+
+    border-radius: 8px;
+  }
+
+  .jr-collection-code-eyebrow {
+    font-size: clamp(4.5px, 1.1vh, 6px);
+  }
+
+  .jr-collection-code-value {
+    margin:
+      4px
+      0
+      3px;
+
+    font-size: clamp(17px, 4.5vh, 23px);
+  }
+
+  .jr-collection-code-card p {
+    max-width: 500px;
+
+    font-size: clamp(4.5px, 1.1vh, 6px);
+  }
+
+  .jr-confirmation-primary-button {
+    height: 31px;
+    min-height: 31px;
+
+    border-radius: 7px;
+
+    font-size: clamp(5.5px, 1.4vh, 7px);
+  }
+
+  .jr-confirmation-primary-button strong {
+    font-size: 12px;
+  }
+
+  .jr-confirmation-secondary-button {
+    height: 27px;
+    min-height: 27px;
+
+    margin-top: 4px;
+
+    border-radius: 7px;
+
+    font-size: clamp(5px, 1.25vh, 6.5px);
+  }
+}
+
+
+/* =========================================================
+   SHORT LANDSCAPE
+   Optimized for approximately 613 × 376
+   ========================================================= */
+
+@media (orientation: landscape) and (max-height: 430px) {
+
+  .jr-confirmation-page {
+    padding:
+      5px
+      clamp(12px, 3vw, 30px)
+      52px;
+  }
+
+  .jr-confirmation-success-icon {
+    width: 37px;
+    height: 37px;
+
+    margin-bottom: 3px;
+
+    border-radius: 11px;
+
+    font-size: 19px;
+  }
+
+  .jr-confirmation-heading {
+    margin-bottom: 4px;
+  }
+
+  .jr-confirmation-heading h1 {
+    font-size: 18px;
+  }
+
+  .jr-confirmation-heading p {
+    margin-top: 3px;
+
+    font-size: 5.5px;
+  }
+
+  .jr-confirmation-order-number {
+    margin-bottom: 3px;
+
+    padding:
+      5px
+      8px;
+  }
+
+  .jr-confirmation-order-number strong {
+    font-size: 12px;
+  }
+
+  .jr-confirmation-location-card {
+    min-height: 34px;
+
+    margin-bottom: 3px;
+
+    padding:
+      4px
+      6px;
+  }
+
+  .jr-confirmation-card-icon {
+    width: 22px;
+    height: 22px;
+
+    min-width: 22px;
+
+    font-size: 8px;
+  }
+
+  .jr-confirmation-location-copy strong {
+    font-size: 6.5px;
+  }
+
+  .jr-confirmation-location-copy span {
+    font-size: 4.5px;
+  }
+
+  .jr-confirmation-items-card {
+    margin-bottom: 3px;
+
+    padding: 5px;
+  }
+
+  .jr-confirmation-section-heading {
+    margin-bottom: 3px;
+  }
+
+  .jr-confirmation-items {
+    gap: 2px;
+  }
+
+  .jr-confirmation-item-name strong {
+    font-size: 5.5px;
+  }
+
+  .jr-confirmation-item-name span {
+    font-size: 4.5px;
+  }
+
+  .jr-confirmation-item > strong {
+    font-size: 5.5px;
+  }
+
+  .jr-confirmation-total-card {
+    margin-bottom: 3px;
+
+    padding:
+      5px
+      7px;
+  }
+
+  .jr-confirmation-total-card strong {
+    font-size: 12px;
+  }
+
+  .jr-confirmation-status-card {
+    margin-bottom: 3px;
+
+    padding:
+      5px
+      7px;
+  }
+
+  .jr-confirmation-status-card strong {
+    font-size: 5.5px;
+  }
+
+  .jr-collection-code-card {
+    margin-bottom: 3px;
+
+    padding:
+      5px
+      7px;
+  }
+
+  .jr-collection-code-value {
+    margin:
+      3px
+      0
+      2px;
+
+    font-size: 17px;
+  }
+
+  .jr-collection-code-card p {
+    font-size: 4.5px;
+  }
+
+  .jr-confirmation-primary-button {
+    height: 28px;
+    min-height: 28px;
+
+    font-size: 5.5px;
+  }
+
+  .jr-confirmation-primary-button strong {
+    font-size: 11px;
+  }
+
+  .jr-confirmation-secondary-button {
+    height: 24px;
+    min-height: 24px;
+
+    margin-top: 3px;
+
+    font-size: 5px;
+  }
+}
+
+
+/* =========================================================
+   EXTRA-WIDE LANDSCAPE
+   ========================================================= */
+
+@media (orientation: landscape) and (min-width: 700px) {
+
+  .jr-confirmation-page {
+    padding-left: clamp(28px, 7vw, 100px);
+    padding-right: clamp(28px, 7vw, 100px);
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .jr-confirmation-primary-button,
+  .jr-confirmation-secondary-button {
+    transition: none;
+  }
+}
+
+/* =========================================================
+   PAYMENT PENDING / FAILED / SUCCESS STATES
+   ========================================================= */
+.jr-confirmation-state-icon {
+  width: clamp(55px, 15vw, 66px);
+  height: clamp(55px, 15vw, 66px);
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  margin: 3px 0 11px;
+  border-radius: 20px;
+  font-size: clamp(27px, 7vw, 32px);
+  line-height: 1;
+  font-weight: 950;
+  box-shadow: 0 5px 15px rgba(0,0,0,.06);
+}
+.jr-confirmation-state-success { background:#e7f1e2; color:#2d8550; }
+.jr-confirmation-state-pending { background:#fff4dc; color:#c97800; }
+.jr-confirmation-state-failed { background:#fde8e7; color:#c53b32; }
+.jr-confirmation-eyebrow-pending { color:#c97800; }
+.jr-confirmation-eyebrow-failed { color:#c53b32; }
+.jr-confirmation-status-pending { border-color:#f0dfba; background:#fffdf7; }
+.jr-confirmation-status-failed { border-color:#f0d0ce; background:#fffafa; }
+.jr-confirmation-status-card .jr-confirmation-pending { color:#c97800; }
+.jr-confirmation-status-card .jr-confirmation-failed { color:#c53b32; }
+.jr-confirmation-secondary-disabled { opacity:.72; cursor:default; background:#f5f5f1; color:#777771; }
+.jr-confirmation-secondary-disabled:disabled { cursor:default; transform:none; }
+.jr-confirmation-retry-button { background:#c97800; box-shadow:0 6px 13px rgba(201,120,0,.15); }
+.jr-confirmation-retry-button:hover { background:#aa6500; }
+@media (max-width:390px){.jr-confirmation-state-icon{width:55px;height:55px;}}
+@media (max-width:360px){.jr-confirmation-state-icon{width:55px;height:55px;margin-bottom:9px;font-size:25px;}}
+@media (orientation:portrait) and (max-height:700px){.jr-confirmation-state-icon{width:52px;height:52px;margin-bottom:8px;font-size:25px;}}
+@media (orientation:landscape){.jr-confirmation-state-icon{width:43px;height:43px;margin:0 0 5px;border-radius:13px;font-size:22px;}}
+@media (orientation:landscape) and (max-height:430px){.jr-confirmation-state-icon{width:37px;height:37px;margin-bottom:3px;border-radius:11px;font-size:19px;}}

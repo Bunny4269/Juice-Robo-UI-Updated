@@ -1,0 +1,14 @@
+/* Final UPI QR payment presentation — no app deeplinks */
+.jr-upi-qr-page {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.jr-upi-qr-card {
+  max-width: 420px !important;
+}
+.jr-upi-qr-card img {
+  image-rendering: pixelated;
+}
+@media (max-width: 380px) {
+  .jr-upi-qr-card { padding-left: 10px !important; padding-right: 10px !important; }
+}

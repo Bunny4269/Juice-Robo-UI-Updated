@@ -1,0 +1,1179 @@
+/* =========================================================
+   LOGIN SCREEN
+   ========================================================= */
+
+.jr-login-screen {
+  width: 100%;
+  min-height: 100dvh;
+
+  box-sizing: border-box;
+
+  padding: 24px 18px 28px;
+
+  background: #f8f9ef;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* =========================================================
+   CONTAINER
+   ========================================================= */
+
+.jr-login-container {
+  width: min(100%, 380px);
+
+  margin: 0 auto;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.jr-login-logo-container {
+  width: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin-bottom: 22px;
+}
+
+.jr-login-logo-image {
+  display: block;
+
+  width: min(100%, 205px);
+  height: auto;
+
+  object-fit: contain;
+}
+
+
+/* =========================================================
+   INTRO
+   ========================================================= */
+
+.jr-login-copy {
+  width: 100%;
+
+  margin-bottom: 21px;
+}
+
+.jr-login-eyebrow {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #287b4d;
+
+  font-size: clamp(8px, 1.7vw, 10px);
+  line-height: 1.2;
+
+  font-weight: 800;
+
+  letter-spacing: 0.095em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   HEADING
+   ========================================================= */
+
+.jr-login-copy h1 {
+  margin: 0;
+
+  color: #0d2c20;
+
+  font-size: clamp(34px, 9vw, 42px);
+  line-height: 0.92;
+
+  font-weight: 900;
+
+  letter-spacing: -1.7px;
+}
+
+.jr-login-copy h1 em {
+  color: #2d804b;
+
+  font-style: italic;
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   DESCRIPTION
+   ========================================================= */
+
+.jr-login-copy p {
+  margin: 13px 0 0;
+
+  color: #6d746f;
+
+  font-size: clamp(11px, 2.7vw, 13px);
+  line-height: 1.45;
+
+  font-weight: 400;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.jr-login-form {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 13px;
+}
+
+
+/* =========================================================
+   FIELD
+   ========================================================= */
+
+.jr-login-field {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+.jr-login-field label {
+  display: block;
+
+  color: #5e6660;
+
+  font-size: 8px;
+  line-height: 1.2;
+
+  font-weight: 850;
+
+  letter-spacing: 0.09em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   INPUT
+   ========================================================= */
+
+.jr-login-field input {
+  width: 100%;
+  height: 48px;
+
+  box-sizing: border-box;
+
+  padding: 0 14px;
+
+  border: 1px solid #e0e3dc;
+  border-radius: 12px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #27332d;
+
+  font-family: inherit;
+
+  font-size: clamp(12px, 2.8vw, 13px);
+  line-height: 1;
+
+  font-weight: 600;
+
+  box-shadow:
+    0 2px 5px rgba(35, 55, 40, 0.025),
+    0 7px 18px rgba(35, 55, 40, 0.035);
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.jr-login-field input::placeholder {
+  color: #a1a7a3;
+
+  font-weight: 400;
+}
+
+.jr-login-field input:focus {
+  border-color: #70a77f;
+
+  box-shadow:
+    0 0 0 3px rgba(45, 128, 75, 0.08),
+    0 7px 18px rgba(35, 55, 40, 0.04);
+}
+
+.jr-login-field input:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+
+/* =========================================================
+   PASSWORD
+   ========================================================= */
+
+.jr-login-password-wrap {
+  position: relative;
+
+  width: 100%;
+}
+
+.jr-login-password-input {
+  padding-right: 48px !important;
+
+  background: #eaf2ff !important;
+
+  border-color: #d7e2f2 !important;
+}
+
+.jr-login-password-input:focus {
+  background: #eef5ff !important;
+
+  border-color: #a9c2e4 !important;
+
+  box-shadow:
+    0 0 0 3px rgba(69, 125, 190, 0.08),
+    0 7px 18px rgba(35, 55, 40, 0.04) !important;
+}
+
+
+/* =========================================================
+   PASSWORD TOGGLE
+   ========================================================= */
+
+.jr-login-password-toggle {
+  position: absolute;
+
+  top: 50%;
+  right: 10px;
+
+  width: 30px;
+  height: 30px;
+
+  padding: 0;
+
+  transform: translateY(-50%);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: transparent;
+
+  color: #7f8b91;
+
+  cursor: pointer;
+}
+
+.jr-login-password-toggle:hover {
+  color: #56636a;
+
+  background: rgba(80, 100, 115, 0.06);
+}
+
+.jr-login-password-toggle:focus-visible {
+  outline: 2px solid #4f9468;
+  outline-offset: 2px;
+}
+
+.jr-login-password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.jr-login-password-toggle svg {
+  width: 19px;
+  height: 19px;
+
+  display: block;
+}
+
+
+/* =========================================================
+   REMEMBER / FORGOT
+   ========================================================= */
+
+.jr-login-options {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-top: 0;
+}
+
+
+/* =========================================================
+   REMEMBER
+   ========================================================= */
+
+.jr-login-remember {
+  min-width: 0;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin: 0;
+
+  color: #626963;
+
+  font-size: 10px;
+  line-height: 1.2;
+
+  font-weight: 650;
+
+  cursor: pointer;
+}
+
+.jr-login-remember input {
+  appearance: none;
+
+  width: 16px;
+  height: 16px;
+
+  flex: 0 0 16px;
+
+  margin: 0;
+
+  position: relative;
+
+  border: 1px solid #cbd4cd;
+  border-radius: 4px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+.jr-login-remember input:checked {
+  background: #2f8750;
+  border-color: #2f8750;
+}
+
+.jr-login-remember input:checked::after {
+  content: "";
+
+  position: absolute;
+
+  left: 4px;
+  top: 1px;
+
+  width: 5px;
+  height: 9px;
+
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+
+  transform: rotate(45deg);
+}
+
+.jr-login-remember input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+/* =========================================================
+   FORGOT PASSWORD
+   ========================================================= */
+
+.jr-login-forgot {
+  flex: 0 0 auto;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #287c4b;
+
+  font-family: inherit;
+
+  font-size: 10px;
+  line-height: 1.2;
+
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+.jr-login-forgot:hover {
+  color: #205f39;
+
+  text-decoration: underline;
+}
+
+.jr-login-forgot:focus-visible {
+  outline: 2px solid #4f9468;
+  outline-offset: 3px;
+
+  border-radius: 3px;
+}
+
+.jr-login-forgot:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.jr-login-error {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 8px;
+
+  padding: 9px 11px;
+
+  border: 1px solid #f0caca;
+  border-radius: 10px;
+
+  background: #fff5f5;
+
+  color: #a53d3d;
+}
+
+.jr-login-error-icon {
+  width: 17px;
+  height: 17px;
+
+  flex: 0 0 17px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #c94b4b;
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.jr-login-error p {
+  margin: 1px 0 0;
+
+  font-size: 9px;
+  line-height: 1.4;
+
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   SIGN IN BUTTON
+   ========================================================= */
+
+.jr-login-button {
+  width: 100%;
+  height: 49px;
+
+  margin-top: 1px;
+
+  padding: 0 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: #2d8750;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 10px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.045em;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 18px rgba(45, 135, 80, 0.19);
+
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease,
+    opacity 0.16s ease;
+}
+
+.jr-login-button:hover {
+  background: #267745;
+
+  box-shadow:
+    0 10px 22px rgba(45, 135, 80, 0.23);
+}
+
+.jr-login-button:active {
+  transform: translateY(1px);
+}
+
+.jr-login-button:focus-visible {
+  outline: 3px solid rgba(45, 135, 80, 0.25);
+  outline-offset: 3px;
+}
+
+.jr-login-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+
+/* =========================================================
+   ARROW
+   ========================================================= */
+
+.jr-login-arrow {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 17px;
+  line-height: 1;
+
+  font-weight: 400;
+
+  margin-top: -1px;
+}
+
+
+/* =========================================================
+   CONTINUE WITHOUT LOGIN
+   ========================================================= */
+
+.jr-continue-without-login {
+  width: 100%;
+  min-height: 45px;
+
+  box-sizing: border-box;
+
+  margin-top: 10px;
+  padding: 0 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #dfe5df;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  color: #287f46;
+
+  font-family: inherit;
+
+  font-size: 10px;
+  line-height: 1;
+
+  font-weight: 850;
+
+  letter-spacing: 0.04em;
+
+  cursor: pointer;
+
+  -webkit-tap-highlight-color: transparent;
+
+  box-shadow:
+    0 3px 10px rgba(25, 55, 33, 0.04);
+
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.jr-continue-without-login:hover {
+  background: #f1f8f2;
+
+  color: #216b3d;
+
+  box-shadow:
+    0 6px 15px rgba(25, 75, 42, 0.08);
+}
+
+.jr-continue-without-login:active {
+  transform: translateY(1px);
+}
+
+.jr-continue-without-login:focus-visible {
+  outline: 3px solid rgba(45, 135, 80, 0.18);
+  outline-offset: 3px;
+}
+
+.jr-continue-without-login:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+
+/* =========================================================
+   GUEST NOTE
+   ========================================================= */
+
+.jr-login-guest-note {
+  width: 100%;
+
+  margin: 7px 0 0;
+
+  box-sizing: border-box;
+
+  color: #929b93;
+
+  font-size: 8px;
+  line-height: 1.4;
+
+  font-weight: 500;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   SECURITY NOTE
+   ========================================================= */
+
+.jr-login-note {
+  width: 100%;
+
+  margin: 15px 0 0;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  gap: 5px;
+
+  color: #a0a49f;
+
+  font-size: 7px;
+  line-height: 1.4;
+
+  font-weight: 500;
+
+  text-align: center;
+}
+
+.jr-login-lock {
+  font-size: 7px;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 360px) {
+  .jr-login-screen {
+    padding: 20px 15px 24px;
+  }
+
+  .jr-login-logo-container {
+    margin-bottom: 18px;
+  }
+
+  .jr-login-logo-image {
+    width: min(100%, 185px);
+  }
+
+  .jr-login-copy {
+    margin-bottom: 18px;
+  }
+
+  .jr-login-copy h1 {
+    font-size: 34px;
+  }
+
+  .jr-login-copy p {
+    margin-top: 11px;
+    font-size: 11px;
+  }
+
+  .jr-login-form {
+    gap: 11px;
+  }
+
+  .jr-login-field input {
+    height: 45px;
+  }
+
+  .jr-login-button {
+    height: 47px;
+  }
+
+  .jr-continue-without-login {
+    min-height: 43px;
+  }
+}
+
+
+/* =========================================================
+   LANDSCAPE
+   ========================================================= */
+
+@media (orientation: landscape) and (min-width: 600px) {
+  .jr-login-screen {
+    min-height: 100dvh;
+
+    padding: 18px 28px 20px;
+
+    align-items: center;
+  }
+
+  .jr-login-container {
+    width: min(100%, 820px);
+
+    display: grid;
+
+    grid-template-columns:
+      minmax(230px, 0.82fr)
+      minmax(330px, 1.18fr);
+
+    column-gap: clamp(30px, 6vw, 70px);
+
+    align-items: center;
+  }
+
+  .jr-login-logo-container {
+    grid-column: 1;
+
+    margin: 0 0 13px;
+
+    justify-content: flex-start;
+  }
+
+  .jr-login-logo-image {
+    width: min(100%, 190px);
+  }
+
+  .jr-login-copy {
+    grid-column: 1;
+
+    margin: 0;
+  }
+
+  .jr-login-eyebrow {
+    margin-bottom: 7px;
+
+    font-size: 8px;
+  }
+
+  .jr-login-copy h1 {
+    font-size: clamp(34px, 5vw, 46px);
+
+    letter-spacing: -1.8px;
+  }
+
+  .jr-login-copy p {
+    max-width: 270px;
+
+    margin-top: 11px;
+
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .jr-login-form {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+
+    gap: 10px;
+  }
+
+  .jr-login-field {
+    gap: 5px;
+  }
+
+  .jr-login-field label {
+    font-size: 8px;
+  }
+
+  .jr-login-field input {
+    height: 43px;
+
+    font-size: 12px;
+  }
+
+  .jr-login-password-toggle {
+    width: 28px;
+    height: 28px;
+  }
+
+  .jr-login-options {
+    margin-top: 1px;
+  }
+
+  .jr-login-error {
+    padding: 8px 10px;
+  }
+
+  .jr-login-button {
+    height: 44px;
+  }
+
+  .jr-continue-without-login {
+    grid-column: 2;
+
+    min-height: 42px;
+
+    margin-top: 8px;
+  }
+
+  .jr-login-guest-note {
+    grid-column: 2;
+
+    margin-top: 6px;
+  }
+
+  .jr-login-note {
+    grid-column: 2;
+
+    margin-top: 10px;
+  }
+}
+
+
+/* =========================================================
+   COMPACT LANDSCAPE
+   Optimized for approximately 613 × 376
+   ========================================================= */
+
+@media (orientation: landscape)
+  and (min-width: 600px)
+  and (max-width: 900px) {
+
+  .jr-login-screen {
+    padding: 12px 22px 14px;
+  }
+
+  .jr-login-container {
+    width: min(100%, 700px);
+
+    grid-template-columns:
+      minmax(205px, 0.76fr)
+      minmax(300px, 1.24fr);
+
+    column-gap: 30px;
+  }
+
+  .jr-login-logo-container {
+    margin-bottom: 8px;
+  }
+
+  .jr-login-logo-image {
+    width: min(100%, 155px);
+  }
+
+  .jr-login-eyebrow {
+    font-size: 7px;
+  }
+
+  .jr-login-copy h1 {
+    font-size: 32px;
+
+    line-height: 0.9;
+  }
+
+  .jr-login-copy p {
+    max-width: 230px;
+
+    margin-top: 8px;
+
+    font-size: 9px;
+  }
+
+  .jr-login-form {
+    gap: 7px;
+  }
+
+  .jr-login-field {
+    gap: 4px;
+  }
+
+  .jr-login-field label {
+    font-size: 7px;
+  }
+
+  .jr-login-field input {
+    height: 37px;
+
+    padding: 0 11px;
+
+    border-radius: 9px;
+
+    font-size: 10px;
+  }
+
+  .jr-login-password-input {
+    padding-right: 40px !important;
+  }
+
+  .jr-login-password-toggle {
+    right: 7px;
+
+    width: 25px;
+    height: 25px;
+  }
+
+  .jr-login-password-toggle svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .jr-login-options {
+    gap: 8px;
+  }
+
+  .jr-login-remember,
+  .jr-login-forgot {
+    font-size: 8px;
+  }
+
+  .jr-login-remember input {
+    width: 13px;
+    height: 13px;
+
+    flex-basis: 13px;
+  }
+
+  .jr-login-remember input:checked::after {
+    left: 3px;
+    top: 1px;
+
+    width: 4px;
+    height: 7px;
+  }
+
+  .jr-login-error {
+    padding: 6px 8px;
+
+    gap: 6px;
+
+    border-radius: 8px;
+  }
+
+  .jr-login-error-icon {
+    width: 14px;
+    height: 14px;
+
+    flex-basis: 14px;
+
+    font-size: 8px;
+  }
+
+  .jr-login-error p {
+    font-size: 7px;
+  }
+
+  .jr-login-button {
+    height: 38px;
+
+    border-radius: 9px;
+
+    font-size: 8px;
+  }
+
+  .jr-login-arrow {
+    font-size: 14px;
+  }
+
+  .jr-continue-without-login {
+    min-height: 36px;
+
+    margin-top: 6px;
+
+    border-radius: 9px;
+
+    font-size: 8px;
+  }
+
+  .jr-login-guest-note {
+    margin-top: 4px;
+
+    font-size: 7px;
+  }
+
+  .jr-login-note {
+    margin-top: 7px;
+
+    font-size: 6px;
+  }
+
+  .jr-login-lock {
+    font-size: 6px;
+  }
+}
+
+
+/* =========================================================
+   VERY SHORT LANDSCAPE
+   ========================================================= */
+
+@media (orientation: landscape)
+  and (max-height: 390px) {
+
+  .jr-login-screen {
+    padding-top: 8px;
+    padding-bottom: 10px;
+  }
+
+  .jr-login-container {
+    column-gap: 26px;
+  }
+
+  .jr-login-logo-container {
+    margin-bottom: 5px;
+  }
+
+  .jr-login-logo-image {
+    width: 135px;
+  }
+
+  .jr-login-copy h1 {
+    font-size: 29px;
+  }
+
+  .jr-login-copy p {
+    margin-top: 6px;
+  }
+
+  .jr-login-form {
+    gap: 5px;
+  }
+
+  .jr-login-field input {
+    height: 34px;
+  }
+
+  .jr-login-button {
+    height: 35px;
+  }
+
+  .jr-continue-without-login {
+    min-height: 33px;
+    margin-top: 4px;
+  }
+
+  .jr-login-guest-note {
+    margin-top: 3px;
+  }
+
+  .jr-login-note {
+    margin-top: 4px;
+  }
+}
+
+
+/* =========================================================
+   LARGE SCREENS
+   ========================================================= */
+
+@media (min-width: 1000px) {
+  .jr-login-screen {
+    padding: 30px 40px;
+  }
+
+  .jr-login-container {
+    width: min(100%, 860px);
+
+    grid-template-columns:
+      minmax(280px, 0.85fr)
+      minmax(360px, 1.15fr);
+
+    column-gap: 80px;
+  }
+
+  .jr-login-logo-image {
+    width: 205px;
+  }
+
+  .jr-login-copy h1 {
+    font-size: 46px;
+  }
+
+  .jr-login-copy p {
+    font-size: 13px;
+  }
+
+  .jr-login-field input {
+    height: 48px;
+
+    font-size: 13px;
+  }
+
+  .jr-login-button {
+    height: 49px;
+  }
+
+  .jr-continue-without-login {
+    min-height: 46px;
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .jr-login-field input,
+  .jr-login-button,
+  .jr-continue-without-login,
+  .jr-login-password-toggle {
+    transition: none;
+  }
+}

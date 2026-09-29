@@ -1,0 +1,94 @@
+# ==============================
+# Python
+# ==============================
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# ==============================
+# Environment / Secrets
+# ==============================
+.env
+.env.*
+!.env.example
+
+# ==============================
+# Database / Local Data
+# ==============================
+*.db
+*.sqlite
+*.sqlite3
+juice_robo_backend/data/
+
+# ==============================
+# Node / Frontend
+# ==============================
+node_modules/
+dist/
+
+# ==============================
+# Logs
+# ==============================
+*.log
+
+# ==============================
+# OS
+# ==============================
+.DS_Store
+Thumbs.db
+
+# ==============================
+# IDE
+# ==============================
+.vscode/
+.idea/
+
+# ==============================
+# Local Files
+# ==============================
+*.local
+*.tmp
+*.temp
+
+# ==============================
+# Certificates / Local Keys
+# ==============================
+certs/
+*.pem
+*.key
+
+# ==============================
+# Sensitive Local Files
+# ==============================
+login_details.txt
+card details.txt
+
+# ==============================
+# Razorpay Credentials / Exports
+# ==============================
+*key*.csv
+
+# ==============================
+# Temporary / Generated Files
+# ==============================
+scratch_bundle.js
+chunk_*.js
+New Text Document.txt
+
+# Backup HTML Files
+index.backup.html
+index.original.html
+
+# ==============================
+# Certificates / Local Keys
+# ==============================
+certs/
+*.pem
+*.key
+*.crt
+

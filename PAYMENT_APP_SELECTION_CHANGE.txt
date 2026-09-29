@@ -1,0 +1,13 @@
+JUICE ROBO — PAYMENT APP SELECTION CHANGE
+
+Changed:
+- PaymentScreen no longer shows Cards, Netbanking, Wallets, or generic payment-method selection.
+- Proceed to Payment now opens a UPI-only app selection screen.
+- Only PhonePe and Google Pay are offered.
+- Selecting an app creates the backend order/payment session and launches the selected UPI app.
+- Google Pay uses gpay://upi/pay on iOS and tez://upi/pay on Android.
+- PhonePe uses phonepe://upi/pay.
+- Existing VITE_JR_UPI_ID configuration remains the source for the UPI payee when a payment URL must be constructed.
+- Backend payment verification remains authoritative; launching a UPI app never marks payment successful.
+- PaymentPendingScreen also offers only PhonePe and Google Pay for reopening the payment app.
+- No backend files were modified.

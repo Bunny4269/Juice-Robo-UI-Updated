@@ -1,0 +1,17 @@
+Juice Robo payment failure cleanup
+
+Changed:
+- Removed manual UPI input and Save & Pay Again UI from PaymentFailedScreen.jsx.
+- Removed all yellow VPA-box JSX and CSS.
+- Removed UPI-edit state/handlers/props from App.jsx and CheckoutScreen.jsx.
+- Payment flow now resolves the configured UPI VPA from VITE_JR_UPI_ID via the existing api configuration.
+- Removed hardcoded JUICEROBO@ybl fallbacks from api.js and App.jsx.
+- Retry payment continues through the existing payment flow; backend verification remains unchanged.
+- No backend files changed.
+
+Verification:
+- Removed yellow-box text: no matches.
+- Removed manual UPI input text: no matches.
+- Hardcoded JUICEROBO@ybl: no matches.
+- No .env.local was included in the uploaded ZIP, so its runtime value could not be inspected directly. Existing source configuration identifies VITE_JR_UPI_ID as the UPI environment variable.
+- npm run build could not be executed because the uploaded ZIP contains no package.json/node_modules.

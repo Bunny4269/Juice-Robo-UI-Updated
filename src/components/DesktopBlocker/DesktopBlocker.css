@@ -1,0 +1,263 @@
+/* =========================================================
+   JUICE ROBO — POLISHED DESKTOP NOTICE STYLES
+   ========================================================= */
+
+.jr-desktop-blocker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100dvh;
+  background: radial-gradient(circle at 50% 25%, #182e21 0%, #0d1a12 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 40px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.jr-desktop-blocker-card {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 4px 18px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 36px 32px 32px;
+  box-sizing: border-box;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  animation: jrDesktopFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes jrDesktopFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Badge */
+.jr-desktop-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #eef8f1;
+  color: #276749;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 20px;
+}
+
+.jr-desktop-badge-dot {
+  width: 6px;
+  height: 6px;
+  background: #38a169;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Smartphone Mockup */
+.jr-desktop-illustration {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.jr-phone-mockup {
+  width: 140px;
+  height: 190px;
+  background: #172019;
+  border-radius: 24px;
+  border: 3.5px solid #2d3748;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+  padding: 8px 6px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.jr-phone-notch {
+  width: 38px;
+  height: 4px;
+  background: #2d3748;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.jr-phone-screen {
+  width: 100%;
+  flex: 1;
+  background: linear-gradient(180deg, #f7faf7 0%, #edf7f0 100%);
+  border-radius: 16px;
+  padding: 8px 4px 6px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.jr-phone-logo {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.jr-phone-juice-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 0;
+}
+
+.jr-phone-juice-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1.2;
+}
+
+.jr-phone-juice-pill {
+  font-size: 8.5px;
+  font-weight: 600;
+  color: #276749;
+  background: #c6f6d5;
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.jr-phone-bar {
+  width: 44px;
+  height: 3px;
+  background: #4a5568;
+  border-radius: 3px;
+  margin-top: 5px;
+}
+
+/* Content */
+.jr-desktop-blocker-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.jr-desktop-blocker-logo {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.jr-logo-green,
+.jr-desktop-logo-green {
+  color: #287f46;
+}
+
+.jr-logo-orange,
+.jr-desktop-logo-orange {
+  color: #f07800;
+  margin-left: 3px;
+}
+
+.jr-desktop-blocker-title {
+  margin: 0 0 10px;
+  font-size: 23px;
+  font-weight: 800;
+  color: #172019;
+  letter-spacing: -0.4px;
+  line-height: 1.25;
+}
+
+.jr-desktop-blocker-desc {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #4a5568;
+  max-width: 380px;
+}
+
+/* Features */
+.jr-desktop-features {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+  background: #fbfbf8;
+  border: 1px solid #edf2ec;
+  border-radius: 16px;
+  padding: 12px 16px;
+  box-sizing: border-box;
+}
+
+.jr-desktop-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: left;
+}
+
+.jr-desktop-feature-icon {
+  font-size: 16px;
+  flex: 0 0 20px;
+  text-align: center;
+}
+
+/* Hint Pill */
+.jr-desktop-blocker-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #edf7f0;
+  border: 1px solid #c6f6d5;
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: #22543d;
+  font-weight: 500;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.jr-desktop-blocker-hint strong {
+  font-weight: 700;
+  color: #1b4332;
+}
+
+.jr-desktop-hint-icon {
+  font-size: 15px;
+}
+
+/* Hide on mobile/tablet viewports (<= 1024px) */
+@media screen and (max-width: 1024px) {
+  .jr-desktop-blocker-overlay {
+    display: none !important;
+  }
+}

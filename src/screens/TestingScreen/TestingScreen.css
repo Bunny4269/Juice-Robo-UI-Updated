@@ -1,0 +1,298 @@
+/* =========================================================
+   JUICE ROBO — DEVELOPER TEST SUITE STYLES
+   ========================================================= */
+
+.jr-testing-screen {
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 24px 16px 80px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
+}
+
+.jr-testing-header {
+  margin-bottom: 24px;
+}
+
+.jr-testing-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.jr-testing-back-btn {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.jr-testing-back-btn:hover {
+  background: #e2e8f0;
+}
+
+.jr-testing-badge {
+  background: #0f172a;
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.08em;
+}
+
+.jr-testing-title {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  color: #0f172a;
+}
+
+.jr-testing-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.jr-testing-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+  scrollbar-width: thin;
+}
+
+.jr-testing-tab {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.jr-testing-tab:hover {
+  background: #f1f5f9;
+}
+
+.jr-testing-tab.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+.jr-testing-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.jr-testing-panel h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #1e293b;
+}
+
+.jr-testing-panel p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 16px;
+}
+
+.jr-testing-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.jr-testing-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jr-testing-card strong {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.jr-testing-card code {
+  font-family: monospace;
+  font-size: 13px;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+.jr-testing-btn {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.jr-testing-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.jr-testing-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jr-testing-btn-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.jr-testing-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.jr-testing-form-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.jr-testing-input {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: monospace;
+}
+
+.jr-testing-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.jr-testing-pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 14px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 12px;
+  overflow-x: auto;
+  max-height: 360px;
+  margin-top: 14px;
+}
+
+.jr-testing-count-badge {
+  display: inline-block;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 12px;
+}
+
+/* Console Logs */
+.jr-testing-console {
+  background: #1e293b;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.jr-testing-console-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.jr-testing-console-head button {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.jr-testing-console-body {
+  padding: 12px 16px;
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.jr-testing-log-empty {
+  color: #64748b;
+  font-style: italic;
+}
+
+.jr-testing-log-item {
+  display: flex;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.jr-testing-log-time {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.jr-testing-log-item--info .jr-testing-log-msg {
+  color: #e2e8f0;
+}
+
+.jr-testing-log-item--success .jr-testing-log-msg {
+  color: #4ade80;
+}
+
+.jr-testing-log-item--error .jr-testing-log-msg {
+  color: #f87171;
+}

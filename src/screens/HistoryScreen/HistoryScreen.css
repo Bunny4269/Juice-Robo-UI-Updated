@@ -1,0 +1,972 @@
+/* =========================================================
+   JUICE ROBO — HISTORY / MY ORDERS SCREEN
+   ========================================================= */
+
+.jr-history-page {
+  width: 100%;
+  min-height: 0;
+
+  flex: 1;
+
+  box-sizing: border-box;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  padding:
+    20px
+    14px
+    calc(
+      32px +
+      env(
+        safe-area-inset-bottom,
+        0px
+      )
+    );
+
+  background: #fbfaf4;
+}
+
+
+/* =========================================================
+   BACK BUTTON
+   ========================================================= */
+
+.jr-history-back {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  border: 0;
+
+  padding: 0;
+
+  margin: 0 0 14px;
+
+  background: transparent;
+
+  color: #287c4b;
+
+  font-size: 16px;
+
+  font-weight: 700;
+
+  line-height: 1.2;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.jr-history-back:hover {
+  color: #1f693e;
+}
+
+.jr-history-back:active {
+  transform: translateX(-2px);
+}
+
+
+/* =========================================================
+   TITLE
+   ========================================================= */
+
+.jr-history-title-row {
+  display: flex;
+
+  align-items: flex-end;
+
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin: 0 0 14px;
+}
+
+.jr-history-title-row h1 {
+  margin: 0;
+
+  color: #111;
+
+  font-size:
+    clamp(
+      32px,
+      8vw,
+      40px
+    );
+
+  line-height: 1.05;
+
+  letter-spacing: -1.5px;
+
+  font-weight: 850;
+}
+
+.jr-history-subtitle {
+  margin:
+    6px
+    0
+    0;
+
+  color: #777;
+
+  font-size: 13px;
+
+  line-height: 1.25;
+}
+
+.jr-history-count {
+  flex: 0 0 auto;
+
+  min-width: 30px;
+  height: 30px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    0
+    9px;
+
+  border-radius: 999px;
+
+  background: #eaf7ef;
+
+  color: #287c4b;
+
+  font-size: 12px;
+
+  font-weight: 850;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   FLOATING FILTER PANEL
+   ========================================================= */
+
+.jr-history-filter-float {
+  position: sticky;
+
+  top: 8px;
+
+  z-index: 20;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  margin:
+    0
+    0
+    14px;
+
+  padding: 10px;
+
+  border:
+    1px solid
+    rgba(0, 0, 0, 0.09);
+
+  border-radius: 16px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.96
+    );
+
+  box-shadow:
+    0 8px 24px
+    rgba(0, 0, 0, 0.08);
+
+  backdrop-filter:
+    blur(12px);
+
+  -webkit-backdrop-filter:
+    blur(12px);
+
+  transition:
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.jr-history-filter-float.has-filters {
+  border-color:
+    rgba(
+      40,
+      124,
+      75,
+      0.25
+    );
+
+  box-shadow:
+    0 8px 26px
+    rgba(
+      40,
+      124,
+      75,
+      0.11
+    );
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.jr-history-search {
+  width: 100%;
+
+  min-height: 44px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding:
+    0
+    11px;
+
+  border:
+    1px solid
+    #ddddda;
+
+  border-radius: 11px;
+
+  background: #fbfaf7;
+
+  box-sizing: border-box;
+}
+
+.jr-history-search:focus-within {
+  border-color: #287c4b;
+
+  background: #fff;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(
+      40,
+      124,
+      75,
+      0.08
+    );
+}
+
+.jr-history-filter-icon {
+  flex: 0 0 auto;
+
+  color: #777;
+
+  font-size: 22px;
+
+  line-height: 1;
+
+  transform: rotate(-15deg);
+}
+
+.jr-history-search input {
+  width: 100%;
+  min-width: 0;
+
+  height: 42px;
+
+  border: 0;
+
+  outline: 0;
+
+  background: transparent;
+
+  color: #111;
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  box-sizing: border-box;
+}
+
+.jr-history-search input::placeholder {
+  color: #999;
+}
+
+.jr-history-search-clear {
+  flex: 0 0 auto;
+
+  width: 26px;
+  height: 26px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+
+  border-radius: 50%;
+
+  background: #e8e8e4;
+
+  color: #555;
+
+  font-size: 18px;
+
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   FILTER CONTROLS
+   ========================================================= */
+
+.jr-history-filter-controls {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 8px;
+
+  margin-top: 9px;
+}
+
+.jr-history-filter-field {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.jr-history-filter-field > span {
+  color: #777;
+
+  font-size: 10px;
+
+  font-weight: 750;
+
+  line-height: 1;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.35px;
+}
+
+.jr-history-filter-field select {
+  width: 100%;
+
+  min-width: 0;
+
+  height: 36px;
+
+  padding:
+    0
+    25px
+    0
+    9px;
+
+  border:
+    1px solid
+    #ddddda;
+
+  border-radius: 9px;
+
+  background: #fff;
+
+  color: #222;
+
+  font-family: inherit;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  outline: none;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+}
+
+.jr-history-filter-field select:focus {
+  border-color: #287c4b;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(
+      40,
+      124,
+      75,
+      0.08
+    );
+}
+
+
+/* =========================================================
+   CLEAR FILTERS
+   ========================================================= */
+
+.jr-history-reset {
+  grid-column:
+    1 /
+    -1;
+
+  min-height: 34px;
+
+  border:
+    1px solid
+    #d9b5b5;
+
+  border-radius: 9px;
+
+  background: #fff7f7;
+
+  color: #c62828;
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.jr-history-reset:hover {
+  background: #fff0f0;
+}
+
+
+/* =========================================================
+   HISTORY LIST
+   ========================================================= */
+
+.jr-history-list {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 9px;
+}
+
+
+/* =========================================================
+   ORDER CARD
+   ========================================================= */
+
+.jr-order-card {
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(0, 0, 0, 0.12);
+
+  border-radius: 15px;
+
+  background: #fff;
+
+  box-shadow:
+    0 1px 3px
+    rgba(0, 0, 0, 0.05);
+}
+
+
+/* =========================================================
+   ORDER SUMMARY
+   ========================================================= */
+
+.jr-order-summary {
+  width: 100%;
+
+  min-height: 96px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding:
+    14px
+    12px;
+
+  border: 0;
+
+  background: #fff;
+
+  text-align: left;
+
+  color: #111;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.jr-order-summary:hover {
+  background: #fdfdfb;
+}
+
+.jr-order-summary:active {
+  background: #fafaf7;
+}
+
+
+/* =========================================================
+   ORDER SUMMARY COPY
+   ========================================================= */
+
+.jr-order-summary-copy {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+
+/* =========================================================
+   ORDER LABEL
+   ========================================================= */
+
+.jr-order-label {
+  font-size: 18px;
+
+  line-height: 1.15;
+
+  color: #111;
+}
+
+
+/* =========================================================
+   TRANSACTION ID
+   ========================================================= */
+
+.jr-order-transaction {
+  margin-top: 2px;
+
+  font-size: 18px;
+
+  line-height: 1.15;
+
+  font-weight: 500;
+
+  letter-spacing: 0.2px;
+
+  overflow-wrap: anywhere;
+
+  color: #111;
+}
+
+
+/* =========================================================
+   ORDER DATE
+   ========================================================= */
+
+.jr-order-date {
+  margin-top: 6px;
+
+  color: #777;
+
+  font-size: 13px;
+
+  line-height: 1.2;
+}
+
+
+/* =========================================================
+   STATUS + CHEVRON
+   ========================================================= */
+
+.jr-order-summary-status {
+  flex: 0 0 auto;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+/* =========================================================
+   PAYMENT STATUS
+   ========================================================= */
+
+.jr-order-status {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 27px;
+
+  padding:
+    0
+    11px;
+
+  border:
+    1px solid
+    transparent;
+
+  border-radius: 999px;
+
+  font-size: 11px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.15px;
+
+  line-height: 1;
+
+  white-space: nowrap;
+
+  box-sizing: border-box;
+}
+
+
+/* SUCCESS */
+
+.jr-order-status.success {
+  background: #eaf7ef !important;
+
+  color: #218838 !important;
+
+  border-color: #bfe3cb !important;
+}
+
+
+/* FAILED */
+
+.jr-order-status.failed {
+  background: #fdeaea !important;
+
+  color: #d93025 !important;
+
+  border-color: #f1bcbc !important;
+}
+
+
+/* PENDING */
+
+.jr-order-status.pending {
+  background: #fff7d6 !important;
+
+  color: #a66a00 !important;
+
+  border-color: #f0cf63 !important;
+}
+
+
+/* UNKNOWN */
+
+.jr-order-status.default {
+  background: #f3f3f0 !important;
+
+  color: #666 !important;
+
+  border-color: #ddddda !important;
+}
+
+
+/* =========================================================
+   CHEVRON
+   ========================================================= */
+
+.jr-order-chevron {
+  width: 20px;
+
+  color: #777;
+
+  font-size: 19px;
+
+  line-height: 1;
+
+  text-align: center;
+
+  flex: 0 0 20px;
+}
+
+
+/* =========================================================
+   ORDER DETAILS
+   ========================================================= */
+
+.jr-order-details {
+  padding:
+    4px
+    12px
+    14px;
+}
+
+
+/* =========================================================
+   ORDER DETAIL ROWS
+   ========================================================= */
+
+.jr-order-row,
+.jr-order-total {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 14px;
+
+  padding: 7px 0;
+
+  color: #6f6f6f;
+
+  font-size: 16px;
+
+  line-height: 1.25;
+}
+
+
+/* =========================================================
+   DETAIL VALUES
+   ========================================================= */
+
+.jr-order-row strong,
+.jr-order-total strong {
+  color: #111;
+
+  font-weight: 600;
+
+  text-align: right;
+}
+
+
+/* =========================================================
+   FIRST DETAIL VALUE
+   ========================================================= */
+
+.jr-order-row:first-child strong {
+  color: #2b7f4b;
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   TOTAL
+   ========================================================= */
+
+.jr-order-total {
+  margin-top: 5px;
+
+  padding-top: 15px;
+
+  border-top:
+    1px solid
+    #e4e4e4;
+
+  color: #666;
+
+  font-weight: 500;
+}
+
+.jr-order-total strong {
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   EMPTY HISTORY
+   ========================================================= */
+
+.jr-history-empty {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 6px;
+
+  padding:
+    30px
+    18px;
+
+  border:
+    1px solid
+    rgba(0, 0, 0, 0.1);
+
+  border-radius: 16px;
+
+  background: #fff;
+
+  color: #777;
+
+  text-align: center;
+}
+
+.jr-history-empty strong {
+  color: #111;
+
+  font-size: 18px;
+}
+
+
+/* =========================================================
+   NO RESULTS BUTTON
+   ========================================================= */
+
+.jr-history-empty-reset {
+  min-height: 40px;
+
+  margin-top: 10px;
+
+  padding:
+    0
+    16px;
+
+  border:
+    1px solid
+    #287c4b;
+
+  border-radius: 10px;
+
+  background: #287c4b;
+
+  color: #fff;
+
+  font-size: 13px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+/* =========================================================
+   CANCEL HISTORY BUTTON
+   Compact header button
+   ========================================================= */
+
+.jr-history-clear {
+  width: auto;
+  min-width: 118px;
+  height: 34px;
+  min-height: 34px;
+
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 2px;
+  padding: 0 14px;
+
+  box-sizing: border-box;
+
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #d32f2f; /* RED */
+
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+
+  white-space: nowrap;
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+}
+.jr-history-clear:hover {
+  background: #fafafa;
+
+  border-color:
+    rgba(0, 0, 0, 0.18);
+}
+
+
+.jr-history-clear:active {
+  transform: translateY(1px);
+}
+
+
+.jr-history-clear:focus-visible {
+  outline:
+    3px solid
+    rgba(45, 122, 70, 0.18);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 390px) {
+
+  .jr-history-clear {
+    min-width: 108px;
+    height: 32px;
+    min-height: 32px;
+
+    padding: 0 12px;
+
+    font-size: 9px;
+  }
+}
+
+
+/* =========================================================
+   EXTRA SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 350px) {
+
+  .jr-history-clear {
+    min-width: 100px;
+    height: 30px;
+    min-height: 30px;
+
+    padding: 0 10px;
+
+    font-size: 9px;
+  }
+}
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .jr-history-page *,
+  .jr-history-page *::before,
+  .jr-history-page *::after {
+    transition: none !important;
+
+    animation: none !important;
+  }
+}

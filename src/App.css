@@ -1,0 +1,1998 @@
+/* =========================================================
+   01. GLOBAL RESET
+   ========================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 100dvh;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  background: #f7f7f1;
+  color: #172019;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+svg {
+  display: block;
+}
+
+
+/* =========================================================
+   02. ROOT / APP
+   ========================================================= */
+
+#root {
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+}
+
+.jr-app {
+  position: relative;
+
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   03. MOBILE APP FRAME
+   ========================================================= */
+
+.jr-mobile-frame {
+  position: relative;
+
+  width: 100%;
+  max-width: 100%;
+
+  height: 100dvh;
+  min-height: 0;
+
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: #faf9f1;
+}
+
+
+/* =========================================================
+   04. HEADER
+   ========================================================= */
+
+.jr-header {
+  position: relative;
+
+  z-index: 1000;
+
+  width: 100%;
+  height: 56px;
+  min-height: 56px;
+  max-height: 56px;
+
+  flex: 0 0 56px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 6px 8px;
+
+  margin: 0;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #eeeeea;
+
+  overflow: hidden;
+
+  isolation: isolate;
+}
+
+
+/* =========================================================
+   05. JUICE ROBO LOGO
+   ========================================================= */
+
+.jr-header-logo-button {
+  position: relative;
+
+  z-index: 1002;
+
+  flex: 0 0 38px;
+
+  width: 38px;
+  height: 38px;
+
+  min-width: 38px;
+  min-height: 38px;
+
+  max-width: 38px;
+  max-height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  margin: 0;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  overflow: hidden;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.jr-header-logo {
+  display: block;
+
+  width: 38px;
+  height: 38px;
+
+  min-width: 38px;
+  min-height: 38px;
+
+  max-width: 38px;
+  max-height: 38px;
+
+  object-fit: contain;
+
+  border-radius: 9px;
+}
+
+
+/* =========================================================
+   06. HEADER LOCATION BUTTON
+   ========================================================= */
+
+.jr-header-location {
+  position: relative;
+
+  z-index: 1001;
+
+  flex: 1 1 auto;
+
+  width: 0;
+  min-width: 0;
+  max-width: 100%;
+
+  height: 42px;
+  min-height: 42px;
+  max-height: 42px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 2px 3px;
+  margin: 0;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #172019;
+
+  text-align: left;
+
+  overflow: hidden;
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  touch-action: manipulation;
+}
+
+.jr-header-location:active {
+  background: #f4f8f1;
+}
+
+.jr-header-location:focus {
+  outline: none;
+}
+
+.jr-header-location:focus-visible {
+  outline: 2px solid #f07800;
+  outline-offset: -1px;
+}
+
+
+/* =========================================================
+   07. HEADER LOCATION ICON
+   ========================================================= */
+
+.jr-header-location-icon {
+  flex: 0 0 28px;
+
+  width: 28px;
+  height: 28px;
+
+  min-width: 28px;
+  min-height: 28px;
+
+  max-width: 28px;
+  max-height: 28px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #eef8ef;
+
+  color: #287f46;
+
+  overflow: hidden;
+}
+
+.jr-header-location-icon svg {
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+}
+
+
+/* =========================================================
+   08. HEADER LOCATION TEXT
+   ========================================================= */
+
+.jr-header-location-copy {
+  flex: 1 1 auto;
+
+  min-width: 0;
+  max-width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+
+  gap: 1px;
+
+  overflow: hidden;
+}
+
+.jr-header-location-copy small,
+.jr-header-location-copy strong,
+.jr-header-location-copy > span {
+  display: block;
+
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.jr-header-location-copy small {
+  color: #969b96;
+
+  font-size: 6px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+}
+
+.jr-header-location-copy strong {
+  color: #151b17;
+
+  font-size: 10px;
+  line-height: 1.1;
+
+  font-weight: 900;
+}
+
+.jr-header-location-copy > span {
+  color: #7b817b;
+
+  font-size: 7px;
+  line-height: 1.05;
+
+  font-weight: 650;
+}
+
+
+/* =========================================================
+   09. HEADER CHEVRON
+   ========================================================= */
+
+.jr-header-chevron {
+  flex: 0 0 16px;
+
+  width: 16px;
+  height: 16px;
+
+  min-width: 16px;
+  min-height: 16px;
+
+  max-width: 16px;
+  max-height: 16px;
+
+  display: grid;
+  place-items: center;
+
+  color: #707670;
+
+  font-size: 0;
+  line-height: 0;
+
+  overflow: hidden;
+}
+
+.jr-header-chevron svg {
+  display: block;
+
+  width: 14px !important;
+  height: 14px !important;
+
+  min-width: 14px !important;
+  min-height: 14px !important;
+
+  max-width: 14px !important;
+  max-height: 14px !important;
+}
+
+
+/* =========================================================
+   10. HEADER ACTIONS
+   ========================================================= */
+
+.jr-header-actions {
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  min-width: 0;
+}
+
+.jr-profile-button,
+.jr-cart-button {
+  position: relative;
+
+  flex: 0 0 34px;
+
+  width: 34px;
+  height: 34px;
+
+  min-width: 34px;
+  min-height: 34px;
+
+  max-width: 34px;
+  max-height: 34px;
+
+  padding: 0;
+  margin: 0;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #e9e9e4;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #287f46;
+
+  box-shadow:
+    0 2px 8px rgba(25, 35, 25, 0.06);
+
+  cursor: pointer;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  touch-action: manipulation;
+}
+
+.jr-profile-button:active,
+.jr-cart-button:active {
+  transform: scale(0.96);
+}
+
+.jr-profile-button:focus,
+.jr-cart-button:focus {
+  outline: none;
+}
+
+.jr-profile-button:focus-visible,
+.jr-cart-button:focus-visible {
+  outline: 2px solid #f07800;
+  outline-offset: 1px;
+}
+
+.jr-header-action-icon {
+  display: block;
+
+  width: 18px !important;
+  height: 18px !important;
+
+  min-width: 18px !important;
+  min-height: 18px !important;
+
+  max-width: 18px !important;
+  max-height: 18px !important;
+}
+
+
+/* =========================================================
+   11. CART BADGE
+   ========================================================= */
+
+.jr-cart-badge {
+  position: absolute;
+
+  top: -4px;
+  right: -4px;
+
+  min-width: 15px;
+  height: 15px;
+
+  padding: 0 3px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+
+  background: #ef7d24;
+
+  color: #ffffff;
+
+  font-size: 7px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   12. IMPORTANT — REMOVE OLD NATIVE HEADER SELECTS
+   ========================================================= */
+
+.jr-header select,
+.jr-header .jr-header-select,
+.jr-header .jr-header-machine-select,
+.jr-header .jr-header-dropdown,
+.jr-header .jr-header-machine-dropdown {
+  display: none !important;
+
+  width: 0 !important;
+  height: 0 !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  max-width: 0 !important;
+  max-height: 0 !important;
+
+  opacity: 0 !important;
+  visibility: hidden !important;
+
+  pointer-events: none !important;
+}
+
+
+/* =========================================================
+   13. MAIN SCREEN AREA
+   ========================================================= */
+
+.jr-screen-container {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  flex: 1 1 auto;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   14. PAGE / CONTENT SCROLLING
+   ========================================================= */
+
+.jr-screen-container > .jr-content,
+.jr-screen-container > .jr-page {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  flex: 1 1 auto;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  padding:
+    14px
+    12px
+    calc(84px + env(safe-area-inset-bottom, 0px));
+
+  -webkit-overflow-scrolling: touch;
+
+  overscroll-behavior-y: contain;
+
+  scrollbar-width: none;
+}
+
+.jr-screen-container > .jr-content::-webkit-scrollbar,
+.jr-screen-container > .jr-page::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* =========================================================
+   15. PAGE TITLES
+   ========================================================= */
+
+.jr-page-title {
+  margin: 7px 0 9px;
+
+  color: #141b16;
+
+  font-size: 29px;
+  line-height: 1.02;
+
+  font-weight: 900;
+
+  letter-spacing: -1px;
+}
+
+
+/* =========================================================
+   16. CART LIST
+   ========================================================= */
+
+.jr-cart-list {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+
+/* =========================================================
+   17. CART ITEM
+   ========================================================= */
+
+.jr-cart-item {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 84px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 8px;
+
+  margin: 0;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   18. CART IMAGE
+   ========================================================= */
+
+.jr-cart-item > img {
+  flex: 0 0 64px;
+
+  width: 64px;
+  height: 64px;
+
+  min-width: 64px;
+  min-height: 64px;
+
+  max-width: 64px;
+  max-height: 64px;
+
+  object-fit: cover;
+
+  border-radius: 11px;
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   19. CART INFORMATION
+   ========================================================= */
+
+.jr-cart-info {
+  flex: 1 1 auto;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  padding-right: 26px;
+
+  overflow: hidden;
+}
+
+.jr-cart-info > span {
+  display: block;
+
+  min-width: 0;
+  max-width: 100%;
+
+  overflow: hidden;
+
+  font-size: 10px;
+  line-height: 1.2;
+
+  font-weight: 850;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.jr-cart-info > strong {
+  font-size: 11px;
+  line-height: 1.1;
+
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   20. CART QUANTITY CONTROL
+   ========================================================= */
+
+.jr-cart-info .jr-quantity-control,
+.jr-cart-info .jr-cart-quantity {
+  align-self: flex-start;
+
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  padding: 2px;
+
+  border-radius: 999px;
+
+  flex-shrink: 0;
+}
+
+.jr-cart-info .jr-quantity-control button,
+.jr-cart-info .jr-cart-quantity button {
+  flex: 0 0 22px;
+
+  width: 22px;
+  height: 22px;
+
+  min-width: 22px;
+  min-height: 22px;
+
+  max-width: 22px;
+  max-height: 22px;
+
+  padding: 0;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  font-size: 13px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  touch-action: manipulation;
+}
+
+
+/* =========================================================
+   21. CART REMOVE BUTTON
+   ========================================================= */
+
+.jr-remove {
+  position: absolute;
+
+  top: 7px;
+  right: 7px;
+
+  width: 22px;
+  height: 22px;
+
+  min-width: 22px;
+  min-height: 22px;
+
+  max-width: 22px;
+  max-height: 22px;
+
+  padding: 0;
+  margin: 0;
+
+  display: grid;
+  place-items: center;
+
+  border: 0;
+
+  background: transparent;
+
+  font-size: 14px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  touch-action: manipulation;
+}
+
+
+/* =========================================================
+   22. COLLECTION / VENUE CARD
+   ========================================================= */
+
+.jr-venue-selected {
+  width: 100%;
+  min-width: 0;
+
+  margin: 8px 0 10px;
+  padding: 9px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+}
+
+.jr-venue-selected-icon {
+  flex: 0 0 32px;
+
+  width: 32px;
+  height: 32px;
+
+  min-width: 32px;
+  min-height: 32px;
+
+  max-width: 32px;
+  max-height: 32px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+
+  overflow: hidden;
+}
+
+.jr-venue-selected > span:nth-child(2) {
+  flex: 1 1 auto;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  overflow: hidden;
+}
+
+.jr-venue-selected small,
+.jr-venue-selected strong {
+  display: block;
+
+  min-width: 0;
+  max-width: 100%;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.jr-venue-selected small {
+  font-size: 6px;
+  line-height: 1;
+
+  font-weight: 900;
+}
+
+.jr-venue-selected strong {
+  font-size: 10px;
+  line-height: 1.15;
+
+  font-weight: 900;
+}
+
+.jr-venue-selected > b {
+  flex: 0 0 auto;
+
+  font-size: 14px;
+  line-height: 1;
+}
+
+
+/* =========================================================
+   23. ORDER SUMMARY
+   ========================================================= */
+
+.jr-order-summary {
+  width: 100%;
+  min-width: 0;
+
+  margin: 6px 0 10px;
+  padding: 11px;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+}
+
+.jr-order-summary > div {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 4px 0;
+}
+
+.jr-order-summary span {
+  min-width: 0;
+
+  font-size: 8px;
+  line-height: 1.2;
+
+  font-weight: 650;
+}
+
+.jr-order-summary strong {
+  flex: 0 0 auto;
+
+  font-size: 11px;
+  line-height: 1.1;
+
+  font-weight: 900;
+}
+
+.jr-summary-total {
+  margin-top: 6px;
+  padding-top: 9px;
+}
+
+.jr-summary-total strong {
+  font-size: 19px;
+}
+
+
+/* =========================================================
+   24. PRIMARY CHECKOUT BUTTON
+   ========================================================= */
+
+.jr-button-primary.jr-full {
+  position: relative;
+
+  width: 100%;
+  min-height: 42px;
+
+  margin: 0 0 8px;
+  padding: 0 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-radius: 11px;
+
+  cursor: pointer;
+
+  touch-action: manipulation;
+}
+
+
+/* =========================================================
+   25. CONTINUE SHOPPING
+   ========================================================= */
+
+.jr-continue-shopping {
+  position: relative;
+
+  width: 100%;
+
+  margin: 8px 0 10px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 8px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   26. GLOBAL ARROW PROTECTION
+   ========================================================= */
+
+.jr-continue-arrow,
+.jr-location-continue-arrow,
+.jr-header-chevron,
+.jr-chevron,
+.jr-arrow {
+  box-sizing: border-box !important;
+
+  flex: 0 0 16px !important;
+
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  font-size: 0 !important;
+  line-height: 0 !important;
+
+  overflow: hidden !important;
+
+  transform: none !important;
+}
+
+.jr-continue-arrow svg,
+.jr-location-continue-arrow svg,
+.jr-header-chevron svg,
+.jr-chevron svg,
+.jr-arrow svg {
+  display: block !important;
+
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: visible !important;
+
+  transform: none !important;
+}
+
+
+/* =========================================================
+   27. LOCATION MACHINE SCREEN
+   ========================================================= */
+
+.jr-location-machine-page,
+.jr-location-page,
+.jr-location-machine-screen {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  flex: 1 1 auto;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.jr-location-machine-page *,
+.jr-location-page *,
+.jr-location-machine-screen * {
+  max-width: 100%;
+}
+
+
+/* =========================================================
+   28. LOCATION MACHINE SVG PROTECTION
+   ========================================================= */
+
+.jr-location-machine-page svg,
+.jr-location-page svg,
+.jr-location-machine-screen svg {
+  max-width: 100%;
+}
+
+.jr-location-machine-page
+.jr-continue-arrow,
+.jr-location-page
+.jr-continue-arrow,
+.jr-location-machine-screen
+.jr-continue-arrow {
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+
+  font-size: 0 !important;
+  line-height: 0 !important;
+
+  overflow: hidden !important;
+}
+
+.jr-location-machine-page
+.jr-continue-arrow
+svg,
+.jr-location-page
+.jr-continue-arrow
+svg,
+.jr-location-machine-screen
+.jr-continue-arrow
+svg {
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+}
+
+
+/* =========================================================
+   29. PRODUCT GRID
+   ========================================================= */
+
+.jr-product-grid {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin: 0;
+  padding: 0;
+}
+
+.jr-product-grid > * {
+  min-width: 0;
+}
+
+
+/* =========================================================
+   30. PRODUCT CARD
+   ========================================================= */
+
+.jr-product-card {
+  position: relative;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  border-radius: 14px;
+}
+
+.jr-product-card img {
+  width: 100%;
+
+  aspect-ratio: 1 / 1;
+
+  object-fit: cover;
+}
+
+
+/* =========================================================
+   31. BOTTOM NAVIGATION
+   ========================================================= */
+
+.jr-bottom-nav {
+  position: absolute;
+
+  z-index: 5000;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  width: 100%;
+
+  height:
+    calc(64px + env(safe-area-inset-bottom, 0px));
+
+  min-height:
+    calc(64px + env(safe-area-inset-bottom, 0px));
+
+  max-height:
+    calc(64px + env(safe-area-inset-bottom, 0px));
+
+  padding:
+    4px
+    8px
+    calc(4px + env(safe-area-inset-bottom, 0px));
+
+  display: flex;
+  align-items: stretch;
+
+  overflow: hidden;
+
+  background: rgba(255, 255, 255, 0.98);
+
+  border-top: 1px solid #eeeeea;
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.jr-bottom-nav > button {
+  flex: 1 1 0;
+
+  min-width: 0;
+  min-height: 0;
+
+  height: 100%;
+
+  padding: 0;
+  margin: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 2px;
+
+  border: 0;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  touch-action: manipulation;
+}
+
+.jr-bottom-nav > button > span,
+.jr-bottom-nav svg {
+  width: 21px !important;
+  height: 21px !important;
+
+  min-width: 21px !important;
+  min-height: 21px !important;
+
+  max-width: 21px !important;
+  max-height: 21px !important;
+}
+
+.jr-bottom-nav small {
+  font-size: 8px;
+  line-height: 1;
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   32. EMPTY CART
+   ========================================================= */
+
+.jr-empty-cart {
+  width: 100%;
+
+  min-height: 260px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  text-align: center;
+}
+
+.jr-empty-cart svg {
+  width: 42px;
+  height: 42px;
+
+  min-width: 42px;
+  min-height: 42px;
+
+  max-width: 42px;
+  max-height: 42px;
+}
+
+.jr-empty-cart h2 {
+  margin: 0;
+
+  font-size: 19px;
+  line-height: 1.1;
+
+  font-weight: 900;
+}
+
+.jr-empty-cart p {
+  max-width: 240px;
+
+  margin: 0;
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   33. GENERAL FORM SAFETY
+   ========================================================= */
+
+.jr-app input,
+.jr-app textarea {
+  max-width: 100%;
+
+  box-sizing: border-box;
+}
+
+.jr-app input {
+  font-size: 16px;
+}
+
+
+/* =========================================================
+   34. PREVENT HORIZONTAL OVERFLOW
+   ========================================================= */
+
+.jr-app,
+.jr-mobile-frame,
+.jr-screen-container,
+.jr-screen-container > .jr-content,
+.jr-screen-container > .jr-page,
+.jr-location-machine-page,
+.jr-location-page,
+.jr-location-machine-screen {
+  overflow-x: hidden;
+}
+
+
+/* =========================================================
+   35. SMALL PHONES — <= 375px
+   ========================================================= */
+
+@media screen and (max-width: 375px) {
+
+  .jr-header {
+    height: 54px;
+    min-height: 54px;
+    max-height: 54px;
+
+    flex-basis: 54px;
+
+    padding:
+      5px
+      6px;
+  }
+
+  .jr-header-logo-button {
+    flex-basis: 34px;
+
+    width: 34px;
+    height: 34px;
+
+    min-width: 34px;
+    min-height: 34px;
+
+    max-width: 34px;
+    max-height: 34px;
+  }
+
+  .jr-header-logo {
+    width: 34px;
+    height: 34px;
+
+    min-width: 34px;
+    min-height: 34px;
+
+    max-width: 34px;
+    max-height: 34px;
+  }
+
+  .jr-header-location {
+    height: 38px;
+    min-height: 38px;
+    max-height: 38px;
+
+    gap: 5px;
+  }
+
+  .jr-header-location-icon {
+    flex-basis: 25px;
+
+    width: 25px;
+    height: 25px;
+
+    min-width: 25px;
+    min-height: 25px;
+
+    max-width: 25px;
+    max-height: 25px;
+  }
+
+  .jr-header-location-icon svg {
+    width: 14px !important;
+    height: 14px !important;
+
+    min-width: 14px !important;
+    min-height: 14px !important;
+
+    max-width: 14px !important;
+    max-height: 14px !important;
+  }
+
+  .jr-header-location-copy small {
+    font-size: 5px;
+  }
+
+  .jr-header-location-copy strong {
+    font-size: 9px;
+  }
+
+  .jr-header-location-copy > span {
+    font-size: 6px;
+  }
+
+  .jr-header-chevron {
+    flex-basis: 14px;
+
+    width: 14px;
+    height: 14px;
+
+    min-width: 14px;
+    min-height: 14px;
+
+    max-width: 14px;
+    max-height: 14px;
+  }
+
+  .jr-header-chevron svg {
+    width: 12px !important;
+    height: 12px !important;
+
+    min-width: 12px !important;
+    min-height: 12px !important;
+
+    max-width: 12px !important;
+    max-height: 12px !important;
+  }
+
+  .jr-profile-button,
+  .jr-cart-button {
+    flex-basis: 30px;
+
+    width: 30px;
+    height: 30px;
+
+    min-width: 30px;
+    min-height: 30px;
+
+    max-width: 30px;
+    max-height: 30px;
+
+    border-radius: 8px;
+  }
+
+  .jr-header-action-icon {
+    width: 15px !important;
+    height: 15px !important;
+
+    min-width: 15px !important;
+    min-height: 15px !important;
+
+    max-width: 15px !important;
+    max-height: 15px !important;
+  }
+
+  .jr-cart-item > img {
+    flex-basis: 60px;
+
+    width: 60px;
+    height: 60px;
+
+    min-width: 60px;
+    min-height: 60px;
+
+    max-width: 60px;
+    max-height: 60px;
+  }
+
+  .jr-page-title {
+    font-size: 27px;
+  }
+
+  .jr-product-grid {
+    gap: 8px;
+  }
+}
+
+
+/* =========================================================
+   36. VERY SMALL PHONES — <= 360px
+   ========================================================= */
+
+@media screen and (max-width: 360px) {
+
+  .jr-header {
+    padding-left: 5px;
+    padding-right: 5px;
+
+    gap: 4px;
+  }
+
+  .jr-header-location {
+    gap: 4px;
+  }
+
+  .jr-header-location-copy strong {
+    font-size: 8px;
+  }
+
+  .jr-header-location-copy > span {
+    font-size: 5.5px;
+  }
+
+  .jr-header-actions {
+    gap: 3px;
+  }
+
+  .jr-profile-button,
+  .jr-cart-button {
+    flex-basis: 29px;
+
+    width: 29px;
+    height: 29px;
+
+    min-width: 29px;
+    min-height: 29px;
+
+    max-width: 29px;
+    max-height: 29px;
+  }
+}
+
+
+/* =========================================================
+   37. LANDSCAPE MOBILE
+   ========================================================= */
+
+@media screen and (orientation: landscape)
+and (max-height: 500px) {
+
+  .jr-header {
+    height: 50px;
+    min-height: 50px;
+    max-height: 50px;
+
+    flex-basis: 50px;
+
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .jr-header-logo-button {
+    width: 32px;
+    height: 32px;
+
+    min-width: 32px;
+    min-height: 32px;
+
+    max-width: 32px;
+    max-height: 32px;
+
+    flex-basis: 32px;
+  }
+
+  .jr-header-logo {
+    width: 32px;
+    height: 32px;
+
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .jr-profile-button,
+  .jr-cart-button {
+    width: 30px;
+    height: 30px;
+
+    min-width: 30px;
+    min-height: 30px;
+
+    max-width: 30px;
+    max-height: 30px;
+
+    flex-basis: 30px;
+  }
+
+  .jr-bottom-nav {
+    height:
+      calc(54px + env(safe-area-inset-bottom, 0px));
+
+    min-height:
+      calc(54px + env(safe-area-inset-bottom, 0px));
+
+    max-height:
+      calc(54px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+
+/* =========================================================
+   38. SAFE AREA
+   ========================================================= */
+
+@supports (padding: env(safe-area-inset-bottom)) {
+
+  .jr-mobile-frame {
+    padding-top: 0;
+  }
+
+  .jr-screen-container > .jr-content,
+  .jr-screen-container > .jr-page {
+    padding-bottom:
+      calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .jr-bottom-nav {
+    padding-bottom:
+      calc(4px + env(safe-area-inset-bottom));
+  }
+}
+
+
+/* =========================================================
+   39. ACCESSIBILITY
+   ========================================================= */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #f07800;
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   40. REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+
+    transition: none !important;
+
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* =========================================================
+   41. FINAL SVG SAFETY
+   ========================================================= */
+
+/*
+   Do not allow an SVG to become a full-screen element.
+*/
+
+.jr-app svg:not([class*="product"]) {
+  max-width: 100%;
+}
+
+
+/* =========================================================
+   42. FINAL LEGACY V / CHEVRON SAFETY
+   ========================================================= */
+
+.jr-app .jr-chevron,
+.jr-app .jr-arrow,
+.jr-app .jr-continue-arrow,
+.jr-app .jr-location-continue-arrow,
+.jr-app [class*="continue-arrow"],
+.jr-app [class*="ContinueArrow"] {
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+
+  flex: 0 0 16px !important;
+
+  font-size: 0 !important;
+  line-height: 0 !important;
+
+  overflow: hidden !important;
+
+  transform: none !important;
+}
+
+.jr-app .jr-chevron svg,
+.jr-app .jr-arrow svg,
+.jr-app .jr-continue-arrow svg,
+.jr-app .jr-location-continue-arrow svg,
+.jr-app [class*="continue-arrow"] svg,
+.jr-app [class*="ContinueArrow"] svg {
+  width: 16px !important;
+  height: 16px !important;
+
+  min-width: 16px !important;
+  min-height: 16px !important;
+
+  max-width: 16px !important;
+  max-height: 16px !important;
+
+  overflow: visible !important;
+
+  transform: none !important;
+}
+
+
+/* =========================================================
+   43. DESKTOP — MOBILE ONLY NOTICE
+   Disable any desktop blocker overlay so desktop browsers
+   can render the full responsive Juice Robo UI.
+   ========================================================= */
+
+.desktop-block,
+#desktop-block,
+.mobile-only-overlay,
+.mobile-only-notice {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+
+/* =========================================================
+   44. RESPONSIVE APPLICATION FRAME (TABLET & DESKTOP)
+   ========================================================= */
+
+/* --- TABLET (768px - 1099px) --- */
+@media screen and (min-width: 768px) {
+
+  body {
+    background: #f0eee6;
+  }
+
+  #root {
+    background: #f0eee6;
+  }
+
+  .jr-app {
+    background: #f0eee6;
+    align-items: stretch;
+  }
+
+  .jr-mobile-frame {
+    max-width: 768px;
+    border-left: 1px solid #e7e5db;
+    border-right: 1px solid #e7e5db;
+    box-shadow: 0 0 40px rgba(20, 33, 61, 0.08);
+  }
+
+  .jr-header {
+    height: 58px;
+    min-height: 58px;
+    max-height: 58px;
+    flex: 0 0 58px;
+    padding: 8px 16px;
+    gap: 10px;
+  }
+
+  .jr-header-location-copy small {
+    font-size: 7px;
+  }
+
+  .jr-header-location-copy strong {
+    font-size: 11px;
+  }
+
+  .jr-header-location-copy > span {
+    font-size: 8px;
+  }
+
+  .jr-bottom-nav {
+    justify-content: center;
+    gap: 24px;
+    padding: 6px 16px;
+  }
+
+  .jr-bottom-nav > button {
+    flex: 0 1 180px;
+    max-width: 200px;
+    border-radius: 12px;
+    transition: background 0.15s ease;
+  }
+
+  .jr-bottom-nav > button:hover {
+    background: rgba(40, 127, 70, 0.06);
+  }
+
+  /* Subtle desktop/tablet scrollbar */
+  .jr-screen-container > .jr-content,
+  .jr-screen-container > .jr-page {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
+  }
+
+  .jr-screen-container > .jr-content::-webkit-scrollbar,
+  .jr-screen-container > .jr-page::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+  }
+
+  .jr-screen-container > .jr-content::-webkit-scrollbar-thumb,
+  .jr-screen-container > .jr-page::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.16);
+    border-radius: 999px;
+  }
+
+  .jr-screen-container > .jr-content::-webkit-scrollbar-track,
+  .jr-screen-container > .jr-page::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+
+/* --- DESKTOP (1100px - 1399px) --- */
+@media screen and (min-width: 1100px) {
+
+  body {
+    background: #eceae1;
+  }
+
+  #root {
+    background: #eceae1;
+  }
+
+  .jr-app {
+    background: #eceae1;
+  }
+
+  .jr-mobile-frame {
+    max-width: 1040px;
+    border-left: 1px solid #e2dfd5;
+    border-right: 1px solid #e2dfd5;
+    box-shadow: 0 0 54px rgba(20, 33, 61, 0.10);
+  }
+
+  .jr-header {
+    height: 60px;
+    min-height: 60px;
+    max-height: 60px;
+    flex: 0 0 60px;
+    padding: 8px 24px;
+    gap: 12px;
+  }
+
+  .jr-header-logo-button,
+  .jr-header-logo {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    max-width: 42px;
+    max-height: 42px;
+  }
+
+  .jr-header-location {
+    height: 46px;
+    min-height: 46px;
+    max-height: 46px;
+    padding: 3px 6px;
+  }
+
+  .jr-header-location-copy small {
+    font-size: 7.5px;
+  }
+
+  .jr-header-location-copy strong {
+    font-size: 12px;
+  }
+
+  .jr-header-location-copy > span {
+    font-size: 9px;
+  }
+
+  .jr-profile-button,
+  .jr-cart-button {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    max-width: 38px;
+    max-height: 38px;
+  }
+
+  .jr-bottom-nav {
+    height: 66px;
+    min-height: 66px;
+    max-height: 66px;
+    padding: 6px 20px;
+    gap: 32px;
+  }
+
+  .jr-bottom-nav > button {
+    flex: 0 1 200px;
+    max-width: 220px;
+  }
+}
+
+
+/* --- WIDE DESKTOP (>= 1400px) --- */
+@media screen and (min-width: 1400px) {
+
+  body {
+    background: #e8e6dc;
+  }
+
+  #root {
+    background: #e8e6dc;
+  }
+
+  .jr-app {
+    background: #e8e6dc;
+  }
+
+  .jr-mobile-frame {
+    max-width: 1100px;
+    box-shadow: 0 0 64px rgba(20, 33, 61, 0.12);
+  }
+}
