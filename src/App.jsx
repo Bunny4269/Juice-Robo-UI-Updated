@@ -850,22 +850,39 @@ function parseUrlToScreen(pathname = "") {
 
   // Extract segments
   const segments = sub.split("/").filter(Boolean);
-  const first = (segments[0] || "").toLowerCase();
+  const first = (segments[0] || "").trim();
 
-  let outlet = null;
-  let restSegments = segments;
+  // Known top-level screens that don't have an outlet segment prefix
+  const NON_OUTLET_SCREEN_NAMES = new Set([
+    "scan",
+    "menu",
+    "home",
+    "cart",
+    "profile",
+    "history",
+    "orders",
+    "my_orders",
+    "location",
+    "location-confirmation",
+    "confirmation",
+    "checkout",
+    "payment",
+    "upi-payment",
+    "payment-success",
+    "login",
+    "menu-items",
+  ]);
 
-  if (first === "jr" || first === "hck") {
-    outlet = first;
-    restSegments = segments.slice(1);
-  } else {
+  if (NON_OUTLET_SCREEN_NAMES.has(first.toLowerCase())) {
     // Direct URL access without a recognized outlet -> Scan QR screen
     return { outlet: null, screen: "scan", param: "" };
   }
 
+  const outlet = first;
+  const restSegments = segments.slice(1);
   const subRoute = restSegments.join("/");
 
-  if (!subRoute || subRoute === "menu") {
+  if (!subRoute || subRoute === "menu" || subRoute === "home") {
     return { outlet, screen: "menu", param: "" };
   }
 
@@ -895,11 +912,11 @@ function parseUrlToScreen(pathname = "") {
     return { outlet, screen: "location", param: "" };
   }
 
-  if (subRoute === "location-confirmation") {
+  if (subRoute === "location-confirmation" || subRoute === "confirmation" || subRoute === "checkout") {
     return { outlet, screen: "location-confirmation", param: "" };
   }
 
-  if (subRoute === "upi-payment") {
+  if (subRoute === "upi-payment" || subRoute === "payment") {
     return { outlet, screen: "upi-payment", param: "" };
   }
 
@@ -1106,11 +1123,12 @@ function getScreenPath(screenName, param = "", outletId = null) {
     return `${BASE_PATH}/`.replace(/\/+/g, "/");
   }
 
-  const currentOutlet = String(outletId).toLowerCase();
+  const currentOutlet = encodeURIComponent(String(outletId).trim());
 
   let sub = "menu";
   switch (screenName) {
     case "menu":
+    case "home":
       sub = "menu";
       break;
     case "cart":
@@ -1131,6 +1149,7 @@ function getScreenPath(screenName, param = "", outletId = null) {
       sub = "location";
       break;
     case "location-confirmation":
+    case "confirmation":
       sub = "location-confirmation";
       break;
     case "upi-payment":
@@ -1154,22 +1173,29 @@ function getScreenPath(screenName, param = "", outletId = null) {
 function isSameRoute(currentPath = "", canonicalPath = "", outlet = null) {
   const normCurrent = normalizePath(currentPath).replace(/^\/+|\/+$/g, "");
   const normCanonical = normalizePath(canonicalPath).replace(/^\/+|\/+$/g, "");
-  if (normCurrent === normCanonical) return true;
+  if (normCurrent.toLowerCase() === normCanonical.toLowerCase()) return true;
 
   if (outlet) {
-    const baseOutlet = `order_now/${outlet}`;
-    const menuOutlet = `order_now/${outlet}/menu`;
-    if (
-      (normCurrent === baseOutlet && normCanonical === menuOutlet) ||
-      (normCurrent === menuOutlet && normCanonical === baseOutlet)
-    ) {
-      return true;
+    const encodedOutlet = encodeURIComponent(String(outlet).trim()).toLowerCase();
+    const rawOutlet = String(outlet).trim().toLowerCase();
+    const lowerCurrent = normCurrent.toLowerCase();
+    const lowerCanonical = normCanonical.toLowerCase();
+
+    for (const out of [encodedOutlet, rawOutlet]) {
+      const baseOutlet = `order_now/${out}`;
+      const menuOutlet = `order_now/${out}/menu`;
+      if (
+        (lowerCurrent === baseOutlet && lowerCanonical === menuOutlet) ||
+        (lowerCurrent === menuOutlet && lowerCanonical === baseOutlet)
+      ) {
+        return true;
+      }
     }
   }
 
   if (
-    (normCurrent === "order_now" && normCanonical === "order_now/scan") ||
-    (normCurrent === "order_now/scan" && normCanonical === "order_now")
+    (normCurrent.toLowerCase() === "order_now" && normCanonical.toLowerCase() === "order_now/scan") ||
+    (normCurrent.toLowerCase() === "order_now/scan" && normCanonical.toLowerCase() === "order_now")
   ) {
     return true;
   }
@@ -3309,6 +3335,24 @@ export default function App() {
         // Find location matching the outlet
         const outletTarget = String(outlet).toLowerCase();
         let matchedLocation = safeLocations.find((loc) => {
+          const locIds = [
+            loc?.id,
+            loc?.storeId,
+            loc?.store_id,
+            loc?.storeCode,
+            loc?.store_code,
+            loc?.locId,
+            loc?.locationId,
+            loc?.outletId,
+            loc?.outlet_id,
+          ]
+            .filter((v) => v !== undefined && v !== null && v !== "")
+            .map((v) => String(v).trim().toLowerCase());
+
+          if (locIds.includes(outletTarget)) {
+            return true;
+          }
+
           const locName = [
             loc?.storeName,
             loc?.name,
@@ -3357,7 +3401,8 @@ export default function App() {
            ================================================= */
         const config = OUTLET_CONFIG[outletTarget];
         const outletMenuUuid = config?.menuLocationId || "";
-        const requestedCode = menuItemCode || outletMenuUuid;
+        const locationMenuUuid = resolveMenuCodeForLocation(matchedLocation);
+        const requestedCode = menuItemCode || outletMenuUuid || locationMenuUuid;
 
         const productPromise = requestedCode
           ? fetchMenuItemsByCode(requestedCode)
@@ -3678,6 +3723,24 @@ export default function App() {
       // Restore outlet location
       const outletTarget = String(outlet || "").toLowerCase();
       let matchedLocation = loadedLocations.find((loc) => {
+        const locIds = [
+          loc?.id,
+          loc?.storeId,
+          loc?.store_id,
+          loc?.storeCode,
+          loc?.store_code,
+          loc?.locId,
+          loc?.locationId,
+          loc?.outletId,
+          loc?.outlet_id,
+        ]
+          .filter((v) => v !== undefined && v !== null && v !== "")
+          .map((v) => String(v).trim().toLowerCase());
+
+        if (locIds.includes(outletTarget)) {
+          return true;
+        }
+
         const locName = [
           loc?.storeName,
           loc?.name,
@@ -4142,12 +4205,16 @@ export default function App() {
 
   async function loadMenuForOutlet(targetOutlet) {
     if (!targetOutlet) return [];
-    const config = OUTLET_CONFIG[targetOutlet];
+    const targetKey = String(targetOutlet).toLowerCase();
+    const config = OUTLET_CONFIG[targetKey];
     const uuid = config?.menuLocationId;
     if (uuid) {
       return fetchMenuItemsByCode(uuid);
     }
-    return api.menuItems("", { outlet: targetOutlet });
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetOutlet)) {
+      return fetchMenuItemsByCode(targetOutlet);
+    }
+    return api.menuItems("", { outlet: targetOutlet, storeId: targetOutlet, id: targetOutlet });
   }
 
   /* =======================================================
@@ -4168,6 +4235,18 @@ export default function App() {
 
     if (!id) {
       return;
+    }
+
+    const nextOutletId = String(
+      location?.storeId ??
+        location?.id ??
+        location?.store_id ??
+        location?.locId ??
+        id
+    ).trim();
+
+    if (nextOutletId && nextOutletId !== outlet) {
+      setOutlet(nextOutletId);
     }
 
     setSelectedLocationId(
@@ -7298,7 +7377,7 @@ function Header({
         }}
       >
         <img
-          src={logoSrc}
+          src={juiceRoboLogo}
           alt="Juice Robo"
           className="jr-header-logo"
           draggable="false"
@@ -7326,6 +7405,7 @@ function Header({
       {/* PROFILE */}
       <button
         type="button"
+        className="jr-profile-button"
         style={{
           width: "36px",
           minWidth: "36px",
@@ -7337,6 +7417,11 @@ function Header({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          border: "1px solid #e9e9e4",
+          borderRadius: "8px",
+          background: "#ffffff",
+          cursor: "pointer",
+          boxShadow: "0 2px 6px rgba(25, 35, 25, 0.05)",
         }}
         onClick={onProfile}
         aria-label="Profile"
@@ -7369,6 +7454,7 @@ function Header({
       {/* CART */}
       <button
         type="button"
+        className="jr-cart-button"
         style={{
           width: "36px",
           minWidth: "36px",
@@ -7380,6 +7466,12 @@ function Header({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          border: "1px solid #e9e9e4",
+          borderRadius: "8px",
+          background: "#ffffff",
+          cursor: "pointer",
+          position: "relative",
+          boxShadow: "0 2px 6px rgba(25, 35, 25, 0.05)",
         }}
         onClick={onCart}
         aria-label={
