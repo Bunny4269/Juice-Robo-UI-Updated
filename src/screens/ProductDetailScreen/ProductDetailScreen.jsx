@@ -70,7 +70,8 @@ function productType(product = {}) {
 
 function getProductName(
   product = {},
-  displayProductName
+  displayProductName,
+  isHck = false
 ) {
   const generated =
     typeof displayProductName === "function"
@@ -111,6 +112,10 @@ function getProductName(
 
   if (usable(rawName)) {
     return rawName;
+  }
+
+  if (isHck) {
+    return "Helmet Cleaning Service";
   }
 
   const type = productType(product);
@@ -155,7 +160,8 @@ function getProductDescription(
 
 function getProductImage(
   product = {},
-  productImage
+  productImage,
+  isHck = false
 ) {
   const supplied =
     typeof productImage === "function"
@@ -181,7 +187,9 @@ function getProductImage(
     return resolveJuiceProductImage(direct);
   }
 
-  const fallback = PRODUCT_ASSETS[productType(product)] || "plain-juice.jpg";
+  const fallback = isHck
+    ? "hck-helmet-clean.svg"
+    : (PRODUCT_ASSETS[productType(product)] || "plain-juice.jpg");
   return resolveJuiceProductImage(fallback);
 }
 
@@ -202,7 +210,8 @@ function getVariants(product = {}) {
 
 function getVariantName(
   variant = {},
-  index
+  index,
+  isHck = false
 ) {
   return (
     clean(
@@ -212,7 +221,7 @@ function getVariantName(
         variant?.title ||
         variant?.size
     ) ||
-    (index === 0 ? "Full" : "Half")
+    (isHck ? "Disinfection Service" : (index === 0 ? "Full" : "Half"))
   );
 }
 
@@ -334,6 +343,7 @@ export default function ProductDetailScreen({
       : `₹${Number(value || 0).toFixed(2)}`,
   money,
   initialQuantity = 1,
+  isHck = false,
 }) {
   const variants = useMemo(
     () => getVariants(product),
@@ -346,14 +356,14 @@ export default function ProductDetailScreen({
         ? variants
         : [
             {
-              name: "Full",
+              name: isHck ? "Standard Service" : "Full",
               price:
                 product?.price ??
                 product?.unitPrice ??
                 0,
             },
           ],
-    [variants, product]
+    [variants, product, isHck]
   );
 
   const [selectedVariantIndex, setSelectedVariantIndex] =
@@ -429,7 +439,8 @@ export default function ProductDetailScreen({
 
   const name = getProductName(
     product,
-    displayProductName
+    displayProductName,
+    isHck
   );
 
   const description =
@@ -440,7 +451,8 @@ export default function ProductDetailScreen({
 
   const image = getProductImage(
     product,
-    productImage
+    productImage,
+    isHck
   );
 
   const selectedPrice =
@@ -515,7 +527,8 @@ export default function ProductDetailScreen({
   }
 
   async function increaseQuantity() {
-    const nextQty = quantity + 1;
+    if (quantity >= 9) return;
+    const nextQty = Math.min(quantity + 1, 9);
     if (isInCart) {
       const targetId =
         cartItem?.id ??
@@ -609,7 +622,28 @@ export default function ProductDetailScreen({
               className="jr-product-detail-image-fallback"
               aria-hidden="true"
             >
-              <span>🧃</span>
+              {isHck ? (
+                <svg
+                  viewBox="0 0 64 64"
+                  width="48"
+                  height="48"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <rect width="64" height="64" rx="14" fill="#EDF7ED" />
+                  <path
+                    d="M16 34 C16 22 23 16 32 16 C41 16 48 22 48 34 C48 43 43 47 36 47 L24 47 C18 47 16 41 16 34 Z"
+                    fill="#287F46"
+                  />
+                  <path
+                    d="M22 31 H42 V37 C42 39 40 41 38 41 H26 C24 41 22 39 22 37 Z"
+                    fill="#a3e635"
+                    opacity="0.9"
+                  />
+                </svg>
+              ) : (
+                <span>🧃</span>
+              )}
             </div>
           )}
         </div>
@@ -620,7 +654,7 @@ export default function ProductDetailScreen({
 
         <div className="jr-product-detail-info">
           <span className="jr-product-detail-eyebrow">
-            FRESH SUGARCANE JUICE
+            {isHck ? "HELMET DISINFECTION & CLEANING" : "FRESH SUGARCANE JUICE"}
           </span>
 
           <h1>{name}</h1>
@@ -631,14 +665,14 @@ export default function ProductDetailScreen({
         </div>
 
         {/* =================================================
-            CHOOSE SIZE
+            CHOOSE SIZE / PACKAGE DETAILS
            ================================================= */}
 
         <section className="jr-product-detail-section">
           <div className="jr-product-detail-section-heading">
-            <strong>CHOOSE SIZE</strong>
+            <strong>{isHck ? "PACKAGE DETAILS" : "CHOOSE SIZE"}</strong>
             <small>
-              Select your preferred serving
+              {isHck ? "Select your preferred package" : "Select your preferred serving"}
             </small>
           </div>
 
@@ -652,7 +686,8 @@ export default function ProductDetailScreen({
                 const variantName =
                   getVariantName(
                     variant,
-                    index
+                    index,
+                    isHck
                   );
 
                 const variantDescription =
@@ -727,9 +762,9 @@ export default function ProductDetailScreen({
 
         <section className="jr-product-detail-quantity-section">
           <div className="jr-product-detail-section-heading">
-            <strong>QUANTITY</strong>
+            <strong>{isHck ? "NUMBER OF HELMETS" : "QUANTITY"}</strong>
             <small>
-              How many would you like?
+              {isHck ? "How many helmets to clean?" : "How many would you like?"}
             </small>
           </div>
 
@@ -763,6 +798,7 @@ export default function ProductDetailScreen({
               onClick={
                 increaseQuantity
               }
+              disabled={quantity >= 9}
               aria-label="Increase quantity"
             >
               +

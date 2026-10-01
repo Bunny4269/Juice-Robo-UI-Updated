@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="bg_basic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0F9FF" />
+      <stop offset="100%" stop-color="#E0F2FE" />
+    </linearGradient>
+    <linearGradient id="helmet_basic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284C7" />
+      <stop offset="100%" stop-color="#0369A1" />
+    </linearGradient>
+    <linearGradient id="visor_basic" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="20" fill="url(#bg_basic)" />
+  <!-- Disinfection Ring -->
+  <circle cx="100" cy="95" r="65" stroke="#BAE6FD" stroke-width="4" stroke-dasharray="6 6" />
+  <circle cx="100" cy="95" r="54" fill="#FFFFFF" fill-opacity="0.6" />
+  <!-- Helmet Body -->
+  <path d="M100 48C68 48 50 68 50 98C50 115 58 132 72 142L80 148H138C145 140 150 128 150 112C150 96 148 78 134 60C123 52 112 48 100 48Z" fill="url(#helmet_basic)" />
+  <!-- Visor -->
+  <path d="M88 82H134C139 82 142 86 140.5 91L135 112C133 118 127 122 121 122H92C86 122 81 117 80 110L78 88C77 84 81 82 88 82Z" fill="url(#visor_basic)" />
+  <!-- Visor Reflection -->
+  <path d="M92 88L86 112C85 116 88 118 92 118H96L102 88H92Z" fill="#FFFFFF" fill-opacity="0.35" />
+  <!-- Aeration Vent Details -->
+  <rect x="94" y="60" width="12" height="4" rx="2" fill="#38BDF8" />
+  <!-- Clean Sparkles -->
+  <path d="M152 46L154 52L160 54L154 56L152 62L150 56L144 54L150 52Z" fill="#0284C7" />
+  <path d="M48 98L49.5 103L54 104.5L49.5 106L48 111L46.5 106L42 104.5L46.5 103Z" fill="#38BDF8" />
+  <!-- Badge Pill -->
+  <rect x="42" y="160" width="116" height="24" rx="12" fill="#0284C7" />
+  <text x="100" y="176" font-family="Inter, -apple-system, sans-serif" font-weight="800" font-size="11" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">BASIC CLEAN</text>
+</svg>

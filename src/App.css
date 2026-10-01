@@ -135,18 +135,18 @@ svg {
   z-index: 1000;
 
   width: 100%;
-  height: 56px;
-  min-height: 56px;
-  max-height: 56px;
+  height: 58px;
+  min-height: 58px;
+  max-height: 58px;
 
-  flex: 0 0 56px;
+  flex: 0 0 58px;
 
   display: flex;
   align-items: center;
 
-  gap: 6px;
+  gap: 7px;
 
-  padding: 6px 8px;
+  padding: 7px 10px;
 
   margin: 0;
 
@@ -154,7 +154,7 @@ svg {
 
   border-bottom: 1px solid #eeeeea;
 
-  overflow: hidden;
+  overflow: visible;
 
   isolation: isolate;
 }
@@ -169,26 +169,26 @@ svg {
 
   z-index: 1002;
 
-  flex: 0 0 38px;
+  flex: 0 1 clamp(118px, 34vw, 150px);
 
-  width: 38px;
-  height: 38px;
+  width: clamp(118px, 34vw, 150px);
+  height: 42px;
 
-  min-width: 38px;
-  min-height: 38px;
+  min-width: 118px;
+  min-height: 42px;
 
-  max-width: 38px;
-  max-height: 38px;
+  max-width: 150px;
+  max-height: 42px;
 
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 
   padding: 0;
   margin: 0;
 
   border: 0;
-  border-radius: 9px;
+  border-radius: 8px;
 
   background: #ffffff;
 
@@ -203,6 +203,43 @@ svg {
 .jr-header-logo {
   display: block;
 
+  width: 100%;
+  height: auto;
+
+  max-width: 150px;
+  max-height: 36px;
+
+  object-fit: contain;
+  object-position: left center;
+
+  border-radius: 8px;
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   06. HEADER SPACER
+   ========================================================= */
+
+.jr-header-spacer {
+  flex: 1 1 auto;
+
+  width: 0;
+  min-width: 0;
+}
+
+
+/* =========================================================
+   07. HEADER ACTIONS
+   ========================================================= */
+
+.jr-profile-button,
+.jr-cart-button {
+  position: relative;
+
+  flex: 0 0 38px;
+
   width: 38px;
   height: 38px;
 
@@ -211,251 +248,6 @@ svg {
 
   max-width: 38px;
   max-height: 38px;
-
-  object-fit: contain;
-
-  border-radius: 9px;
-}
-
-
-/* =========================================================
-   06. HEADER LOCATION BUTTON
-   ========================================================= */
-
-.jr-header-location {
-  position: relative;
-
-  z-index: 1001;
-
-  flex: 1 1 auto;
-
-  width: 0;
-  min-width: 0;
-  max-width: 100%;
-
-  height: 42px;
-  min-height: 42px;
-  max-height: 42px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 6px;
-
-  padding: 2px 3px;
-  margin: 0;
-
-  border: 0;
-  border-radius: 8px;
-
-  background: transparent;
-
-  color: #172019;
-
-  text-align: left;
-
-  overflow: hidden;
-
-  cursor: pointer;
-
-  appearance: none;
-  -webkit-appearance: none;
-
-  touch-action: manipulation;
-}
-
-.jr-header-location:active {
-  background: #f4f8f1;
-}
-
-.jr-header-location:focus {
-  outline: none;
-}
-
-.jr-header-location:focus-visible {
-  outline: 2px solid #f07800;
-  outline-offset: -1px;
-}
-
-
-/* =========================================================
-   07. HEADER LOCATION ICON
-   ========================================================= */
-
-.jr-header-location-icon {
-  flex: 0 0 28px;
-
-  width: 28px;
-  height: 28px;
-
-  min-width: 28px;
-  min-height: 28px;
-
-  max-width: 28px;
-  max-height: 28px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 50%;
-
-  background: #eef8ef;
-
-  color: #287f46;
-
-  overflow: hidden;
-}
-
-.jr-header-location-icon svg {
-  width: 16px !important;
-  height: 16px !important;
-
-  min-width: 16px !important;
-  min-height: 16px !important;
-
-  max-width: 16px !important;
-  max-height: 16px !important;
-}
-
-
-/* =========================================================
-   08. HEADER LOCATION TEXT
-   ========================================================= */
-
-.jr-header-location-copy {
-  flex: 1 1 auto;
-
-  min-width: 0;
-  max-width: 100%;
-
-  display: flex;
-  flex-direction: column;
-
-  justify-content: center;
-
-  gap: 1px;
-
-  overflow: hidden;
-}
-
-.jr-header-location-copy small,
-.jr-header-location-copy strong,
-.jr-header-location-copy > span {
-  display: block;
-
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-
-  margin: 0;
-  padding: 0;
-
-  overflow: hidden;
-
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.jr-header-location-copy small {
-  color: #969b96;
-
-  font-size: 6px;
-  line-height: 1;
-
-  font-weight: 900;
-
-  letter-spacing: 0.08em;
-}
-
-.jr-header-location-copy strong {
-  color: #151b17;
-
-  font-size: 10px;
-  line-height: 1.1;
-
-  font-weight: 900;
-}
-
-.jr-header-location-copy > span {
-  color: #7b817b;
-
-  font-size: 7px;
-  line-height: 1.05;
-
-  font-weight: 650;
-}
-
-
-/* =========================================================
-   09. HEADER CHEVRON
-   ========================================================= */
-
-.jr-header-chevron {
-  flex: 0 0 16px;
-
-  width: 16px;
-  height: 16px;
-
-  min-width: 16px;
-  min-height: 16px;
-
-  max-width: 16px;
-  max-height: 16px;
-
-  display: grid;
-  place-items: center;
-
-  color: #707670;
-
-  font-size: 0;
-  line-height: 0;
-
-  overflow: hidden;
-}
-
-.jr-header-chevron svg {
-  display: block;
-
-  width: 14px !important;
-  height: 14px !important;
-
-  min-width: 14px !important;
-  min-height: 14px !important;
-
-  max-width: 14px !important;
-  max-height: 14px !important;
-}
-
-
-/* =========================================================
-   10. HEADER ACTIONS
-   ========================================================= */
-
-.jr-header-actions {
-  flex: 0 0 auto;
-
-  display: flex;
-  align-items: center;
-
-  gap: 5px;
-
-  min-width: 0;
-}
-
-.jr-profile-button,
-.jr-cart-button {
-  position: relative;
-
-  flex: 0 0 34px;
-
-  width: 34px;
-  height: 34px;
-
-  min-width: 34px;
-  min-height: 34px;
-
-  max-width: 34px;
-  max-height: 34px;
 
   padding: 0;
   margin: 0;
@@ -481,6 +273,21 @@ svg {
   touch-action: manipulation;
 }
 
+.jr-cart-button {
+  flex-basis: 40px;
+
+  width: 40px;
+  height: 40px;
+
+  min-width: 40px;
+  min-height: 40px;
+
+  max-width: 40px;
+  max-height: 40px;
+
+  border-radius: 9px;
+}
+
 .jr-profile-button:active,
 .jr-cart-button:active {
   transform: scale(0.96);
@@ -500,31 +307,44 @@ svg {
 .jr-header-action-icon {
   display: block;
 
-  width: 18px !important;
-  height: 18px !important;
+  width: 19px !important;
+  height: 19px !important;
 
-  min-width: 18px !important;
-  min-height: 18px !important;
+  min-width: 19px !important;
+  min-height: 19px !important;
 
-  max-width: 18px !important;
-  max-height: 18px !important;
+  max-width: 19px !important;
+  max-height: 19px !important;
+}
+
+.jr-cart-button .jr-cart-icon {
+  width: 21px !important;
+  height: 21px !important;
+
+  min-width: 21px !important;
+  min-height: 21px !important;
+
+  max-width: 21px !important;
+  max-height: 21px !important;
 }
 
 
 /* =========================================================
-   11. CART BADGE
+   08. CART BADGE
    ========================================================= */
 
 .jr-cart-badge {
   position: absolute;
 
-  top: -4px;
-  right: -4px;
+  top: -5px;
+  right: -5px;
 
-  min-width: 15px;
-  height: 15px;
+  z-index: 20;
 
-  padding: 0 3px;
+  min-width: 21px;
+  height: 21px;
+
+  padding: 0 5px;
 
   display: flex;
   align-items: center;
@@ -534,17 +354,193 @@ svg {
   border-radius: 999px;
 
   background: #ef7d24;
-
   color: #ffffff;
 
-  font-size: 7px;
+  font-size: 10px;
   line-height: 1;
 
   font-weight: 900;
 
+  white-space: nowrap;
+
   pointer-events: none;
 }
 
+
+/* =========================================================
+   09. HEADER RESPONSIVE SAFETY
+   ========================================================= */
+
+@media screen and (max-width: 375px) {
+  .jr-header {
+    height: 54px;
+    min-height: 54px;
+    max-height: 54px;
+    flex-basis: 54px;
+    padding: 5px 6px;
+    gap: 5px;
+  }
+
+  .jr-header-logo-button {
+    flex-basis: 112px;
+    width: 112px;
+    min-width: 112px;
+    max-width: 112px;
+
+    height: 36px;
+    min-height: 36px;
+    max-height: 36px;
+  }
+
+  .jr-header-logo {
+    max-width: 112px;
+    max-height: 32px;
+  }
+
+  .jr-profile-button {
+    flex-basis: 32px;
+
+    width: 32px;
+    height: 32px;
+
+    min-width: 32px;
+    min-height: 32px;
+
+    max-width: 32px;
+    max-height: 32px;
+
+    border-radius: 8px;
+  }
+
+  .jr-cart-button {
+    flex-basis: 36px;
+
+    width: 36px;
+    height: 36px;
+
+    min-width: 36px;
+    min-height: 36px;
+
+    max-width: 36px;
+    max-height: 36px;
+
+    border-radius: 8px;
+  }
+
+  .jr-header-action-icon {
+    width: 17px !important;
+    height: 17px !important;
+
+    min-width: 17px !important;
+    min-height: 17px !important;
+
+    max-width: 17px !important;
+    max-height: 17px !important;
+  }
+
+  .jr-cart-button .jr-cart-icon {
+    width: 19px !important;
+    height: 19px !important;
+
+    min-width: 19px !important;
+    min-height: 19px !important;
+
+    max-width: 19px !important;
+    max-height: 19px !important;
+  }
+
+  .jr-cart-badge {
+    top: -5px;
+    right: -5px;
+
+    min-width: 19px;
+    height: 19px;
+
+    font-size: 9px;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .jr-header {
+    padding-left: 5px;
+    padding-right: 5px;
+    gap: 4px;
+  }
+
+  .jr-header-logo-button {
+    flex-basis: 108px;
+    width: 108px;
+    min-width: 108px;
+    max-width: 108px;
+  }
+
+  .jr-profile-button {
+    flex-basis: 30px;
+
+    width: 30px;
+    height: 30px;
+
+    min-width: 30px;
+    min-height: 30px;
+
+    max-width: 30px;
+    max-height: 30px;
+  }
+
+  .jr-cart-button {
+    flex-basis: 35px;
+
+    width: 35px;
+    height: 35px;
+
+    min-width: 35px;
+    min-height: 35px;
+
+    max-width: 35px;
+    max-height: 35px;
+  }
+}
+
+
+/* =========================================================
+   10. HEADER LEGACY SELECTS — DISABLED
+   ========================================================= */
+
+.jr-header select,
+.jr-header .jr-header-select,
+.jr-header .jr-header-machine-select,
+.jr-header .jr-header-dropdown,
+.jr-header .jr-header-machine-dropdown {
+  display: none !important;
+
+  width: 0 !important;
+  height: 0 !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  max-width: 0 !important;
+  max-height: 0 !important;
+
+  opacity: 0 !important;
+  visibility: hidden !important;
+
+  pointer-events: none !important;
+}
+
+
+/* =========================================================
+   11. HEADER ACCESSIBILITY
+   ========================================================= */
+
+.jr-cart-button:hover,
+.jr-profile-button:hover {
+  border-color: #dcded8;
+}
+
+.jr-cart-button:hover {
+  background: #fbfcfa;
+}
 
 /* =========================================================
    12. IMPORTANT — REMOVE OLD NATIVE HEADER SELECTS
@@ -673,7 +669,7 @@ svg {
 
   width: 100%;
   min-width: 0;
-  min-height: 84px;
+  min-height: 96px;
 
   display: flex;
   align-items: center;
@@ -722,27 +718,35 @@ svg {
   flex: 1 1 auto;
 
   min-width: 0;
+  max-width: 100%;
 
   display: flex;
   flex-direction: column;
 
-  gap: 4px;
+  gap: 5px;
 
-  padding-right: 26px;
+  padding-right: 28px;
 
-  overflow: hidden;
+  overflow: visible;
 }
 
+/* Product name */
 .jr-cart-info > span {
   display: block;
 
+  width: 100%;
   min-width: 0;
   max-width: 100%;
 
+  margin: 0;
+  padding: 0;
+
+  color: #172019;
+
   overflow: hidden;
 
-  font-size: 10px;
-  line-height: 1.2;
+  font-size: 15px !important;
+  line-height: 1.25;
 
   font-weight: 850;
 
@@ -750,11 +754,53 @@ svg {
   text-overflow: ellipsis;
 }
 
+/* Price */
 .jr-cart-info > strong {
-  font-size: 11px;
-  line-height: 1.1;
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  color: #172019;
+
+  font-size: 15px !important;
+  line-height: 1.2;
 
   font-weight: 900;
+}
+
+/* All direct information inside cart */
+.jr-cart-info > * {
+  min-width: 0;
+
+  font-size: 14px !important;
+  line-height: 1.3;
+
+  font-weight: 750;
+}
+
+/* Quantity / Modify text */
+.jr-cart-info .jr-quantity-control,
+.jr-cart-info .jr-cart-quantity {
+  font-size: 14px !important;
+  line-height: 1.3;
+
+  font-weight: 800;
+}
+
+/* Quantity number */
+.jr-cart-info .jr-quantity-control span,
+.jr-cart-info .jr-cart-quantity span {
+  font-size: 14px !important;
+  font-weight: 900;
+}
+
+/* Modify button */
+.jr-cart-info button {
+  font-size: 13px !important;
+  line-height: 1.2;
+
+  font-weight: 850 !important;
 }
 
 
@@ -805,7 +851,6 @@ svg {
 
   touch-action: manipulation;
 }
-
 
 /* =========================================================
    21. CART REMOVE BUTTON
@@ -1272,7 +1317,7 @@ svg {
   flex: 1 1 0;
 
   min-width: 0;
-  min-height: 0;
+  min-height: 48px;
 
   height: 100%;
 
@@ -1293,6 +1338,14 @@ svg {
   cursor: pointer;
 
   touch-action: manipulation;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jr-bottom-nav > button * {
+  pointer-events: none;
 }
 
 .jr-bottom-nav > button > span,
@@ -1312,6 +1365,15 @@ svg {
   line-height: 1;
 
   font-weight: 800;
+}
+
+.jr-bottom-nav.jr-bottom-nav--single {
+  justify-content: center;
+}
+
+.jr-bottom-nav.jr-bottom-nav--single > button {
+  flex: 0 1 200px;
+  max-width: 220px;
 }
 
 
@@ -1586,8 +1648,7 @@ svg {
     gap: 3px;
   }
 
-  .jr-profile-button,
-  .jr-cart-button {
+  .jr-profile-button {
     flex-basis: 29px;
 
     width: 29px;
@@ -1621,28 +1682,22 @@ and (max-height: 500px) {
   }
 
   .jr-header-logo-button {
-    width: 32px;
-    height: 32px;
+    flex-basis: 112px;
+    width: 112px;
+    min-width: 112px;
+    max-width: 112px;
 
-    min-width: 32px;
-    min-height: 32px;
-
-    max-width: 32px;
-    max-height: 32px;
-
-    flex-basis: 32px;
+    height: 36px;
+    min-height: 36px;
+    max-height: 36px;
   }
 
   .jr-header-logo {
-    width: 32px;
-    height: 32px;
-
-    min-width: 32px;
-    min-height: 32px;
+    max-width: 112px;
+    max-height: 32px;
   }
 
-  .jr-profile-button,
-  .jr-cart-button {
+  .jr-profile-button {
     width: 30px;
     height: 30px;
 
@@ -1952,8 +2007,7 @@ textarea:focus-visible {
     font-size: 9px;
   }
 
-  .jr-profile-button,
-  .jr-cart-button {
+  .jr-profile-button {
     width: 38px;
     height: 38px;
     min-width: 38px;
@@ -1996,4 +2050,88 @@ textarea:focus-visible {
     max-width: 1100px;
     box-shadow: 0 0 64px rgba(20, 33, 61, 0.12);
   }
+}
+
+/* =========================================================
+   FINAL CART BUTTON OVERRIDE
+   ========================================================= */
+
+.jr-header .jr-cart-button {
+  position: relative !important;
+
+  width: 40px !important;
+  height: 40px !important;
+
+  min-width: 40px !important;
+  min-height: 40px !important;
+
+  max-width: 40px !important;
+  max-height: 40px !important;
+
+  flex: 0 0 40px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 1px solid #e9e9e4 !important;
+  border-radius: 9px !important;
+
+  background: #ffffff !important;
+  color: #287f46 !important;
+
+  cursor: pointer !important;
+
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+
+  z-index: 1003 !important;
+}
+
+.jr-header .jr-cart-button * {
+  pointer-events: none !important;
+}
+
+.jr-header .jr-cart-button .jr-cart-icon {
+  width: 21px !important;
+  height: 21px !important;
+
+  min-width: 21px !important;
+  min-height: 21px !important;
+
+  max-width: 21px !important;
+  max-height: 21px !important;
+
+  pointer-events: none !important;
+}
+
+.jr-header .jr-cart-button .jr-cart-badge {
+  position: absolute !important;
+
+  top: -5px !important;
+  right: -5px !important;
+
+  min-width: 21px !important;
+  height: 21px !important;
+
+  padding: 0 5px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border: 2px solid #ffffff !important;
+  border-radius: 999px !important;
+
+  background: #ef7d24 !important;
+  color: #ffffff !important;
+
+  font-size: 10px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+
+  pointer-events: none !important;
+  z-index: 20 !important;
 }

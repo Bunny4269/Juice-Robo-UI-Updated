@@ -3,6 +3,7 @@ import "./LoginScreen.css";
 
 import juiceRoboLogo from "../../../assets/juice-robo-logo.jpg";
 
+const HCK_LOGO = `${import.meta.env.BASE_URL}assets/hck-logo.svg`;
 const REMEMBER_KEY = "juice_robo_remember_me";
 const SAVED_EMAIL_KEY = "juice_robo_saved_email";
 
@@ -13,6 +14,7 @@ export default function LoginScreen({
   busy = false,
   error = "",
   onContinueWithoutLogin,
+  isHck = false,
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -181,15 +183,15 @@ export default function LoginScreen({
         <div className="jr-login-logo-container">
           <img
             className="jr-login-logo-image"
-            src={juiceRoboLogo}
-            alt="Juice Robo"
+            src={isHck ? HCK_LOGO : juiceRoboLogo}
+            alt={isHck ? "HCK Helmet Cleaning" : "Juice Robo"}
           />
         </div>
 
         {/* INTRO */}
         <div className="jr-login-copy">
           <span className="jr-login-eyebrow">
-            FRESH JUICE · READY WHEN YOU ARE
+            {isHck ? "HELMET CARE · READY WHEN YOU ARE" : "FRESH JUICE · READY WHEN YOU ARE"}
           </span>
 
           <h1>
@@ -199,8 +201,9 @@ export default function LoginScreen({
           </h1>
 
           <p>
-            Sign in to continue your
-            Juice Robo experience.
+            {isHck
+              ? "Sign in to continue to your HCK services."
+              : "Sign in to continue your Juice Robo experience."}
           </p>
         </div>
 

@@ -1500,6 +1500,8 @@ function buildLegacyOrderPayload(payload = {}) {
       payload?.store_id,
       payload?.location?.storeId,
       payload?.location?.store_id,
+      payload?.locId,
+      payload?.location?.locId,
       getStoreId()
     )
   );

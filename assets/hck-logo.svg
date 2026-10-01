@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" fill="none">
+  <defs>
+    <linearGradient id="hck_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284C7" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="visor_grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0.95" />
+    </linearGradient>
+  </defs>
+  <!-- Helmet Icon Mark -->
+  <g transform="translate(6, 6)">
+    <rect width="48" height="48" rx="12" fill="url(#hck_grad)" />
+    <!-- Helmet Shell -->
+    <path d="M24 12C16.8 12 12 16.5 12 24C12 28.2 13.8 32.5 17 35.5L19 37H35C36.5 35 37.5 32 37.5 28C37.5 24 36.8 19.5 33 15C30.2 13 27.2 12 24 12Z" fill="#F8FAFC" />
+    <!-- Visor -->
+    <path d="M21 21H34C35.2 21 35.8 22.2 35.5 23.5L34 29C33.5 30.5 32 31.5 30.5 31.5H23C21.5 31.5 20.2 30.2 20 28.5L19.5 23C19.3 21.8 20.1 21 21 21Z" fill="url(#visor_grad)" />
+    <!-- Sparkle / Clean Icon -->
+    <path d="M38 12L39 14.5L41.5 15.5L39 16.5L38 19L37 16.5L34.5 15.5L37 14.5Z" fill="#38BDF8" />
+  </g>
+  <!-- Wordmark Text -->
+  <text x="64" y="32" font-family="Inter, -apple-system, sans-serif" font-weight="900" font-size="24" fill="#0F172A" letter-spacing="0.5">HCK</text>
+  <rect x="65" y="38" width="135" height="15" rx="3" fill="#F1F5F9" />
+  <text x="70" y="49" font-family="Inter, -apple-system, sans-serif" font-weight="700" font-size="9.5" fill="#0284C7" letter-spacing="1">HELMET CLEANING</text>
+</svg>

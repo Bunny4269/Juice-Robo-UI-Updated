@@ -33,7 +33,7 @@ function checkIsDesktop() {
   return true;
 }
 
-export default function DesktopBlocker() {
+export default function DesktopBlocker({ isHck = false }) {
   const [isDesktop, setIsDesktop] = useState(checkIsDesktop);
 
   useEffect(() => {
@@ -59,13 +59,17 @@ export default function DesktopBlocker() {
       className="jr-desktop-blocker-overlay"
       role="dialog"
       aria-modal="true"
-      aria-label="Juice Robo is designed for mobile devices"
+      aria-label={
+        isHck
+          ? "HCK Helmet Cleaning is designed for mobile devices"
+          : "Juice Robo is designed for mobile devices"
+      }
     >
       <div className="jr-desktop-blocker-card">
         {/* Brand Badge */}
         <div className="jr-desktop-badge">
           <span className="jr-desktop-badge-dot" aria-hidden="true" />
-          <span>ORDER AT MACHINE</span>
+          <span>{isHck ? "SERVICE AT STATION" : "ORDER AT MACHINE"}</span>
         </div>
 
         {/* Mobile Smartphone Illustration */}
@@ -74,45 +78,86 @@ export default function DesktopBlocker() {
             <div className="jr-phone-notch" />
             <div className="jr-phone-screen">
               <div className="jr-phone-logo">
-                <span className="jr-logo-green">JUICE</span>
-                <span className="jr-logo-orange">ROBO</span>
+                {isHck ? (
+                  <>
+                    <span className="jr-logo-green">HCK</span>
+                    <span className="jr-logo-orange">CLEAN</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="jr-logo-green">JUICE</span>
+                    <span className="jr-logo-orange">ROBO</span>
+                  </>
+                )}
               </div>
               <div className="jr-phone-juice-art">
-                <svg
-                  viewBox="0 0 100 100"
-                  width="54"
-                  height="54"
-                  fill="none"
-                  className="jr-juice-svg"
-                >
-                  <circle cx="50" cy="50" r="46" fill="#eaf6ed" />
-                  <path
-                    d="M32 30h36l-6 48a6 6 0 0 1-6 5H44a6 6 0 0 1-6-5l-6-48Z"
-                    fill="#38a169"
-                    opacity="0.85"
-                  />
-                  <path
-                    d="M36 42h28l-4 32a4 4 0 0 1-4 4H44a4 4 0 0 1-4-4l-4-32Z"
-                    fill="#2f855a"
-                  />
-                  <path
-                    d="M30 30h40"
-                    stroke="#276749"
-                    strokeWidth="3.5"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M56 22l6-10"
-                    stroke="#dd6b20"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-                  <circle cx="48" cy="52" r="3" fill="#ffffff" opacity="0.6" />
-                  <circle cx="54" cy="62" r="2" fill="#ffffff" opacity="0.6" />
-                </svg>
+                {isHck ? (
+                  <svg
+                    viewBox="0 0 100 100"
+                    width="54"
+                    height="54"
+                    fill="none"
+                    className="jr-juice-svg"
+                  >
+                    <circle cx="50" cy="50" r="46" fill="#eaf6ed" />
+                    <path
+                      d="M26 50 C26 34 37 24 50 24 C63 24 74 34 74 50 C74 62 66 68 56 68 L36 68 C28 68 26 60 26 50 Z"
+                      fill="#2f855a"
+                    />
+                    <path
+                      d="M34 46 H66 V56 C66 58 64 60 62 60 H38 C36 60 34 58 34 56 Z"
+                      fill="#38a169"
+                      opacity="0.8"
+                    />
+                    <path
+                      d="M44 32 L48 38 L56 30"
+                      stroke="#ffffff"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    viewBox="0 0 100 100"
+                    width="54"
+                    height="54"
+                    fill="none"
+                    className="jr-juice-svg"
+                  >
+                    <circle cx="50" cy="50" r="46" fill="#eaf6ed" />
+                    <path
+                      d="M32 30h36l-6 48a6 6 0 0 1-6 5H44a6 6 0 0 1-6-5l-6-48Z"
+                      fill="#38a169"
+                      opacity="0.85"
+                    />
+                    <path
+                      d="M36 42h28l-4 32a4 4 0 0 1-4 4H44a4 4 0 0 1-4-4l-4-32Z"
+                      fill="#2f855a"
+                    />
+                    <path
+                      d="M30 30h40"
+                      stroke="#276749"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M56 22l6-10"
+                      stroke="#dd6b20"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="48" cy="52" r="3" fill="#ffffff" opacity="0.6" />
+                    <circle cx="54" cy="62" r="2" fill="#ffffff" opacity="0.6" />
+                  </svg>
+                )}
               </div>
-              <div className="jr-phone-juice-title">Sugarcane Juice</div>
-              <div className="jr-phone-juice-pill">Cold-Pressed Fresh</div>
+              <div className="jr-phone-juice-title">
+                {isHck ? "Helmet Cleaning" : "Sugarcane Juice"}
+              </div>
+              <div className="jr-phone-juice-pill">
+                {isHck ? "Sanitized & Fresh" : "Cold-Pressed Fresh"}
+              </div>
             </div>
             <div className="jr-phone-bar" />
           </div>
@@ -121,34 +166,62 @@ export default function DesktopBlocker() {
         {/* Logo and Titles */}
         <div className="jr-desktop-blocker-content">
           <div className="jr-desktop-blocker-logo">
-            <span className="jr-desktop-logo-green">JUICE</span>
-            <span className="jr-desktop-logo-orange">ROBO</span>
+            {isHck ? (
+              <>
+                <span className="jr-desktop-logo-green">HCK</span>
+                <span className="jr-desktop-logo-orange">HELMET CARE</span>
+              </>
+            ) : (
+              <>
+                <span className="jr-desktop-logo-green">JUICE</span>
+                <span className="jr-desktop-logo-orange">ROBO</span>
+              </>
+            )}
           </div>
 
           <h1 className="jr-desktop-blocker-title">
-            Open Juice Robo on your phone
+            {isHck ? "Open HCK on your phone" : "Open Juice Robo on your phone"}
           </h1>
 
           <p className="jr-desktop-blocker-desc">
-            For the best ordering experience, please open this website on your
-            mobile device.
+            {isHck
+              ? "For the best experience, please open this helmet cleaning website on your mobile device."
+              : "For the best ordering experience, please open this website on your mobile device."}
           </p>
 
           <div className="jr-desktop-features">
             <div className="jr-desktop-feature-item">
-              <span className="jr-desktop-feature-icon" aria-hidden="true">⚡</span>
-              <span>Order ahead & collect instantly</span>
+              <span className="jr-desktop-feature-icon" aria-hidden="true">
+                {isHck ? "🛡️" : "⚡"}
+              </span>
+              <span>
+                {isHck
+                  ? "Professional helmet disinfection & cleaning"
+                  : "Order ahead & collect instantly"}
+              </span>
             </div>
             <div className="jr-desktop-feature-item">
-              <span className="jr-desktop-feature-icon" aria-hidden="true">🌱</span>
-              <span>100% natural, freshly crushed at the machine</span>
+              <span className="jr-desktop-feature-icon" aria-hidden="true">
+                {isHck ? "✨" : "🌱"}
+              </span>
+              <span>
+                {isHck
+                  ? "Fresh, disinfected helmet in minutes"
+                  : "100% natural, freshly crushed at the machine"}
+              </span>
             </div>
           </div>
 
           <div className="jr-desktop-blocker-hint">
             <span className="jr-desktop-hint-icon" aria-hidden="true">📱</span>
             <span>
-              Open <strong>/order_now/menu/</strong> on your mobile phone
+              {isHck ? (
+                <>Open this page on your mobile phone</>
+              ) : (
+                <>
+                  Open <strong>/order_now/menu/</strong> on your mobile phone
+                </>
+              )}
             </span>
           </div>
         </div>

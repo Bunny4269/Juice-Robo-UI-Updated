@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { api, onSessionExpired, isTokenValid } from "./api";
 import { resolveJuiceProductImage } from "./shared/utils/imageResolver.js";
+import { getCartQuantityForProduct, findCartItemForProduct, isSamePackage } from "./shared/utils/cartMatcher.js";
 import juiceRoboLogo from "../assets/juice-robo-logo.jpg";
 import "./App.css";
 
 import DesktopBlocker from "./components/DesktopBlocker/DesktopBlocker";
 import LoginScreen from "./screens/LoginScreen/LoginScreen";
+
+import { LOCATION_ENABLED, MACHINE_ENABLED } from "./featureFlags";
 
 import HomeScreen from "./screens/HomeScreen/HomeScreen";
 import MenuScreen from "./screens/MenuScreen/MenuScreen";
@@ -20,19 +23,119 @@ import PaymentSuccessScreen from "./screens/PaymentSuccessScreen/PaymentSuccessS
 
 const ASSET_BASE =
   `${import.meta.env.BASE_URL}assets/`;
+const HCK_LOGO =
+  `${import.meta.env.BASE_URL}assets/hck-logo.svg`;
   
 const OUTLET_CONFIG = Object.freeze({
   jr: {
     id: "jr",
     name: "Juice Robo",
     menuLocationId: "f9eef7a2-bbf5-4a98-a1ce-ceb69b171996",
+    /* Canonical UUID used in the URL: /order_now/<outletId>/ */
+    outletId: "d2006bfc-95df-4925-a617-6d10d06b99bc",
   },
   hck: {
     id: "hck",
     name: "HCK",
     menuLocationId: "829f12b5-915d-44c2-9e9d-c024b6572b4a",
+    /* Canonical UUID used in the URL: /order_now/<outletId>/ */
+    outletId: "829f12b5-915d-44c2-9e9d-c024b6572b4a",
   },
 });
+
+/*
+ * Reverse map: outletId UUID → internal outlet key.
+ * Populated automatically from OUTLET_CONFIG so adding a new outlet only
+ * requires a single entry in OUTLET_CONFIG above.
+ *
+ * e.g. "d2006bfc-..." → "jr"
+ *      "829f12b5-..." → "hck"
+ */
+const OUTLET_ID_TO_KEY = Object.fromEntries(
+  Object.entries(OUTLET_CONFIG)
+    .filter(([, cfg]) => cfg.outletId)
+    .map(([key, cfg]) => [cfg.outletId.toLowerCase(), key])
+);
+
+function resolveOutletLocationAndMachine(locationsList = [], outletKey = "") {
+  const safeList = Array.isArray(locationsList) ? locationsList : [];
+  const outletTarget = String(outletKey || "").trim().toLowerCase();
+  const cfg = OUTLET_CONFIG[outletTarget] || OUTLET_CONFIG.jr;
+
+  let matchedLocation = safeList.find((loc) => {
+    const locIds = [
+      loc?.id,
+      loc?.storeId,
+      loc?.store_id,
+      loc?.storeCode,
+      loc?.store_code,
+      loc?.locId,
+      loc?.locationId,
+      loc?.outletId,
+      loc?.outlet_id,
+    ]
+      .filter((v) => v !== undefined && v !== null && v !== "")
+      .map((v) => String(v).trim().toLowerCase());
+
+    if (locIds.includes(outletTarget)) return true;
+
+    const locName = [
+      loc?.storeName,
+      loc?.name,
+      loc?.outletName,
+      loc?.locationName,
+      loc?.machineName,
+      loc?.description,
+      loc?.locAddress,
+    ]
+      .map((v) => String(v ?? "").trim().toLowerCase())
+      .filter(Boolean)
+      .join(" ");
+
+    if (outletTarget === "jr") {
+      return /(^|\s)jr(\s|$)/i.test(locName) || /(^|\s)juice\s*robo(\s|$)/i.test(locName);
+    }
+    if (outletTarget === "hck") {
+      return /(^|\s)hck(\s|$)/i.test(locName);
+    }
+    return false;
+  });
+
+  if (!matchedLocation && safeList.length) {
+    matchedLocation = safeList[0];
+  }
+
+  if (!matchedLocation) {
+    matchedLocation = {
+      id: cfg.menuLocationId,
+      storeId: cfg.menuLocationId,
+      locId: cfg.menuLocationId,
+      name: cfg.name,
+      address: cfg.name,
+    };
+  }
+
+  const locationId = String(
+    matchedLocation?.id ??
+      matchedLocation?.storeId ??
+      matchedLocation?.store_id ??
+      matchedLocation?.locId ??
+      ""
+  );
+
+  const matchedMachine = {
+    id: locationId || "1",
+    name: matchedLocation?.name || "Juice Robo Machine",
+    status: "ONLINE",
+  };
+
+  return {
+    location: matchedLocation,
+    locationId,
+    machine: matchedMachine,
+    machineId: String(matchedMachine.id),
+  };
+}
 
 const STORAGE = {
   loggedIn: "jr_logged_in",
@@ -195,7 +298,7 @@ function normalizeCart(value) {
         quantity:
           Number.isFinite(parsedQuantity) &&
           parsedQuantity > 0
-            ? Math.floor(parsedQuantity)
+            ? Math.min(Math.floor(parsedQuantity), 9)
             : 1,
       };
     });
@@ -747,9 +850,12 @@ function makeCartItem(
       selectedVariant,
 
     quantity:
-      Math.max(
-        1,
-        Number(quantity || 1)
+      Math.min(
+        Math.max(
+          1,
+          Math.floor(Number(quantity) || 1)
+        ),
+        9
       ),
   };
 }
@@ -759,15 +865,18 @@ function makeCartItem(
    ========================================================= */
 
 function getCartVariantId(item = {}) {
-  return Number(
+  const vid =
     item?.variantId ??
-      item?.variant_id ??
-      item?._variant?.variantId ??
-      item?._variant?.variant_id ??
-      item?._variant?.id ??
-      item?.id ??
-      0
-  );
+    item?.variant_id ??
+    item?._variant?.variantId ??
+    item?._variant?.variant_id ??
+    item?._variant?.id ??
+    item?.id;
+
+  if (vid !== undefined && vid !== null && vid !== "") {
+    return vid;
+  }
+  return 0;
 }
 
 function extractBackendCartItems(response) {
@@ -832,6 +941,39 @@ function normalizePath(pathname = "") {
     .trim();
 }
 
+/*
+ * Given any URL outlet segment — either a UUID outletId like
+ * "d2006bfc-95df-4925-a617-6d10d06b99bc" or a legacy short code
+ * like "jr" / "hck" — return the canonical OUTLET_CONFIG key
+ * (e.g. "jr", "hck").
+ *
+ * Returns the segment unchanged when it is not recognised, so the
+ * router stays forward-compatible with future outlets whose config
+ * may not yet be present in OUTLET_CONFIG.
+ */
+function resolveOutletKey(segment = "") {
+  const raw = String(segment || "").trim();
+  if (!raw) return raw;
+  // Fast path: already a known short key
+  if (OUTLET_CONFIG[raw.toLowerCase()]) return raw.toLowerCase();
+  // Check if it is a recognised outletId UUID
+  const mapped = OUTLET_ID_TO_KEY[raw.toLowerCase()];
+  if (mapped) return mapped;
+  // Unknown segment — return as-is (e.g. a future outlet UUID not yet in config)
+  return raw;
+}
+
+/*
+ * Given an internal outlet key (e.g. "jr"), return the canonical
+ * URL segment to use: the outletId UUID when configured, otherwise
+ * the key itself as a fallback.
+ */
+function outletKeyToUrlSegment(key = "") {
+  const cfg = OUTLET_CONFIG[String(key || "").toLowerCase()];
+  if (cfg?.outletId) return cfg.outletId;
+  return key;
+}
+
 function parseUrlToScreen(pathname = "") {
   const clean = normalizePath(pathname);
 
@@ -878,7 +1020,13 @@ function parseUrlToScreen(pathname = "") {
     return { outlet: null, screen: "scan", param: "" };
   }
 
-  const outlet = first;
+  /*
+   * Normalize the raw URL segment to the canonical internal outlet key.
+   * This converts UUID-based outlet IDs (e.g. "d2006bfc-95df-4925-a617-6d10d06b99bc")
+   * to the internal key ("jr") that the rest of the app uses.
+   * Unrecognised segments are passed through unchanged.
+   */
+  const outlet = resolveOutletKey(first);
   const restSegments = segments.slice(1);
   const subRoute = restSegments.join("/");
 
@@ -909,11 +1057,11 @@ function parseUrlToScreen(pathname = "") {
   }
 
   if (subRoute === "location") {
-    return { outlet, screen: "location", param: "" };
+    return { outlet, screen: LOCATION_ENABLED ? "location" : "menu", param: "" };
   }
 
   if (subRoute === "location-confirmation" || subRoute === "confirmation" || subRoute === "checkout") {
-    return { outlet, screen: "location-confirmation", param: "" };
+    return { outlet, screen: (LOCATION_ENABLED || MACHINE_ENABLED) ? "location-confirmation" : "cart", param: "" };
   }
 
   if (subRoute === "upi-payment" || subRoute === "payment") {
@@ -1123,7 +1271,13 @@ function getScreenPath(screenName, param = "", outletId = null) {
     return `${BASE_PATH}/`.replace(/\/+/g, "/");
   }
 
-  const currentOutlet = encodeURIComponent(String(outletId).trim());
+  /*
+   * Convert the internal outlet key (e.g. "jr") to the URL-facing
+   * outletId UUID (e.g. "d2006bfc-95df-4925-a617-6d10d06b99bc").
+   * For unknown outlet identifiers the value is used as-is.
+   */
+  const urlSegment = outletKeyToUrlSegment(String(outletId).trim());
+  const currentOutlet = encodeURIComponent(urlSegment);
 
   let sub = "menu";
   switch (screenName) {
@@ -1146,11 +1300,11 @@ function getScreenPath(screenName, param = "", outletId = null) {
       break;
     }
     case "location":
-      sub = "location";
+      sub = LOCATION_ENABLED ? "location" : "menu";
       break;
     case "location-confirmation":
     case "confirmation":
-      sub = "location-confirmation";
+      sub = (LOCATION_ENABLED || MACHINE_ENABLED) ? "location-confirmation" : "cart";
       break;
     case "upi-payment":
       sub = "upi-payment";
@@ -1176,12 +1330,20 @@ function isSameRoute(currentPath = "", canonicalPath = "", outlet = null) {
   if (normCurrent.toLowerCase() === normCanonical.toLowerCase()) return true;
 
   if (outlet) {
-    const encodedOutlet = encodeURIComponent(String(outlet).trim()).toLowerCase();
+    // Build the full set of URL segment aliases for this outlet:
+    // both the internal key (e.g. "jr") and the UUID outletId (e.g. "d2006bfc-...")
     const rawOutlet = String(outlet).trim().toLowerCase();
+    const uuidSegment = outletKeyToUrlSegment(rawOutlet).toLowerCase();
+    const segmentAliases = [...new Set([
+      rawOutlet,
+      encodeURIComponent(rawOutlet).toLowerCase(),
+      uuidSegment,
+      encodeURIComponent(uuidSegment).toLowerCase(),
+    ])];
     const lowerCurrent = normCurrent.toLowerCase();
     const lowerCanonical = normCanonical.toLowerCase();
 
-    for (const out of [encodedOutlet, rawOutlet]) {
+    for (const out of segmentAliases) {
       const baseOutlet = `order_now/${out}`;
       const menuOutlet = `order_now/${out}/menu`;
       if (
@@ -1490,7 +1652,7 @@ async function fetchMenuItemsByCode(
    SCAN QR SCREEN (NO OUTLET ID)
    ========================================================= */
 
-function ScanQRScreen() {
+function ScanQRScreen({ isHck = false }) {
   return (
     <main
       className="jr-content jr-page"
@@ -1507,8 +1669,8 @@ function ScanQRScreen() {
       }}
     >
       <img
-        src={juiceRoboLogo}
-        alt="Juice Robo"
+        src={isHck ? HCK_LOGO : juiceRoboLogo}
+        alt={isHck ? "HCK Helmet Cleaning" : "Juice Robo"}
         style={{
           width: "220px",
           height: "auto",
@@ -1550,7 +1712,7 @@ function ScanQRScreen() {
           <rect x="14" y="14" width="7" height="7"></rect>
           <rect x="3" y="14" width="7" height="7"></rect>
           <line x1="7" y1="7" x2="7.01" y2="7"></line>
-          <line x1="17" y1="7" x2="17.01" y2="7"></line>
+          <line x1="17" y1="17" x2="17.01" y2="7"></line>
           <line x1="7" y1="17" x2="7.01" y2="17"></line>
           <line x1="17" y1="17" x2="17.01" y2="17"></line>
         </svg>
@@ -1565,7 +1727,7 @@ function ScanQRScreen() {
           letterSpacing: "-0.02em",
         }}
       >
-        Scan QR to Order
+        {isHck ? "Scan QR to Clean" : "Scan QR to Order"}
       </h1>
 
       <p
@@ -1577,7 +1739,9 @@ function ScanQRScreen() {
           margin: "0 0 26px",
         }}
       >
-        Please scan the QR code located on the Juice Robo machine to view the menu and place your order.
+        {isHck
+          ? "Please scan the QR code located on the HCK machine to view the services and place your order."
+          : "Please scan the QR code located on the Juice Robo machine to view the menu and place your order."}
       </p>
 
       <div
@@ -1637,6 +1801,21 @@ export default function App() {
     );
     return parsed.outlet || null;
   });
+
+  const isHck =
+    String(outlet || "").toLowerCase() === "hck" ||
+    String(outlet || "").toLowerCase() === "829f12b5-915d-44c2-9e9d-c024b6572b4a" ||
+    (typeof window !== "undefined" &&
+      (window.location.pathname.toLowerCase().includes("829f12b5-915d-44c2-9e9d-c024b6572b4a") ||
+       window.location.pathname.toLowerCase().includes("/hck")));
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.title = isHck
+        ? "HCK — Helmet Cleaning Service"
+        : "Juice Robo";
+    }
+  }, [isHck]);
 
   const [loginRedirectTarget, setLoginRedirectTarget] = useState(() => {
     try {
@@ -1770,18 +1949,26 @@ export default function App() {
       }
 
       return loggedIn
-        ? "location"
+        ? (LOCATION_ENABLED ? "location" : "menu")
         : "menu";
     });
 
   function setScreen(nextScreen, options = {}) {
+    let resolvedScreen = nextScreen;
+    if (resolvedScreen === "location" && !LOCATION_ENABLED) {
+      resolvedScreen = "menu";
+    }
+    if (resolvedScreen === "location-confirmation" && !LOCATION_ENABLED && !MACHINE_ENABLED) {
+      resolvedScreen = "cart";
+    }
+
     const { replace = false, productCode = null, skipHistory = false } = options;
-    setScreenState(nextScreen);
+    setScreenState(resolvedScreen);
 
     try {
       localStorage.setItem(
         STORAGE.screen,
-        String(nextScreen)
+        String(resolvedScreen)
       );
     } catch {
       // Ignore storage errors.
@@ -1892,11 +2079,31 @@ export default function App() {
       );
     });
 
+  const [selectedHckPackage, setSelectedHckPackage] = useState(null);
+
   const safeCart =
     useMemo(
-      () => normalizeCart(cart),
-      [cart]
+      () =>
+        isHck
+          ? (selectedHckPackage ? [makeCartItem(selectedHckPackage, null, 1)] : [])
+          : normalizeCart(cart),
+      [cart, isHck, selectedHckPackage]
     );
+
+  const handleToggleHckPackage = useCallback(
+    (pkg) => {
+      if (!isHck) return;
+      setSelectedHckPackage((prev) => {
+        const isSame = isSamePackage(prev, pkg);
+        const next = isSame ? null : pkg;
+        const nextCart = next ? [makeCartItem(next, null, 1)] : [];
+        setCart(nextCart);
+        writeCart(user || {}, nextCart, outlet);
+        return next;
+      });
+    },
+    [isHck, user, outlet]
+  );
 
   const [historyOrders, setHistoryOrders] =
     useState(() =>
@@ -2302,26 +2509,28 @@ export default function App() {
   const cartCount =
     useMemo(
       () =>
-        safeCart.reduce(
-          (sum, item) => {
-            const itemQuantity =
-              Number(
-                item?.quantity || 0
-              );
+        isHck
+          ? 0
+          : safeCart.reduce(
+              (sum, item) => {
+                const itemQuantity =
+                  Number(
+                    item?.quantity || 0
+                  );
 
-            return (
-              sum +
-              (
-                Number.isFinite(itemQuantity) &&
-                itemQuantity > 0
-                  ? Math.floor(itemQuantity)
-                  : 0
-              )
-            );
-          },
-          0
-        ),
-      [safeCart]
+                return (
+                  sum +
+                  (
+                    Number.isFinite(itemQuantity) &&
+                    itemQuantity > 0
+                      ? Math.floor(itemQuantity)
+                      : 0
+                  )
+                );
+              },
+              0
+            ),
+      [safeCart, isHck]
     );
 
   /* -------------------------------------------------------
@@ -2658,11 +2867,15 @@ export default function App() {
     const normalizedCart =
       normalizeCart(nextCart);
 
+    const resolvedFallback = resolveOutletLocationAndMachine(locations, outlet);
+    const effectiveLocation = selectedLocation || resolvedFallback.location;
+
     const storeId =
-      selectedLocation?.storeId ||
-      selectedLocation?.store_id ||
-      selectedLocation?.id ||
-      selectedLocationId;
+      effectiveLocation?.storeId ||
+      effectiveLocation?.store_id ||
+      effectiveLocation?.id ||
+      selectedLocationId ||
+      resolvedFallback.locationId;
 
     /*
      * Only pass a UUID-shaped location identifier to the API.
@@ -2672,11 +2885,12 @@ export default function App() {
      * if this selected-location snapshot does not contain the UUID.
      */
     const locationUuidCandidates = [
-      selectedLocation?.locId,
-      selectedLocation?.locationId,
-      selectedLocation?.location_id,
-      selectedLocation?.locationUuid,
-      selectedLocation?.uuid,
+      effectiveLocation?.locId,
+      effectiveLocation?.locationId,
+      effectiveLocation?.location_id,
+      effectiveLocation?.locationUuid,
+      effectiveLocation?.uuid,
+      resolvedFallback.location?.locId,
     ];
 
     const locationUuid =
@@ -2686,7 +2900,7 @@ export default function App() {
           /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
         ) || "";
 
-    if (!storeId) {
+    if (!storeId && LOCATION_ENABLED) {
       throw new Error(
         "Please select a collection location before adding items."
       );
@@ -2702,7 +2916,7 @@ export default function App() {
       /* locId must be the backend UUID, never numeric storeId. */
       locId: locationUuid,
       storeId: String(storeId),
-      location: selectedLocation,
+      location: effectiveLocation,
       cartItems:
         normalizedCart,
     };
@@ -3132,6 +3346,11 @@ export default function App() {
       return;
     }
 
+    // Only fetch location data when the feature is enabled
+    if (!LOCATION_ENABLED) {
+      return;
+    }
+
     reloadLocationData();
   }, [
     screen,
@@ -3318,80 +3537,34 @@ export default function App() {
 
       try {
         /* =================================================
-           1. LOAD LOCATIONS ONCE
+           1. RESOLVE LOCATION & MACHINE (SINGLE MACHINE AT 1 LOCATION)
            ================================================= */
-        const loadedLocations = await api.locations();
+        let safeLocations = [];
+
+        try {
+          const loadedLocations = await api.locations();
+          if (Array.isArray(loadedLocations)) {
+            safeLocations = loadedLocations;
+          }
+        } catch (locErr) {
+          console.warn("[Juice Robo] Location fetch failed, using outlet config fallback:", locErr);
+        }
 
         if (cancelled) {
           return;
         }
 
-        const safeLocations = Array.isArray(loadedLocations)
-          ? loadedLocations
-          : [];
+        const resolved = resolveOutletLocationAndMachine(safeLocations, outlet);
+        const matchedLocation = resolved.location;
+        const locationId = resolved.locationId;
 
-        setLocations(safeLocations);
-
-        // Find location matching the outlet
-        const outletTarget = String(outlet).toLowerCase();
-        let matchedLocation = safeLocations.find((loc) => {
-          const locIds = [
-            loc?.id,
-            loc?.storeId,
-            loc?.store_id,
-            loc?.storeCode,
-            loc?.store_code,
-            loc?.locId,
-            loc?.locationId,
-            loc?.outletId,
-            loc?.outlet_id,
-          ]
-            .filter((v) => v !== undefined && v !== null && v !== "")
-            .map((v) => String(v).trim().toLowerCase());
-
-          if (locIds.includes(outletTarget)) {
-            return true;
-          }
-
-          const locName = [
-            loc?.storeName,
-            loc?.name,
-            loc?.outletName,
-            loc?.locationName,
-            loc?.machineName,
-            loc?.description,
-            loc?.locAddress,
-          ]
-            .map((v) => String(v ?? "").trim().toLowerCase())
-            .filter(Boolean)
-            .join(" ");
-
-          if (outletTarget === "jr") {
-            return /(^|\s)jr(\s|$)/i.test(locName) || /(^|\s)juice\s*robo(\s|$)/i.test(locName);
-          }
-          if (outletTarget === "hck") {
-            return /(^|\s)hck(\s|$)/i.test(locName);
-          }
-          return false;
-        });
-
-        if (!matchedLocation && safeLocations.length) {
-          matchedLocation = safeLocations[0];
-        }
-
-        const locationId = String(
-          matchedLocation?.id ??
-            matchedLocation?.storeId ??
-            matchedLocation?.store_id ??
-            matchedLocation?.locId ??
-            ""
-        );
-
-        if (matchedLocation) {
-          setSelectedLocationId(locationId);
-          setSelectedLocationSnapshot(matchedLocation);
-          localStorage.setItem(STORAGE.location, locationId);
-          writeJSON("juice_robo_selected_location", matchedLocation);
+        setLocations(safeLocations.length ? safeLocations : [matchedLocation]);
+        setSelectedLocationId(locationId);
+        setSelectedLocationSnapshot(matchedLocation);
+        localStorage.setItem(STORAGE.location, locationId);
+        writeJSON("juice_robo_selected_location", matchedLocation);
+        if (matchedLocation.locId) {
+          localStorage.setItem("juice_robo_location_uuid", matchedLocation.locId);
         }
 
         setLoading(false);
@@ -3399,6 +3572,7 @@ export default function App() {
         /* =================================================
            2. LOAD PRODUCTS + MACHINES IN PARALLEL
            ================================================= */
+        const outletTarget = String(outlet).toLowerCase();
         const config = OUTLET_CONFIG[outletTarget];
         const outletMenuUuid = config?.menuLocationId || "";
         const locationMenuUuid = resolveMenuCodeForLocation(matchedLocation);
@@ -3408,7 +3582,8 @@ export default function App() {
           ? fetchMenuItemsByCode(requestedCode)
           : loadMenuForLocation(matchedLocation, menuItemCode);
 
-        const machinePromise = api.machines(safeLocations);
+        const machinePromise = api.machines(safeLocations.length ? safeLocations : [matchedLocation])
+          .catch(() => [resolved.machine]);
 
         const [productResult, machineResult] = await Promise.allSettled([
           productPromise,
@@ -3429,30 +3604,32 @@ export default function App() {
           setProducts([]);
         }
 
-        if (machineResult.status === "fulfilled") {
-          const loadedMachines = Array.isArray(machineResult.value)
-            ? machineResult.value
-            : [];
-          setMachines(loadedMachines);
-
-          const savedMachineId = localStorage.getItem(STORAGE.machine) || "";
-          const existingMachine = loadedMachines.find(
-            (m) => String(m?.id) === String(savedMachineId)
-          );
-
-          if (existingMachine) {
-            setSelectedMachineId(String(existingMachine.id));
-          } else if (loadedMachines.length) {
-            const firstMachineId = String(loadedMachines[0]?.id || "");
-            if (firstMachineId) {
-              setSelectedMachineId(firstMachineId);
-              localStorage.setItem(STORAGE.machine, firstMachineId);
-            }
-          }
+        let loadedMachines = [];
+        if (machineResult.status === "fulfilled" && Array.isArray(machineResult.value) && machineResult.value.length) {
+          loadedMachines = machineResult.value;
         } else {
-          console.warn("[Juice Robo] Machine loading failed:", machineResult.reason);
-          setMachines([]);
+          loadedMachines = [resolved.machine];
         }
+
+        setMachines(loadedMachines);
+
+        const savedMachineId = localStorage.getItem(STORAGE.machine) || "";
+        const existingMachine = loadedMachines.find(
+          (m) => String(m?.id) === String(savedMachineId)
+        ) || loadedMachines.find(
+          (m) => String(m?.id) === String(locationId) || String(m?.location_id) === String(locationId)
+        ) || loadedMachines[0] || resolved.machine;
+
+        const finalMachineId = String(existingMachine.id);
+        setSelectedMachineId(finalMachineId);
+        setSelectedMachineSnapshot(existingMachine);
+        localStorage.setItem(STORAGE.machine, finalMachineId);
+        writeJSON("juice_robo_selected_machine", existingMachine);
+
+        console.log("[Juice Robo] INITIAL DATA LOAD COMPLETE (auto-selected 1 location & 1 machine):", {
+          locationId,
+          machineId: finalMachineId,
+        });
 
         console.log("[Juice Robo] INITIAL DATA LOAD COMPLETE");
       } catch (loadError) {
@@ -3713,73 +3890,25 @@ export default function App() {
         )
       );
 
-      const loadedLocations =
-        await api.locations();
-
-      setLocations(
-        loadedLocations
-      );
-
-      // Restore outlet location
-      const outletTarget = String(outlet || "").toLowerCase();
-      let matchedLocation = loadedLocations.find((loc) => {
-        const locIds = [
-          loc?.id,
-          loc?.storeId,
-          loc?.store_id,
-          loc?.storeCode,
-          loc?.store_code,
-          loc?.locId,
-          loc?.locationId,
-          loc?.outletId,
-          loc?.outlet_id,
-        ]
-          .filter((v) => v !== undefined && v !== null && v !== "")
-          .map((v) => String(v).trim().toLowerCase());
-
-        if (locIds.includes(outletTarget)) {
-          return true;
-        }
-
-        const locName = [
-          loc?.storeName,
-          loc?.name,
-          loc?.outletName,
-          loc?.locationName,
-          loc?.machineName,
-          loc?.description,
-          loc?.locAddress,
-        ]
-          .map((v) => String(v ?? "").trim().toLowerCase())
-          .filter(Boolean)
-          .join(" ");
-
-        if (outletTarget === "jr") {
-          return /(^|\s)jr(\s|$)/i.test(locName) || /(^|\s)juice\s*robo(\s|$)/i.test(locName);
-        }
-        if (outletTarget === "hck") {
-          return /(^|\s)hck(\s|$)/i.test(locName);
-        }
-        return false;
-      });
-
-      if (!matchedLocation && loadedLocations.length) {
-        matchedLocation = loadedLocations[0];
+      let loadedLocations = [];
+      try {
+        const apiLocs = await api.locations();
+        if (Array.isArray(apiLocs)) loadedLocations = apiLocs;
+      } catch (locErr) {
+        console.warn("[Juice Robo] Login locations fetch failed:", locErr);
       }
 
-      const nextLocationId = String(
-        matchedLocation?.id ??
-          matchedLocation?.storeId ??
-          matchedLocation?.store_id ??
-          matchedLocation?.locId ??
-          ""
-      );
+      const resolved = resolveOutletLocationAndMachine(loadedLocations, outlet);
+      const matchedLocation = resolved.location;
+      const nextLocationId = resolved.locationId;
 
-      if (matchedLocation) {
-        setSelectedLocationId(nextLocationId);
-        setSelectedLocationSnapshot(matchedLocation);
-        localStorage.setItem(STORAGE.location, nextLocationId);
-        writeJSON("juice_robo_selected_location", matchedLocation);
+      setLocations(loadedLocations.length ? loadedLocations : [matchedLocation]);
+      setSelectedLocationId(nextLocationId);
+      setSelectedLocationSnapshot(matchedLocation);
+      localStorage.setItem(STORAGE.location, nextLocationId);
+      writeJSON("juice_robo_selected_location", matchedLocation);
+      if (matchedLocation.locId) {
+        localStorage.setItem("juice_robo_location_uuid", matchedLocation.locId);
       }
 
       /*
@@ -3798,31 +3927,24 @@ export default function App() {
           : []
       );
 
-      const loadedMachines =
-        await api.machines(loadedLocations);
-
-      setMachines(
-        loadedMachines
-      );
-
-      const savedMachineId =
-        localStorage.getItem(STORAGE.machine) || "";
-      const existingMachine = loadedMachines.find(
-        (m) => String(m?.id) === String(savedMachineId)
-      );
-
-      if (existingMachine) {
-        setSelectedMachineId(String(existingMachine.id));
-        setSelectedMachineSnapshot(existingMachine);
-      } else if (loadedMachines.length) {
-        const firstMachine = loadedMachines[0];
-        const firstMachineId = String(firstMachine?.id || "");
-        if (firstMachineId) {
-          setSelectedMachineId(firstMachineId);
-          setSelectedMachineSnapshot(firstMachine);
-          localStorage.setItem(STORAGE.machine, firstMachineId);
-        }
+      let loadedMachines = [];
+      try {
+        const apiMachines = await api.machines(loadedLocations.length ? loadedLocations : [matchedLocation]);
+        if (Array.isArray(apiMachines) && apiMachines.length) loadedMachines = apiMachines;
+      } catch (mErr) {
+        console.warn("[Juice Robo] Login machines fetch failed:", mErr);
       }
+
+      const matchedMachine = loadedMachines.find(
+        (m) => String(m?.id) === String(nextLocationId) || String(m?.location_id) === String(nextLocationId)
+      ) || loadedMachines[0] || resolved.machine;
+
+      const finalMachineId = String(matchedMachine.id);
+      setMachines(loadedMachines.length ? loadedMachines : [matchedMachine]);
+      setSelectedMachineId(finalMachineId);
+      setSelectedMachineSnapshot(matchedMachine);
+      localStorage.setItem(STORAGE.machine, finalMachineId);
+      writeJSON("juice_robo_selected_machine", matchedMachine);
 
       const destinationScreen =
         loginRedirectTarget === "cart" ? "cart" : "menu";
@@ -4407,14 +4529,14 @@ export default function App() {
   }
 
   function continueToMenu() {
-    if (!selectedLocationId) {
+    if (LOCATION_ENABLED && !selectedLocationId) {
       showToast(
         "Select a collection location"
       );
       return;
     }
 
-    if (!selectedMachineId) {
+    if (MACHINE_ENABLED && !selectedMachineId) {
       showToast(
         "Select a Juice Robo machine"
       );
@@ -4496,11 +4618,16 @@ export default function App() {
       setBusy(true);
       setError("");
 
+      const clampedQty = Math.min(
+        Math.max(1, Math.floor(Number(nextQuantity) || 1)),
+        9
+      );
+
       const item =
         makeCartItem(
           product,
           variant,
-          nextQuantity
+          clampedQty
         );
 
       const currentCart =
@@ -4508,36 +4635,23 @@ export default function App() {
           cart
         );
 
-      const exists =
-        currentCart.find(
-          (entry) =>
-            String(
-              getCartVariantId(entry)
-            ) ===
-            String(
-              getCartVariantId(item)
-            )
+      const existingItem =
+        findCartItemForProduct(
+          currentCart,
+          product,
+          variant || item._variant
         );
 
       const nextCart =
-        exists
-          ? currentCart.map(
-              (entry) =>
-                String(
-                  getCartVariantId(entry)
-                ) ===
-                String(
-                  getCartVariantId(item)
-                )
-                  ? {
-                      ...entry,
-                      ...item,
-                      quantity:
-                        Number(
-                          item.quantity
-                        ),
-                    }
-                  : entry
+        existingItem
+          ? currentCart.map((entry) =>
+              entry === existingItem
+                ? {
+                    ...entry,
+                    ...item,
+                    quantity: clampedQty,
+                  }
+                : entry
             )
           : [
               ...currentCart,
@@ -4650,68 +4764,70 @@ export default function App() {
 
   function cartItemMatchesId(item, targetId) {
     if (!item || targetId === undefined || targetId === null || targetId === "") return false;
-    const tid = String(targetId);
-    return (
-      String(getCartVariantId(item)) === tid ||
-      String(item?.id) === tid ||
-      String(item?.variantId) === tid ||
-      String(item?.productId) === tid ||
-      String(item?.itemId) === tid
-    );
+    const tid = String(targetId).trim();
+    if (!tid) return false;
+
+    // Match exact cart item ID or variant ID first
+    if (item.id !== undefined && item.id !== null && String(item.id).trim() === tid) return true;
+    if (item.variantId !== undefined && item.variantId !== null && String(item.variantId).trim() === tid) return true;
+    if (item._variant?.variantId !== undefined && item._variant?.variantId !== null && String(item._variant?.variantId).trim() === tid) return true;
+    if (item._variant?.id !== undefined && item._variant?.id !== null && String(item._variant?.id).trim() === tid) return true;
+
+    // Match product IDs
+    if (item.productId !== undefined && item.productId !== null && String(item.productId).trim() === tid) return true;
+    if (item.itemId !== undefined && item.itemId !== null && String(item.itemId).trim() === tid) return true;
+
+    return false;
   }
 
   async function updateQuantity(
     productId,
     nextQuantity
   ) {
-    const value =
+    const rawValue =
       Number(
         nextQuantity
       );
 
     if (
       !Number.isFinite(
-        value
+        rawValue
       )
     ) {
       return;
     }
 
-    if (value <= 0) {
+    if (rawValue <= 0) {
       await removeProduct(
         productId
       );
       return;
     }
 
+    const value = Math.min(
+      Math.max(1, Math.floor(rawValue)),
+      9
+    );
+
     const currentCart =
       normalizeCart(
         cart
       );
 
-    const nextCart =
-      currentCart.map(
-        (item) =>
-          cartItemMatchesId(item, productId)
-            ? {
-                ...item,
-                quantity:
-                  Math.floor(
-                    value
-                  ),
-              }
-            : item
-      );
+    const targetItem = currentCart.find((item) => cartItemMatchesId(item, productId));
 
-    const itemExists =
-      currentCart.some(
-        (item) =>
-          cartItemMatchesId(item, productId)
-      );
-
-    if (!itemExists) {
+    if (!targetItem) {
       return;
     }
+
+    const nextCart = currentCart.map((item) =>
+      item === targetItem
+        ? {
+            ...item,
+            quantity: value,
+          }
+        : item
+    );
 
     if (!loggedIn) {
       setCart(nextCart);
@@ -4775,33 +4891,13 @@ export default function App() {
      */
     if (!nextCart.length) {
       setCart([]);
-
-      writeJSON(
-        cartKey({}),
-        []
-      );
-
-      writeJSON(
-        "juice_robo_cart",
-        []
-      );
-
+      writeCart(user || {}, [], outlet);
       return;
     }
 
     if (!loggedIn) {
       setCart(nextCart);
-
-      writeJSON(
-        cartKey({}),
-        nextCart
-      );
-
-      writeJSON(
-        "juice_robo_cart",
-        nextCart
-      );
-
+      writeCart(user || {}, nextCart, outlet);
       return;
     }
 
@@ -4865,15 +4961,22 @@ export default function App() {
      ======================================================= */
 
   async function openCart() {
+    if (isHck) {
+      return;
+    }
+
     /*
      * Cart is public. Guests see and edit their local cart.
      * Authenticated users load the current cart from the Juice Robo
      * cart API so the backend remains the source of truth.
      */
     if (!loggedIn) {
-      setCart(
-        readCart({})
-      );
+      if (!Array.isArray(cart) || cart.length === 0) {
+        const loaded = readCart(user || {}, outlet);
+        if (Array.isArray(loaded) && loaded.length > 0) {
+          setCart(loaded);
+        }
+      }
 
       setError("");
       setScreen("cart");
@@ -4889,7 +4992,14 @@ export default function App() {
           silent: true,
         });
 
-      setCart(backendCart);
+      if (Array.isArray(backendCart) && backendCart.length > 0) {
+        setCart(backendCart);
+      } else if (!Array.isArray(cart) || cart.length === 0) {
+        const local = readCart(user || {}, outlet);
+        if (Array.isArray(local) && local.length > 0) {
+          setCart(local);
+        }
+      }
       setScreen("cart");
     } catch (cartError) {
       console.error(
@@ -4901,8 +5011,13 @@ export default function App() {
         errorText(cartError) ||
         "Unable to load your cart.";
 
-      showToast(message);
-      setError(message);
+      if (!Array.isArray(cart) || cart.length === 0) {
+        const local = readCart(user || {}, outlet);
+        if (Array.isArray(local) && local.length > 0) {
+          setCart(local);
+        }
+      }
+      setScreen("cart");
     } finally {
       setBusy(false);
     }
@@ -4936,6 +5051,14 @@ export default function App() {
         "menu"
       );
 
+      return;
+    }
+
+    // Feature-flag fast path:
+    // When both Location and Machine are disabled, skip all selection
+    // screens and proceed directly to payment.
+    if (!LOCATION_ENABLED && !MACHINE_ENABLED) {
+      proceedToPayment();
       return;
     }
 
@@ -5826,7 +5949,7 @@ export default function App() {
       return;
     }
 
-    if (!selectedLocationId) {
+    if (LOCATION_ENABLED && !selectedLocationId) {
       showToast(
         "Please select a collection location"
       );
@@ -5834,7 +5957,7 @@ export default function App() {
       return;
     }
 
-    if (!selectedMachineId) {
+    if (MACHINE_ENABLED && !selectedMachineId) {
       showToast(
         "Please select a Juice Robo machine"
       );
@@ -5849,14 +5972,19 @@ export default function App() {
         "Preparing your secure UPI payment..."
       );
 
+      const resolved = resolveOutletLocationAndMachine(locations, outlet);
+      const effectiveLocation = selectedLocation || resolved.location;
+      const effectiveMachine = selectedMachine || resolved.machine;
+
       /*
       * Create the Juice Robo order first. This is order creation,
       * not payment confirmation.
       */
       const created = await api.createOrder({
         storeId:
-          selectedLocation?.storeId ||
-          selectedLocation?.id,
+          effectiveLocation?.storeId ||
+          effectiveLocation?.id ||
+          resolved.locationId,
 
         /*
          * Only a real UUID is allowed here. If the selected outlet
@@ -5866,11 +5994,12 @@ export default function App() {
          * Never use storeId (for example 200) as locId.
          */
         locId: [
-          selectedLocation?.locId,
-          selectedLocation?.locationId,
-          selectedLocation?.location_id,
-          selectedLocation?.locationUuid,
-          selectedLocation?.uuid,
+          effectiveLocation?.locId,
+          effectiveLocation?.locationId,
+          effectiveLocation?.location_id,
+          effectiveLocation?.locationUuid,
+          effectiveLocation?.uuid,
+          resolved.location?.locId,
         ]
           .map((value) => String(value ?? "").trim())
           .find((value) =>
@@ -5878,13 +6007,13 @@ export default function App() {
           ) || "",
 
         location:
-          selectedLocation,
+          effectiveLocation,
 
         locationId:
-          selectedLocation?.id,
+          effectiveLocation?.id || resolved.locationId,
 
         machineId:
-          selectedMachine?.id,
+          effectiveMachine?.id || resolved.machineId,
 
         cartItems: safeCart,
       });
@@ -6269,12 +6398,12 @@ export default function App() {
   if (error && !locations.length && !products.length) {
     return (
       <div className="jr-app">
-        <DesktopBlocker />
+        <DesktopBlocker isHck={isHck} />
         <div className="jr-mobile-frame">
           <div className="jr-loading" style={{ padding: "32px 22px", textAlign: "center" }}>
             <img
-              src={juiceRoboLogo}
-              alt="Juice Robo"
+              src={isHck ? HCK_LOGO : juiceRoboLogo}
+              alt={isHck ? "HCK Helmet Cleaning" : "Juice Robo"}
               className="jr-loading-image"
               style={{
                 width: "260px",
@@ -6286,7 +6415,9 @@ export default function App() {
                 margin: "0 auto 20px",
               }}
             />
-            <h2 style={{ margin: "0 0 10px" }}>Unable to load Juice Robo</h2>
+            <h2 style={{ margin: "0 0 10px" }}>
+              {isHck ? "Unable to load cleaning services" : "Unable to load Juice Robo"}
+            </h2>
             <p style={{ margin: "0 0 20px", lineHeight: 1.5 }}>{error}</p>
             <button
               type="button"
@@ -6314,12 +6445,12 @@ export default function App() {
   if (loading) {
     return (
       <div className="jr-app">
-        <DesktopBlocker />
+        <DesktopBlocker isHck={isHck} />
         <div className="jr-mobile-frame">
           <div className="jr-loading">
             <img
-              src={juiceRoboLogo}
-              alt="Juice Robo"
+              src={isHck ? HCK_LOGO : juiceRoboLogo}
+              alt={isHck ? "HCK Helmet Cleaning" : "Juice Robo"}
               className="jr-loading-image"
               style={{
                 width: "280px",
@@ -6335,7 +6466,7 @@ export default function App() {
             <div className="jr-loader" />
 
             <p>
-              Loading Juice Robo…
+              {isHck ? "Loading helmet cleaning services..." : "Loading Juice Robo…"}
             </p>
           </div>
         </div>
@@ -6350,9 +6481,9 @@ export default function App() {
   if (screen === "scan" || !outlet) {
     return (
       <div className="jr-app">
-        <DesktopBlocker />
+        <DesktopBlocker isHck={isHck} />
         <div className="jr-mobile-frame">
-          <ScanQRScreen />
+          <ScanQRScreen isHck={isHck} />
 
           {toast && (
             <Toast
@@ -6373,7 +6504,7 @@ export default function App() {
   if (screen === "login") {
     return (
       <div className="jr-app">
-        <DesktopBlocker />
+        <DesktopBlocker isHck={isHck} />
         <div className="jr-mobile-frame">
           <LoginScreen
             customer={
@@ -6390,6 +6521,9 @@ export default function App() {
             }
             error={
               error
+            }
+            isHck={
+              isHck
             }
             onContinueWithoutLogin={() => {
               const target =
@@ -6420,7 +6554,7 @@ export default function App() {
 
   return (
     <div className="jr-app">
-      <DesktopBlocker />
+      <DesktopBlocker isHck={isHck} />
       <div className="jr-mobile-frame">
 
         {/* ===================================================
@@ -6430,6 +6564,7 @@ export default function App() {
         <Header
           cartCount={cartCount}
           onCart={openCart}
+          isHck={isHck}
           onProfile={() => {
             setScreen("profile");
           }}
@@ -6500,6 +6635,7 @@ export default function App() {
               onHistory={
                 openOrderHistory
               }
+              isHck={isHck}
             />
           )}
 
@@ -6530,43 +6666,49 @@ export default function App() {
              ================================================= */}
 
           {screen === "location" && (
-            <LocationMachineScreen
-              locations={
-                locations
-              }
+            LOCATION_ENABLED ? (
+              <LocationMachineScreen
+                locations={
+                  locations
+                }
 
-              machines={
-                machines
-              }
+                machines={
+                  machines
+                }
 
-              selectedLocationId={
-                selectedLocationId
-              }
+                selectedLocationId={
+                  selectedLocationId
+                }
 
-              selectedMachineId={
-                selectedMachineId
-              }
+                selectedMachineId={
+                  selectedMachineId
+                }
 
-              onLocation={
-                selectLocation
-              }
+                onLocation={
+                  selectLocation
+                }
 
-              onMachine={
-                selectMachine
-              }
+                onMachine={
+                  selectMachine
+                }
 
-              onContinue={
-                continueToMenu
-              }
+                onContinue={
+                  continueToMenu
+                }
 
-              onRetry={
-                reloadLocationData
-              }
+                onRetry={
+                  reloadLocationData
+                }
 
-              error={
-                error
-              }
-            />
+                error={
+                  error
+                }
+              />
+            ) : (
+              // LOCATION_ENABLED=0: silently redirect away from the
+              // location screen so it is never visible to the user.
+              (() => { setTimeout(() => setScreen("menu"), 0); return null; })()
+            )
           )}
 
           {/* =================================================
@@ -6606,6 +6748,9 @@ export default function App() {
               money={
                 money
               }
+
+              showLocation={Boolean(LOCATION_ENABLED)}
+              isHck={isHck}
 
               onMenu={() =>
                 setScreen(
@@ -6687,6 +6832,18 @@ export default function App() {
               money={
                 money
               }
+
+              isHck={
+                isHck
+              }
+
+              selectedHckPackage={
+                selectedHckPackage
+              }
+
+              onToggleHckPackage={
+                handleToggleHckPackage
+              }
             />
           )}
 
@@ -6761,6 +6918,10 @@ export default function App() {
               money={
                 productMoney
               }
+
+              isHck={
+                isHck
+              }
             />
           )}
 
@@ -6822,6 +6983,8 @@ export default function App() {
                 )
               }
 
+              showLocation={Boolean(LOCATION_ENABLED)}
+
               onCheckout={
                 startCheckout
               }
@@ -6837,6 +7000,10 @@ export default function App() {
               money={
                 money
               }
+
+              isHck={
+                isHck
+              }
             />
           )}
 
@@ -6845,49 +7012,55 @@ export default function App() {
              ================================================= */}
 
           {screen === "location-confirmation" && (
-            <LocationConfirmationScreen
-              location={
-                selectedLocation
-              }
+            (!LOCATION_ENABLED && !MACHINE_ENABLED)
+              // Both disabled: redirect straight to payment without rendering
+              // the confirmation screen.
+              ? (() => { setTimeout(() => proceedToPayment(), 0); return null; })()
+              : (
+                <LocationConfirmationScreen
+                  location={
+                    selectedLocation
+                  }
 
-              machine={
-                selectedMachine
-              }
+                  machine={
+                    selectedMachine
+                  }
 
-              cart={
-                safeCart
-              }
+                  cart={
+                    safeCart
+                  }
 
-              total={
-                finalTotal
-              }
+                  total={
+                    finalTotal
+                  }
 
-              subtotal={
-                subtotal
-              }
+                  subtotal={
+                    subtotal
+                  }
 
-              gst={
-                gst
-              }
+                  gst={
+                    gst
+                  }
 
-              finalTotal={
-                finalTotal
-              }
+                  finalTotal={
+                    finalTotal
+                  }
 
-              onBack={() =>
-                setScreen(
-                  "cart"
-                )
-              }
+                  onBack={() =>
+                    setScreen(
+                      "cart"
+                    )
+                  }
 
-              onConfirm={
-                proceedToPayment
-              }
+                  onConfirm={
+                    proceedToPayment
+                  }
 
-              money={
-                money
-              }
-            />
+                  money={
+                    money
+                  }
+                />
+              )
           )}
           {/* =================================================
               UPI PAYMENT
@@ -7227,6 +7400,10 @@ export default function App() {
               money={
                 money
               }
+
+              isHck={
+                isHck
+              }
             />
           )}
 
@@ -7249,13 +7426,16 @@ export default function App() {
               onHistory={
                 openOrderHistory
               }
+              isHck={
+                isHck
+              }
             />
           )}
         </div>
 
         {/* ===================================================
             BOTTOM NAVIGATION
-           =================================================== */}
+          =================================================== */}
 
         {screen !== "profile" &&
           screen !== "history" &&
@@ -7276,22 +7456,12 @@ export default function App() {
                 cartCount
               }
 
-              loggedIn={
-                loggedIn
-              }
-
-              onRequireSignIn={() => {
-                showToast(
-                  "Please sign in to view your cart"
-                );
-
-                setScreen(
-                  "login"
-                );
-              }}
-
               onCart={
                 openCart
+              }
+
+              isHck={
+                isHck
               }
             />
           )}
@@ -7332,73 +7502,28 @@ function Header({
   cartCount,
   onCart,
   onProfile,
+  isHck = false,
 }) {
   return (
-    <header
-      className="jr-header"
-      style={{
-        display: "flex",
-        width: "100%",
-        minHeight: "58px",
-        height: "58px",
-        boxSizing: "border-box",
-        padding: "7px clamp(10px, 3vw, 14px)",
-        gap: "8px",
-        alignItems: "center",
-        background: "#ffffff",
-        overflow: "hidden",
-      }}
-    >
-      {/* =====================================================
-          JUICE ROBO LOGO
-          Location and machine are selected only during checkout.
-         ===================================================== */}
+    <header className="jr-header">
+      {/* BRAND LOGO */}
       <button
         type="button"
         className="jr-header-logo-button"
         onClick={onProfile}
-        aria-label="Juice Robo"
-        style={{
-          flex: "0 1 clamp(118px, 34vw, 150px)",
-          width: "clamp(118px, 34vw, 150px)",
-          minWidth: "118px",
-          maxWidth: "150px",
-          height: "42px",
-          minHeight: "42px",
-          padding: 0,
-          margin: 0,
-          border: 0,
-          background: "#ffffff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          overflow: "hidden",
-          borderRadius: "8px",
-        }}
+        aria-label={isHck ? "HCK Helmet Cleaning" : "Juice Robo"}
       >
         <img
-          src={juiceRoboLogo}
-          alt="Juice Robo"
+          src={isHck ? HCK_LOGO : juiceRoboLogo}
+          alt={isHck ? "HCK Helmet Cleaning" : "Juice Robo"}
           className="jr-header-logo"
           draggable="false"
-          style={{
-            display: "block",
-            width: "100%",
-            maxWidth: "150px",
-            height: "auto",
-            maxHeight: "36px",
-            objectFit: "contain",
-            objectPosition: "left center",
-            flexShrink: 0,
-          }}
         />
       </button>
 
+      {/* HEADER SPACER */}
       <div
-        style={{
-          flex: "1 1 auto",
-          minWidth: 0,
-        }}
+        className="jr-header-spacer"
         aria-hidden="true"
       />
 
@@ -7406,30 +7531,13 @@ function Header({
       <button
         type="button"
         className="jr-profile-button"
-        style={{
-          width: "36px",
-          minWidth: "36px",
-          height: "36px",
-          minHeight: "36px",
-          flex: "0 0 36px",
-          padding: 0,
-          margin: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: "1px solid #e9e9e4",
-          borderRadius: "8px",
-          background: "#ffffff",
-          cursor: "pointer",
-          boxShadow: "0 2px 6px rgba(25, 35, 25, 0.05)",
-        }}
         onClick={onProfile}
         aria-label="Profile"
       >
         <svg
           className="jr-header-action-icon"
-          width="17"
-          height="17"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -7452,70 +7560,61 @@ function Header({
       </button>
 
       {/* CART */}
-      <button
-        type="button"
-        className="jr-cart-button"
-        style={{
-          width: "36px",
-          minWidth: "36px",
-          height: "36px",
-          minHeight: "36px",
-          flex: "0 0 36px",
-          padding: 0,
-          margin: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: "1px solid #e9e9e4",
-          borderRadius: "8px",
-          background: "#ffffff",
-          cursor: "pointer",
-          position: "relative",
-          boxShadow: "0 2px 6px rgba(25, 35, 25, 0.05)",
-        }}
-        onClick={onCart}
-        aria-label={
-          cartCount > 0
-            ? `Cart, ${cartCount} items`
-            : "Cart"
-        }
-      >
-        <svg
-          className="jr-header-action-icon"
-          width="17"
-          height="17"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
+      {!isHck && (
+        <button
+          type="button"
+          className="jr-cart-button"
+          onClick={() => {
+            if (typeof onCart === "function") {
+              onCart();
+            }
+          }}
+          aria-label={
+            cartCount > 0
+              ? `Cart, ${cartCount} items`
+              : "Cart"
+          }
         >
-          <path
-            d="M4.2 5.2H6.25L7.75 15.1H17.55L19.15 8H7.05"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <circle
-            cx="9.15"
-            cy="19"
-            r="1.35"
-            fill="currentColor"
-          />
-          <circle
-            cx="16.25"
-            cy="19"
-            r="1.35"
-            fill="currentColor"
-          />
-        </svg>
+          <svg
+            className="jr-header-action-icon jr-cart-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              d="M4.2 5.2H6.25L7.75 15.1H17.55L19.15 8H7.05"
+              stroke="currentColor"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle
+              cx="9.15"
+              cy="19"
+              r="1.35"
+              fill="currentColor"
+            />
+            <circle
+              cx="16.25"
+              cy="19"
+              r="1.35"
+              fill="currentColor"
+            />
+          </svg>
 
-        {cartCount > 0 && (
-          <span className="jr-cart-badge">
-            {cartCount}
-          </span>
-        )}
-      </button>
+          {cartCount > 0 && (
+            <span
+              className="jr-cart-badge"
+              aria-hidden="true"
+            >
+              {cartCount}
+            </span>
+          )}
+        </button>
+      )}
     </header>
   );
 }
@@ -7530,6 +7629,7 @@ function BottomNav({
   setScreen,
   cartCount,
   onCart,
+  isHck = false,
 }) {
   const activeColor =
     "#2f8050";
@@ -7703,7 +7803,7 @@ function BottomNav({
 
   return (
     <nav
-      className="jr-bottom-nav jr-bottom-nav-two"
+      className={`jr-bottom-nav ${isHck ? "jr-bottom-nav--single" : "jr-bottom-nav-two"}`}
       aria-label="Primary navigation"
     >
 
@@ -7758,72 +7858,66 @@ function BottomNav({
 
 
       {/* CART */}
-
-      <button
-        type="button"
-        className={
-          screen === "cart"
-            ? "active"
-            : ""
-        }
-        onClick={() => {
-          if (typeof onCart === "function") {
-            onCart();
-          } else {
-            setScreen(
-              "cart"
-            );
-          }
-        }}
-        aria-label="Cart"
-        style={{
-          ...navButtonStyle,
-          color:
+      {!isHck && (
+        <button
+          type="button"
+          className={
             screen === "cart"
-              ? activeColor
-              : inactiveColor,
-        }}
-      >
-
-        <span
-          className="jr-nav-cart-icon"
+              ? "active"
+              : ""
+          }
+          onClick={() => {
+            if (typeof onCart === "function") {
+              onCart();
+            } else if (typeof setScreen === "function") {
+              setScreen("cart");
+            }
+          }}
+          aria-label="Cart"
           style={{
-            ...iconStyle,
-            position:
-              "relative",
-            display:
-              "grid",
-            placeItems:
-              "center",
+            ...navButtonStyle,
+            color:
+              screen === "cart"
+                ? activeColor
+                : inactiveColor,
           }}
         >
+          <span
+            className="jr-nav-cart-icon"
+            style={{
+              ...iconStyle,
+              position:
+                "relative",
+              display:
+                "grid",
+              placeItems:
+                "center",
+            }}
+          >
+            <OrderIcon
+              active={
+                screen === "cart"
+              }
+            />
 
-          <OrderIcon
-            active={
-              screen === "cart"
+            {cartCount > 0 && (
+              <b
+                className="jr-nav-cart-badge"
+              >
+                {cartCount}
+              </b>
+            )}
+          </span>
+
+          <small
+            style={
+              labelStyle
             }
-          />
-
-          {cartCount > 0 && (
-            <b
-              className="jr-nav-cart-badge"
-            >
-              {cartCount}
-            </b>
-          )}
-
-        </span>
-
-        <small
-          style={
-            labelStyle
-          }
-        >
-          Cart
-        </small>
-
-      </button>
-
+          >
+            Cart
+          </small>
+        </button>
+      )}
     </nav>
   );
 }

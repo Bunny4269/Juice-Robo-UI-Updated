@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="bg_univ" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC" />
+      <stop offset="100%" stop-color="#F1F5F9" />
+    </linearGradient>
+    <linearGradient id="helmet_univ" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="visor_univ" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="20" fill="url(#bg_univ)" />
+  <!-- Sanitization Wave -->
+  <circle cx="100" cy="95" r="66" stroke="#94A3B8" stroke-width="3" stroke-dasharray="6 6" />
+  <circle cx="100" cy="95" r="54" fill="#FFFFFF" fill-opacity="0.8" />
+  <!-- Helmet Body -->
+  <path d="M100 48C68 48 50 68 50 98C50 115 58 132 72 142L80 148H138C145 140 150 128 150 112C150 96 148 78 134 60C123 52 112 48 100 48Z" fill="url(#helmet_univ)" />
+  <!-- Visor -->
+  <path d="M88 82H134C139 82 142 86 140.5 91L135 112C133 118 127 122 121 122H92C86 122 81 117 80 110L78 88C77 84 81 82 88 82Z" fill="url(#visor_univ)" />
+  <!-- Visor Reflection -->
+  <path d="M92 88L86 112C85 116 88 118 92 118H96L102 88H92Z" fill="#FFFFFF" fill-opacity="0.35" />
+  <!-- Sparkles -->
+  <path d="M154 44L156 50L162 52L156 54L154 60L152 54L146 52L152 50Z" fill="#38BDF8" />
+  <!-- Badge Pill -->
+  <rect x="36" y="160" width="128" height="24" rx="12" fill="#0F172A" />
+  <text x="100" y="176" font-family="Inter, -apple-system, sans-serif" font-weight="800" font-size="11" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">HELMET CARE</text>
+</svg>

@@ -916,6 +916,33 @@
   font-size: 11px;
 }
 
+.jr-hck-select-btn {
+  min-width: 90px;
+}
+
+.jr-hck-selected-btn {
+  border-color: #287f46 !important;
+  background: #287f46 !important;
+  color: #ffffff !important;
+  min-width: 104px;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  box-shadow: 0 2px 8px rgba(40, 127, 70, 0.25) !important;
+  font-size: 12px !important;
+  transition: all 0.15s ease !important;
+}
+
+.jr-hck-selected-btn:hover {
+  background: #23703e !important;
+  border-color: #23703e !important;
+  color: #ffffff !important;
+}
+
+.jr-hck-selected-btn:active {
+  transform: scale(0.96) !important;
+}
+
 /* =========================================================
    QUANTITY COUNTER: [-] {qty} [+]
    ========================================================= */
@@ -970,6 +997,13 @@
 
 .jr-qty-btn:active {
   background: rgba(255, 255, 255, 0.38);
+}
+
+.jr-qty-btn:disabled,
+.jr-qty-btn--disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
 }
 
 .jr-qty-value {
@@ -1851,10 +1885,9 @@
   overflow-y: auto !important;
 
   /*
-   * No artificial bottom clearance.
-   * The navigation consumes its own layout height below.
+   * Clearance for fixed bottom navigation.
    */
-  padding-bottom: 12px !important;
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
 
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
@@ -1880,7 +1913,7 @@
   overflow-x: hidden !important;
   overflow-y: auto !important;
 
-  padding-bottom: 12px !important;
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
 
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;

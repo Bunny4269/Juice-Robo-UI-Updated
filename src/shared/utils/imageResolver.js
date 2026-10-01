@@ -76,20 +76,45 @@ export function getProductImageCandidates(product = {}) {
     addCandidate(v?.photo);
   }
 
-  // 3. Fallback to existing jpg asset filename by flavor name if PNG is missing
-  const name = String(product?.itemName || product?.name || "").toLowerCase();
-  if (name.includes("ginger") && name.includes("lemon")) {
-    addCandidate("ginger-lemon-juice.jpg");
-    addCandidate("SG-Ginger-Lemon-200X200.png");
-  } else if (name.includes("ginger")) {
-    addCandidate("ginger-juice.jpg");
-    addCandidate("SG-Ginger-200X200.png");
-  } else if (name.includes("lemon")) {
-    addCandidate("lemon-juice.jpg");
-    addCandidate("SG-Lemon-200X200.png");
-  } else if (name.includes("plain") || name.includes("classic")) {
-    addCandidate("plain-juice.jpg");
-    addCandidate("SG-Plain-200X200.png");
+  // 3. Fallback for HCK Helmet Cleaning services
+  const lowerName = String(product?.itemName || product?.name || "").toLowerCase();
+  const lowerDesc = String(product?.desc || product?.description || "").toLowerCase();
+  const text = `${lowerName} ${lowerDesc}`;
+
+  const isHckProduct =
+    text.includes("disinfection") ||
+    text.includes("helmet") ||
+    text.includes("basic") ||
+    text.includes("standard") ||
+    text.includes("premium") ||
+    String(product?.category || "").toLowerCase().includes("helmet") ||
+    String(product?.outlet || "").toLowerCase() === "hck";
+
+  if (isHckProduct) {
+    if (text.includes("basic")) {
+      addCandidate("hck-basic.svg");
+    } else if (text.includes("standard")) {
+      addCandidate("hck-standard.svg");
+    } else if (text.includes("premium")) {
+      addCandidate("hck-premium.svg");
+    } else {
+      addCandidate("hck-helmet-clean.svg");
+    }
+  } else {
+    // 4. Fallback to existing jpg asset filename by flavor name for Juice Robo
+    if (lowerName.includes("ginger") && lowerName.includes("lemon")) {
+      addCandidate("ginger-lemon-juice.jpg");
+      addCandidate("SG-Ginger-Lemon-200X200.png");
+    } else if (lowerName.includes("ginger")) {
+      addCandidate("ginger-juice.jpg");
+      addCandidate("SG-Ginger-200X200.png");
+    } else if (lowerName.includes("lemon")) {
+      addCandidate("lemon-juice.jpg");
+      addCandidate("SG-Lemon-200X200.png");
+    } else if (lowerName.includes("plain") || lowerName.includes("classic")) {
+      addCandidate("plain-juice.jpg");
+      addCandidate("SG-Plain-200X200.png");
+    }
   }
 
   return candidates;

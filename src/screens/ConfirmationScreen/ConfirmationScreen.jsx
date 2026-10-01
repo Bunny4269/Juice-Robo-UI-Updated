@@ -87,7 +87,7 @@ function getItems(order = {}) {
   return [];
 }
 
-function getItemName(item = {}) {
+function getItemName(item = {}, isHck = false) {
   return (
     clean(
       item?.product_name ||
@@ -96,7 +96,7 @@ function getItemName(item = {}) {
         item?.name ||
         item?.itemName ||
         item?.title
-    ) || "Sugarcane Juice"
+    ) || (isHck ? "Helmet Cleaning Service" : "Sugarcane Juice")
   );
 }
 
@@ -215,6 +215,7 @@ export default function ConfirmationScreen({
   onHistory,
   onRetry,
   money,
+  isHck = false,
 }) {
   const items = getItems(order);
 
@@ -266,7 +267,11 @@ export default function ConfirmationScreen({
         {paymentState === "success" ? (
           <>
             <h1>Order<br /><em>confirmed!</em></h1>
-            <p>Your payment has been verified by the payment server. Your order is ready for collection at the selected Juice Robo.</p>
+            <p>
+              {isHck
+                ? "Your payment has been verified by the payment server. Your order is ready. Use your code at the HCK machine to begin helmet cleaning."
+                : "Your payment has been verified by the payment server. Your order is ready for collection at the selected Juice Robo."}
+            </p>
           </>
         ) : paymentState === "failed" ? (
           <>
@@ -455,9 +460,13 @@ export default function ConfirmationScreen({
 
         <p>
           {paymentState === "success" && collectionCode
-            ? "Save this code. Enter it at your selected Juice Robo machine when you arrive."
+            ? isHck
+              ? "Save this code. Enter it at your selected HCK machine when you arrive."
+              : "Save this code. Enter it at your selected Juice Robo machine when you arrive."
             : paymentState === "failed"
             ? "A collection code is not available because the payment was not confirmed."
+            : isHck
+            ? "Your service code will appear here after payment is verified by the machine backend."
             : "Your collection code will appear here after payment is verified by the machine backend."}
         </p>
 
@@ -473,14 +482,14 @@ export default function ConfirmationScreen({
           <button type="button" className="jr-confirmation-primary-button jr-confirmation-retry-button" onClick={onRetry}>
             <span>TRY AGAIN</span><strong>→</strong>
           </button>
-          <button type="button" className="jr-confirmation-secondary-button" onClick={onHome}>BACK TO MENU</button>
+          <button type="button" className="jr-confirmation-secondary-button" onClick={onHome}>{isHck ? "BACK TO SERVICES" : "BACK TO MENU"}</button>
         </>
       ) : paymentState === "pending" ? (
         <button type="button" className="jr-confirmation-secondary-button jr-confirmation-secondary-disabled" disabled>VERIFYING PAYMENT...</button>
       ) : (
         <>
           <button type="button" className="jr-confirmation-primary-button" onClick={onHome}>
-            <span>BACK TO MENU</span><strong>→</strong>
+            <span>{isHck ? "BACK TO SERVICES" : "BACK TO MENU"}</span><strong>→</strong>
           </button>
           <button type="button" className="jr-confirmation-secondary-button" onClick={onHistory}>VIEW ORDER HISTORY</button>
         </>

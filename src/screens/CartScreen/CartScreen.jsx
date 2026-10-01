@@ -17,6 +17,8 @@ export default function CartScreen({
   productImage,
   displayProductName,
   money,
+  showLocation = true,
+  isHck = false,
 }) {
   const items = Array.isArray(cart) ? cart : [];
 
@@ -34,7 +36,7 @@ export default function CartScreen({
       item?.name ||
       item?.productName ||
       item?.product_name ||
-      "Sugarcane Juice"
+      (isHck ? "Helmet Cleaning Service" : "Sugarcane Juice")
     );
   }
 
@@ -69,10 +71,8 @@ export default function CartScreen({
   }
 
   function getQuantity(item) {
-    return Math.max(
-      1,
-      Number(item?.quantity || 1)
-    );
+    const raw = Number(item?.quantity ?? item?.qty ?? item?.count ?? 1);
+    return Number.isFinite(raw) && raw > 0 ? Math.min(Math.floor(raw), 9) : 1;
   }
 
   function formatMoney(value) {
@@ -156,8 +156,9 @@ export default function CartScreen({
           </h1>
 
           <p>
-            Pick something fresh from the menu
-            and add it to your order.
+            {isHck
+              ? "Select a cleaning service from the menu and add it to your order."
+              : "Pick something fresh from the menu and add it to your order."}
           </p>
 
           <button
@@ -165,7 +166,7 @@ export default function CartScreen({
             className="jr-cart-primary-button"
             onClick={onBack}
           >
-            CONTINUE SHOPPING
+            {isHck ? "VIEW SERVICES" : "CONTINUE SHOPPING"}
             <span>→</span>
           </button>
 
@@ -191,7 +192,7 @@ export default function CartScreen({
         className="jr-cart-back"
         onClick={onBack}
       >
-        ← Back to menu
+        {isHck ? "← Back to services" : "← Back to menu"}
       </button>
 
 
@@ -218,46 +219,48 @@ export default function CartScreen({
           COLLECTION LOCATION
          ================================================= */}
 
-      <section className="jr-cart-location-card">
+      {showLocation && (
+        <section className="jr-cart-location-card">
 
-        <div className="jr-cart-location-icon">
-          📍
-        </div>
+          <div className="jr-cart-location-icon">
+            📍
+          </div>
 
-        <div className="jr-cart-location-copy">
+          <div className="jr-cart-location-copy">
 
-          <small>
-            COLLECT FROM
-          </small>
+            <small>
+              COLLECT FROM
+            </small>
 
-          <strong>
-            {location?.name ||
-              "Juice Robo location"}
-          </strong>
+            <strong>
+              {location?.name ||
+                (isHck ? "HCK Station" : "Juice Robo location")}
+            </strong>
 
-          {location?.address && (
-            <span>
-              {location.address}
-            </span>
-          )}
+            {location?.address && (
+              <span>
+                {location.address}
+              </span>
+            )}
 
-          {machine?.name && (
-            <span>
-              Machine: {machine.name}
-            </span>
-          )}
+            {machine?.name && (
+              <span>
+                Machine: {machine.name}
+              </span>
+            )}
 
-        </div>
+          </div>
 
-        <button
-          type="button"
-          className="jr-cart-change-button"
-          onClick={onLocation}
-        >
-          CHANGE
-        </button>
+          <button
+            type="button"
+            className="jr-cart-change-button"
+            onClick={onLocation}
+          >
+            CHANGE
+          </button>
 
-      </section>
+        </section>
+      )}
 
 
       {/* =================================================
@@ -325,7 +328,14 @@ export default function CartScreen({
                   />
                 ) : (
                   <div className="jr-cart-image-placeholder">
-                    🧃
+                    {isHck ? (
+                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+                        <path d="M4 12 C4 7 7.5 4 12 4 C16.5 4 20 7 20 12 C20 16 17.5 18 14 18 L8 18 C5.5 18 4 15 4 12 Z" fill="#287F46" />
+                        <path d="M7 11 H17 V14 C17 15 16 16 15 16 H9 C8 16 7 15 7 14 Z" fill="#a3e635" />
+                      </svg>
+                    ) : (
+                      "🧃"
+                    )}
                   </div>
                 )}
 
@@ -337,7 +347,7 @@ export default function CartScreen({
               <div className="jr-cart-item-info">
 
                 <span className="jr-cart-item-type">
-                  FRESH JUICE
+                  {isHck ? "HELMET SERVICE" : "FRESH JUICE"}
                 </span>
 
                 <h2>
@@ -364,12 +374,18 @@ export default function CartScreen({
                     <button
                       type="button"
                       aria-label="Decrease quantity"
-                      onClick={() =>
-                        onUpdate?.(
-                          item.id,
-                          quantity - 1
-                        )
-                      }
+                      onClick={() => {
+                        const targetId = item?.variantId ?? item?.id ?? item?.productId;
+                        if (quantity - 1 <= 0) {
+                          if (typeof onRemove === "function") {
+                            onRemove(targetId);
+                          } else {
+                            onUpdate?.(targetId, 0);
+                          }
+                        } else {
+                          onUpdate?.(targetId, quantity - 1);
+                        }
+                      }}
                     >
                       −
                     </button>
@@ -381,12 +397,13 @@ export default function CartScreen({
                     <button
                       type="button"
                       aria-label="Increase quantity"
-                      onClick={() =>
-                        onUpdate?.(
-                          item.id,
-                          quantity + 1
-                        )
-                      }
+                      disabled={quantity >= 9}
+                      className={quantity >= 9 ? "jr-cart-qty-btn--disabled" : ""}
+                      onClick={() => {
+                        if (quantity >= 9) return;
+                        const targetId = item?.variantId ?? item?.id ?? item?.productId;
+                        onUpdate?.(targetId, Math.min(quantity + 1, 9));
+                      }}
                     >
                       +
                     </button>

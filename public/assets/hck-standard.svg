@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="bg_std" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0FDF4" />
+      <stop offset="100%" stop-color="#DCFCE7" />
+    </linearGradient>
+    <linearGradient id="helmet_std" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="visor_std" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="20" fill="url(#bg_std)" />
+  <!-- Dual Sanitization Rings -->
+  <circle cx="100" cy="95" r="67" stroke="#86EFAC" stroke-width="4" stroke-dasharray="8 6" />
+  <circle cx="100" cy="95" r="54" fill="#FFFFFF" fill-opacity="0.65" />
+  <!-- Helmet Body -->
+  <path d="M100 48C68 48 50 68 50 98C50 115 58 132 72 142L80 148H138C145 140 150 128 150 112C150 96 148 78 134 60C123 52 112 48 100 48Z" fill="url(#helmet_std)" />
+  <!-- Visor -->
+  <path d="M88 82H134C139 82 142 86 140.5 91L135 112C133 118 127 122 121 122H92C86 122 81 117 80 110L78 88C77 84 81 82 88 82Z" fill="url(#visor_std)" />
+  <!-- Visor Reflection -->
+  <path d="M92 88L86 112C85 116 88 118 92 118H96L102 88H92Z" fill="#FFFFFF" fill-opacity="0.35" />
+  <!-- Vent details -->
+  <rect x="92" y="58" width="16" height="5" rx="2.5" fill="#A7F3D0" />
+  <circle cx="130" cy="132" r="3.5" fill="#34D399" />
+  <!-- Clean Sparkles -->
+  <path d="M156 42L158.5 49L165 51.5L158.5 54L156 61L153.5 54L147 51.5L153.5 49Z" fill="#059669" />
+  <path d="M42 90L44 95L49 97L44 99L42 104L40 99L35 97L40 95Z" fill="#34D399" />
+  <!-- Badge Pill -->
+  <rect x="36" y="160" width="128" height="24" rx="12" fill="#059669" />
+  <text x="100" y="176" font-family="Inter, -apple-system, sans-serif" font-weight="800" font-size="11" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">STANDARD CARE</text>
+</svg>

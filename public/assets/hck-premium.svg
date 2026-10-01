@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="bg_prem" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFBEB" />
+      <stop offset="100%" stop-color="#FEF3C7" />
+    </linearGradient>
+    <linearGradient id="helmet_prem" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+    <linearGradient id="visor_prem" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="20" fill="url(#bg_prem)" />
+  <!-- Triple Sanitization Shield Halo -->
+  <circle cx="100" cy="95" r="70" stroke="#FDE68A" stroke-width="4" stroke-dasharray="10 6" />
+  <circle cx="100" cy="95" r="56" fill="#FFFFFF" fill-opacity="0.75" />
+  <!-- Helmet Body -->
+  <path d="M100 48C68 48 50 68 50 98C50 115 58 132 72 142L80 148H138C145 140 150 128 150 112C150 96 148 78 134 60C123 52 112 48 100 48Z" fill="url(#helmet_prem)" />
+  <!-- Visor -->
+  <path d="M88 82H134C139 82 142 86 140.5 91L135 112C133 118 127 122 121 122H92C86 122 81 117 80 110L78 88C77 84 81 82 88 82Z" fill="url(#visor_prem)" />
+  <!-- Visor Gold Reflection -->
+  <path d="M92 88L86 112C85 116 88 118 92 118H96L102 88H92Z" fill="#FFFFFF" fill-opacity="0.4" />
+  <!-- Vent details -->
+  <rect x="90" y="56" width="20" height="5" rx="2.5" fill="#FDE68A" />
+  <circle cx="132" cy="132" r="4" fill="#F59E0B" />
+  <!-- Gold Sparkles -->
+  <path d="M160 38L163 46L171 49L163 52L160 60L157 52L149 49L157 46Z" fill="#D97706" />
+  <path d="M38 82L40.5 88L47 90.5L40.5 93L38 99L35.5 93L29 90.5L35.5 88Z" fill="#F59E0B" />
+  <!-- Crown / Premium Icon atop badge -->
+  <rect x="36" y="160" width="128" height="24" rx="12" fill="#D97706" />
+  <text x="100" y="176" font-family="Inter, -apple-system, sans-serif" font-weight="800" font-size="11" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">PREMIUM DEEP</text>
+</svg>

@@ -4,6 +4,7 @@ import {
   getProductImageCandidates,
   resolveJuiceProductImage,
 } from "../../shared/utils/imageResolver.js";
+import { getCartQuantityForProduct, isSamePackage } from "../../shared/utils/cartMatcher.js";
 
 /*
  * Juice Robo Menu
@@ -229,34 +230,13 @@ function readQuantity(value) {
 }
 
 function quantityForProduct(cart, product) {
-  const targetVariantId =
-    productCartId(product);
-
-  if (targetVariantId === null) {
-    return 0;
-  }
-
-  const items =
-    Array.isArray(cart)
-      ? cart
-      : [];
-
-  const item = items.find(
-    (entry) =>
-      cartItemVariantId(entry) ===
-      targetVariantId
-  );
-
-  return readQuantity(
-    item?.quantity ??
-    item?.qty ??
-    0
-  );
+  return getCartQuantityForProduct(cart, product);
 }
 
 function displayName(
   product,
-  resolver
+  resolver,
+  isHck = false
 ) {
   if (typeof resolver === "function") {
     const resolved = sanitizeText(
@@ -275,7 +255,7 @@ function displayName(
     product?.itemName
   );
 
-  return raw || "Juice";
+  return raw || (isHck ? "Helmet Cleaning Service" : "Juice");
 }
 
 function displayDescription(
@@ -404,7 +384,26 @@ export default function MenuScreen({
   displayDescription:
     displayDescriptionResolver,
   money,
+  isHck = false,
+  selectedHckPackage,
+  onToggleHckPackage,
 }) {
+  /* =======================================================
+     HCK SINGLE SELECTION STATE
+     ======================================================= */
+
+  const [internalSelectedPackage, setInternalSelectedPackage] = useState(null);
+  const activeHckPackage = selectedHckPackage !== undefined ? selectedHckPackage : internalSelectedPackage;
+
+  const handleToggleHckPackage = useCallback(
+    (product) => {
+      setInternalSelectedPackage((prev) => (isSamePackage(prev, product) ? null : product));
+      if (typeof onToggleHckPackage === "function") {
+        onToggleHckPackage(product);
+      }
+    },
+    [onToggleHckPackage]
+  );
 
   /* =======================================================
      PRODUCTS
@@ -460,18 +459,29 @@ export default function MenuScreen({
         <div className="jr-welcome-copy">
 
           <span className="jr-eyebrow">
-            FRESHLY MADE
+            {isHck ? "PROFESSIONAL CARE" : "FRESHLY MADE"}
           </span>
 
           <h1>
-            Your favourite
-            <br />
-            <em>juice, your way.</em>
+            {isHck ? (
+              <>
+                Clean helmet,
+                <br />
+                <em>fresh ride.</em>
+              </>
+            ) : (
+              <>
+                Your favourite
+                <br />
+                <em>juice, your way.</em>
+              </>
+            )}
           </h1>
 
           <p>
-            Pick your juice, choose your quantity and
-            collect it fresh from your Juice Robo machine.
+            {isHck
+              ? "Choose your cleaning package and refresh your helmet in minutes."
+              : "Pick your juice, choose your quantity and collect it fresh from your Juice Robo machine."}
           </p>
 
         </div>
@@ -480,7 +490,34 @@ export default function MenuScreen({
           className="jr-welcome-icon"
           aria-hidden="true"
         >
-          🧃
+          {isHck ? (
+            <svg
+              viewBox="0 0 48 48"
+              width="38"
+              height="38"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M10 24 C10 14 17 8 24 8 C31 8 38 14 38 24 C38 31 34 35 28 35 L16 35 C11 35 10 30 10 24 Z"
+                fill="#287F46"
+              />
+              <path
+                d="M16 22 H32 V27 C32 29 30 30 28 30 H20 C18 30 16 29 16 27 Z"
+                fill="#a3e635"
+                opacity="0.9"
+              />
+              <path
+                d="M21 15 L24 19 L29 13"
+                stroke="#ffffff"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : (
+            "🧃"
+          )}
         </div>
 
       </section>
@@ -497,18 +534,22 @@ export default function MenuScreen({
           <div className="jr-section-heading-copy">
 
             <span className="jr-section-eyebrow">
-              AVAILABLE JUICES
+              {isHck ? "CLEANING PACKAGES" : "AVAILABLE JUICES"}
             </span>
 
             <h2>
-              What are you craving?
+              {isHck ? "Choose your cleaning service" : "What are you craving?"}
             </h2>
 
           </div>
 
           <span
             className="jr-count"
-            aria-label={`${visibleProducts.length} juices available`}
+            aria-label={
+              isHck
+                ? `${visibleProducts.length} packages available`
+                : `${visibleProducts.length} juices available`
+            }
           >
             {visibleProducts.length}
           </span>
@@ -517,7 +558,9 @@ export default function MenuScreen({
 
 
         <p className="jr-section-subtitle">
-          Choose your favourite fresh juice.
+          {isHck
+            ? "Select a package to keep your helmet fresh, clean, and disinfected."
+            : "Choose your favourite fresh juice."}
         </p>
 
 
@@ -532,16 +575,37 @@ export default function MenuScreen({
             <div className="jr-products-empty">
 
               <span aria-hidden="true">
-                🧃
+                {isHck ? (
+                  <svg
+                    viewBox="0 0 48 48"
+                    width="42"
+                    height="42"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M10 24 C10 14 17 8 24 8 C31 8 38 14 38 24 C38 31 34 35 28 35 L16 35 C11 35 10 30 10 24 Z"
+                      fill="#287F46"
+                    />
+                    <path
+                      d="M16 22 H32 V27 C32 29 30 30 28 30 H20 C18 30 16 29 16 27 Z"
+                      fill="#a3e635"
+                      opacity="0.9"
+                    />
+                  </svg>
+                ) : (
+                  "🧃"
+                )}
               </span>
 
               <strong>
-                No juices available
+                {isHck ? "No cleaning services available" : "No juices available"}
               </strong>
 
               <p>
-                No available products were returned by
-                the Juice Robo Products API.
+                {isHck
+                  ? "No cleaning services were returned by the Products API."
+                  : "No available products were returned by the Juice Robo Products API."}
               </p>
 
             </div>
@@ -575,6 +639,9 @@ export default function MenuScreen({
                     displayDescriptionResolver
                   }
                   money={money}
+                  isHck={isHck}
+                  selectedHckPackage={activeHckPackage}
+                  onToggleHckPackage={handleToggleHckPackage}
                 />
 
               )
@@ -605,6 +672,9 @@ function ProductCard({
   displayProductName,
   displayDescription: displayDescriptionResolver,
   money,
+  isHck = false,
+  selectedHckPackage,
+  onToggleHckPackage,
 }) {
   const [imageIndex, setImageIndex] = useState(0);
   const [imageFailed, setImageFailed] = useState(false);
@@ -613,7 +683,7 @@ function ProductCard({
      PRODUCT DATA (FROM LIVE API)
      ======================================================= */
 
-  const name = displayName(product, displayProductName);
+  const name = displayName(product, displayProductName, isHck);
   const description = displayDescription(product, displayDescriptionResolver);
   const price = productPrice(product);
 
@@ -644,10 +714,13 @@ function ProductCard({
     !imageFailed && candidates.length > 0 ? candidates[imageIndex] : "";
 
   /* =======================================================
-     CART SYNCHRONIZATION
+     CART SYNCHRONIZATION & SELECTION
      ======================================================= */
 
   const quantity = quantityForProduct(cart, product);
+  const isSelected = isHck
+    ? Boolean(isSamePackage(selectedHckPackage, product))
+    : quantity > 0;
 
   /* =======================================================
      AVAILABILITY
@@ -656,7 +729,24 @@ function ProductCard({
   const available = isAvailable(product) && isAvailable(variant);
 
   /* =======================================================
-     ADD TO CART / INCREMENT
+     HCK TOGGLE (SELECT / DESELECT RADIO LOGIC)
+     ======================================================= */
+
+  function handleHckToggle(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    if (!available) return;
+
+    if (typeof onToggleHckPackage === "function") {
+      onToggleHckPackage(product);
+    }
+  }
+
+  /* =======================================================
+     ADD TO CART / INCREMENT (JR ONLY)
      ======================================================= */
 
   async function handlePlus(event) {
@@ -666,6 +756,10 @@ function ProductCard({
     }
 
     if (!available) return;
+
+    if (quantity >= 9) {
+      return;
+    }
 
     if (typeof onAddToCart !== "function") {
       console.error("[Juice Robo] MenuScreen: onAddToCart is not connected.");
@@ -677,7 +771,7 @@ function ProductCard({
       return;
     }
 
-    const nextQuantity = quantity + 1;
+    const nextQuantity = Math.min(quantity + 1, 9);
     try {
       await onAddToCart(product, variant, nextQuantity);
     } catch (error) {
@@ -686,7 +780,7 @@ function ProductCard({
   }
 
   /* =======================================================
-     REMOVE FROM CART / DECREMENT
+     REMOVE FROM CART / DECREMENT (JR ONLY)
      ======================================================= */
 
   async function handleMinus(event) {
@@ -714,10 +808,12 @@ function ProductCard({
   return (
     <article
       className={`jr-product-card jr-food-card${
-        quantity > 0 ? " jr-product-card-in-cart jr-food-card--selected" : ""
+        isSelected ? " jr-product-card-in-cart jr-food-card--selected" : ""
       }${!available ? " jr-product-card-unavailable jr-food-card--unavailable" : ""}`}
-      onClick={() => {
-        if (typeof onSelect === "function") {
+      onClick={(e) => {
+        if (isHck) {
+          handleHckToggle(e);
+        } else if (typeof onSelect === "function") {
           onSelect(product);
         }
       }}
@@ -726,7 +822,9 @@ function ProductCard({
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          if (typeof onSelect === "function") {
+          if (isHck) {
+            handleHckToggle(event);
+          } else if (typeof onSelect === "function") {
             onSelect(product);
           }
         }
@@ -749,50 +847,79 @@ function ProductCard({
             className="jr-product-image-placeholder jr-food-card__placeholder"
             aria-hidden="true"
           >
-            <svg
-              viewBox="0 0 64 64"
-              fill="none"
-              className="jr-fallback-juice-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              width="52"
-              height="52"
-            >
-              <rect width="64" height="64" rx="14" fill="#EDF7ED" />
-              <path
-                d="M22 18H42L39 48C39 50.2 37.2 52 35 52H29C26.8 52 25 50.2 25 48L22 18Z"
-                fill="#287F46"
-                fillOpacity="0.15"
-                stroke="#287F46"
-                strokeWidth="2.5"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M20 18H44"
-                stroke="#287F46"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              <path
-                d="M25 28H39"
-                stroke="#287F46"
-                strokeWidth="2"
-                strokeDasharray="2 2"
-                strokeLinecap="round"
-              />
-              <path
-                d="M38 10L33 22"
-                stroke="#E67E22"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              <circle
-                cx="32"
-                cy="38"
-                r="4"
-                fill="#287F46"
-                fillOpacity="0.25"
-              />
-            </svg>
+            {isHck ? (
+              <svg
+                viewBox="0 0 64 64"
+                fill="none"
+                className="jr-fallback-juice-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="52"
+                height="52"
+              >
+                <rect width="64" height="64" rx="14" fill="#EDF7ED" />
+                <path
+                  d="M16 34 C16 22 23 16 32 16 C41 16 48 22 48 34 C48 43 43 47 36 47 L24 47 C18 47 16 41 16 34 Z"
+                  fill="#287F46"
+                />
+                <path
+                  d="M22 31 H42 V37 C42 39 40 41 38 41 H26 C24 41 22 39 22 37 Z"
+                  fill="#a3e635"
+                  opacity="0.9"
+                />
+                <path
+                  d="M28 22 L31 27 L37 19"
+                  stroke="#ffffff"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ) : (
+              <svg
+                viewBox="0 0 64 64"
+                fill="none"
+                className="jr-fallback-juice-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="52"
+                height="52"
+              >
+                <rect width="64" height="64" rx="14" fill="#EDF7ED" />
+                <path
+                  d="M22 18H42L39 48C39 50.2 37.2 52 35 52H29C26.8 52 25 50.2 25 48L22 18Z"
+                  fill="#287F46"
+                  fillOpacity="0.15"
+                  stroke="#287F46"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20 18H44"
+                  stroke="#287F46"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M25 28H39"
+                  stroke="#287F46"
+                  strokeWidth="2"
+                  strokeDasharray="2 2"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M38 10L33 22"
+                  stroke="#E67E22"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <circle
+                  cx="32"
+                  cy="38"
+                  r="4"
+                  fill="#287F46"
+                  fillOpacity="0.25"
+                />
+              </svg>
+            )}
           </div>
         )}
 
@@ -802,7 +929,7 @@ function ProductCard({
           ) : (
             <span className="jr-fresh-badge jr-badge jr-badge--fresh">
               <span className="jr-badge__dot" />
-              100% PURE
+              {isHck ? "SANITIZED" : "100% PURE"}
             </span>
           )}
         </div>
@@ -826,6 +953,26 @@ function ProductCard({
               >
                 SOLD OUT
               </button>
+            ) : isHck ? (
+              !isSelected ? (
+                <button
+                  type="button"
+                  className="jr-add-btn jr-hck-select-btn"
+                  onClick={handleHckToggle}
+                  aria-label={`Select ${name}`}
+                >
+                  SELECT
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="jr-add-btn jr-hck-selected-btn"
+                  onClick={handleHckToggle}
+                  aria-label={`Deselect ${name}`}
+                >
+                  SELECTED ✓
+                </button>
+              )
             ) : quantity === 0 ? (
               <button
                 type="button"
@@ -858,8 +1005,9 @@ function ProductCard({
                 </span>
                 <button
                   type="button"
-                  className="jr-qty-btn jr-qty-btn--plus"
+                  className={`jr-qty-btn jr-qty-btn--plus${quantity >= 9 ? " jr-qty-btn--disabled" : ""}`}
                   onClick={handlePlus}
+                  disabled={quantity >= 9}
                   aria-label={`Increase ${name} quantity`}
                 >
                   +

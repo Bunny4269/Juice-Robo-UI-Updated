@@ -78,7 +78,7 @@ function getEmail(user, customer) {
  * backend has no useful name or still contains the generic
  * "Juice Lover" value.
  */
-function getDisplayName(user, customer) {
+function getDisplayName(user, customer, isHck = false) {
   const email = getEmail(user, customer);
 
   const backendName =
@@ -98,14 +98,14 @@ function getDisplayName(user, customer) {
     return backendName;
   }
 
-  return nameFromEmail(email) || "Juice Lover";
+  return nameFromEmail(email) || (isHck ? "Customer" : "Juice Lover");
 }
 
-function getInitials(name) {
+function getInitials(name, isHck = false) {
   const value = clean(name);
 
   if (!value) {
-    return "JL";
+    return isHck ? "HC" : "JL";
   }
 
   const parts = value
@@ -134,6 +134,7 @@ export default function ProfileScreen({
   error = "",
   onOrders,
   onHistory,
+  isHck = false,
 }) {
   const email = useMemo(
     () => getEmail(user, customer),
@@ -141,16 +142,16 @@ export default function ProfileScreen({
   );
 
   const displayName = useMemo(
-    () => getDisplayName(user, customer),
-    [user, customer]
+    () => getDisplayName(user, customer, isHck),
+    [user, customer, isHck]
   );
 
   const firstName =
     clean(displayName)
       .split(/\s+/)
-      .filter(Boolean)[0] || "Juice";
+      .filter(Boolean)[0] || (isHck ? "Customer" : "Juice");
 
-  const initials = getInitials(displayName);
+  const initials = getInitials(displayName, isHck);
 
   /*
    * IMPORTANT:
@@ -246,7 +247,7 @@ export default function ProfileScreen({
           disabled={busy}
         >
           <span aria-hidden="true">←</span>
-          <span>Back to menu</span>
+          <span>{isHck ? "Back to services" : "Back to menu"}</span>
         </button>
 
         {/* ACCOUNT HEADING */}
@@ -276,7 +277,7 @@ export default function ProfileScreen({
             <strong>{displayName}</strong>
 
             <small>
-              {email || "Juice Robo member"}
+              {email || (isHck ? "HCK Member" : "Juice Robo member")}
             </small>
           </div>
         </section>

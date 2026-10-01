@@ -9,6 +9,10 @@ import "./HomeScreen.css";
 
 const JUICE_ROBO_LOGO =
   `${import.meta.env.BASE_URL}assets/app_logo.jpg`;
+const HCK_LOGO =
+  `${import.meta.env.BASE_URL}assets/hck-logo.svg`;
+const HCK_FALLBACK_IMAGE =
+  `${import.meta.env.BASE_URL}assets/hck-helmet-clean.svg`;
 
 export default function HomeScreen({
   products = [],
@@ -19,10 +23,14 @@ export default function HomeScreen({
   displayProductName,
   displayDescription,
   money,
+  showLocation = false,
+  isHck = false,
 }) {
   const safeProducts = Array.isArray(products)
     ? products
     : [];
+
+  const activeLogo = isHck ? HCK_LOGO : JUICE_ROBO_LOGO;
 
   return (
     <main className="jr-content jr-home-page">
@@ -36,20 +44,29 @@ export default function HomeScreen({
         <div className="jr-welcome-copy">
 
           <span className="jr-eyebrow">
-            FRESHLY MADE
+            {isHck ? "PROFESSIONAL CARE" : "FRESHLY MADE"}
           </span>
 
           <h1>
-            Your favourite
-            <br />
-            <em>
-              juice, your way.
-            </em>
+            {isHck ? (
+              <>
+                Clean helmet,
+                <br />
+                <em>fresh ride.</em>
+              </>
+            ) : (
+              <>
+                Your favourite
+                <br />
+                <em>juice, your way.</em>
+              </>
+            )}
           </h1>
 
           <p>
-            Pick your juice, choose your quantity and
-            collect it fresh from your Juice Robo machine.
+            {isHck
+              ? "Choose your cleaning package and refresh your helmet in minutes."
+              : "Pick your juice, choose your quantity and collect it fresh from your Juice Robo machine."}
           </p>
 
         </div>
@@ -59,7 +76,7 @@ export default function HomeScreen({
           aria-hidden="true"
         >
           <img
-            src={JUICE_ROBO_LOGO}
+            src={activeLogo}
             alt=""
             className="jr-app-logo-image"
           />
@@ -72,49 +89,51 @@ export default function HomeScreen({
           SELECTED LOCATION / MACHINE
          ================================================= */}
 
-      <section
-        className="jr-selected-machine-banner"
-        aria-label="Collection point"
-      >
-
-        <div
-          className="jr-selected-machine-icon jr-collection-logo"
-          aria-hidden="true"
+      {showLocation && (
+        <section
+          className="jr-selected-machine-banner"
+          aria-label="Collection point"
         >
-          <img
-            src={JUICE_ROBO_LOGO}
-            alt=""
-            className="jr-collection-logo-image"
-            onError={(event) => {
-              event.currentTarget.style.display =
-                "none";
-            }}
-          />
-        </div>
 
-        <div className="jr-selected-machine-copy">
+          <div
+            className="jr-selected-machine-icon jr-collection-logo"
+            aria-hidden="true"
+          >
+            <img
+              src={JUICE_ROBO_LOGO}
+              alt=""
+              className="jr-collection-logo-image"
+              onError={(event) => {
+                event.currentTarget.style.display =
+                  "none";
+              }}
+            />
+          </div>
 
-          <small>
-            COLLECTING FROM
-          </small>
+          <div className="jr-selected-machine-copy">
 
-          <strong>
-            {selectedLocation?.name ||
-              "Selected location"}
-          </strong>
+            <small>
+              COLLECTING FROM
+            </small>
 
-          <small>
-            {selectedMachine?.name ||
-              "Selected machine"}
-          </small>
+            <strong>
+              {selectedLocation?.name ||
+                "Selected location"}
+            </strong>
 
-        </div>
+            <small>
+              {selectedMachine?.name ||
+                "Selected machine"}
+            </small>
 
-      </section>
+          </div>
+
+        </section>
+      )}
 
 
       {/* =================================================
-          AVAILABLE JUICES
+          AVAILABLE JUICES / CLEANING PACKAGES
          ================================================= */}
 
       <section className="jr-menu-section">
@@ -124,11 +143,11 @@ export default function HomeScreen({
           <div>
 
             <span className="jr-eyebrow">
-              AVAILABLE JUICES
+              {isHck ? "CLEANING PACKAGES" : "AVAILABLE JUICES"}
             </span>
 
             <h2>
-              What are you craving?
+              {isHck ? "Choose your cleaning service" : "What are you craving?"}
             </h2>
 
           </div>
@@ -140,7 +159,9 @@ export default function HomeScreen({
         </div>
 
         <p className="jr-section-subtitle">
-          Choose your favourite fresh juice.
+          {isHck
+            ? "Select a package to keep your helmet fresh, clean, and disinfected."
+            : "Choose your favourite fresh juice."}
         </p>
 
 
@@ -159,19 +180,20 @@ export default function HomeScreen({
                 aria-hidden="true"
               >
                 <img
-                  src={JUICE_ROBO_LOGO}
+                  src={activeLogo}
                   alt=""
                   className="jr-empty-logo-image"
                 />
               </span>
 
               <strong>
-                No juices available
+                {isHck ? "No cleaning services available" : "No juices available"}
               </strong>
 
               <p>
-                Fresh juice options will appear here
-                when available.
+                {isHck
+                  ? "Cleaning service options will appear here when available."
+                  : "Fresh juice options will appear here when available."}
               </p>
 
             </div>
@@ -198,6 +220,7 @@ export default function HomeScreen({
                     displayDescription
                   }
                   money={money}
+                  isHck={isHck}
                 />
 
               )
@@ -225,6 +248,7 @@ function ProductCard({
   displayProductName,
   displayDescription,
   money,
+  isHck = false,
 }) {
   const name =
     product?.displayName ||
@@ -237,7 +261,7 @@ function ProductCard({
     product?.productName ||
     product?.product_name ||
     product?.title ||
-    "Juice";
+    (isHck ? "Helmet Cleaning Service" : "Juice");
 
   const description =
     product?.displayDescription ||
@@ -247,7 +271,9 @@ function ProductCard({
         : ""
     ) ||
     product?.description ||
-    "Freshly prepared juice.";
+    (isHck
+      ? "Professional helmet cleaning and disinfection service."
+      : "Freshly prepared juice.");
 
   const image =
     product?.image ||
@@ -312,7 +338,7 @@ function ProductCard({
             aria-hidden="true"
           >
             <img
-              src={JUICE_ROBO_LOGO}
+              src={isHck ? HCK_FALLBACK_IMAGE : JUICE_ROBO_LOGO}
               alt=""
               className="jr-product-logo-image"
             />
@@ -322,7 +348,7 @@ function ProductCard({
 
         <span className="jr-fresh-badge">
           <i />
-          FRESH
+          {isHck ? "CARE" : "FRESH"}
         </span>
 
       </div>
