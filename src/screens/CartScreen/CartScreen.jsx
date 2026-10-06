@@ -528,7 +528,7 @@ export default function CartScreen({
           onClick={onCheckout}
         >
           <span>
-            PROCEED TO PAYMENT
+            CONTINUE
           </span>
 
           <b>

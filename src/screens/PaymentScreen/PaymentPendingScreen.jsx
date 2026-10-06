@@ -137,63 +137,20 @@ export default function PaymentPendingScreen({
             4. ACTION CONTROLS
            =================================================== */}
         <div className="jr-payment-pending-actions">
-          {typeof onOpenUpiApp === "function" && (
-            <div className="jr-pending-upi-apps">
-              <div className="jr-pending-upi-heading">
-                <strong>Continue with your UPI app</strong>
-                <span>Choose an installed payment app</span>
-              </div>
+          <button
+            type="button"
+            className="jr-pending-proceed-upi-btn"
+            onClick={onProceedWithUpi || onOpenUpiApp}
+            disabled={activeVerifying}
+          >
+            <span>{activeVerifying ? "Verifying Payment..." : "Pay with UPI"}</span>
+            {!activeVerifying && <span aria-hidden="true">→</span>}
+          </button>
 
-              <div className="jr-pending-upi-app-list">
-                <button
-                  type="button"
-                  className="jr-pending-reopen-btn jr-pending-reopen-btn--phonepe"
-                  onClick={() => onOpenUpiApp({
-                    id: "phonepe",
-                    name: "PhonePe",
-                    scheme: "phonepe://pay",
-                  })}
-                >
-                  <span className="jr-pending-upi-app-icon jr-pending-upi-app-icon--phonepe">पे</span>
-                  <span>Open PhonePe</span>
-                  <span className="jr-pending-upi-arrow">→</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="jr-pending-reopen-btn jr-pending-reopen-btn--gpay"
-                  onClick={() => onOpenUpiApp({
-                    id: "googlepay",
-                    name: "Google Pay",
-                    scheme: "gpay://upi/pay",
-              androidScheme: "tez://upi/pay",
-                  })}
-                >
-                  <span className="jr-pending-upi-app-icon jr-pending-upi-app-icon--gpay">G</span>
-                  <span>Open Google Pay</span>
-                  <span className="jr-pending-upi-arrow">→</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="jr-pending-reopen-btn"
-                  onClick={() => onOpenUpiApp({ id: "paytm", name: "Paytm", scheme: "paytmmp://pay" })}
-                >
-                  <span className="jr-pending-upi-app-icon">P</span>
-                  <span>Open Paytm</span>
-                  <span className="jr-pending-upi-arrow">→</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="jr-pending-reopen-btn"
-                  onClick={() => onOpenUpiApp({ id: "bhim", name: "BHIM", scheme: "bhim://upi/pay" })}
-                >
-                  <span className="jr-pending-upi-app-icon">B</span>
-                  <span>Open BHIM</span>
-                  <span className="jr-pending-upi-arrow">→</span>
-                </button>
-              </div>
+          {!isMobile && (
+            <div className="jr-pending-desktop-notice" role="note">
+              <strong>Pay using your phone</strong>
+              <span>UPI payment apps cannot be launched from this desktop browser. Open the same Juice Robo order on your phone to continue.</span>
             </div>
           )}
 

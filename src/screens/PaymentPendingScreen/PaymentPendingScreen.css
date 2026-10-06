@@ -1,0 +1,759 @@
+/* =========================================================
+   PAYMENT PENDING SCREEN — Juice Robo
+   Real-time backend verification in progress
+   ========================================================= */
+
+.jr-payment-pending-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--jr-cream-alt, #f5f5ef);
+  padding: 24px 16px calc(100px + env(safe-area-inset-bottom, 0px));
+}
+
+.jr-payment-pending-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  gap: 0;
+}
+
+/* ============== ANIMATED LOADER ============== */
+
+.jr-payment-loader-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto 24px;
+}
+
+/* Rotating outer ring */
+.jr-pending-radar-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: var(--jr-green, #2a7d4f);
+  border-right-color: var(--jr-green-muted, #c8e6d5);
+  animation: jr-spin 1.2s linear infinite;
+}
+
+@keyframes jr-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Card chip animation */
+.jr-demo-payment-loader {
+  width: 72px;
+  height: 48px;
+  background: linear-gradient(135deg, #2a7d4f 0%, #1a5235 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(42,125,79,0.35);
+  animation: jr-card-float 2s ease-in-out infinite;
+}
+
+@keyframes jr-card-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+.jr-demo-pad {
+  width: 52px;
+  height: 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 4px;
+}
+
+.jr-demo-chip {
+  width: 22px;
+  height: 14px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #f5c842 0%, #e8a100 100%);
+}
+
+.jr-demo-line {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.45);
+}
+
+.jr-demo-line.line1 {
+  width: 100%;
+}
+
+.jr-demo-line.line2 {
+  width: 60%;
+}
+
+/* ============== STATUS BADGE ============== */
+
+.jr-payment-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: var(--jr-amber-light, #fef3c7);
+  color: var(--jr-amber, #d97706);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+
+.jr-payment-pending-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--jr-amber, #d97706);
+  animation: jr-pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes jr-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.4); opacity: 0.6; }
+}
+
+/* ============== TITLE & MESSAGE ============== */
+
+.jr-payment-pending-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: clamp(22px, 5vw, 28px);
+  font-weight: 900;
+  color: var(--jr-dark, #161c19);
+  text-align: center;
+  letter-spacing: -0.3px;
+  margin-bottom: 10px;
+}
+
+.jr-payment-pending-message {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--jr-gray-dark, #4a5250);
+  text-align: center;
+  max-width: 320px;
+  margin: 0 auto 20px;
+}
+
+/* ============== LAUNCH ALERT ============== */
+
+.jr-pending-launch-alert {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff8e1;
+  border: 1.5px solid #fde68a;
+  margin-bottom: 14px;
+}
+
+.jr-pending-launch-alert-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.jr-pending-launch-alert-content strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--jr-dark, #161c19);
+  margin-bottom: 3px;
+}
+
+.jr-pending-launch-alert-content p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--jr-gray-dark, #4a5250);
+}
+
+/* ============== ORDER DETAILS CARD ============== */
+
+.jr-payment-pending-card {
+  width: 100%;
+  background: var(--jr-white, #fff);
+  border: 1px solid var(--jr-border-light, #eef0ee);
+  border-radius: 20px;
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.jr-pending-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--jr-border-light, #eef0ee);
+}
+
+.jr-pending-card-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.jr-pending-card-row:first-child {
+  padding-top: 0;
+}
+
+.jr-pending-card-label {
+  font-size: 13px;
+  color: var(--jr-gray, #7a857d);
+  font-weight: 500;
+}
+
+.jr-pending-order-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: var(--jr-green-light, #e8f5ef);
+  color: var(--jr-green, #2a7d4f);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Manrope', monospace;
+}
+
+.jr-pending-card-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--jr-dark, #161c19);
+  text-align: right;
+}
+
+.jr-pending-card-amount {
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--jr-dark, #161c19);
+}
+
+.jr-pending-notice-box {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--jr-cream-alt, #f5f5ef);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.jr-pending-notice-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.jr-pending-notice-text {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--jr-gray-dark, #4a5250);
+}
+
+/* ============== ACTION CONTROLS ============== */
+
+.jr-pending-proceed-upi-btn {
+  width: 100%;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #161c19;
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 150ms ease, opacity 150ms ease;
+}
+
+.jr-pending-proceed-upi-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.jr-pending-proceed-upi-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.jr-pending-proceed-upi-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.jr-pending-desktop-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f7f8f7;
+  color: #5f6862;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.jr-pending-desktop-notice strong {
+  color: #161c19;
+  font-size: 13px;
+}
+
+.jr-payment-pending-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* UPI App Buttons */
+.jr-pending-upi-apps {
+  width: 100%;
+  background: var(--jr-white, #fff);
+  border: 1px solid var(--jr-border-light, #eef0ee);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.jr-pending-upi-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.jr-pending-upi-heading strong {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--jr-dark, #161c19);
+}
+
+.jr-pending-upi-heading span {
+  font-size: 12px;
+  color: var(--jr-gray, #7a857d);
+}
+
+.jr-pending-upi-app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jr-pending-reopen-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--jr-border, #e3e8e3);
+  border-radius: 12px;
+  background: var(--jr-white, #fff);
+  color: var(--jr-dark, #161c19);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.jr-pending-reopen-btn:hover {
+  background: var(--jr-cream-alt, #f5f5ef);
+  border-color: var(--jr-gray-light, #9ea89f);
+}
+
+.jr-pending-reopen-btn--phonepe {
+  border-color: rgba(94,36,178,0.25);
+}
+
+.jr-pending-reopen-btn--phonepe:hover {
+  background: rgba(94,36,178,0.05);
+  border-color: rgba(94,36,178,0.4);
+}
+
+.jr-pending-reopen-btn--gpay {
+  border-color: rgba(66,133,244,0.25);
+}
+
+.jr-pending-reopen-btn--gpay:hover {
+  background: rgba(66,133,244,0.05);
+  border-color: rgba(66,133,244,0.4);
+}
+
+.jr-pending-reopen-btn--paytm {
+  border-color: rgba(0, 185, 245, 0.25);
+}
+
+.jr-pending-reopen-btn--paytm:hover {
+  background: rgba(0, 185, 245, 0.05);
+  border-color: rgba(0, 185, 245, 0.4);
+}
+
+.jr-pending-reopen-btn--bhim {
+  border-color: rgba(0, 90, 156, 0.25);
+}
+
+.jr-pending-reopen-btn--bhim:hover {
+  background: rgba(0, 90, 156, 0.05);
+  border-color: rgba(0, 90, 156, 0.4);
+}
+
+.jr-pending-reopen-btn--cred {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.jr-pending-reopen-btn--cred:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.jr-pending-reopen-btn--generic {
+  border-color: rgba(42, 125, 79, 0.25);
+  background: #f7faf7;
+}
+
+.jr-pending-reopen-btn--generic:hover {
+  background: rgba(42, 125, 79, 0.08);
+  border-color: rgba(42, 125, 79, 0.4);
+}
+
+.jr-pending-upi-app-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--jr-cream-alt, #f5f5ef);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--jr-gray-dark, #4a5250);
+  flex-shrink: 0;
+}
+
+.jr-pending-upi-app-icon--phonepe {
+  background: #5e24b2;
+  color: #fff;
+  font-size: 12px;
+}
+
+.jr-pending-upi-app-icon--gpay {
+  background: #4285f4;
+  color: #fff;
+}
+
+.jr-pending-upi-app-icon--paytm {
+  background: #002e6e;
+  color: #00b9f5;
+  font-weight: 900;
+}
+
+.jr-pending-upi-app-icon--bhim {
+  background: #005a9c;
+  color: #fff;
+}
+
+.jr-pending-upi-app-icon--cred {
+  background: #111;
+  color: #fff;
+}
+
+.jr-pending-upi-app-icon--generic {
+  background: #2a7d4f;
+  color: #fff;
+  font-size: 11px;
+}
+
+.jr-pending-reopen-btn span:nth-child(2) {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.jr-pending-upi-arrow {
+  color: var(--jr-gray, #7a857d);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Check Status Button */
+.jr-pending-check-btn {
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 14px;
+  background: var(--jr-green, #2a7d4f);
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 4px 16px rgba(42,125,79,0.3);
+  transition: background 150ms ease, transform 120ms ease, box-shadow 150ms ease;
+}
+
+.jr-pending-check-btn:hover {
+  background: var(--jr-green-hover, #236642);
+}
+
+.jr-pending-check-btn:active {
+  transform: scale(0.98);
+  box-shadow: none;
+}
+
+.jr-pending-check-btn:disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Cancel Button */
+.jr-pending-cancel-btn {
+  width: 100%;
+  padding: 12px 20px;
+  border: 1.5px solid var(--jr-border, #e3e8e3);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--jr-gray-dark, #4a5250);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.jr-pending-cancel-btn:hover {
+  background: var(--jr-error-light, #fef2f2);
+  border-color: rgba(220,38,38,0.3);
+  color: var(--jr-error, #dc2626);
+}
+
+
+/* =========================================================
+   REDESIGNED JUICE ROBO PAYMENT PROCESSING UI
+   Keeps the global App header visible above this screen.
+   ========================================================= */
+
+.jr-payment-pending-page {
+  min-height: 100%;
+  padding: 20px 14px 32px;
+  background: #fbfaf4;
+  color: #171717;
+  overflow-x: hidden;
+}
+
+.jr-payment-pending-content {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+.jr-payment-loader-wrapper {
+  width: 86px;
+  height: 86px;
+  margin: 20px auto 24px;
+}
+
+.jr-pending-radar-ring {
+  inset: 2px;
+  border-width: 4px;
+  border-top-color: #2f8050;
+  border-right-color: #d9eadc;
+}
+
+.jr-demo-payment-loader {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #e7e8e1;
+  box-shadow: 0 6px 20px rgba(35, 75, 45, 0.08);
+}
+
+.jr-demo-pad {
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.jr-demo-chip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2f8050;
+}
+
+.jr-demo-line { display: none; }
+
+.jr-payment-pending-badge {
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  background: #eef7ef;
+  color: #2f8050;
+  font-size: 9px;
+  letter-spacing: .08em;
+}
+
+.jr-payment-pending-dot {
+  width: 6px;
+  height: 6px;
+  background: #2f8050;
+}
+
+.jr-payment-pending-title {
+  margin: 0 0 8px;
+  color: #171717;
+  font-size: clamp(24px, 7vw, 32px);
+  line-height: 1.02;
+  letter-spacing: -.045em;
+}
+
+.jr-payment-pending-message {
+  max-width: 340px;
+  margin-bottom: 18px;
+  color: #74746e;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.jr-payment-pending-card {
+  margin-bottom: 14px;
+  padding: 15px;
+  border: 1px solid #e6e7df;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 5px 18px rgba(35, 55, 40, .045);
+}
+
+.jr-pending-card-row {
+  padding: 9px 0;
+  border-color: #eeeeea;
+}
+
+.jr-pending-card-label {
+  color: #8a8a84;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.jr-pending-card-value,
+.jr-pending-order-pill {
+  color: #252525;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.jr-pending-card-amount {
+  color: #2f8050;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.jr-pending-notice-box {
+  margin-top: 12px;
+  padding: 10px 11px;
+  border: 1px solid #e5eee5;
+  border-radius: 11px;
+  background: #f5f9f3;
+}
+
+.jr-pending-notice-text {
+  color: #686d68;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.jr-payment-pending-actions {
+  width: 100%;
+}
+
+.jr-pending-upi-apps {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 13px;
+  border: 1px solid #e6e7df;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.jr-pending-upi-heading strong {
+  display: block;
+  color: #222;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.jr-pending-upi-heading span {
+  display: block;
+  margin-top: 3px;
+  color: #8a8a84;
+  font-size: 10px;
+}
+
+.jr-pending-upi-app-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.jr-pending-reopen-btn,
+.jr-pending-check-btn,
+.jr-pending-cancel-btn {
+  min-height: 44px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-weight: 800;
+}
+
+.jr-pending-reopen-btn {
+  border: 1px solid #e2e4dd;
+  background: #fafaf7;
+  color: #222;
+}
+
+.jr-pending-check-btn {
+  width: 100%;
+  border: 0;
+  background: #2f8050;
+  box-shadow: 0 5px 15px rgba(47,128,80,.18);
+}
+
+.jr-pending-cancel-btn {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid #e1e2dc;
+  background: #ffffff;
+  color: #5d5d58;
+}
+
+@media (max-width: 380px) {
+  .jr-payment-pending-page { padding-inline: 11px; }
+  .jr-payment-pending-card { padding: 13px; }
+}

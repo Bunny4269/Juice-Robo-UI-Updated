@@ -98,14 +98,14 @@ function getDisplayName(user, customer, isHck = false) {
     return backendName;
   }
 
-  return nameFromEmail(email) || (isHck ? "Customer" : "Juice Lover");
+  return nameFromEmail(email) || (isHck ? "Customer" : "");
 }
 
 function getInitials(name, isHck = false) {
   const value = clean(name);
 
   if (!value) {
-    return isHck ? "HC" : "JL";
+    return isHck ? "HC" : "U";
   }
 
   const parts = value
@@ -136,6 +136,10 @@ export default function ProfileScreen({
   onHistory,
   isHck = false,
 }) {
+  if (!user) {
+    return null;
+  }
+
   const email = useMemo(
     () => getEmail(user, customer),
     [user, customer]
@@ -149,7 +153,7 @@ export default function ProfileScreen({
   const firstName =
     clean(displayName)
       .split(/\s+/)
-      .filter(Boolean)[0] || (isHck ? "Customer" : "Juice");
+      .filter(Boolean)[0] || (isHck ? "Customer" : "User");
 
   const initials = getInitials(displayName, isHck);
 

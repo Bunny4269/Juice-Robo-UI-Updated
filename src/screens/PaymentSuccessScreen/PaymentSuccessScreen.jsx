@@ -118,7 +118,7 @@ function getOrderNumber(order = {}) {
   return num || "";
 }
 
-function getLocationName(order = {}, location = {}, isHck = false) {
+function getLocationName(order = {}, location = {}) {
   return (
     clean(
       order?.location?.name ||
@@ -128,7 +128,7 @@ function getLocationName(order = {}, location = {}, isHck = false) {
         location?.name ||
         location?.locationName ||
         location?.storeName
-    ) || (isHck ? "HCK Station" : "Juice Robo Outlet")
+    ) || "Juice Robo Outlet"
   );
 }
 
@@ -146,7 +146,7 @@ function getLocationAddress(order = {}, location = {}) {
   );
 }
 
-function getMachineName(order = {}, machine = {}, isHck = false) {
+function getMachineName(order = {}, machine = {}) {
   return (
     clean(
       order?.machine?.name ||
@@ -159,7 +159,7 @@ function getMachineName(order = {}, machine = {}, isHck = false) {
         machine?.machineName ||
         machine?.code ||
         machine?.machineCode
-    ) || (isHck ? "HCK Machine" : "Juice Robo Machine")
+    ) || "Juice Robo Machine"
   );
 }
 
@@ -179,7 +179,7 @@ function getItems(order = {}) {
   return [];
 }
 
-function getItemName(item = {}, isHck = false) {
+function getItemName(item = {}) {
   return (
     clean(
       item?.displayName ||
@@ -192,7 +192,7 @@ function getItemName(item = {}, isHck = false) {
       .replace(/\bundefined\b/gi, "")
       .replace(/\bnull\b/gi, "")
       .replace(/\s+/g, " ")
-      .trim() || (isHck ? "Helmet Cleaning Service" : "Sugarcane Juice")
+      .trim() || "Sugarcane Juice"
   );
 }
 
@@ -410,7 +410,6 @@ export default function PaymentSuccessScreen({
   onHome,
   onBack,
   onHistory,
-  isHck = false,
 }) {
   const collectionCode = useMemo(() => getCollectionCode(order), [order]);
   const hasCollectionCode = Boolean(collectionCode);
@@ -420,9 +419,9 @@ export default function PaymentSuccessScreen({
   }, [collectionCode]);
 
   const orderNumber = useMemo(() => getOrderNumber(order), [order]);
-  const locationName = useMemo(() => getLocationName(order, location, isHck), [order, location, isHck]);
+  const locationName = useMemo(() => getLocationName(order, location), [order, location]);
   const locationAddress = useMemo(() => getLocationAddress(order, location), [order, location]);
-  const machineName = useMemo(() => getMachineName(order, machine, isHck), [order, machine, isHck]);
+  const machineName = useMemo(() => getMachineName(order, machine), [order, machine]);
   const items = useMemo(() => getItems(order), [order]);
   const totalPaid = useMemo(() => getTotalPaid(order, items), [order, items]);
 
@@ -475,9 +474,7 @@ export default function PaymentSuccessScreen({
         </h1>
 
         <p className="jr-payment-success-message">
-          {isHck
-            ? "Your order has been verified and confirmed. Enter your service code at the machine to start helmet cleaning."
-            : "Your order has been verified and confirmed. Enter your pickup code at the machine to collect your fresh juice."}
+          Your order has been verified and confirmed. Enter your pickup code at the machine to collect your fresh juice.
         </p>
 
         {/* ===================================================
@@ -489,14 +486,14 @@ export default function PaymentSuccessScreen({
               ? "jr-payment-success-code-card"
               : "jr-payment-success-code-card jr-payment-success-code-card-empty"
           }
-          aria-label={isHck ? "Service code" : "Collection code"}
+          aria-label="Collection code"
         >
           <div className="jr-payment-success-code-heading">
             <span className="jr-payment-success-check">
               <CheckIcon />
             </span>
             <span className="jr-payment-success-code-label">
-              {isHck ? "YOUR 4-DIGIT SERVICE CODE" : "YOUR 4-DIGIT COLLECTION CODE"}
+              YOUR 4-DIGIT COLLECTION CODE
             </span>
           </div>
 
@@ -504,11 +501,7 @@ export default function PaymentSuccessScreen({
             className="jr-payment-success-code-digits"
             aria-label={
               hasCollectionCode
-                ? isHck
-                  ? `Your service code is ${collectionCode}`
-                  : `Your collection code is ${collectionCode}`
-                : isHck
-                ? "Service code is being generated"
+                ? `Your collection code is ${collectionCode}`
                 : "Collection code is being generated"
             }
           >
@@ -528,19 +521,13 @@ export default function PaymentSuccessScreen({
 
           <p className="jr-payment-success-code-message">
             {hasCollectionCode
-              ? isHck
-                ? "Enter this code on your HCK machine to start helmet cleaning."
-                : "Enter this code on your Juice Robo machine to collect your juice."
-              : isHck
-              ? "Your service code will appear here once ready by the machine."
+              ? "Enter this code on your Juice Robo machine to collect your juice."
               : "Your collection code will appear here once ready by the machine."}
           </p>
 
           {hasCollectionCode && (
             <p className="jr-payment-success-safe-note">
-              {isHck
-                ? "Keep this code safe until service."
-                : "Keep this code safe until collection."}
+              Keep this code safe until collection.
             </p>
           )}
         </section>
@@ -599,7 +586,7 @@ export default function PaymentSuccessScreen({
                 {items.map((item, idx) => {
                   const qty = getItemQuantity(item);
                   const subtotal = getItemSubtotal(item);
-                  const name = getItemName(item, isHck);
+                  const name = getItemName(item);
 
                   return (
                     <div
@@ -656,7 +643,7 @@ export default function PaymentSuccessScreen({
             className="jr-payment-success-primary-button"
             onClick={handleContinue}
           >
-            <span>{isHck ? "BACK TO SERVICES" : "BACK TO MENU / ORDER MORE"}</span>
+            <span>BACK TO MENU / ORDER MORE</span>
             <ArrowRightIcon />
           </button>
 

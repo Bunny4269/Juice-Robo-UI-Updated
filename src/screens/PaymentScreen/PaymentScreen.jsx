@@ -185,6 +185,7 @@ export default function PaymentScreen({
   location,
   machine,
   onBack,
+  backLabel = "Back to checkout",
   onPay,
   money,
   paymentStatus,
@@ -318,7 +319,7 @@ export default function PaymentScreen({
         type="button"
         disabled={isProcessing}
       >
-        ← Back to cart
+        ← {backLabel}
       </button>
 
       {/* =================================================

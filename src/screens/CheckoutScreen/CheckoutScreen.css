@@ -1,721 +1,314 @@
-/* =========================================================
-   CHECKOUT SCREEN — Juice Robo
-   Zomato-inspired checkout, production-quality
-   ========================================================= */
-
-.jr-zomato-checkout {
-  position: relative;
+.jr-checkout-page {
+  box-sizing: border-box;
   width: 100%;
+  min-width: 0;
   min-height: 0;
+  height: 100%;
   flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  background: var(--jr-cream-alt, #f5f5ef);
-  overflow: hidden;
-}
-
-.jr-zomato-empty-checkout {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-}
-
-.jr-zomato-empty-card {
-  width: 100%;
-  max-width: 320px;
-  padding: 40px 28px;
-  text-align: center;
-  background: var(--jr-white, #fff);
-  border: 1px solid var(--jr-border-light, #eef0ee);
-  border-radius: 24px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-}
-
-.jr-zomato-empty-emoji {
-  font-size: 48px;
-  margin-bottom: 16px;
-  line-height: 1;
-}
-
-.jr-zomato-empty-card h2 {
-  font-family: 'Manrope', sans-serif;
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--jr-dark, #161c19);
-  margin-bottom: 8px;
-}
-
-.jr-zomato-empty-card p {
-  font-size: 14px;
-  color: var(--jr-gray, #7a857d);
-  line-height: 1.5;
-  margin-bottom: 24px;
-}
-
-.jr-zomato-primary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 13px 28px;
-  border: none;
-  border-radius: 12px;
-  background: var(--jr-green, #2a7d4f);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: background 150ms ease;
-}
-
-.jr-zomato-primary-button:hover {
-  background: var(--jr-green-hover, #236642);
-}
-
-/* ============== SCROLLABLE CONTENT ============== */
-
-.jr-zomato-checkout-content {
-  flex: 1 1 auto;
-  min-height: 0;
+  padding: 16px 12px 110px;
+  background: #fbfaf4;
   overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  scrollbar-width: none;
-  padding: 12px 16px 140px;
 }
 
-.jr-zomato-checkout-content::-webkit-scrollbar {
-  display: none;
+.jr-checkout-back {
+  width: fit-content !important;
+  max-width: 100% !important;
+  height: 34px !important;
+  min-height: 34px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+
+  margin: 0 0 16px !important;
+  padding: 0 14px !important;
+
+  border: 1px solid #e8e8e1 !important;
+  border-radius: 8px !important;
+
+  background: #f3f3ed !important;
+  color: #171717 !important;
+
+  font-family: Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  cursor: pointer !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease !important;
 }
 
-/* Back link */
-.jr-checkout-back-link {
+.jr-checkout-back:hover {
+  background: #eaeae3 !important;
+  border-color: #d6d6ce !important;
+}
+
+.jr-checkout-back:active {
+  transform: scale(0.97) !important;
+}
+
+.jr-checkout-back:focus-visible {
+  outline: 2px solid rgba(40, 127, 70, 0.35) !important;
+  outline-offset: 2px !important;
+}
+
+.jr-checkout-back > span:first-child {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 0;
-  border: none;
-  background: transparent;
-  color: var(--jr-gray-dark, #4a5250);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: color 150ms ease;
-  margin-bottom: 4px;
-}
-
-.jr-checkout-back-link:hover {
-  color: var(--jr-green, #2a7d4f);
-}
-
-.jr-checkout-back-link:disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-/* Page heading */
-.jr-checkout-page-heading {
-  margin-bottom: 20px;
-}
-
-.jr-checkout-eyebrow {
-  display: block;
-  font-size: 10px;
+  justify-content: center;
+  line-height: 1;
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--jr-green, #2a7d4f);
-  margin-bottom: 4px;
 }
 
-.jr-checkout-page-heading h1 {
-  font-family: 'Manrope', sans-serif;
-  font-size: clamp(24px, 5vw, 30px);
-  font-weight: 900;
-  color: var(--jr-dark, #161c19);
-  line-height: 1.1;
-  letter-spacing: -0.5px;
+.jr-checkout-header {
+  padding: 16px 4px 18px;
 }
 
-.jr-checkout-page-heading h1 span {
-  color: var(--jr-green, #2a7d4f);
-  font-style: italic;
+.jr-checkout-header h1 {
+  margin: 5px 0 0;
+  color: #20241f;
+  font-size: clamp(30px, 8vw, 40px);
+  line-height: .98;
+  letter-spacing: -.04em;
 }
 
-.jr-checkout-page-heading p {
-  font-size: 14px;
-  color: var(--jr-gray, #7a857d);
-  margin-top: 4px;
+.jr-checkout-header h1 em {
+  font-style: normal;
+  color: #2f8050;
 }
 
-/* ============== CARDS ============== */
-
-.jr-zomato-card {
-  background: var(--jr-white, #fff);
-  border: 1px solid var(--jr-border-light, #eef0ee);
-  border-radius: 20px;
-  padding: 18px;
-  margin-bottom: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+.jr-checkout-card {
+  margin-bottom: 10px;
+  padding: 16px;
+  border: 1px solid #ecebe5;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(20, 33, 20, .045);
 }
 
-.jr-zomato-card-heading {
+.jr-checkout-card-heading,
+.jr-checkout-total-row,
+.jr-checkout-location-row,
+.jr-checkout-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  gap: 8px;
+  gap: 12px;
 }
 
-.jr-zomato-card-heading h2 {
-  font-family: 'Manrope', sans-serif;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--jr-dark, #161c19);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.jr-checkout-card-heading > div,
+.jr-checkout-grand-total > div,
+.jr-checkout-item-copy,
+.jr-checkout-location-row > div:nth-child(2) {
+  min-width: 0;
 }
 
-.jr-zomato-heading-sub {
-  font-size: 12px;
-  color: var(--jr-gray, #7a857d);
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
-  margin-top: 2px;
+.jr-checkout-kicker,
+.jr-checkout-section-title {
   display: block;
+  color: #777;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: .1em;
 }
 
-.jr-zomato-heading-with-icon {
+.jr-checkout-card-heading strong {
+  display: block;
+  margin-top: 4px;
+  color: #20241f;
+  font-size: 16px;
+}
+
+.jr-checkout-items {
+  margin-top: 14px;
+}
+
+.jr-checkout-item {
+  padding: 12px 0;
+  border-top: 1px solid #f0efe9;
+}
+
+.jr-checkout-item-copy {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--jr-gray-dark, #4a5250);
+  flex-direction: column;
+  gap: 4px;
 }
 
-.jr-zomato-heading-with-icon h2 {
-  color: var(--jr-dark, #161c19);
-}
-
-/* ============== ITEMS CARD ============== */
-
-.jr-zomato-items-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 9999px;
-  background: var(--jr-green-light, #e8f5ef);
-  color: var(--jr-green, #2a7d4f);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+.jr-checkout-item-copy strong {
+  overflow: hidden;
+  color: #242723;
+  font-size: 14px;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.jr-zomato-items-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+.jr-checkout-item-copy span,
+.jr-checkout-item > strong {
+  color: #666;
+  font-size: 12px;
 }
 
-.jr-zomato-item-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--jr-border-light, #eef0ee);
+.jr-checkout-item > strong {
+  flex: 0 0 auto;
+  color: #242723;
+  font-size: 13px;
 }
 
-.jr-zomato-item-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.jr-checkout-location-card {
+  margin-top: 0;
 }
 
-.jr-zomato-item-row:first-child {
-  padding-top: 0;
+.jr-checkout-location-row {
+  justify-content: flex-start;
+  margin-top: 12px;
 }
 
-.jr-zomato-item-img-wrap {
-  flex: 0 0 72px;
-  width: 72px;
-  height: 72px;
+.jr-checkout-location-icon {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
   border-radius: 12px;
-  overflow: hidden;
-  background: var(--jr-cream-alt, #f5f5ef);
+  background: #f2f7f0;
+  color: #2f8050;
+  font-size: 20px;
 }
 
-.jr-zomato-item-img-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.jr-zomato-item-main {
-  flex: 1 1 auto;
-  min-width: 0;
+.jr-checkout-location-row > div:nth-child(2) {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
-.jr-zomato-item-title-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.jr-checkout-location-row strong {
+  color: #242723;
+  font-size: 13px;
 }
 
-/* Veg badge */
-.jr-zomato-veg-badge {
-  display: inline-flex;
+.jr-checkout-location-row span {
+  color: #777;
+  font-size: 11px;
+}
+
+.jr-checkout-location-row button {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: #e84356;
+  font: 800 11px Poppins, sans-serif;
+  cursor: pointer;
+}
+
+.jr-checkout-total-row {
+  padding: 5px 0;
+  color: #5e615d;
+  font-size: 13px;
+}
+
+.jr-checkout-total-row strong {
+  color: #262a25;
+  font-size: 13px;
+}
+
+.jr-checkout-total-row small {
+  display: block;
+  margin-top: 3px;
+  color: #858780;
+  font-size: 10px;
+}
+
+.jr-checkout-divider {
+  height: 1px;
+  margin: 10px 0;
+  background: #ecebe5;
+}
+
+.jr-checkout-grand-total span {
+  display: block;
+  color: #242723;
+  font-size: 15px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.jr-checkout-grand-total > strong {
+  color: #242723;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.jr-checkout-action-bar {
+  position: fixed;
+  z-index: 5200;
+  left: 50%;
+  bottom: 0;
+  width: min(100%, 720px);
+  min-height: 68px;
+  box-sizing: border-box;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  background: rgba(255,255,255,.98);
+  border-top: 1px solid #e9e8e1;
+  box-shadow: 0 -6px 18px rgba(0,0,0,.05);
+}
+
+.jr-checkout-action-bar > div {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.jr-checkout-action-bar > div span {
+  color: #777;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.jr-checkout-action-bar > div strong {
+  color: #242723;
+  font-size: 17px;
+}
+
+.jr-checkout-action-bar > button {
+  flex: 0 0 54%;
+  min-height: 46px;
+  border: 0;
+  border-radius: 8px;
+  background: #f04f62;
+  color: #fff;
+  display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  border: 1.5px solid #43a047;
-  border-radius: 3px;
-}
-
-.jr-zomato-veg-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #43a047;
-}
-
-.jr-zomato-item-title {
-  font-family: 'Manrope', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--jr-dark, #161c19);
-  line-height: 1.3;
-}
-
-.jr-zomato-item-variant {
-  font-size: 12px;
-  color: var(--jr-gray, #7a857d);
-}
-
-.jr-zomato-item-price-tag {
-  font-size: 12px;
-  color: var(--jr-gray-dark, #4a5250);
-  font-weight: 500;
-}
-
-.jr-zomato-item-actions {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-}
-
-.jr-zomato-item-qty-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 9999px;
-  border: 1.5px solid var(--jr-border, #e3e8e3);
-  font-size: 12px;
-  color: var(--jr-gray-dark, #4a5250);
-  background: var(--jr-white, #fff);
-}
-
-.jr-zomato-item-qty-badge strong {
-  color: var(--jr-dark, #161c19);
-  font-weight: 700;
-  margin-left: 2px;
-}
-
-.jr-zomato-item-total {
-  font-family: 'Manrope', sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--jr-dark, #161c19);
-}
-
-/* ============== BILL CARD ============== */
-
-.jr-zomato-bill-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.jr-zomato-bill-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
   gap: 8px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--jr-border-light, #eef0ee);
-  font-size: 14px;
-  color: var(--jr-gray-dark, #4a5250);
-}
-
-.jr-zomato-bill-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.jr-zomato-bill-row:first-child {
-  padding-top: 0;
-}
-
-.jr-zomato-bill-row span {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.jr-zomato-bill-row > strong {
-  font-weight: 600;
-  color: var(--jr-dark, #161c19);
-  white-space: nowrap;
-}
-
-.jr-zomato-tax-pill {
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 9999px;
-  background: var(--jr-green-light, #e8f5ef);
-  color: var(--jr-green, #2a7d4f);
-  font-size: 10px;
-  font-weight: 700;
-  vertical-align: middle;
-}
-
-.jr-zomato-bill-divider {
-  height: 1px;
-  background: var(--jr-border, #e3e8e3);
-  margin: 6px 0;
-}
-
-.jr-zomato-bill-row.grand-total {
-  padding-top: 12px;
-  border-top: 2px solid var(--jr-border, #e3e8e3);
-  border-bottom: none;
-  align-items: center;
-}
-
-.jr-zomato-grand-label {
-  font-family: 'Manrope', sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--jr-dark, #161c19);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.jr-zomato-grand-sub {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--jr-gray, #7a857d);
-  display: block;
-  margin-top: 1px;
-}
-
-.jr-zomato-grand-amount {
-  font-family: 'Manrope', sans-serif;
-  font-size: 20px;
-  font-weight: 900;
-  color: var(--jr-green, #2a7d4f);
-}
-
-/* ============== PAYMENT METHOD ============== */
-
-.jr-zomato-instant-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 9999px;
-  background: #fff8e1;
-  color: #f59e0b;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
-.jr-zomato-payment-options {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin-bottom: 14px;
-}
-
-.jr-zomato-payment-option {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
-  border: 2px solid transparent;
-  border-radius: 14px;
+  font: 800 14px Poppins, sans-serif;
   cursor: pointer;
-  transition: border-color 150ms ease, background 150ms ease;
+  box-shadow: 0 4px 10px rgba(240,79,98,.16);
 }
 
-.jr-zomato-payment-option.selected {
-  border-color: var(--jr-green, #2a7d4f);
-  background: var(--jr-green-mid, #eef7f2);
+.jr-checkout-action-bar > button:active {
+  transform: translateY(1px);
 }
 
-.jr-zomato-payment-option input[type="radio"] {
-  margin-top: 2px;
-  accent-color: var(--jr-green, #2a7d4f);
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.jr-zomato-payment-details {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.jr-zomato-payment-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 3px;
-}
-
-.jr-zomato-payment-title-row strong {
-  font-family: 'Manrope', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--jr-dark, #161c19);
-}
-
-.jr-zomato-recommended-tag {
-  display: inline-block;
-  padding: 2px 7px;
-  border-radius: 9999px;
-  background: var(--jr-green, #2a7d4f);
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-.jr-zomato-payment-desc {
-  font-size: 12px;
-  color: var(--jr-gray, #7a857d);
-  line-height: 1.4;
-}
-
-.jr-zomato-upi-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 8px;
-}
-
-.jr-upi-chip {
-  display: inline-block;
-  padding: 3px 9px;
-  border-radius: 9999px;
-  background: var(--jr-white, #fff);
-  border: 1px solid var(--jr-border, #e3e8e3);
-  color: var(--jr-gray-dark, #4a5250);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.jr-zomato-security-badge {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--jr-green-mid, #eef7f2);
-  color: var(--jr-green, #2a7d4f);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-/* ============== HYGIENE NOTE ============== */
-
-.jr-zomato-hygiene-note {
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: var(--jr-white, #fff);
-  border: 1px solid var(--jr-border-light, #eef0ee);
-  margin-bottom: 12px;
-}
-
-.jr-zomato-hygiene-note p {
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--jr-gray-dark, #4a5250);
-}
-
-.jr-zomato-hygiene-note strong {
-  color: var(--jr-dark, #161c19);
-}
-
-/* ============== LOGIN NOTICE ============== */
-
-.jr-checkout-login-notice {
-  margin-bottom: 12px;
-  padding: 14px 16px;
-  background: #fff8e1;
-  border: 1.5px solid #fde68a;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.jr-checkout-login-notice-content {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.jr-checkout-login-icon {
-  font-size: 20px;
-  flex-shrink: 0;
+.jr-checkout-action-bar > button b {
+  font-size: 22px;
   line-height: 1;
-}
-
-.jr-checkout-login-notice-content strong {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--jr-dark, #161c19);
-  margin-bottom: 2px;
-}
-
-.jr-checkout-login-notice-content p {
-  font-size: 12px;
-  color: var(--jr-gray-dark, #4a5250);
-  line-height: 1.4;
-}
-
-.jr-checkout-login-btn {
-  flex-shrink: 0;
-  padding: 9px 16px;
-  border: none;
-  border-radius: 10px;
-  background: var(--jr-green, #2a7d4f);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  touch-action: manipulation;
-  white-space: nowrap;
-  transition: background 150ms ease;
-}
-
-.jr-checkout-login-btn:hover {
-  background: var(--jr-green-hover, #236642);
-}
-
-/* ============== ERROR BOX ============== */
-
-.jr-zomato-error-box {
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: var(--jr-error-light, #fef2f2);
-  border: 1.5px solid rgba(220,38,38,0.2);
-  color: var(--jr-error, #dc2626);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.4;
-  margin-bottom: 12px;
-}
-
-/* ============== STICKY BOTTOM BAR ============== */
-
-.jr-zomato-bottom-bar {
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
-  background: var(--jr-white, #fff);
-  border-top: 1px solid var(--jr-border-light, #eef0ee);
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-}
-
-.jr-zomato-bottom-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.jr-zomato-bottom-pricing {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.jr-zomato-bottom-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--jr-gray, #7a857d);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.jr-zomato-bottom-amount {
-  font-family: 'Manrope', sans-serif;
-  font-size: 20px;
-  font-weight: 900;
-  color: var(--jr-dark, #161c19);
-  line-height: 1.1;
-}
-
-.jr-zomato-bottom-actions {
-  flex: 0 0 auto;
-}
-
-.jr-zomato-pay-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 24px;
-  border: none;
-  border-radius: 14px;
-  background: var(--jr-green, #2a7d4f);
-  color: #fff;
-  font-family: 'Manrope', sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.3px;
-  cursor: pointer;
-  touch-action: manipulation;
-  white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(42,125,79,0.3);
-  transition: background 150ms ease, transform 120ms ease, box-shadow 150ms ease;
-}
-
-.jr-zomato-pay-cta:hover {
-  background: var(--jr-green-hover, #236642);
-}
-
-.jr-zomato-pay-cta:active {
-  transform: scale(0.97);
-  box-shadow: none;
-}
-
-.jr-zomato-pay-cta:disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.jr-zomato-cta-arrow {
-  font-size: 16px;
 }
