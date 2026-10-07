@@ -1,8 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import basicSsl from "@vitejs/plugin-basic-ssl";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 const __dirname = fileURLToPath(
   new URL(".", import.meta.url)
@@ -11,8 +11,6 @@ const __dirname = fileURLToPath(
 export default defineConfig({
   plugins: [
     react(),
-
-    basicSsl(),
 
     {
       name: "route-and-asset-rewrites",
@@ -147,6 +145,20 @@ export default defineConfig({
 
     allowedHosts: true,
 
-    https: true,
+    https: {
+      key: fs.readFileSync(
+        resolve(
+          __dirname,
+          "192.168.100.4+2-key.pem"
+        )
+      ),
+
+      cert: fs.readFileSync(
+        resolve(
+          __dirname,
+          "192.168.100.4+2.pem"
+        )
+      ),
+    },
   },
 });

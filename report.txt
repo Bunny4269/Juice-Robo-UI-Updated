@@ -1,0 +1,125 @@
+NGE Agromate
+
+PROJECTS
+1. Juice Robo (JR) – Updated UI for Existing E-commerce Service
+2. Helmet Cleaning Kiosk (HCK) – New E-commerce Website Designed from Scratch
+
+
+JUICE ROBO (JR) – UPDATED UI WEBSITE
+
+What Is Completed
+- React + Vite mobile-first frontend architecture with responsive layout and unified image handling.
+- Outlet-based URL routing for JR and HCK.
+- QR scanning flow for machine/outlet identification.
+- Token-based login with Remember Me.
+- Guest menu browsing with login required at checkout.
+- Cart with variants, quantity controls, persistence, and 5% GST.
+- Order creation through /v1/addcart and /v1/order/submit.
+- Android/iOS UPI deep-link integration for PhonePe and Google Pay.
+- Backend payment-status polling every 3 seconds.
+- Payment success shown only after backend confirmation.
+- Backend-authoritative 4-digit collection code.
+- Order history and payment-state recovery.
+
+Currently Working
+- JR/HCK outlet isolation through URL.
+- Cart operations.
+- Order submission with locId and cartId.
+- PhonePe/Google Pay UPI handoff.
+- Payment polling and order-history persistence.
+
+Known Issues
+- /v1/order/submit can sometimes return a missing orderId, requiring /v1/order/recent fallback.
+- PhonePe iOS requires the correct backend intent mode; generic upi:// can open the wrong app, such as WhatsApp.
+- Desktop browsers cannot directly launch UPI apps.
+- Git working tree contains modified files and untracked/duplicate files.
+
+Remaining Work
+- Real-device payment testing on Android and iPhone.
+- Verify the 4-digit collection code with the physical dispenser.
+- Clean up duplicate/untracked files and commit changes.
+
+Today’s Priority
+1. Test real ₹1 transactions using PhonePe and Google Pay.
+2. Verify browser return → payment polling → success screen.
+3. Confirm /v1/order/submit reliably returns orderId.
+4. Clean the repository and commit the finalized frontend changes.
+
+
+HELMET CLEANING KIOSK (HCK) – NEW E-COMMERCE WEBSITE
+
+Objective
+- Design and develop a new e-commerce website for Helmet Cleaning Kiosk from scratch.
+- Build the complete frontend UI and integrate it with the existing backend APIs.
+
+Complete UI → API Flow
+Login Screen
+→ OTP APIs
+→ Location/Machine Selection
+→ Products API
+→ Menu Screen
+→ Cart Screen
+→ Checkout
+→ Order Creation API
+→ Payment
+→ Order Status API
+→ Payment Confirmation API
+→ Payment Success/Failure
+→ Order History
+→ Profile/Logout
+
+
+APIs USED
+
+1. Login Screen
+- POST /api/auth/request-otp
+  - Sends OTP to the user's registered mobile number.
+- POST /api/auth/verify-otp
+  - Verifies the OTP and authenticates the user session.
+
+2. Home / Location & Machine Selection Screen
+- GET /api/locations
+  - Fetches available locations.
+- GET /api/machines
+  - Fetches available machines for the selected location.
+
+3. Menu Screen
+- GET /api/products
+  - Fetches available products and their prices.
+
+4. Cart Screen
+- No direct API call.
+- Manages selected products, quantities, and cart details on the frontend.
+
+5. Checkout Screen
+- POST /api/orders
+  - Creates the order with selected products, quantities, outlet/machine details, and customer information.
+
+6. Payment Screen
+- Uses the created order details to initiate the payment flow.
+- GET /api/orders/{order_id}
+  - Checks the current order/payment status.
+
+7. Payment Success Screen
+- GET /api/orders/{order_id}
+  - Confirms the latest order/payment status.
+- POST /api/orders/{order_id}/mark-paid
+  - Updates the order as paid after successful payment verification.
+
+8. Payment Failure / Pending Screen
+- GET /api/orders/{order_id}
+  - Fetches the latest order/payment status to determine whether the payment is pending, successful, or failed.
+
+9. Order History Screen
+- Uses order-related data to display previous orders.
+- Exact history endpoint should be confirmed from the current api.js implementation.
+
+10. Profile Screen
+- GET /api/auth/me
+  - Retrieves the currently authenticated user's information.
+- POST /api/auth/logout
+  - Logs the user out and terminates the session.
+
+11. Collection / Order Verification
+- POST /api/orders/verify-code
+  - Verifies the 4-digit collection code generated for the order.

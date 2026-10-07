@@ -63,7 +63,6 @@ import {
 
 import {
   isMobileDevice,
-  launchCrossPlatformUpi,
   persistPaymentSession,
   clearPaymentSession,
   formatUpiAmount,
@@ -2704,7 +2703,7 @@ function ScanQRScreen({ isHck = false }) {
   );
 }
 
-function Header({ cartCount, onCart, onProfile, onLogo, isHck = false }) {
+function Header({ onProfile, onLogo, isHck = false }) {
   return (
     <header className="jr-header">
       <button
@@ -2713,10 +2712,10 @@ function Header({ cartCount, onCart, onProfile, onLogo, isHck = false }) {
         onClick={onLogo || onProfile}
         aria-label={isHck ? "HCK Helmet Cleaning" : "Juice Robo"}
       >
-        <img
+       <img
           src={isHck ? HCK_LOGO : juiceRoboLogo}
-          alt={isHck ? "HCK Helmet Cleaning" : "Juice Robo"}
-          className="jr-header-logo"
+          alt={isHck ? "HCK - Helmet Cleaning Kiosk" : "Juice Robo"}
+          className={`jr-header-logo ${isHck ? "hck-header-logo" : ""}`}
           draggable="false"
         />
       </button>
@@ -2748,40 +2747,6 @@ function Header({ cartCount, onCart, onProfile, onLogo, isHck = false }) {
         </svg>
       </button>
 
-      {!isHck && (
-        <button
-          type="button"
-          className="jr-cart-button"
-          onClick={onCart}
-          aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
-        >
-          <svg
-            className="jr-header-action-icon jr-cart-icon"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <path
-              d="M4.2 5.2H6.25L7.75 15.1H17.55L19.15 8H7.05"
-              stroke="currentColor"
-              strokeWidth="1.9"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <circle cx="9.15" cy="19" r="1.35" fill="currentColor" />
-            <circle cx="16.25" cy="19" r="1.35" fill="currentColor" />
-          </svg>
-
-          {cartCount > 0 && (
-            <span className="jr-cart-badge" aria-hidden="true">
-              {cartCount}
-            </span>
-          )}
-        </button>
-      )}
     </header>
   );
 }
@@ -2883,7 +2848,6 @@ function BottomNav({
             ›
           </span>
         </button>
-
         <button
           type="button"
           className="jr-cart-cta-menu"
@@ -2892,6 +2856,23 @@ function BottomNav({
         >
           <span aria-hidden="true">☰</span>
           <span>Menu</span>
+        </button>
+
+        <button
+          type="button"
+          className="jr-cart-cta-cart"
+          onClick={() => setScreen("cart")}
+          aria-label="Cart"
+        >
+          <span className="jr-cart-icon-wrapper">
+            <span className="jr-cart-count">
+              {cartCount > 99 ? "99+" : cartCount}
+            </span>
+
+            <span aria-hidden="true">🛒</span>
+          </span>
+
+          <span>Cart</span>
         </button>
       </nav>
     );
@@ -3326,6 +3307,13 @@ export default function App() {
 
   const [paymentDebugDetails, setPaymentDebugDetails] = useState(null);
 
+  // Mobile UPI app chooser. A website cannot reliably enumerate installed
+  // iOS apps, so we offer explicit app-specific UPI deep links instead of
+  // the generic upi://pay link that Safari may resolve to WhatsApp Pay.
+  const [showUpiAppChooser, setShowUpiAppChooser] = useState(false);
+  const [upiAppLaunchMessage, setUpiAppLaunchMessage] = useState("");
+  const [paymentAppLaunched, setPaymentAppLaunched] = useState(false);
+
   /* -----------------------------------------------------------
      G. PAYMENT POLLING REFS & CONTROLS (STRICT 5 ATTEMPTS MAX)
      ----------------------------------------------------------- */
@@ -3733,6 +3721,9 @@ export default function App() {
       outlet
     );
     stopPolling();
+    setPaymentAppLaunched(false);
+    setShowUpiAppChooser(false);
+    setUpiAppLaunchMessage("");
     // Do NOT clear the cart, do NOT create new order, keep same outlet UUID
     setScreen("cart");
   }
@@ -3741,23 +3732,17 @@ export default function App() {
      K. POLLING LIFECYCLE & CLEANUP
      ----------------------------------------------------------- */
   useEffect(() => {
-    if (screen === "upi-payment" && paymentSession) {
-      if (
-        pollAttemptsRef.current < MAX_POLL_ATTEMPTS &&
-        !isPollingActiveRef.current
-      ) {
-        startPolling(false);
-      }
-    } else {
+    if (screen !== "upi-payment" || !paymentSession) {
       stopPolling();
     }
 
     return () => {
       stopPolling();
     };
-  }, [screen, paymentSession, startPolling]);
+  }, [screen, paymentSession]);
 
-  // Browser return handling (visibility / focus / pageshow)
+  // Browser return handling (visibility / focus / pageshow).
+  // Verification begins only after a UPI app has actually been selected.
   useEffect(() => {
     if (screen !== "upi-payment") return;
 
@@ -3766,13 +3751,14 @@ export default function App() {
       if (
         screen === "upi-payment" &&
         paymentSession &&
+        paymentAppLaunched &&
         pollAttemptsRef.current < MAX_POLL_ATTEMPTS &&
         !isPollingActiveRef.current
       ) {
         console.log(
           "[Juice Robo] Resuming payment polling on browser return"
         );
-        executePollAttempt();
+        startPolling(false);
       }
     }
 
@@ -3785,7 +3771,7 @@ export default function App() {
       window.removeEventListener("focus", handleBrowserReturn);
       document.removeEventListener("visibilitychange", handleBrowserReturn);
     };
-  }, [screen, paymentSession, executePollAttempt]);
+  }, [screen, paymentSession, paymentAppLaunched, startPolling]);
 
   /* -----------------------------------------------------------
      L. DATA LOADING & OUTLET SWITCH LIFECYCLE
@@ -4341,9 +4327,19 @@ export default function App() {
      Q. PAYMENT ORDER INITIATION
      ----------------------------------------------------------- */
   async function handlePayment() {
+    // Reuse an existing pending order, but do not start verification until
+    // the customer has actually selected and launched a UPI app.
     if (paymentSession) {
+      pollAttemptsRef.current = 0;
+      isPollingActiveRef.current = false;
+      setPaymentStatus("pending");
+      setPaymentMessage(
+        "Your order is ready. Tap Pay with UPI, choose your UPI app, complete the payment, and return to Juice Robo."
+      );
+      setPaymentAppLaunched(false);
+      setUpiAppLaunchMessage("");
+      setShowUpiAppChooser(false);
       setScreen("upi-payment");
-      startPolling(true);
       return;
     }
 
@@ -4457,8 +4453,13 @@ export default function App() {
         payment_status: "PENDING",
       });
 
-      // Start fresh payment polling loop with reset attempts counter
+      // Do not consume verification attempts before the customer has
+      // selected and launched a UPI app. Polling starts after app launch.
       pollAttemptsRef.current = 0;
+      isPollingActiveRef.current = false;
+      setPaymentAppLaunched(false);
+      setUpiAppLaunchMessage("");
+      setShowUpiAppChooser(false);
       setScreen("upi-payment");
     } catch (paymentError) {
       console.error("[Juice Robo] Payment initiation failed:", paymentError);
@@ -4471,28 +4472,161 @@ export default function App() {
     }
   }
 
-  function handleProceedWithUpi() {
+  async function handleProceedWithUpi() {
+    const session =
+      readJSON("juice_robo_payment_session", null) || paymentSession;
+
+    if (!session?.cartId || !session?.orderId || !session?.upiUrl) {
+      showToast("UPI payment session is unavailable. Please return to cart and try again.");
+      return;
+    }
+
+    // Never launch a UPI app again for an order that the backend has already
+    // marked as paid. This prevents PhonePe/another UPI app from showing
+    // messages such as “your payment is complete” when the customer taps
+    // Pay with UPI a second time after returning to the website.
+    if (paymentStatusRef.current === "paid") {
+      setShowUpiAppChooser(false);
+      setScreen("payment-success");
+      return;
+    }
+
+    if (!isMobileDevice) {
+      setPaymentMessage(
+        "UPI payment apps cannot be opened from a desktop browser. Please open this same order on your mobile phone to complete payment."
+      );
+      showToast("Open Juice Robo on your phone to pay with UPI.");
+      return;
+    }
+
+    // Before opening an app, perform one direct backend status check. If the
+    // customer already completed payment and then came back to this screen,
+    // go straight to the success screen instead of launching the same UPI
+    // transaction again. If it is still pending, show the app chooser.
+    setPaymentStatus("processing");
+    setPaymentMessage("Checking your existing payment before opening UPI...");
+
+    const alreadyPaid = await verifyPendingPayment({ silent: true });
+    if (alreadyPaid) {
+      setShowUpiAppChooser(false);
+      return;
+    }
+
+    // A failed transaction should not automatically launch the old UPI intent.
+    // The customer can start a fresh payment from the cart instead.
+    if (paymentStatusRef.current === "failed") {
+      return;
+    }
+
+    setPaymentStatus("pending");
+    setPaymentMessage(
+      "Choose your UPI app, complete the payment, then return to Juice Robo."
+    );
+    setUpiAppLaunchMessage("");
+    setShowUpiAppChooser(true);
+  }
+
+  function buildSelectedUpiAppUrl(upiUrl, scheme) {
+    const raw = String(upiUrl || "").trim();
+    if (!raw) return "";
+
+    const queryIndex = raw.indexOf("?");
+    if (queryIndex === -1) return "";
+
+    const query = raw.slice(queryIndex + 1);
+    return `${scheme}?${query}`;
+  }
+
+  function handleCheckPaymentStatus() {
+    const session =
+      readJSON("juice_robo_payment_session", null) || paymentSession;
+
+    if (!session?.cartId || !session?.orderId) {
+      setPaymentMessage(
+        "Payment session is unavailable. Please return to cart and start payment again."
+      );
+      return;
+    }
+
+    // Check Status must ONLY verify the existing payment with the backend.
+    // It must never reopen the UPI-app chooser. The chooser is exclusively
+    // opened by the Pay with UPI action.
+    setShowUpiAppChooser(false);
+    setUpiAppLaunchMessage("");
+    setPaymentAppLaunched(true);
+    setPaymentStatus("processing");
+    setPaymentMessage("Checking your payment status with Juice Robo...");
+    startPolling(true);
+  }
+
+  function handleSelectUpiApp(app) {
     const session =
       readJSON("juice_robo_payment_session", null) || paymentSession;
 
     if (!session?.upiUrl) {
-      showToast("UPI payment link is unavailable.");
+      setUpiAppLaunchMessage(
+        "UPI payment link is unavailable. Please return to cart and try again."
+      );
       return;
     }
 
-    launchCrossPlatformUpi(session.upiUrl, {
-      onDesktop: () => {
-        setPaymentMessage(
-          "UPI payment apps cannot be opened from a desktop browser. Please open this same order on your mobile phone to complete payment."
+    const deepLink = buildSelectedUpiAppUrl(session.upiUrl, app.scheme);
+
+    if (!deepLink) {
+      setUpiAppLaunchMessage(
+        "The payment link could not be prepared. Please try again."
+      );
+      return;
+    }
+
+    setShowUpiAppChooser(false);
+    setUpiAppLaunchMessage(`Opening ${app.name}...`);
+    setPaymentMessage(
+      `Complete payment in ${app.name}, then return to Juice Robo. We will verify the payment automatically.`
+    );
+
+    // Reset the verification window for this specific payment-app attempt.
+    // This prevents the initial payment screen from consuming all five
+    // backend checks before the customer has even opened a UPI app.
+    pollAttemptsRef.current = 0;
+    isPollingActiveRef.current = false;
+    setPaymentAppLaunched(true);
+
+    const startedAt = Date.now();
+    let pageWasHidden = false;
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        pageWasHidden = true;
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    window.location.href = deepLink;
+
+    // Give the selected app time to open before starting backend polling.
+    window.setTimeout(() => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+
+      if (pageWasHidden) {
+        // The browser was backgrounded, which is the expected successful
+        // hand-off path. The visibility/focus/pageshow handlers will resume
+        // verification when the customer returns.
+        return;
+      }
+
+      if (Date.now() - startedAt >= 1200) {
+        startPolling(true);
+      }
+
+      if (Date.now() - startedAt >= 1600) {
+        setShowUpiAppChooser(true);
+        setUpiAppLaunchMessage(
+          `${app.name} could not be opened. If it is installed, try again or choose another UPI app.`
         );
-        showToast("Open Juice Robo on your phone to pay with UPI.");
-      },
-      onNoHandler: () => {
-        setPaymentMessage(
-          "No compatible UPI app was found. Please ensure a UPI app is installed, or tap Check Status if you paid elsewhere."
-        );
-      },
-    });
+      }
+    }, 1600);
   }
 
   async function openOrderHistory() {
@@ -4636,8 +4770,6 @@ export default function App() {
       <DesktopBlocker isHck={isHck} />
       <div className="jr-mobile-frame">
         <Header
-          cartCount={cartCount}
-          onCart={openCart}
           isHck={isHck}
           onLogo={() => setScreen("menu")}
           onProfile={() => {
@@ -4838,7 +4970,7 @@ export default function App() {
               isVerifying={paymentStatus === "processing"}
               verifying={paymentStatus === "processing"}
               message="Your order is ready. Continue with UPI to choose your preferred payment app. After payment, return to Juice Robo and we will verify it with the backend."
-              onCheckStatus={() => startPolling(true)}
+              onCheckStatus={handleCheckPaymentStatus}
               onCancel={handleCancelPayment}
               onProceedWithUpi={handleProceedWithUpi}
               onOpenUpiApp={handleProceedWithUpi}
@@ -4891,6 +5023,67 @@ export default function App() {
               isHck={isHck}
             />
           )}
+
+        {showUpiAppChooser && screen === "upi-payment" && (
+          <div className="jr-upi-app-chooser-backdrop" role="presentation">
+            <div
+              className="jr-upi-app-chooser"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="jr-upi-app-chooser-title"
+            >
+              <div className="jr-upi-app-chooser-header">
+                <div>
+                  <h2 id="jr-upi-app-chooser-title">Choose UPI app</h2>
+                  <p>Select the app you want to use for this payment.</p>
+                </div>
+                <button
+                  type="button"
+                  className="jr-upi-app-chooser-close"
+                  onClick={() => setShowUpiAppChooser(false)}
+                  aria-label="Close UPI app chooser"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="jr-upi-app-list">
+                {[
+                  { name: "PhonePe", scheme: "phonepe://pay", mark: "P" },
+                  { name: "Google Pay", scheme: "gpay://upi/pay", mark: "G" },
+                  { name: "Paytm", scheme: "paytmmp://pay", mark: "P" },
+                  { name: "BHIM", scheme: "bhim://upi/pay", mark: "B" },
+                  { name: "CRED", scheme: "credpay://upi/pay", mark: "C" },
+                ].map((app) => (
+                  <button
+                    key={app.name}
+                    type="button"
+                    className="jr-upi-app-option"
+                    onClick={() => handleSelectUpiApp(app)}
+                  >
+                    <span className="jr-upi-app-mark" aria-hidden="true">
+                      {app.mark}
+                    </span>
+                    <span className="jr-upi-app-name">{app.name}</span>
+                    <span className="jr-upi-app-arrow" aria-hidden="true">
+                      ›
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <p className="jr-upi-app-chooser-note">
+                Only an installed app can open. If an app is not installed, choose another option.
+              </p>
+
+              {upiAppLaunchMessage && (
+                <p className="jr-upi-app-chooser-message">
+                  {upiAppLaunchMessage}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {toast && <Toast message={toast} />}
 
