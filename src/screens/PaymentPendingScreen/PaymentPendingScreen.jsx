@@ -1,10 +1,13 @@
 import "./PaymentPendingScreen.css";
-import { UPI_APPS } from "../../payment/paymentEngine.js";
 
 /* =========================================================
    JUICE ROBO — PAYMENT PENDING SCREEN
-   Shows when payment is initiated and backend verification is actively in progress.
-   Incorporates the demo's PaymentLoader terminal animation.
+   Active UPI payment screen:
+   - Polling & backend verification indicator
+   - Pay with UPI button (launches UPI intent / chooser)
+   - Order & dispenser information
+   - Manual status verification button
+   - Safe cancel & return to cart
    ========================================================= */
 
 function formatMoney(value, money) {
@@ -34,8 +37,23 @@ export default function PaymentPendingScreen({
   verifying = false,
   message = "Waiting for bank confirmation...",
 }) {
-  const displayTotal = Number(total || order?.total_amount || order?.totalAmount || 0);
-  const rawOrderId = String(order?.orderId || order?.order_id || order?.id || "").trim();
+  const displayTotal = Number(
+    total ||
+      order?.total_amount ||
+      order?.totalAmount ||
+      order?.total ||
+      session?.total ||
+      0
+  );
+
+  const rawOrderId = String(
+    order?.orderId ||
+      order?.order_id ||
+      order?.id ||
+      session?.orderId ||
+      ""
+  ).trim();
+
   const displayOrderId =
     rawOrderId.length > 14
       ? `JR-${rawOrderId.replace(/[^a-zA-Z0-9]/g, "").slice(-6).toUpperCase()}`
@@ -53,14 +71,19 @@ export default function PaymentPendingScreen({
     order?.machine?.name ||
     "Sugarcane Juicer";
 
-  const activeVerifying = Boolean(isVerifying || verifying);
+  const activeVerifying = Boolean(
+    isVerifying ||
+      verifying ||
+      paymentStatus === "processing" ||
+      paymentStatus === "PROCESSING"
+  );
+
+  const handlePay = onProceedWithUpi || onOpenUpiApp;
 
   return (
     <main className="jr-content jr-page jr-payment-pending-page">
       <section className="jr-payment-pending-content" aria-live="polite">
-        {/* ===================================================
-            1. DEMO ADAPTED PAYMENT LOADER
-           =================================================== */}
+        {/* RADAR & CHIP LOADER ANIMATION */}
         <div className="jr-payment-loader-wrapper" aria-hidden="true">
           <div className="jr-pending-radar-ring" />
           <div className="jr-demo-payment-loader">
@@ -72,28 +95,34 @@ export default function PaymentPendingScreen({
           </div>
         </div>
 
-        {/* ===================================================
-            2. STATUS BADGE & TITLE
-           =================================================== */}
+        {/* STATUS BADGE */}
         <div className="jr-payment-pending-badge">
           <span className="jr-payment-pending-dot" />
-          <span>PAYMENT VERIFICATION IN PROGRESS</span>
+          <span>
+            {activeVerifying
+              ? "VERIFYING PAYMENT STATUS"
+              : "PAYMENT VERIFICATION IN PROGRESS"}
+          </span>
         </div>
 
+        {/* TITLE */}
         <h1 className="jr-payment-pending-title">
           {activeVerifying ? "Verifying Payment..." : "Payment Processing"}
         </h1>
 
+        {/* DESCRIPTION / STATUS MESSAGE */}
         <p className="jr-payment-pending-message">
           {activeVerifying
             ? "Verifying transaction with Juice Robo backend..."
-            : statusMessage || message || "Complete payment in your UPI app. Juice Robo is checking the backend for confirmation."}
+            : statusMessage ||
+              message ||
+              "Complete payment in your UPI app. Juice Robo is checking the backend for confirmation."}
         </p>
 
-        {/* Launch Error / Notice Banner */}
+        {/* LAUNCH ERROR ALERT */}
         {launchError && (
           <div className="jr-pending-launch-alert" role="alert">
-            <span className="jr-pending-launch-alert-icon">⚠️</span>
+            <span className="jr-pending-launch-alert-icon" aria-hidden="true">⚠️</span>
             <div className="jr-pending-launch-alert-content">
               <strong>UPI App Notice</strong>
               <p>{launchError}</p>
@@ -101,9 +130,7 @@ export default function PaymentPendingScreen({
           </div>
         )}
 
-        {/* ===================================================
-            3. ORDER DETAILS CARD
-           =================================================== */}
+        {/* ORDER DETAILS CARD */}
         <div className="jr-payment-pending-card">
           <div className="jr-pending-card-row">
             <span className="jr-pending-card-label">Order Ref</span>
@@ -112,16 +139,12 @@ export default function PaymentPendingScreen({
 
           <div className="jr-pending-card-row">
             <span className="jr-pending-card-label">Dispenser</span>
-            <span className="jr-pending-card-value">{locationName} • {machineName}</span>
+            <span className="jr-pending-card-value">
+              {locationName} • {machineName}
+            </span>
           </div>
 
-          <div
-            className="jr-pending-card-row"
-            style={{
-              paddingTop: "10px",
-              borderTop: "1px dashed #e5e7eb",
-            }}
-          >
+          <div className="jr-pending-card-row jr-pending-card-amount-row">
             <span className="jr-pending-card-label">Amount Payable</span>
             <span className="jr-pending-card-amount">
               {formatMoney(displayTotal, money)}
@@ -129,43 +152,46 @@ export default function PaymentPendingScreen({
           </div>
 
           <div className="jr-pending-notice-box">
-            <span className="jr-pending-notice-icon">ℹ️</span>
+            <span className="jr-pending-notice-icon" aria-hidden="true">ℹ️</span>
             <p className="jr-pending-notice-text">
               Please do not refresh this page. Once your UPI app confirms the transfer, your machine pickup code will appear automatically.
             </p>
           </div>
         </div>
 
-        {/* ===================================================
-            4. ACTION CONTROLS
-           =================================================== */}
+        {/* ACTIONS */}
         <div className="jr-payment-pending-actions">
-          <button
-            type="button"
-            className="jr-pending-proceed-upi-btn"
-            onClick={onProceedWithUpi || onOpenUpiApp}
-            disabled={activeVerifying}
-          >
-            <span>{activeVerifying ? "Verifying Payment..." : "Pay with UPI"}</span>
-            {!activeVerifying && <span aria-hidden="true">→</span>}
-          </button>
+          {typeof handlePay === "function" && (
+            <button
+              type="button"
+              className="jr-pending-proceed-upi-btn"
+              onClick={handlePay}
+              disabled={activeVerifying}
+            >
+              <span>{activeVerifying ? "Verifying Payment..." : "Pay with UPI"}</span>
+              {!activeVerifying && <span aria-hidden="true">→</span>}
+            </button>
+          )}
 
           {!isMobile && (
             <div className="jr-pending-desktop-notice" role="note">
               <strong>Pay using your phone</strong>
-              <span>UPI payment apps cannot be launched from this desktop browser. Open the same Juice Robo order on your phone to continue.</span>
+              <span>
+                UPI payment apps cannot be launched from this desktop browser. Open this same order on your mobile phone to complete payment.
+              </span>
             </div>
           )}
 
-          <button
-            type="button"
-            className="jr-pending-check-btn"
-            onClick={onCheckStatus}
-            disabled={activeVerifying}
-          >
-            <span>{activeVerifying ? "Verifying Payment..." : "⚡ Check Status Now"}</span>
-          </button>
-
+          {typeof onCheckStatus === "function" && (
+            <button
+              type="button"
+              className="jr-pending-check-btn"
+              onClick={onCheckStatus}
+              disabled={activeVerifying}
+            >
+              <span>{activeVerifying ? "Verifying..." : "⚡ Check Status Now"}</span>
+            </button>
+          )}
 
           {typeof onCancel === "function" && (
             <button

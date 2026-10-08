@@ -2865,11 +2865,39 @@ function BottomNav({
           aria-label="Cart"
         >
           <span className="jr-cart-icon-wrapper">
+            <svg
+              viewBox="0 0 24 24"
+              width="22"
+              height="22"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M4.2 5.2H6.2L7.7 15.2H17.7L19.3 8H7"
+                stroke={screen === "cart" ? activeColor : inactiveColor}
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+
+              <circle
+                cx="9.1"
+                cy="19"
+                r="1.35"
+                fill={screen === "cart" ? activeColor : inactiveColor}
+              />
+
+              <circle
+                cx="16.5"
+                cy="19"
+                r="1.35"
+                fill={screen === "cart" ? activeColor : inactiveColor}
+              />
+            </svg>
+
             <span className="jr-cart-count">
               {cartCount > 99 ? "99+" : cartCount}
             </span>
-
-            <span aria-hidden="true">🛒</span>
           </span>
 
           <span>Cart</span>
@@ -3310,9 +3338,9 @@ export default function App() {
   // Mobile UPI app chooser. A website cannot reliably enumerate installed
   // iOS apps, so we offer explicit app-specific UPI deep links instead of
   // the generic upi://pay link that Safari may resolve to WhatsApp Pay.
-  const [showUpiAppChooser, setShowUpiAppChooser] = useState(false);
   const [upiAppLaunchMessage, setUpiAppLaunchMessage] = useState("");
   const [paymentAppLaunched, setPaymentAppLaunched] = useState(false);
+  const paymentAppBackgroundedRef = useRef(false);
 
   /* -----------------------------------------------------------
      G. PAYMENT POLLING REFS & CONTROLS (STRICT 5 ATTEMPTS MAX)
@@ -3401,37 +3429,45 @@ export default function App() {
 
       console.log("[Juice Robo] ORDER STATUS RESPONSE:", verified);
 
+      // Resolve the backend response deterministically. The legacy API can expose
+      // different payment states in multiple fields, so Array.find() is unsafe:
+      // a leading PENDING must not hide a later PAYMENT_FAILED.
+      // Resolution order is: SUCCESS > FAILED > PENDING.
       const paymentCandidates = [
-        verified?.payment_status,
-        verified?.paymentStatus,
-        verified?.payment_state,
-        verified?.paymentState,
-        verified?.status,
-        verified?.orderStatus,
-        verified?.order_status,
-        verified?.data?.payment_status,
-        verified?.data?.paymentStatus,
-        verified?.data?.status,
-        verified?.result?.payment_status,
-        verified?.result?.paymentStatus,
-        verified?.result?.status,
+        ["payment_status", verified?.payment_status],
+        ["paymentStatus", verified?.paymentStatus],
+        ["payment_state", verified?.payment_state],
+        ["paymentState", verified?.paymentState],
+        ["status", verified?.status],
+        ["orderStatus", verified?.orderStatus],
+        ["order_status", verified?.order_status],
+        ["data.payment_status", verified?.data?.payment_status],
+        ["data.paymentStatus", verified?.data?.paymentStatus],
+        ["data.status", verified?.data?.status],
+        ["result.payment_status", verified?.result?.payment_status],
+        ["result.paymentStatus", verified?.result?.paymentStatus],
+        ["result.status", verified?.result?.status],
       ];
+
+      const normalizePaymentState = (value) =>
+        String(value ?? "")
+          .trim()
+          .toUpperCase()
+          .replace(/[\s-]+/g, "_");
 
       const normalizedPaymentStates = paymentCandidates
         .filter(
-          (value) =>
+          ([, value]) =>
             value !== undefined &&
             value !== null &&
             String(value).trim() !== ""
         )
-        .map((value) =>
-          String(value)
-            .trim()
-            .toUpperCase()
-            .replace(/[\s-]+/g, "_")
-        );
+        .map(([field, value]) => ({
+          field,
+          value: normalizePaymentState(value),
+        }));
 
-      const paidStates = [
+      const paidStates = new Set([
         "PAID",
         "SUCCESS",
         "SUCCESSFUL",
@@ -3443,9 +3479,9 @@ export default function App() {
         "ORDER_SUCCESS",
         "ORDER_COMPLETED",
         "SUCCESSFULLY_PAID",
-      ];
+      ]);
 
-      const failedStates = [
+      const failedStates = new Set([
         "FAILED",
         "FAILURE",
         "PAYMENT_FAILED",
@@ -3457,26 +3493,33 @@ export default function App() {
         "EXPIRED",
         "TRANSACTION_FAILED",
         "ORDER_FAILED",
-      ];
+      ]);
+
+      const successfulState = normalizedPaymentStates.find(({ value }) =>
+        paidStates.has(value)
+      );
+      const failedState = normalizedPaymentStates.find(({ value }) =>
+        failedStates.has(value)
+      );
 
       const paymentState =
+        successfulState?.value ||
+        failedState?.value ||
         normalizedPaymentStates.find(
-          (value) =>
-            paidStates.includes(value) ||
-            failedStates.includes(value) ||
-            value === "PENDING" ||
-            value === "PROCESSING"
-        ) ||
-        normalizedPaymentStates[0] ||
+          ({ value }) => value === "PENDING" || value === "PROCESSING"
+        )?.value ||
+        normalizedPaymentStates[0]?.value ||
         "PENDING";
 
-      const isPaid = paidStates.includes(paymentState);
-      const isFailed = failedStates.includes(paymentState);
+      const isPaid = paidStates.has(paymentState);
+      const isFailed = !isPaid && failedStates.has(paymentState);
 
       console.log("[Juice Robo] PAYMENT STATE:", {
         paymentState,
         isPaid,
+        isFailed,
         normalizedPaymentStates,
+        selectedField: successfulState?.field || failedState?.field || null,
       });
 
       if (isFailed) {
@@ -3722,7 +3765,7 @@ export default function App() {
     );
     stopPolling();
     setPaymentAppLaunched(false);
-    setShowUpiAppChooser(false);
+    paymentAppBackgroundedRef.current = false;
     setUpiAppLaunchMessage("");
     // Do NOT clear the cart, do NOT create new order, keep same outlet UUID
     setScreen("cart");
@@ -3741,25 +3784,24 @@ export default function App() {
     };
   }, [screen, paymentSession]);
 
-  // Browser return handling (visibility / focus / pageshow).
-  // Verification begins only after a UPI app has actually been selected.
+  // Browser return handling. Only the transition back from the UPI app
+  // starts automatic verification. The handlers are guarded so focus,
+  // visibilitychange, and pageshow cannot start duplicate pollers.
   useEffect(() => {
     if (screen !== "upi-payment") return;
 
     function handleBrowserReturn() {
       if (document.visibilityState === "hidden") return;
-      if (
-        screen === "upi-payment" &&
-        paymentSession &&
-        paymentAppLaunched &&
-        pollAttemptsRef.current < MAX_POLL_ATTEMPTS &&
-        !isPollingActiveRef.current
-      ) {
-        console.log(
-          "[Juice Robo] Resuming payment polling on browser return"
-        );
-        startPolling(false);
-      }
+      if (!paymentSession || !paymentAppLaunched) return;
+      if (!paymentAppBackgroundedRef.current) return;
+      if (pollAttemptsRef.current >= MAX_POLL_ATTEMPTS) return;
+      if (isPollingActiveRef.current || paymentVerifyInFlight.current) return;
+
+      paymentAppBackgroundedRef.current = false;
+      console.log(
+        "[Juice Robo] Browser returned from UPI app. Starting payment verification."
+      );
+      startPolling(false);
     }
 
     window.addEventListener("pageshow", handleBrowserReturn);
@@ -4338,7 +4380,6 @@ export default function App() {
       );
       setPaymentAppLaunched(false);
       setUpiAppLaunchMessage("");
-      setShowUpiAppChooser(false);
       setScreen("upi-payment");
       return;
     }
@@ -4459,7 +4500,6 @@ export default function App() {
       isPollingActiveRef.current = false;
       setPaymentAppLaunched(false);
       setUpiAppLaunchMessage("");
-      setShowUpiAppChooser(false);
       setScreen("upi-payment");
     } catch (paymentError) {
       console.error("[Juice Robo] Payment initiation failed:", paymentError);
@@ -4486,7 +4526,6 @@ export default function App() {
     // messages such as “your payment is complete” when the customer taps
     // Pay with UPI a second time after returning to the website.
     if (paymentStatusRef.current === "paid") {
-      setShowUpiAppChooser(false);
       setScreen("payment-success");
       return;
     }
@@ -4499,42 +4538,14 @@ export default function App() {
       return;
     }
 
-    // Before opening an app, perform one direct backend status check. If the
-    // customer already completed payment and then came back to this screen,
-    // go straight to the success screen instead of launching the same UPI
-    // transaction again. If it is still pending, show the app chooser.
-    setPaymentStatus("processing");
-    setPaymentMessage("Checking your existing payment before opening UPI...");
-
-    const alreadyPaid = await verifyPendingPayment({ silent: true });
-    if (alreadyPaid) {
-      setShowUpiAppChooser(false);
-      return;
-    }
-
-    // A failed transaction should not automatically launch the old UPI intent.
-    // The customer can start a fresh payment from the cart instead.
-    if (paymentStatusRef.current === "failed") {
-      return;
-    }
-
+    // Keep the payment flow linear: order exists -> choose UPI app ->
+    // complete payment -> return to browser -> backend verification.
+    // Do not spend a verification attempt before the UPI app is launched.
     setPaymentStatus("pending");
     setPaymentMessage(
-      "Choose your UPI app, complete the payment, then return to Juice Robo."
+      "Complete the payment in your UPI app, then return to Juice Robo."
     );
     setUpiAppLaunchMessage("");
-    setShowUpiAppChooser(true);
-  }
-
-  function buildSelectedUpiAppUrl(upiUrl, scheme) {
-    const raw = String(upiUrl || "").trim();
-    if (!raw) return "";
-
-    const queryIndex = raw.indexOf("?");
-    if (queryIndex === -1) return "";
-
-    const query = raw.slice(queryIndex + 1);
-    return `${scheme}?${query}`;
   }
 
   function handleCheckPaymentStatus() {
@@ -4551,7 +4562,6 @@ export default function App() {
     // Check Status must ONLY verify the existing payment with the backend.
     // It must never reopen the UPI-app chooser. The chooser is exclusively
     // opened by the Pay with UPI action.
-    setShowUpiAppChooser(false);
     setUpiAppLaunchMessage("");
     setPaymentAppLaunched(true);
     setPaymentStatus("processing");
@@ -4559,7 +4569,7 @@ export default function App() {
     startPolling(true);
   }
 
-  function handleSelectUpiApp(app) {
+  function handleSelectUpiApp() {
     const session =
       readJSON("juice_robo_payment_session", null) || paymentSession;
 
@@ -4570,26 +4580,15 @@ export default function App() {
       return;
     }
 
-    const deepLink = buildSelectedUpiAppUrl(session.upiUrl, app.scheme);
-
-    if (!deepLink) {
-      setUpiAppLaunchMessage(
-        "The payment link could not be prepared. Please try again."
-      );
-      return;
-    }
-
-    setShowUpiAppChooser(false);
-    setUpiAppLaunchMessage(`Opening ${app.name}...`);
+    setUpiAppLaunchMessage("Opening UPI app...");
     setPaymentMessage(
-      `Complete payment in ${app.name}, then return to Juice Robo. We will verify the payment automatically.`
+      "Complete the payment in your UPI app, then return to Juice Robo. We will verify the payment automatically."
     );
 
-    // Reset the verification window for this specific payment-app attempt.
-    // This prevents the initial payment screen from consuming all five
-    // backend checks before the customer has even opened a UPI app.
+    // Reset the verification window for this payment attempt.
     pollAttemptsRef.current = 0;
     isPollingActiveRef.current = false;
+    paymentAppBackgroundedRef.current = false;
     setPaymentAppLaunched(true);
 
     const startedAt = Date.now();
@@ -4598,32 +4597,29 @@ export default function App() {
     const handleVisibility = () => {
       if (document.visibilityState === "hidden") {
         pageWasHidden = true;
+        paymentAppBackgroundedRef.current = true;
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibility);
 
-    window.location.href = deepLink;
+    // Launch the exact UPI URI returned by the backend.
+    window.location.href = session.upiUrl;
 
-    // Give the selected app time to open before starting backend polling.
+    // Give the UPI app time to open.
     window.setTimeout(() => {
       document.removeEventListener("visibilitychange", handleVisibility);
 
       if (pageWasHidden) {
-        // The browser was backgrounded, which is the expected successful
-        // hand-off path. The visibility/focus/pageshow handlers will resume
-        // verification when the customer returns.
+        // Expected path:
+        // Browser → UPI app → payment → browser.
+        // Existing visibility/focus/pageshow handlers will resume verification.
         return;
       }
 
-      if (Date.now() - startedAt >= 1200) {
-        startPolling(true);
-      }
-
       if (Date.now() - startedAt >= 1600) {
-        setShowUpiAppChooser(true);
         setUpiAppLaunchMessage(
-          `${app.name} could not be opened. If it is installed, try again or choose another UPI app.`
+          "The UPI app could not be opened. Please try again."
         );
       }
     }, 1600);
@@ -5059,7 +5055,7 @@ export default function App() {
                     key={app.name}
                     type="button"
                     className="jr-upi-app-option"
-                    onClick={() => handleSelectUpiApp(app)}
+                    onClick={handleSelectUpiApp}
                   >
                     <span className="jr-upi-app-mark" aria-hidden="true">
                       {app.mark}

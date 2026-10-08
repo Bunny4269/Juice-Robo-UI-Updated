@@ -1,18 +1,10 @@
 import { useMemo } from "react";
-
-const GST_RATE = 0.05;
 import "./PaymentSuccessScreen.css";
 
-/* =========================================================
-   JUICE ROBO — DEDICATED PAYMENT SUCCESS SCREEN
+const GST_RATE = 0.05;
 
-   Displays confirmed booking details after payment verification:
-   - 4-Digit Collection Code for machine pickup
-   - Order Number & Payment Status
-   - Collection Location & Machine Name
-   - Ordered Items Breakdown
-   - Total Amount Paid (GST inclusive)
-   - Navigation options to continue / return to app
+/* =========================================================
+   HELPERS
    ========================================================= */
 
 function clean(value) {
@@ -25,6 +17,7 @@ function formatMoney(value, money) {
   }
 
   const numeric = Number(value || 0);
+
   return `₹${numeric.toLocaleString("en-IN", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
@@ -67,55 +60,57 @@ function getCollectionCode(order = {}) {
 
   for (const candidate of candidates) {
     const raw = clean(candidate);
-    if (!raw) continue;
+
+    if (!raw) {
+      continue;
+    }
 
     if (/^\d{4}$/.test(raw)) {
       return raw;
     }
 
     const match = raw.match(/\b(\d{4})\b/);
-    if (match?.[1] && /^\d{4}$/.test(match[1])) {
+
+    if (match?.[1]) {
       return match[1];
     }
 
-    // Handle numeric codes that lost leading zeros (e.g. 482 -> 0482)
     if (/^\d{1,3}$/.test(raw)) {
       return raw.padStart(4, "0");
     }
   }
 
-  // Restore stored collection code from storage if available
   try {
     const storedCode =
       sessionStorage.getItem("juice_robo_collection_code") ||
       localStorage.getItem("juice_robo_collection_code");
 
-    const cleanedStored = clean(storedCode);
-    if (/^\d{4}$/.test(cleanedStored)) {
-      return cleanedStored;
+    if (/^\d{4}$/.test(clean(storedCode))) {
+      return clean(storedCode);
     }
-    if (/^\d{1,3}$/.test(cleanedStored)) {
-      return cleanedStored.padStart(4, "0");
+
+    if (/^\d{1,3}$/.test(clean(storedCode))) {
+      return clean(storedCode).padStart(4, "0");
     }
   } catch {
-    // Ignore storage errors.
+    // Ignore storage access errors.
   }
 
   return "";
 }
 
 function getOrderNumber(order = {}) {
-  const num = clean(
-    order?.orderNumber ||
-      order?.order_number ||
-      order?.orderId ||
-      order?.order_id ||
-      order?.id ||
-      order?.rawOrderResponse?.data?.orderNumber ||
-      order?.rawOrderResponse?.data?.orderId
+  return (
+    clean(
+      order?.orderNumber ||
+        order?.order_number ||
+        order?.orderId ||
+        order?.order_id ||
+        order?.id ||
+        order?.rawOrderResponse?.data?.orderNumber ||
+        order?.rawOrderResponse?.data?.orderId
+    ) || ""
   );
-
-  return num || "";
 }
 
 function getLocationName(order = {}, location = {}) {
@@ -128,21 +123,7 @@ function getLocationName(order = {}, location = {}) {
         location?.name ||
         location?.locationName ||
         location?.storeName
-    ) || "Juice Robo Outlet"
-  );
-}
-
-function getLocationAddress(order = {}, location = {}) {
-  return (
-    clean(
-      order?.location?.address ||
-        order?.location?.locationAddress ||
-        order?.location?.storeAddress ||
-        order?.locationAddress ||
-        location?.address ||
-        location?.locationAddress ||
-        location?.storeAddress
-    ) || ""
+    ) || "Selected location"
   );
 }
 
@@ -151,32 +132,26 @@ function getMachineName(order = {}, machine = {}) {
     clean(
       order?.machine?.name ||
         order?.machine?.machineName ||
-        order?.machine?.code ||
         order?.machine?.machineCode ||
         order?.machineName ||
         order?.machineCode ||
         machine?.name ||
         machine?.machineName ||
-        machine?.code ||
-        machine?.machineCode
+        machine?.machineCode ||
+        machine?.code
     ) || "Juice Robo Machine"
   );
 }
 
 function getItems(order = {}) {
-  if (Array.isArray(order?.items) && order.items.length > 0) {
-    return order.items;
-  }
-  if (Array.isArray(order?.orderItems) && order.orderItems.length > 0) {
-    return order.orderItems;
-  }
-  if (Array.isArray(order?.order_items) && order.order_items.length > 0) {
-    return order.order_items;
-  }
-  if (Array.isArray(order?.cartItems) && order.cartItems.length > 0) {
-    return order.cartItems;
-  }
-  return [];
+  const sources = [
+    order?.items,
+    order?.orderItems,
+    order?.order_items,
+    order?.cartItems,
+  ];
+
+  return sources.find((items) => Array.isArray(items) && items.length > 0) || [];
 }
 
 function getItemName(item = {}) {
@@ -221,6 +196,7 @@ function getItemUnitPrice(item = {}) {
   }
 
   const quantity = getItemQuantity(item);
+
   const subtotal = Number(
     item?.subtotal ??
       item?.subTotal ??
@@ -262,19 +238,334 @@ function getTotalPaid(order = {}, items = []) {
       order?.grand_total
   );
 
-  if (Number.isFinite(direct) && direct > 0) {
+  if (Number.isFinite(direct) && direct >= 0) {
     return direct;
   }
 
-  return items.reduce((sum, item) => sum + getItemSubtotal(item), 0);
+  return items.reduce(
+    (sum, item) => sum + getItemSubtotal(item),
+    0
+  );
+}
+
+function getOrderDate(order = {}) {
+  const raw =
+    order?.orderDate ||
+    order?.order_date ||
+    order?.createdAt ||
+    order?.created_at ||
+    order?.paymentDate ||
+    order?.payment_date ||
+    order?.timestamp;
+
+  if (!raw) {
+    return "—";
+  }
+
+  const date = new Date(raw);
+
+  if (Number.isNaN(date.getTime())) {
+    return clean(raw) || "—";
+  }
+
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+function getPaymentMethod(order = {}) {
+  return (
+    clean(
+      order?.payment_method ||
+        order?.paymentMethod ||
+        order?.paymentMode ||
+        order?.payment_mode
+    ).toUpperCase() || "UPI"
+  );
 }
 
 /* =========================================================
-   ICONS & MEDIA
+   ICONS
+   ========================================================= */
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="m5 12 4 4L19 6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect
+        x="5"
+        y="10"
+        width="14"
+        height="11"
+        rx="2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M8 10V7a4 4 0 0 1 8 0v3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="15.5" r="1.2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function TicketIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M4 7.5A2.5 2.5 0 0 0 6.5 5h11A2.5 2.5 0 0 0 20 7.5v2a2.5 2.5 0 0 0 0 5v2a2.5 2.5 0 0 0-2.5 2.5h-11A2.5 2.5 0 0 0 4 16.5v-2a2.5 2.5 0 0 0 0-5v-2Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M9 9v6M12 9v6M15 9v6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeDasharray="1.5 1.5"
+      />
+    </svg>
+  );
+}
+
+function ReceiptIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M5 3v18l3-1.5 4 1.5 4-1.5 3 1.5V3H5Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 8h6M9 12h6M9 16h4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function LocationIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <circle
+        cx="12"
+        cy="9"
+        r="2.3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect
+        x="4"
+        y="5"
+        width="16"
+        height="15"
+        rx="2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M8 3v4M16 3v4M4 9h16"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 13h3M8 16h5"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function MachineIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect
+        x="6"
+        y="3"
+        width="12"
+        height="18"
+        rx="2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <rect
+        x="9"
+        y="6"
+        width="6"
+        height="5"
+        rx="1"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      <circle cx="12" cy="16.5" r="1.3" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PaymentIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect
+        x="3"
+        y="5"
+        width="18"
+        height="14"
+        rx="2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M3 9h18M7 14h4"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function JuiceIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M8 8h8l-1 12H9L8 8Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7 8h10M10 5h5"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+      />
+      <path
+        d="M13 5c1.2-2 1.4-2.8 1.1-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M5 12h14M13 6l6 6-6 6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function HistoryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M3 12a9 9 0 1 0 3-6.7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M3 4v5h5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 7v5l3 2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M3 10.5 12 3l9 7.5M5.5 9.5V21h13V9.5M9.5 21v-6h5v6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/* =========================================================
+   SUCCESS GIF
    ========================================================= */
 
 function PaymentSuccessGif() {
-  const gifSrc = `${import.meta.env.BASE_URL}assets/Payment-successful.gif`;
+  const gifSrc =
+    `${import.meta.env.BASE_URL}assets/Payment-successful.gif`;
 
   return (
     <div className="jr-payment-success-animation" aria-hidden="true">
@@ -285,116 +576,6 @@ function PaymentSuccessGif() {
         draggable="false"
       />
     </div>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="m5 12 4 4L19 6"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function LocationPinIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <circle cx="12" cy="9" r="2.5" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
-}
-
-function ReceiptIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 3v18l3-1.5 3 1.5 3-1.5 3 1.5 3-1.5 1-1V3H5Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function HomeIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M3 10.5 12 3l9 7.5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M5.5 9.5V21h13V9.5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9.5 21v-6h5v6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function HistoryIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M3 12a9 9 0 1 0 3-6.7"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M3 4v5h5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12 7v5l3 2"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ArrowRightIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 12h14M13 6l6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 
@@ -411,23 +592,53 @@ export default function PaymentSuccessScreen({
   onBack,
   onHistory,
 }) {
-  const collectionCode = useMemo(() => getCollectionCode(order), [order]);
-  const hasCollectionCode = Boolean(collectionCode);
+  const collectionCode = useMemo(
+    () => getCollectionCode(order),
+    [order]
+  );
 
-  const digits = useMemo(() => {
-    return collectionCode ? collectionCode.split("") : ["—", "—", "—", "—"];
-  }, [collectionCode]);
+  const digits = collectionCode
+    ? collectionCode.split("")
+    : ["—", "—", "—", "—"];
 
-  const orderNumber = useMemo(() => getOrderNumber(order), [order]);
-  const locationName = useMemo(() => getLocationName(order, location), [order, location]);
-  const locationAddress = useMemo(() => getLocationAddress(order, location), [order, location]);
-  const machineName = useMemo(() => getMachineName(order, machine), [order, machine]);
-  const items = useMemo(() => getItems(order), [order]);
-  const totalPaid = useMemo(() => getTotalPaid(order, items), [order, items]);
+  const orderNumber = useMemo(
+    () => getOrderNumber(order),
+    [order]
+  );
 
-  // Prices are GST-inclusive. Extract the 5% GST component from the total.
+  const locationName = useMemo(
+    () => getLocationName(order, location),
+    [order, location]
+  );
+
+  const machineName = useMemo(
+    () => getMachineName(order, machine),
+    [order, machine]
+  );
+
+  const items = useMemo(
+    () => getItems(order),
+    [order]
+  );
+
+  const totalPaid = useMemo(
+    () => getTotalPaid(order, items),
+    [order, items]
+  );
+
+  const orderDate = useMemo(
+    () => getOrderDate(order),
+    [order]
+  );
+
+  const paymentMethod = useMemo(
+    () => getPaymentMethod(order),
+    [order]
+  );
+
   const taxableSubtotal = useMemo(() => {
     const total = Number(totalPaid) || 0;
+
     return Math.round(
       (total / (1 + GST_RATE) + Number.EPSILON) * 100
     ) / 100;
@@ -435,19 +646,19 @@ export default function PaymentSuccessScreen({
 
   const gstAmount = useMemo(() => {
     const total = Number(totalPaid) || 0;
+
     return Math.round(
       (total - taxableSubtotal + Number.EPSILON) * 100
     ) / 100;
   }, [totalPaid, taxableSubtotal]);
 
-  const itemCount = useMemo(() => {
-    return items.reduce((sum, item) => sum + getItemQuantity(item), 0);
-  }, [items]);
-
   const handleContinue = () => {
     if (typeof onBack === "function") {
       onBack();
-    } else if (typeof onHome === "function") {
+      return;
+    }
+
+    if (typeof onHome === "function") {
       onHome();
     }
   };
@@ -458,9 +669,6 @@ export default function PaymentSuccessScreen({
         className="jr-payment-success-content"
         aria-labelledby="payment-success-title"
       >
-        {/* ===================================================
-            ANIMATION & HERO HEADING
-           =================================================== */}
         <PaymentSuccessGif />
 
         <span className="jr-payment-success-eyebrow">
@@ -474,24 +682,30 @@ export default function PaymentSuccessScreen({
         </h1>
 
         <p className="jr-payment-success-message">
-          Your order has been verified and confirmed. Enter your pickup code at the machine to collect your fresh juice.
+          Your order has been verified and confirmed.
+          <br />
+          Enter your pickup code at the machine to collect
+          <br />
+          your fresh juice.
         </p>
 
-        {/* ===================================================
-            4-DIGIT COLLECTION CODE CARD
-           =================================================== */}
+        {/* =================================================
+            COLLECTION CODE
+           ================================================= */}
+
         <section
           className={
-            hasCollectionCode
+            collectionCode
               ? "jr-payment-success-code-card"
               : "jr-payment-success-code-card jr-payment-success-code-card-empty"
           }
           aria-label="Collection code"
         >
           <div className="jr-payment-success-code-heading">
-            <span className="jr-payment-success-check">
-              <CheckIcon />
+            <span className="jr-payment-success-lock">
+              <LockIcon />
             </span>
+
             <span className="jr-payment-success-code-label">
               YOUR 4-DIGIT COLLECTION CODE
             </span>
@@ -500,7 +714,7 @@ export default function PaymentSuccessScreen({
           <div
             className="jr-payment-success-code-digits"
             aria-label={
-              hasCollectionCode
+              collectionCode
                 ? `Your collection code is ${collectionCode}`
                 : "Collection code is being generated"
             }
@@ -509,7 +723,7 @@ export default function PaymentSuccessScreen({
               <span
                 key={`${digit}-${index}`}
                 className={
-                  hasCollectionCode
+                  collectionCode
                     ? "jr-payment-success-digit"
                     : "jr-payment-success-digit jr-payment-success-digit-empty"
                 }
@@ -519,29 +733,41 @@ export default function PaymentSuccessScreen({
             ))}
           </div>
 
-          <p className="jr-payment-success-code-message">
-            {hasCollectionCode
-              ? "Enter this code on your Juice Robo machine to collect your juice."
-              : "Your collection code will appear here once ready by the machine."}
-          </p>
+          <div className="jr-payment-success-code-instruction">
+            <span className="jr-payment-success-ticket">
+              <TicketIcon />
+            </span>
 
-          {hasCollectionCode && (
-            <p className="jr-payment-success-safe-note">
-              Keep this code safe until collection.
-            </p>
-          )}
+            <div>
+              <p>
+                {collectionCode
+                  ? "Enter this code on your Juice Robo machine"
+                  : "Your collection code will appear here once ready"}
+                <br />
+                {collectionCode && "to collect your juice."}
+              </p>
+
+              {collectionCode && (
+                <strong>Keep this code safe until collection.</strong>
+              )}
+            </div>
+          </div>
         </section>
 
-        {/* ===================================================
-            BOOKING & OUTLET DETAILS
-           =================================================== */}
-        <section className="jr-payment-success-details-card" aria-label="Booking Details">
-          {/* Order Reference Row */}
-          <div className="jr-payment-success-card-header">
-            <div className="jr-payment-success-header-title">
+        {/* =================================================
+            BOOKING SUMMARY
+           ================================================= */}
+
+        <section
+          className="jr-payment-success-summary-card"
+          aria-label="Booking Summary"
+        >
+          <div className="jr-payment-success-summary-header">
+            <div className="jr-payment-success-summary-title">
               <ReceiptIcon />
               <span>BOOKING SUMMARY</span>
             </div>
+
             {orderNumber && (
               <span className="jr-payment-success-order-tag">
                 #{orderNumber}
@@ -549,94 +775,112 @@ export default function PaymentSuccessScreen({
             )}
           </div>
 
-          {/* Payment Status Badge */}
-          <div className="jr-payment-success-status-badge">
-            <span className="jr-payment-success-status-dot" />
-            <span>Paid via UPI • Confirmed</span>
-          </div>
+          <div className="jr-payment-success-summary-divider" />
 
-          {/* Location & Machine */}
-          <div className="jr-payment-success-location-block">
-            <div className="jr-payment-success-loc-icon">
-              <LocationPinIcon />
-            </div>
-            <div className="jr-payment-success-loc-info">
-              <small className="jr-payment-success-loc-label">COLLECT FROM</small>
-              <strong className="jr-payment-success-loc-name">{locationName}</strong>
-              {locationAddress && (
-                <span className="jr-payment-success-loc-address">{locationAddress}</span>
-              )}
-              <span className="jr-payment-success-machine-pill">
-                Machine: {machineName}
+          <div className="jr-payment-success-summary-grid">
+            <div className="jr-payment-success-summary-item">
+              <span className="jr-payment-success-summary-icon">
+                <LocationIcon />
               </span>
-            </div>
-          </div>
 
-          {/* Items Breakdown */}
-          {items.length > 0 && (
-            <div className="jr-payment-success-items-section">
-              <div className="jr-payment-success-items-header">
-                <span>ORDER ITEMS</span>
-                <span>
-                  {itemCount} {itemCount === 1 ? "item" : "items"}
-                </span>
-              </div>
-
-              <div className="jr-payment-success-items-list">
-                {items.map((item, idx) => {
-                  const qty = getItemQuantity(item);
-                  const subtotal = getItemSubtotal(item);
-                  const name = getItemName(item);
-
-                  return (
-                    <div
-                      key={item?.id || item?.productId || item?.cartItemId || idx}
-                      className="jr-payment-success-item-row"
-                    >
-                      <div className="jr-payment-success-item-info">
-                        <span className="jr-payment-success-item-name">{name}</span>
-                        <span className="jr-payment-success-item-qty">× {qty}</span>
-                      </div>
-                      <strong className="jr-payment-success-item-price">
-                        {formatMoney(subtotal, money)}
-                      </strong>
-                    </div>
-                  );
-                })}
+              <div>
+                <small>Location</small>
+                <strong>{locationName}</strong>
               </div>
             </div>
-          )}
 
-          {/* GST-INCLUSIVE PRICE BREAKDOWN */}
-          <div className="jr-payment-success-price-breakdown">
-            <div className="jr-payment-success-price-row">
-              <span>Item subtotal</span>
-              <strong>{formatMoney(taxableSubtotal, money)}</strong>
+            <div className="jr-payment-success-summary-item">
+              <span className="jr-payment-success-summary-icon">
+                <CalendarIcon />
+              </span>
+
+              <div>
+                <small>Order Date</small>
+                <strong>{orderDate}</strong>
+              </div>
             </div>
 
-            <div className="jr-payment-success-price-row">
-              <span>
-                GST <small>5% included</small>
+            <div className="jr-payment-success-summary-item">
+              <span className="jr-payment-success-summary-icon">
+                <MachineIcon />
               </span>
-              <strong>{formatMoney(gstAmount, money)}</strong>
+
+              <div>
+                <small>Machine</small>
+                <strong>{machineName}</strong>
+              </div>
+            </div>
+
+            <div className="jr-payment-success-summary-item">
+              <span className="jr-payment-success-summary-icon">
+                <PaymentIcon />
+              </span>
+
+              <div>
+                <small>Payment Method</small>
+                <strong>{paymentMethod}</strong>
+              </div>
+            </div>
+
+            <div className="jr-payment-success-summary-item jr-payment-success-summary-item-wide">
+              <span className="jr-payment-success-summary-icon">
+                <JuiceIcon />
+              </span>
+
+              <div>
+                <small>Items</small>
+
+                {items.length > 0 ? (
+                  <strong>
+                    {items.map((item, index) => (
+                      <span key={item?.id || item?.productId || index}>
+                        {getItemName(item)}
+                        {getItemQuantity(item) > 1
+                          ? ` × ${getItemQuantity(item)}`
+                          : ""}
+                        {index < items.length - 1 ? ", " : ""}
+                      </span>
+                    ))}
+                  </strong>
+                ) : (
+                  <strong>Sugarcane Juice</strong>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Total Amount Row */}
+          <div className="jr-payment-success-total-divider" />
+
           <div className="jr-payment-success-total-row">
-            <div>
-              <span className="jr-payment-success-total-label">TOTAL PAID</span>
-              <small className="jr-payment-success-gst-note">Inclusive of 5% GST</small>
+            <div className="jr-payment-success-total-copy">
+              <span>Total Paid</span>
             </div>
-            <strong className="jr-payment-success-total-amount">
-              {formatMoney(totalPaid, money)}
-            </strong>
+
+            <div className="jr-payment-success-total-value">
+              <strong>{formatMoney(totalPaid, money)}</strong>
+              <small>
+                (Includes 5% GST)
+              </small>
+            </div>
+          </div>
+
+          <div className="jr-payment-success-price-details" aria-hidden="true">
+            <span>
+              Item subtotal {formatMoney(taxableSubtotal, money)}
+            </span>
+            <span>
+              GST 5% {formatMoney(gstAmount, money)}
+            </span>
           </div>
         </section>
 
-        {/* ===================================================
-            ACTION BUTTONS (RETURN / CONTINUE OPTIONS)
-           =================================================== */}
+        {/* =================================================
+            CONTINUATION ACTIONS
+            Kept below the reference viewport so the primary
+            success state remains visually identical to the
+            supplied design.
+           ================================================= */}
+
         <div className="jr-payment-success-actions">
           <button
             type="button"
@@ -650,7 +894,7 @@ export default function PaymentSuccessScreen({
           {typeof onHistory === "function" && (
             <button
               type="button"
-              className="jr-payment-success-history-button"
+              className="jr-payment-success-secondary-button"
               onClick={onHistory}
             >
               <HistoryIcon />
@@ -661,7 +905,7 @@ export default function PaymentSuccessScreen({
           {typeof onHome === "function" && (
             <button
               type="button"
-              className="jr-payment-success-home-button"
+              className="jr-payment-success-secondary-button"
               onClick={onHome}
             >
               <HomeIcon />

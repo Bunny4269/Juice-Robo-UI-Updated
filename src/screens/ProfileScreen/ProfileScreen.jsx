@@ -8,7 +8,7 @@ import "./ProfileScreen.css";
  *   pratap.pattabhi@gmail.com
  *        -> Pratap Pattabhi
  *
- * The login email is used to derive the name when the backend
+ * The login `email` is used to derive the name when the backend
  * does not provide a real profile name.
  *
  * Phone number has intentionally been removed from the UI.
@@ -279,10 +279,6 @@ export default function ProfileScreen({
 
           <div className="jr-profile-user-copy">
             <strong>{displayName}</strong>
-
-            <small>
-              {email || (isHck ? "HCK Member" : "Juice Robo member")}
-            </small>
           </div>
         </section>
 
