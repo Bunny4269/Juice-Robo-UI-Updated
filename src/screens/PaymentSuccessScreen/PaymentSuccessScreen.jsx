@@ -295,7 +295,7 @@ function getPaymentMethod(order = {}) {
 
 function CheckIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <path
         d="m5 12 4 4L19 6"
         fill="none"
@@ -310,7 +310,7 @@ function CheckIcon() {
 
 function LockIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <rect
         x="5"
         y="10"
@@ -335,7 +335,7 @@ function LockIcon() {
 
 function TicketIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <path
         d="M4 7.5A2.5 2.5 0 0 0 6.5 5h11A2.5 2.5 0 0 0 20 7.5v2a2.5 2.5 0 0 0 0 5v2a2.5 2.5 0 0 0-2.5 2.5h-11A2.5 2.5 0 0 0 4 16.5v-2a2.5 2.5 0 0 0 0-5v-2Z"
         fill="none"
@@ -354,7 +354,7 @@ function TicketIcon() {
 
 function ReceiptIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <path
         d="M5 3v18l3-1.5 4 1.5 4-1.5 3 1.5V3H5Z"
         fill="none"
@@ -374,7 +374,7 @@ function ReceiptIcon() {
 
 function LocationIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <path
         d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"
         fill="none"
@@ -395,7 +395,7 @@ function LocationIcon() {
 
 function CalendarIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <rect
         x="4"
         y="5"
@@ -424,7 +424,7 @@ function CalendarIcon() {
 
 function MachineIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <rect
         x="6"
         y="3"
@@ -452,7 +452,7 @@ function MachineIcon() {
 
 function PaymentIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <rect
         x="3"
         y="5"
@@ -475,7 +475,7 @@ function PaymentIcon() {
 
 function JuiceIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <path
         d="M8 8h8l-1 12H9L8 8Z"
         fill="none"
@@ -502,7 +502,7 @@ function JuiceIcon() {
 
 function ArrowRightIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <path
         d="M5 12h14M13 6l6 6-6 6"
         fill="none"
@@ -517,7 +517,7 @@ function ArrowRightIcon() {
 
 function HistoryIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <path
         d="M3 12a9 9 0 1 0 3-6.7"
         fill="none"
@@ -546,7 +546,7 @@ function HistoryIcon() {
 
 function HomeIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
       <path
         d="M3 10.5 12 3l9 7.5M5.5 9.5V21h13V9.5M9.5 21v-6h5v6"
         fill="none"

@@ -62,11 +62,16 @@ import {
 
 import {
   isMobileDevice,
+  isIOSDevice,
+  isAndroidDevice,
   persistPaymentSession,
   clearPaymentSession,
   formatUpiAmount,
   validateBackendUpiUrl,
   buildBackendUpiPaymentUrl,
+  buildPlatformUpiUrl,
+  generateAppQrStrings,
+  UPI_APPS,
 } from "./payment/paymentEngine.js";
 
 /* ============================================================
@@ -784,8 +789,8 @@ function getVariantId(product = {}, variant = null) {
 
 function money(value) {
   const numericValue = Number(value);
-  if (!Number.isFinite(numericValue)) return "₹0";
-  return `₹${Math.round(numericValue)}`;
+  if (!Number.isFinite(numericValue)) return "₹0.00";
+  return `₹${numericValue.toFixed(2)}`;
 }
 
 function productMoney(value) {
@@ -3014,6 +3019,7 @@ function Toast({ message }) {
    ============================================================ */
 
 export default function App() {
+  const [showUpiAppChooser, setShowUpiAppChooser] = useState(false);
   const [menuItemCode] = useState(() => getMenuItemCodeFromUrl());
 
   /* -----------------------------------------------------------
@@ -4461,11 +4467,16 @@ export default function App() {
         backendPayment?.amount || created?.total_amount || finalTotal
       );
 
+      const qrStrings = generateAppQrStrings(upiUrl);
+
       const session = {
         cartId,
         orderId,
         transactionId: backendPayment?.transactionId || "",
         upiUrl,
+        qrStrings,
+        phonepe_qr: qrStrings.phonepe,
+        gpay_qr: qrStrings.gpay,
         total: parseFloat(backendPaymentAmount || finalTotal) || 0.0,
         subtotal: Number(subtotal),
         gst: parseFloat(gst) || 0.0,
@@ -4475,6 +4486,9 @@ export default function App() {
           items: safeCart,
           total_amount: Number(backendPaymentAmount || finalTotal),
           totalAmount: Number(backendPaymentAmount || finalTotal),
+          qrStrings,
+          phonepe_qr: qrStrings.phonepe,
+          gpay_qr: qrStrings.gpay,
         },
       };
 
@@ -4482,7 +4496,7 @@ export default function App() {
       setPaymentSession(session);
       setPaymentStatus("pending");
       setPaymentMessage(
-        "Complete payment in your UPI app. Return to Juice Robo after payment."
+        "Choose your UPI app to pay. Return to Juice Robo after payment."
       );
       setOrder({
         ...created,
@@ -4491,6 +4505,9 @@ export default function App() {
         items: safeCart,
         total_amount: Number(backendPaymentAmount || finalTotal),
         payment_status: "PENDING",
+        qrStrings,
+        phonepe_qr: qrStrings.phonepe,
+        gpay_qr: qrStrings.gpay,
       });
 
       // Do not consume verification attempts before the customer has
@@ -4568,7 +4585,7 @@ export default function App() {
     startPolling(true);
   }
 
-  function handleSelectUpiApp() {
+  function handleSelectUpiApp(appId = "generic") {
     const session =
       readJSON("juice_robo_payment_session", null) || paymentSession;
 
@@ -4579,9 +4596,21 @@ export default function App() {
       return;
     }
 
-    setUpiAppLaunchMessage("Opening UPI app...");
+    const app =
+      UPI_APPS.find((a) => a.id === String(appId || "").toLowerCase()) || {
+        id: "generic",
+        name: "UPI app",
+      };
+
+    const targetUrl = buildPlatformUpiUrl(
+      session.upiUrl,
+      app.id,
+      isAndroidDevice
+    );
+
+    setUpiAppLaunchMessage(`Opening ${app.name}...`);
     setPaymentMessage(
-      "Complete the payment in your UPI app, then return to Juice Robo. We will verify the payment automatically."
+      `Complete payment in ${app.name}, then return to Juice Robo. We will verify the payment automatically.`
     );
 
     // Reset the verification window for this payment attempt.
@@ -4589,6 +4618,7 @@ export default function App() {
     isPollingActiveRef.current = false;
     paymentAppBackgroundedRef.current = false;
     setPaymentAppLaunched(true);
+    setShowUpiAppChooser(false);
 
     const startedAt = Date.now();
     let pageWasHidden = false;
@@ -4602,8 +4632,12 @@ export default function App() {
 
     document.addEventListener("visibilitychange", handleVisibility);
 
-    // Launch the exact UPI URI returned by the backend.
-    window.location.href = session.upiUrl;
+    // Launch the specific platform & app URL
+    if (isIOSDevice) {
+      window.location.assign(targetUrl);
+    } else {
+      window.location.href = targetUrl;
+    }
 
     // Give the UPI app time to open.
     window.setTimeout(() => {
@@ -4618,7 +4652,7 @@ export default function App() {
 
       if (Date.now() - startedAt >= 1600) {
         setUpiAppLaunchMessage(
-          "The UPI app could not be opened. Please try again."
+          `${app.name} could not be opened. If not installed, please choose another UPI app.`
         );
       }
     }, 1600);
@@ -4964,11 +4998,12 @@ export default function App() {
               statusMessage={paymentMessage}
               isVerifying={paymentStatus === "processing"}
               verifying={paymentStatus === "processing"}
-              message="Your order is ready. Continue with UPI to choose your preferred payment app. After payment, return to Juice Robo and we will verify it with the backend."
+              message="Your order is ready. Choose your UPI app to pay. After payment, return to Juice Robo and we will verify it with the backend."
               onCheckStatus={handleCheckPaymentStatus}
               onCancel={handleCancelPayment}
-              onProceedWithUpi={handleProceedWithUpi}
-              onOpenUpiApp={handleProceedWithUpi}
+              onSelectApp={handleSelectUpiApp}
+              onProceedWithUpi={handleSelectUpiApp}
+              onOpenUpiApp={handleSelectUpiApp}
               isMobile={isMobileDevice}
             />
           )}
@@ -5044,17 +5079,14 @@ export default function App() {
 
               <div className="jr-upi-app-list">
                 {[
-                  { name: "PhonePe", scheme: "phonepe://pay", mark: "P" },
-                  { name: "Google Pay", scheme: "gpay://upi/pay", mark: "G" },
-                  { name: "Paytm", scheme: "paytmmp://pay", mark: "P" },
-                  { name: "BHIM", scheme: "bhim://upi/pay", mark: "B" },
-                  { name: "CRED", scheme: "credpay://upi/pay", mark: "C" },
+                  { id: "phonepe", name: "PhonePe", mark: "P" },
+                  { id: "gpay", name: "Google Pay (GPay)", mark: "G" },
                 ].map((app) => (
                   <button
-                    key={app.name}
+                    key={app.id}
                     type="button"
                     className="jr-upi-app-option"
-                    onClick={handleSelectUpiApp}
+                    onClick={() => handleSelectUpiApp(app.id)}
                   >
                     <span className="jr-upi-app-mark" aria-hidden="true">
                       {app.mark}

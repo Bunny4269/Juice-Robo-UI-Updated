@@ -1195,3 +1195,21 @@
     transition: none;
   }
 }
+
+/* Accessible keyboard focus and reliable touch interaction */
+.jr-location-confirm-button:focus-visible,
+.jr-location-confirm-back:focus-visible {
+  outline: 3px solid #287f48;
+  outline-offset: 3px;
+}
+
+.jr-location-confirm-button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jr-location-confirmation-page,
+.jr-location-confirm-order-card,
+.jr-location-confirm-card {
+  min-width: 0;
+}

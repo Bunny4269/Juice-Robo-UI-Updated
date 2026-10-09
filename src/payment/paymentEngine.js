@@ -37,13 +37,6 @@ export const UPI_APPS = Object.freeze([
     iconText: "पे",
     description: "Pay using PhonePe",
     androidPackage: "com.phonepe.app",
-    /*
-     * On iOS, PhonePe registers the phonepe:// scheme.
-     * We map PhonePe to phonepe://pay so iOS Safari opens PhonePe directly
-     * (rather than upi://pay which iOS routes to WhatsApp).
-     * If the payment payload has mode=15 (offline dynamic QR), we adjust to
-     * mode=04 (UPI intent) so PhonePe does not fail QR signature verification.
-     */
     iosScheme: "phonepe://pay",
     androidScheme: "phonepe://pay",
   },
@@ -51,46 +44,10 @@ export const UPI_APPS = Object.freeze([
     id: "gpay",
     name: "Google Pay",
     iconText: "G",
-    description: "Pay using Google Pay",
+    description: "Pay using Google Pay (GPay)",
     androidPackage: "com.google.android.apps.nbu.paisa.user",
     iosScheme: "gpay://upi/pay",
     androidScheme: "tez://upi/pay",
-  },
-  {
-    id: "paytm",
-    name: "Paytm",
-    iconText: "P",
-    description: "Pay using Paytm",
-    androidPackage: "net.one97.paytm",
-    iosScheme: "paytmmp://pay",
-    androidScheme: "paytmmp://pay",
-  },
-  {
-    id: "bhim",
-    name: "BHIM",
-    iconText: "B",
-    description: "Pay using BHIM",
-    androidPackage: "in.org.npci.upiapp",
-    iosScheme: "bhim://upi/pay",
-    androidScheme: "bhim://upi/pay",
-  },
-  {
-    id: "cred",
-    name: "CRED",
-    iconText: "C",
-    description: "Pay using CRED",
-    androidPackage: "com.dreamplug.androidapp",
-    iosScheme: "credpay://upi/pay",
-    androidScheme: "credpay://upi/pay",
-  },
-  {
-    id: "generic",
-    name: "Other UPI apps",
-    iconText: "UPI",
-    description: "Pay using any installed UPI app",
-    androidPackage: null,
-    iosScheme: "upi://pay",
-    androidScheme: "upi://pay",
   },
 ]);
 
@@ -117,6 +74,50 @@ export function getUpiQueryString(backendUpiUrl) {
 }
 
 /**
+ * Cleans and formats query parameters tailored for specific UPI applications.
+ * For example: PhonePe fails signature verification on in-app intents if mode=15 (offline QR) is present.
+ */
+export function formatAppUpiQuery(query, appId) {
+  if (!query) return "";
+  const raw = String(query).trim();
+  const id = String(appId || "").toLowerCase();
+
+  if (id === "phonepe") {
+    // Mode=15 is for offline dynamic QR code scanning (requires terminal signature).
+    // For in-app direct deep linking, convert mode=15 to mode=04 (UPI intent) or remove mode.
+    return raw
+      .replace(/([?&])mode=15(&|$)/gi, "$1mode=04$2")
+      .replace(/&&+/g, "&")
+      .replace(/[?&]$/, "");
+  }
+
+  return raw;
+}
+
+/**
+ * Generates separate QR strings / intent URIs for PhonePe and Google Pay (GPay).
+ *
+ * @param {string} backendUpiUrl - Raw UPI payment URL (upi://pay?...)
+ * @returns {Record<string, string>} App-specific URIs / QR strings
+ */
+export function generateAppQrStrings(backendUpiUrl) {
+  const genericUrl = normalizeBackendUpiUrl(backendUpiUrl);
+  if (!genericUrl) return {};
+  const query = getUpiQueryString(genericUrl);
+  if (!query) return { generic: genericUrl };
+
+  const phonepeQuery = formatAppUpiQuery(query, "phonepe");
+
+  return {
+    phonepe: `phonepe://pay?${phonepeQuery}`,
+    gpay: `tez://upi/pay?${query}`,
+    gpay_ios: `gpay://upi/pay?${query}`,
+    google_pay: `tez://upi/pay?${query}`,
+    generic: `upi://pay?${query}`,
+  };
+}
+
+/**
  * Android UPI URL constructor:
  * - Supports generic upi://pay?... Intent
  * - Supports Android-specific Intent URI syntax for installed apps
@@ -132,24 +133,29 @@ export function buildAndroidUpiUrl(backendUpiUrl, appId) {
       id: "generic",
     };
 
+  const cleanQuery = formatAppUpiQuery(query, app.id);
+
   // For "Other UPI apps" / Generic: use the standard generic upi://pay?... Intent
   if (app.id === "generic" || !app.androidPackage) {
-    const fallbackUrl = encodeURIComponent(`upi://pay?${query}`);
-    return `intent://pay?${query}#Intent;scheme=upi;S.browser_fallback_url=${fallbackUrl};end`;
+    const fallbackUrl = encodeURIComponent(`upi://pay?${cleanQuery}`);
+    return `intent://pay?${cleanQuery}#Intent;scheme=upi;S.browser_fallback_url=${fallbackUrl};end`;
   }
 
   // Standard Android Intent URI syntax:
   // intent://pay?<raw_query>#Intent;scheme=upi;package=<pkg>;S.browser_fallback_url=<fallback>;end
-  // Notice: raw query is passed directly without double-encoding.
-  const fallbackUrl = encodeURIComponent(`upi://pay?${query}`);
-  return `intent://pay?${query}#Intent;scheme=upi;package=${app.androidPackage};S.browser_fallback_url=${fallbackUrl};end`;
+  const fallbackUrl = encodeURIComponent(`upi://pay?${cleanQuery}`);
+  return `intent://pay?${cleanQuery}#Intent;scheme=upi;package=${app.androidPackage};S.browser_fallback_url=${fallbackUrl};end`;
 }
 
 /**
  * iOS UPI URL constructor:
  * - Does NOT use Android Intent syntax
- * - For PhonePe: uses standards-compatible upi://pay to prevent "Verification Failed"
- * - For other apps: uses registered iOS URL scheme
+ * - For PhonePe: uses phonepe://pay
+ * - For Google Pay: uses gpay://upi/pay
+ * - For Paytm: uses paytmmp://pay
+ * - For BHIM: uses bhim://upi/pay
+ * - For CRED: uses credpay://upi/pay
+ * - For Other UPI apps: uses upi://pay
  * - Preserves every provider parameter without double-encoding or stripping
  */
 export function buildIosUpiUrl(backendUpiUrl, appId) {
@@ -161,16 +167,17 @@ export function buildIosUpiUrl(backendUpiUrl, appId) {
       id: "generic",
     };
 
+  const cleanQuery = formatAppUpiQuery(query, app.id);
+
   // For generic / Other UPI apps: use standard upi://pay?...
   if (app.id === "generic") {
-    return `upi://pay?${query}`;
+    return `upi://pay?${cleanQuery}`;
   }
 
   const scheme = app.iosScheme || "upi://pay";
   const cleanScheme = String(scheme).trim().replace(/:+$/, "").replace(/\/+$/, "");
 
-  // Preserve the exact provider-generated query byte-for-byte without modification
-  return `${cleanScheme}?${query}`;
+  return `${cleanScheme}?${cleanQuery}`;
 }
 
 /**
@@ -743,6 +750,9 @@ export function extractBackendPaymentData(root, fallbackAmount = null) {
           result.currency = params.cu || bestCurrency || "INR";
           result.source = cand.path;
           result.params = parseUpiUriParams(cand.value);
+          result.qrStrings = generateAppQrStrings(cand.value);
+          result.phonepeQr = result.qrStrings.phonepe || "";
+          result.gpayQr = result.qrStrings.gpay || "";
           return result;
         } else if (effectiveAmount) {
           // Complete URI provided by backend but missing am; supplement only authoritative am
@@ -759,6 +769,9 @@ export function extractBackendPaymentData(root, fallbackAmount = null) {
           result.currency = params.cu || bestCurrency || "INR";
           result.source = `${cand.path} + backend amount (${bestAmtCandidate?.path || "order total"})`;
           result.params = parseUpiUriParams(finalUri);
+          result.qrStrings = generateAppQrStrings(finalUri);
+          result.phonepeQr = result.qrStrings.phonepe || "";
+          result.gpayQr = result.qrStrings.gpay || "";
           return result;
         }
       }
@@ -793,9 +806,16 @@ export function extractBackendPaymentData(root, fallbackAmount = null) {
     result.transactionNote = bestNote;
     result.merchantCode = bestCode;
     result.currency = bestCurrency || "INR";
-    result.source = `${bestVpa.path} + ${bestAmtCandidate?.path || "order total"}`;
-    result.params = parseUpiUriParams(finalUri);
+    result.qrStrings = generateAppQrStrings(result.upiUrl);
+    result.phonepeQr = result.qrStrings.phonepe || "";
+    result.gpayQr = result.qrStrings.gpay || "";
     return result;
+  }
+
+  if (result.upiUrl) {
+    result.qrStrings = generateAppQrStrings(result.upiUrl);
+    result.phonepeQr = result.qrStrings.phonepe || "";
+    result.gpayQr = result.qrStrings.gpay || "";
   }
 
   return result;

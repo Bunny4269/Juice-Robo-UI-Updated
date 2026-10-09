@@ -5,6 +5,7 @@
 import {
   buildPlatformUpiUrl,
   extractBackendPaymentData,
+  generateAppQrStrings,
   parseUpiUriParams,
   validateBackendUpiUrl,
 } from "./payment/paymentEngine.js";
@@ -1353,6 +1354,13 @@ function normalizeOrder(rawOrder) {
     total_amount: total,
     totalAmount: total,
     qrString: findQrString(rawOrder),
+    qr_string: findQrString(rawOrder),
+    qrStrings: generateAppQrStrings(findQrString(rawOrder)),
+    qr_strings: generateAppQrStrings(findQrString(rawOrder)),
+    phonepeQr: generateAppQrStrings(findQrString(rawOrder))?.phonepe || "",
+    phonepe_qr: generateAppQrStrings(findQrString(rawOrder))?.phonepe || "",
+    gpayQr: generateAppQrStrings(findQrString(rawOrder))?.gpay || "",
+    gpay_qr: generateAppQrStrings(findQrString(rawOrder))?.gpay || "",
   };
 }
 
@@ -3240,6 +3248,24 @@ export const api = {
 
     qr_string:
       qrString,
+
+    qrStrings:
+      paymentExtraction?.qrStrings || generateAppQrStrings(qrString),
+
+    qr_strings:
+      paymentExtraction?.qrStrings || generateAppQrStrings(qrString),
+
+    phonepeQr:
+      paymentExtraction?.phonepeQr || generateAppQrStrings(qrString)?.phonepe || "",
+
+    phonepe_qr:
+      paymentExtraction?.phonepeQr || generateAppQrStrings(qrString)?.phonepe || "",
+
+    gpayQr:
+      paymentExtraction?.gpayQr || generateAppQrStrings(qrString)?.gpay || "",
+
+    gpay_qr:
+      paymentExtraction?.gpayQr || generateAppQrStrings(qrString)?.gpay || "",
 
     upiUrl:
       qrString,

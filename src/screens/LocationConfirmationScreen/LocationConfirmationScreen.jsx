@@ -31,19 +31,6 @@ function formatMoney(value) {
   const amount = Number(value);
 
   if (!Number.isFinite(amount)) {
-    return "₹0";
-  }
-
-  return `₹${amount.toLocaleString("en-IN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function formatFloatMoney(value) {
-  const amount = Number(value);
-
-  if (!Number.isFinite(amount)) {
     return "₹0.00";
   }
 
@@ -52,6 +39,7 @@ function formatFloatMoney(value) {
     maximumFractionDigits: 2,
   })}`;
 }
+
 
 /* =========================================================
    ITEM NAME
@@ -242,6 +230,9 @@ export default function LocationConfirmationScreen({
   machine,
   cart = [],
   total = 0,
+  subtotal,
+  gst,
+  finalTotal,
   onBack,
   onConfirm,
   money,
@@ -275,15 +266,19 @@ export default function LocationConfirmationScreen({
      ======================================================= */
 
   const payableTotal = roundMoney(
-    Number(total) || 0
+    Number(finalTotal ?? total) || 0
   );
 
   const calculatedSubtotal = roundMoney(
-    payableTotal / 1.05
+    subtotal !== undefined && Number.isFinite(Number(subtotal))
+      ? Number(subtotal)
+      : payableTotal / 1.05
   );
 
   const calculatedGst = roundMoney(
-    payableTotal - calculatedSubtotal
+    gst !== undefined && Number.isFinite(Number(gst))
+      ? Number(gst)
+      : payableTotal - calculatedSubtotal
   );
 
   /* =======================================================

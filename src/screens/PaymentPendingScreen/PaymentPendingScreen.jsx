@@ -4,7 +4,7 @@ import "./PaymentPendingScreen.css";
    JUICE ROBO — PAYMENT PENDING SCREEN
    Active UPI payment screen:
    - Polling & backend verification indicator
-   - Pay with UPI button (launches UPI intent / chooser)
+   - Direct app buttons (PhonePe, Google Pay, Paytm, BHIM, CRED, Other)
    - Order & dispenser information
    - Manual status verification button
    - Safe cancel & return to cart
@@ -18,6 +18,65 @@ function formatMoney(value, money) {
   return `₹${num.toFixed(2)}`;
 }
 
+function PhonePeIcon() {
+  return (
+    <svg viewBox="0 0 36 36" fill="none" width="30" height="30" aria-hidden="true">
+      <rect width="36" height="36" rx="9" fill="#5f259f" />
+      <path
+        d="M19.8 9.5H13.2C12.5 9.5 12 10 12 10.7V25.3C12 26 12.5 26.5 13.2 26.5H15.5V20.2H19.2C22.6 20.2 25.2 17.6 25.2 14.8C25.2 11.9 22.6 9.5 19.8 9.5ZM19.2 16.8H15.5V12.9H19.2C20.5 12.9 21.6 13.8 21.6 14.8C21.6 15.9 20.5 16.8 19.2 16.8Z"
+        fill="#FFFFFF"
+      />
+      <path
+        d="M19.5 20.2L24.5 26.5H20.8L16.2 20.7"
+        stroke="#FFFFFF"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function GooglePayIcon() {
+  return (
+    <svg viewBox="0 0 36 36" fill="none" width="30" height="30" aria-hidden="true">
+      <rect width="36" height="36" rx="9" fill="#FFFFFF" stroke="#E2E8F0" strokeWidth="1" />
+      <path
+        d="M24.8 18.2C24.8 17.6 24.7 17.1 24.6 16.6H18V19.6H21.8C21.6 20.6 21 21.4 20.1 22V24H22.7C24.2 22.6 25.1 20.6 24.8 18.2Z"
+        fill="#4285F4"
+      />
+      <path
+        d="M18 25.1C19.9 25.1 21.5 24.5 22.7 23.4L20.1 21.4C19.4 21.9 18.5 22.2 17.5 22.2C15.6 22.2 14 20.9 13.4 19.2H10.7V21.3C11.9 23.6 14.8 25.1 18 25.1Z"
+        fill="#34A853"
+      />
+      <path
+        d="M13.4 19.2C13.1 18.3 13.1 17.3 13.4 16.4V14.3H10.7C9.7 16.3 9.7 18.7 10.7 20.7L13.4 19.2Z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M18 13.4C19 13.4 20 13.8 20.7 14.5L22.9 12.3C21.5 11 19.8 10.3 18 10.3C14.8 10.3 11.9 11.8 10.7 14.1L13.4 16.2C14 14.5 15.6 13.4 18 13.4Z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
+
+const UPI_BUTTON_LIST = [
+  {
+    id: "phonepe",
+    name: "PhonePe",
+    subtitle: "Pay via PhonePe app",
+    badge: "RECOMMENDED",
+    Icon: PhonePeIcon,
+  },
+  {
+    id: "gpay",
+    name: "Google Pay (GPay)",
+    subtitle: "Pay via Google Pay app",
+    badge: "RECOMMENDED",
+    Icon: GooglePayIcon,
+  },
+];
+
 export default function PaymentPendingScreen({
   session = {},
   order = {},
@@ -30,6 +89,7 @@ export default function PaymentPendingScreen({
   onCancel,
   onOpenUpiApp,
   onProceedWithUpi,
+  onSelectApp,
   isMobile = false,
   paymentStatus = "pending",
   statusMessage = "",
@@ -78,7 +138,15 @@ export default function PaymentPendingScreen({
       paymentStatus === "PROCESSING"
   );
 
-  const handlePay = onProceedWithUpi || onOpenUpiApp;
+  const handleAppLaunch = (appId = "generic") => {
+    if (typeof onSelectApp === "function") {
+      onSelectApp(appId);
+    } else if (typeof onProceedWithUpi === "function") {
+      onProceedWithUpi(appId);
+    } else if (typeof onOpenUpiApp === "function") {
+      onOpenUpiApp(appId);
+    }
+  };
 
   return (
     <main className="jr-content jr-page jr-payment-pending-page">
@@ -116,7 +184,7 @@ export default function PaymentPendingScreen({
             ? "Verifying transaction with Juice Robo backend..."
             : statusMessage ||
               message ||
-              "Complete payment in your UPI app. Juice Robo is checking the backend for confirmation."}
+              "Choose your UPI app below to pay. Juice Robo will verify the transaction automatically."}
         </p>
 
         {/* LAUNCH ERROR ALERT */}
@@ -159,20 +227,40 @@ export default function PaymentPendingScreen({
           </div>
         </div>
 
+        {/* APP-SPECIFIC UPI CHOOSER */}
+        <div className="jr-pending-apps-section">
+          <div className="jr-pending-apps-header">
+            <h2 className="jr-pending-apps-title">Pay using UPI App</h2>
+            <span className="jr-pending-apps-subtitle">Tap to open your app directly</span>
+          </div>
+
+          <div className="jr-pending-apps-grid">
+            {UPI_BUTTON_LIST.map(({ id, name, subtitle, badge, Icon }) => (
+              <button
+                key={id}
+                type="button"
+                className={`jr-pending-app-btn jr-pending-app-btn-${id}`}
+                onClick={() => handleAppLaunch(id)}
+                disabled={activeVerifying}
+              >
+                <div className="jr-pending-app-icon-wrap">
+                  <Icon />
+                </div>
+                <div className="jr-pending-app-info">
+                  <div className="jr-pending-app-name-row">
+                    <strong className="jr-pending-app-name">{name}</strong>
+                    {badge && <span className="jr-pending-app-badge">{badge}</span>}
+                  </div>
+                  <span className="jr-pending-app-sub">{subtitle}</span>
+                </div>
+                <span className="jr-pending-app-arrow" aria-hidden="true">→</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* ACTIONS */}
         <div className="jr-payment-pending-actions">
-          {typeof handlePay === "function" && (
-            <button
-              type="button"
-              className="jr-pending-proceed-upi-btn"
-              onClick={handlePay}
-              disabled={activeVerifying}
-            >
-              <span>{activeVerifying ? "Verifying Payment..." : "Pay with UPI"}</span>
-              {!activeVerifying && <span aria-hidden="true">→</span>}
-            </button>
-          )}
-
           {!isMobile && (
             <div className="jr-pending-desktop-notice" role="note">
               <strong>Pay using your phone</strong>
