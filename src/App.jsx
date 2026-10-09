@@ -36,7 +36,6 @@ import LocationConfirmationScreen from "./screens/LocationConfirmationScreen/Loc
 
 import ProductDetailScreen from "./screens/ProductDetailScreen/ProductDetailScreen";
 
-import ConfirmationScreen from "./screens/ConfirmationScreen/ConfirmationScreen";
 
 import PaymentFailureScreen from "./screens/PaymentFailedScreen/PaymentFailedScreen";
 
