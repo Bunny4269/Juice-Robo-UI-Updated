@@ -3775,3 +3775,102 @@ textarea:focus-visible {
       calc(52px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
+
+/* =========================================================
+   JUICE ROBO — PRODUCT CARD IMAGE FIX
+   ---------------------------------------------------------
+   - Prevents juice images from being cropped.
+   - Keeps images within their card boundaries.
+   - Maintains consistent image heights.
+   - Preserves responsive layouts.
+   ========================================================= */
+
+.jr-menu-page .jr-product-image-wrap,
+.jr-menu-page .jr-food-card__media {
+  position: relative;
+
+  width: 100%;
+  height: clamp(150px, 48vw, 220px);
+  min-height: 0;
+  max-height: none;
+
+  aspect-ratio: 16 / 10;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px;
+
+  background: #ffffff;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.jr-menu-page .jr-product-image,
+.jr-menu-page .jr-food-card__image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+
+  object-fit: contain;
+  object-position: center center;
+
+  border: 0;
+  margin: 0;
+
+  transition: transform 0.25s ease;
+}
+
+/* Keep hover effects from excessively enlarging images. */
+.jr-menu-page .jr-product-card:hover .jr-product-image,
+.jr-menu-page .jr-food-card:hover .jr-food-card__image {
+  transform: scale(1.02);
+}
+
+/* Keep image placeholders consistent with the image area. */
+.jr-menu-page .jr-product-image-placeholder,
+.jr-menu-page .jr-food-card__placeholder {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+}
+
+/* Small mobile screens */
+@media (max-width: 380px) {
+  .jr-menu-page .jr-product-image-wrap,
+  .jr-menu-page .jr-food-card__media {
+    height: 145px;
+    padding: 5px;
+  }
+}
+
+/* Tablet and desktop */
+@media (min-width: 600px) {
+  .jr-menu-page .jr-product-image-wrap,
+  .jr-menu-page .jr-food-card__media {
+    height: clamp(170px, 22vw, 220px);
+    padding: 8px;
+  }
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  .jr-menu-page .jr-product-image,
+  .jr-menu-page .jr-food-card__image {
+    transition: none;
+  }
+}
