@@ -11,8 +11,6 @@ import {
   isSamePackage,
 } from "./shared/utils/cartMatcher.js";
 
-import juiceRoboLogo from "../assets/juice-robo-logo.jpg";
-
 import "./App.css";
 
 /* =========================================================
@@ -32,20 +30,16 @@ import MenuScreen from "./screens/MenuScreen/MenuScreen";
 import CartScreen from "./screens/CartScreen/CartScreen";
 
 import LocationMachineScreen from "./screens/LocationMachineScreen/LocationMachineScreen";
-
 import LocationConfirmationScreen from "./screens/LocationConfirmationScreen/LocationConfirmationScreen";
 
 import ProductDetailScreen from "./screens/ProductDetailScreen/ProductDetailScreen";
 
-
 import PaymentFailureScreen from "./screens/PaymentFailedScreen/PaymentFailedScreen";
 
 import HistoryScreen from "./screens/HistoryScreen/HistoryScreen";
-
 import ProfileScreen from "./screens/ProfileScreen/ProfileScreen";
 
 import PaymentSuccessScreen from "./screens/PaymentSuccessScreen/PaymentSuccessScreen";
-
 import PaymentPendingScreen from "./screens/PaymentPendingScreen/PaymentPendingScreen";
 
 /* =========================================================
@@ -75,12 +69,14 @@ import {
   UPI_APPS,
 } from "./payment/paymentEngine.js";
 
+
 /* ============================================================
    1. CONSTANTS & CONFIGURATION
    ============================================================ */
 
 const BASE_PATH = "/order_now";
 const HCK_LOGO = `${import.meta.env.BASE_URL}assets/hck-logo.svg`;
+const JUICE_ROBO_LOGO = `${import.meta.env.BASE_URL}assets/juice-robo-logo-white.jpg`;
 const GST_RATE = 0.05;
 
 const ITEM_MASTER_API_BASE =
@@ -2718,7 +2714,7 @@ function Header({ onProfile, onLogo, isHck = false }) {
         aria-label={isHck ? "HCK Helmet Cleaning" : "Juice Robo"}
       >
        <img
-          src={isHck ? HCK_LOGO : juiceRoboLogo}
+          src={isHck ? HCK_LOGO : JUICE_ROBO_LOGO}
           alt={isHck ? "HCK - Helmet Cleaning Kiosk" : "Juice Robo"}
           className={`jr-header-logo ${isHck ? "hck-header-logo" : ""}`}
           draggable="false"
@@ -4724,19 +4720,11 @@ export default function App() {
             style={{ padding: "32px 22px", textAlign: "center" }}
           >
             <img
-              src={isHck ? HCK_LOGO : juiceRoboLogo}
-              alt={isHck ? "HCK Helmet Cleaning" : "Juice Robo"}
-              className="jr-loading-image"
-              style={{
-                width: "260px",
-                height: "auto",
-                maxWidth: "90%",
-                maxHeight: "80px",
-                objectFit: "contain",
-                display: "block",
-                margin: "0 auto 20px",
-              }}
-            />
+                src={isHck ? HCK_LOGO : JUICE_ROBO_LOGO}
+                alt={isHck ? "HCK - Helmet Cleaning Kiosk" : "Juice Robo"}
+                className={`jr-header-logo ${isHck ? "hck-header-logo" : ""}`}
+                draggable="false"
+              />
             <h2 style={{ margin: "0 0 10px" }}>
               {isHck
                 ? "Unable to load cleaning services"
@@ -4769,7 +4757,7 @@ export default function App() {
         <div className="jr-mobile-frame">
           <div className="jr-loading">
             <img
-              src={isHck ? HCK_LOGO : juiceRoboLogo}
+              src={isHck ? HCK_LOGO : JUICE_ROBO_LOGO}
               alt={isHck ? "HCK Helmet Cleaning" : "Juice Robo"}
               className="jr-loading-image"
               style={{
