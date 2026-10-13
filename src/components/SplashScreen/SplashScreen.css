@@ -1,6 +1,7 @@
+
 /* =========================================================
-   JUICE ROBO — STITCH SPLASH SCREEN
-   Matches the supplied 390 × 884 reference artboard.
+   JUICE ROBO — RESPONSIVE SPLASH SCREEN
+   Dynamic sizing for mobile, tablet, and desktop viewports.
    ========================================================= */
 
 .jr-splash {
@@ -11,7 +12,7 @@
   width: 100%;
   height: 100vh;
   height: 100dvh;
-  min-height: 100%;
+  min-height: 0;
 
   display: flex;
   flex-direction: column;
@@ -23,10 +24,9 @@
 
   padding:
     max(24px, env(safe-area-inset-top))
-    24px
+    clamp(18px, 5vw, 48px)
     max(28px, env(safe-area-inset-bottom));
 
-  /* Soft sage green at the top, deep Juice Robo green at the bottom. */
   background: linear-gradient(
     180deg,
     #85b88b 0%,
@@ -52,7 +52,6 @@
   text-rendering: optimizeLegibility;
 }
 
-/* Keep the background clean and softly shaded, as in the reference. */
 .jr-splash-background {
   position: absolute;
   inset: 0;
@@ -74,12 +73,12 @@
   pointer-events: none;
 }
 
-/* Brand group stays centered in the portrait artboard. */
+/* Responsive brand area */
 .jr-splash-content {
   position: relative;
 
   width: 100%;
-  max-width: 390px;
+  max-width: 720px;
 
   display: flex;
   align-items: center;
@@ -88,29 +87,30 @@
   flex: 1 1 auto;
   min-height: 0;
 
-  padding-bottom: 0;
+  padding: 0;
 }
 
 .jr-splash-brand {
   width: 100%;
+  max-width: 680px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  gap: 7px;
+  gap: clamp(10px, 2.5vh, 22px);
 
   transform: translateY(-1px);
 }
 
-/* Use the existing Juice Robo brand asset without a frame or card. */
+/* Logo grows and shrinks with the available viewport width */
 .jr-splash-logo {
   display: block;
 
-  width: min(245px, 76vw);
+  width: min(620px, 88vw);
   height: auto;
-  max-height: 105px;
+  max-height: min(25vh, 220px);
 
   object-fit: contain;
   object-position: center;
@@ -124,71 +124,81 @@
   -webkit-user-drag: none;
 }
 
-/* Small, bold, letter-spaced two-line brand tagline. */
+/* Larger, responsive brand tagline */
 .jr-splash-tagline {
+  width: 100%;
+  max-width: 680px;
   margin: 0;
+  padding: 0 4px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  gap: 2px;
+  gap: clamp(3px, 0.8vh, 8px);
 
-  color: rgba(255, 255, 255, 0.96);
+  color: rgba(255, 255, 255, 0.97);
 
-  font-size: 8px;
+  font-size: clamp(11px, 2.8vw, 19px);
   font-weight: 800;
-  line-height: 1.45;
-  letter-spacing: 1.05px;
+  line-height: 1.5;
+  letter-spacing: clamp(1px, 0.35vw, 2.8px);
 
   text-align: center;
   text-transform: uppercase;
+
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
-/* The reference places this prompt around the lower-middle,
-   not at the very bottom of the screen. */
+.jr-splash-tagline span {
+  max-width: 100%;
+}
+
+/* Loading prompt stays in the lower-middle of the viewport */
 .jr-splash-loading {
   position: absolute;
 
   left: 0;
   right: 0;
-  bottom: 28.5%;
+  bottom: clamp(125px, 28.5%, 330px);
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  gap: 5px;
+  gap: clamp(8px, 1.5vh, 14px);
 
   pointer-events: none;
 }
 
 .jr-splash-loader-label {
   margin: 0;
+  padding: 0 12px;
 
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.88);
 
-  font-size: 6px;
-  font-weight: 500;
+  font-size: clamp(11px, 2.7vw, 17px);
+  font-weight: 600;
   line-height: 1.5;
+  letter-spacing: 0.15px;
 
-  letter-spacing: 0.1px;
   text-align: center;
 }
 
-/* Fine vertical loading line from the Stitch reference. */
+/* Responsive vertical loading indicator */
 .jr-splash-loader {
   position: relative;
 
-  width: 2px;
-  height: 25px;
+  width: clamp(3px, 0.7vw, 5px);
+  height: clamp(28px, 6vh, 48px);
 
   overflow: hidden;
 
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .jr-splash-loader span {
@@ -200,7 +210,7 @@
   height: 45%;
 
   border-radius: inherit;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.95);
 
   animation: jr-splash-loading-line 1.15s ease-in-out infinite;
 }
@@ -221,27 +231,77 @@
   }
 }
 
-/* Compact screens: keep the brand readable and loading cue visible. */
-@media screen and (max-height: 650px) {
+/* Narrow mobile screens */
+@media screen and (max-width: 360px) {
+  .jr-splash {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
   .jr-splash-logo {
-    width: min(210px, 68vw);
-    max-height: 82px;
+    width: 88vw;
+    max-height: 18vh;
   }
 
   .jr-splash-tagline {
-    font-size: 7px;
+    font-size: clamp(10px, 3.1vw, 12px);
+    letter-spacing: 0.8px;
   }
 
   .jr-splash-loading {
-    bottom: 24%;
-  }
-
-  .jr-splash-loader {
-    height: 18px;
+    bottom: clamp(100px, 23%, 160px);
   }
 }
 
-/* Respect reduced-motion accessibility settings. */
+/* Short screens: prevent the logo and loading prompt from colliding */
+@media screen and (max-height: 650px) {
+  .jr-splash {
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .jr-splash-brand {
+    gap: clamp(6px, 1.5vh, 12px);
+  }
+
+  .jr-splash-logo {
+    width: min(400px, 72vw);
+    max-height: 17vh;
+  }
+
+  .jr-splash-tagline {
+    font-size: clamp(10px, 2.4vw, 15px);
+    line-height: 1.35;
+    letter-spacing: clamp(0.6px, 0.2vw, 1.5px);
+  }
+
+  .jr-splash-loading {
+    bottom: max(40px, 12%);
+    gap: 6px;
+  }
+
+  .jr-splash-loader {
+    height: 24px;
+  }
+}
+
+/* Larger tablet and desktop viewports */
+@media screen and (min-width: 768px) {
+  .jr-splash-brand {
+    gap: clamp(14px, 2.5vh, 26px);
+  }
+
+  .jr-splash-tagline {
+    font-size: clamp(16px, 2vw, 21px);
+    letter-spacing: clamp(2px, 0.3vw, 3px);
+  }
+
+  .jr-splash-loader-label {
+    font-size: clamp(15px, 1.5vw, 18px);
+  }
+}
+
+/* Respect reduced-motion accessibility settings */
 @media (prefers-reduced-motion: reduce) {
   .jr-splash-loader span {
     animation: none;
