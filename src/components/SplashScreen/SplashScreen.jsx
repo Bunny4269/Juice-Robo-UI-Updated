@@ -1,6 +1,6 @@
 import "./SplashScreen.css";
 
-const juiceRoboLogo = `${import.meta.env.BASE_URL}assets/juice-robo-logo-white.jpg`;
+const JUICE_ROBO_LOGO = `${import.meta.env.BASE_URL}assets/juice-robo-logo.jpg`;
 
 export default function SplashScreen({ onComplete }) {
   return (
@@ -9,41 +9,32 @@ export default function SplashScreen({ onComplete }) {
       role="status"
       aria-label="Loading Juice Robo"
     >
-      <div
-        className="jr-splash-orb jr-splash-orb-one"
-        aria-hidden="true"
-      />
-
-      <div
-        className="jr-splash-orb jr-splash-orb-two"
-        aria-hidden="true"
-      />
+      <div className="jr-splash-background" aria-hidden="true" />
 
       <div className="jr-splash-content">
-        <div className="jr-splash-logo-wrap">
+        <div className="jr-splash-brand">
           <img
             className="jr-splash-logo"
-            src={juiceRoboLogo}
+            src={JUICE_ROBO_LOGO}
             alt="Juice Robo"
             draggable="false"
           />
-        </div>
 
-        <p className="jr-splash-tagline">
-          FRESHLY PREPARED{" "}
-          <span aria-hidden="true">·</span>{" "}
-          NATURALLY
-          <br />
-          REFRESHING
-        </p>
+          <p className="jr-splash-tagline">
+            <span>
+              FRESHLY PREPARED <span aria-hidden="true">·</span> NATURALLY
+            </span>
+            <span>REFRESHING</span>
+          </p>
+        </div>
       </div>
 
-      <p className="jr-splash-loader-label">
-        Tapping to enter...
-      </p>
+      <div className="jr-splash-loading" aria-hidden="true">
+        <p className="jr-splash-loader-label">Tapping to enter...</p>
 
-      <div className="jr-splash-loader" aria-hidden="true">
-        <span />
+        <div className="jr-splash-loader">
+          <span />
+        </div>
       </div>
     </section>
   );
