@@ -20,6 +20,7 @@ const privateKeyPath = resolve(
   "192.168.100.6-key.pem"
 );
 
+// Validate the HTTPS certificate files.
 if (
   !fs.existsSync(certificatePath) ||
   !fs.existsSync(privateKeyPath)
@@ -39,6 +40,7 @@ export default defineConfig({
 
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
+          // Handle browser runtime debug logs.
           if (
             req.url &&
             req.url.includes("/__debug_log")
@@ -106,6 +108,7 @@ export default defineConfig({
             return;
           }
 
+          // Rewrite root-level asset requests to the app base path.
           if (
             req.url &&
             req.url.startsWith("/assets/") &&
@@ -120,9 +123,14 @@ export default defineConfig({
     },
   ],
 
+  // Application is hosted under /order_now/.
   base: "/order_now/",
 
+  // Production build configuration.
   build: {
+    // Remove the warning for bundles below 600 kB.
+    chunkSizeWarningLimit: 600,
+
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
@@ -130,6 +138,7 @@ export default defineConfig({
     },
   },
 
+  // HTTPS development server and LAN access.
   server: {
     host: "0.0.0.0",
 
