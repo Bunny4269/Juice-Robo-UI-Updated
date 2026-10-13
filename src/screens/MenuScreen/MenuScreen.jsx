@@ -427,6 +427,63 @@ export default function MenuScreen({
   const visibleProducts = safeProducts;
 
   /* =======================================================
+     SELECTED COLLECTION POINT
+     Read the selected outlet and machine passed by App.jsx.
+     These values are display-only; selection remains owned
+     by the existing location/machine flow.
+     ======================================================= */
+
+  const locationName = sanitizeText(
+    selectedLocation?.name ??
+    selectedLocation?.locationName ??
+    selectedLocation?.location_name ??
+    selectedLocation?.storeName ??
+    selectedLocation?.store_name ??
+    selectedLocation?.outletName ??
+    selectedLocation?.outlet_name ??
+    selectedLocation?.title
+  );
+
+  const locationAddress = sanitizeText(
+    selectedLocation?.address ??
+    selectedLocation?.locAddress ??
+    selectedLocation?.locationAddress ??
+    selectedLocation?.location_address ??
+    selectedLocation?.storeAddress ??
+    selectedLocation?.store_address ??
+    selectedLocation?.description ??
+    selectedLocation?.outletDesc
+  );
+
+  const machineName = sanitizeText(
+    selectedMachine?.name ??
+    selectedMachine?.machineName ??
+    selectedMachine?.machine_name ??
+    selectedMachine?.machineCode ??
+    selectedMachine?.machine_code ??
+    selectedMachine?.code ??
+    selectedMachine?.title
+  );
+
+  const collectionPointImage = clean(
+    selectedLocation?.imageUrl ??
+    selectedLocation?.image_url ??
+    selectedLocation?.image ??
+    selectedLocation?.outletImage ??
+    selectedLocation?.outlet_image ??
+    selectedLocation?.thumbnail ??
+    selectedMachine?.imageUrl ??
+    selectedMachine?.image_url ??
+    selectedMachine?.image ??
+    selectedMachine?.thumbnail
+  );
+
+  const collectionPrimary = machineName || locationName || "Selected collection point";
+  const collectionSecondary = [locationName, locationAddress]
+    .filter((value, index, values) => value && values.indexOf(value) === index && value !== collectionPrimary)
+    .join(" · ");
+
+  /* =======================================================
      PRODUCT SELECT
      ======================================================= */
 
@@ -522,6 +579,51 @@ export default function MenuScreen({
 
       </section>
 
+      {/* ===================================================
+          SELECTED LOCATION / COLLECTION MACHINE
+          =================================================== */}
+
+      {!isHck && (selectedLocation || selectedMachine) ? (
+        <section
+          className="jr-selected-machine-banner"
+          aria-label="Selected collection location and machine"
+        >
+          <div className="jr-selected-machine-icon" aria-hidden="true">
+            {collectionPointImage ? (
+              <img
+                src={collectionPointImage}
+                alt=""
+                loading="lazy"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: "inherit",
+                }}
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                }}
+              />
+            ) : (
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+                <path d="M20 10.2c0 5.1-8 11-8 11s-8-5.9-8-11a8 8 0 1 1 16 0Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                <circle cx="12" cy="10" r="2.6" stroke="currentColor" strokeWidth="1.8" />
+              </svg>
+            )}
+          </div>
+
+          <div className="jr-selected-machine-copy">
+            <small>COLLECT FROM</small>
+            <strong>{collectionPrimary}</strong>
+            {collectionSecondary ? (
+              <span>{collectionSecondary}</span>
+            ) : (
+              <span>Your selected Juice Robo location</span>
+            )}
+          </div>
+
+        </section>
+      ) : null}
 
       {/* ===================================================
           MENU SECTION

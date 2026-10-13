@@ -998,3399 +998,643 @@
 
 }
 
-.jr-product-card:hover,
-
-.jr-food-card:hover {
-
-  border-color: #bcd9c1;
-
-  box-shadow: 0 10px 28px rgba(32, 55, 38, 0.09);
-
-  transform: translateY(-2px);
-
-}
-
-.jr-product-card:active,
-
-.jr-food-card:active {
-
-  transform: translateY(0);
-
-}
-
-.jr-product-card-in-cart,
-
-.jr-food-card--selected {
-
-  border-color: #287f46;
-
-  box-shadow: 0 6px 20px rgba(40, 127, 70, 0.12);
-
-}
-
-.jr-product-card-unavailable,
-
-.jr-food-card--unavailable {
-
-  opacity: 0.72;
-
-}
 
 /* =========================================================
-
-   1. PRODUCT MEDIA / IMAGE
-
+   REFERENCE DESIGN — GREEN OUTLINED WELCOME CARD
+   Scoped to the Juice Robo menu hero; other screens unchanged.
    ========================================================= */
 
-.jr-product-image-wrap,
-
-.jr-food-card__media {
-
-  width: 100%;
-
-  aspect-ratio: 16 / 10;
-
-  min-height: 160px;
-
-  max-height: 220px;
-
-  min-width: 0;
-
-  position: relative;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  padding: 0;
-
-  background: linear-gradient(135deg, #f5f9f4 0%, #edf6ee 100%);
-
-  border-bottom: 1px solid #f0f4ef;
-
-  overflow: hidden;
-
-}
-
-.jr-product-image,
-
-.jr-food-card__image {
-
-  width: 100%;
-
-  height: 100%;
-
-  min-width: 0;
-
-  min-height: 0;
-
+.jr-menu-page .jr-menu-welcome {
   display: block;
-
-  object-fit: cover;
-
-  object-position: center;
-
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-
-}
-
-.jr-product-card:hover .jr-product-image,
-
-.jr-food-card:hover .jr-food-card__image {
-
-  transform: scale(1.04);
-
-}
-
-.jr-product-image-placeholder,
-
-.jr-food-card__placeholder {
-
   width: 100%;
-
-  height: 100%;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  color: #287f46;
-
-}
-
-.jr-fallback-juice-icon {
-
-  width: clamp(40px, 12vw, 56px);
-
-  height: clamp(40px, 12vw, 56px);
-
-}
-
-/* Badges */
-
-.jr-food-card__badges {
-
-  position: absolute;
-
-  top: 10px;
-
-  left: 10px;
-
-  display: flex;
-
-  gap: 6px;
-
-  pointer-events: none;
-
-  z-index: 2;
-
-}
-
-.jr-badge {
-
-  display: inline-flex;
-
-  align-items: center;
-
-  gap: 5px;
-
-  padding: 4px 10px;
-
-  border-radius: 999px;
-
-  font-size: 10.5px;
-
-  font-weight: 800;
-
-  letter-spacing: 0.03em;
-
-  text-transform: uppercase;
-
-}
-
-.jr-badge--fresh,
-
-.jr-fresh-badge {
-
-  background: rgba(255, 255, 255, 0.94);
-
-  color: #287f46;
-
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-  backdrop-filter: blur(4px);
-
-  -webkit-backdrop-filter: blur(4px);
-
-}
-
-.jr-badge__dot {
-
-  width: 6px;
-
-  height: 6px;
-
-  border-radius: 50%;
-
-  background: #287f46;
-
-  display: inline-block;
-
-}
-
-.jr-badge--soldout {
-
-  background: rgba(220, 53, 69, 0.92);
-
-  color: #ffffff;
-
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-
-}
-
-/* =========================================================
-
-   2. PRODUCT INFORMATION
-
-   ========================================================= */
-
-.jr-product-info,
-
-.jr-food-card__content {
-
-  width: 100%;
-
   min-width: 0;
-
-  display: flex;
-
-  flex-direction: column;
-
-  flex: 1;
-
-  padding: clamp(12px, 3vw, 16px);
-
-  gap: 8px;
-
-}
-
-/* Header row: Name on left, ADD / counter on right */
-
-.jr-food-card__header-row {
-
-  width: 100%;
-
-  min-width: 0;
-
-  display: flex;
-
-  align-items: flex-start;
-
-  justify-content: space-between;
-
-  gap: 12px;
-
-}
-
-.jr-product-main,
-
-.jr-food-card__title-wrap {
-
-  flex: 1 1 auto;
-
-  min-width: 0;
-
-}
-
-.jr-food-card__title,
-
-.jr-product-info h3 {
-
-  width: 100%;
-
-  min-width: 0;
-
-  margin: 0;
-
-  color: #1a241b;
-
-  font-size: clamp(14.5px, 3.2vw, 17px);
-
-  line-height: 1.25;
-
-  font-weight: 800;
-
-  letter-spacing: -0.01em;
-
-  word-break: break-word;
-
-}
-
-/* Action button area */
-
-.jr-food-card__action-wrap {
-
-  flex: 0 0 auto;
-
-  display: flex;
-
-  align-items: center;
-
-}
-
-/* =========================================================
-
-   ADD BUTTON (ZOMATO-STYLE, JUICE ROBO GREEN)
-
-   ========================================================= */
-
-.jr-add-btn {
-
-  display: inline-flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  min-width: 84px;
-
-  height: 35px;
-
-  padding: 0 16px;
-
-  border: 1.5px solid #287f46;
-
-  border-radius: 8px;
-
-  background: #ffffff;
-
-  color: #287f46;
-
-  font-family: inherit;
-
-  font-size: 12.5px;
-
-  font-weight: 850;
-
-  letter-spacing: 0.05em;
-
-  text-transform: uppercase;
-
-  cursor: pointer;
-
-  outline: none;
-
-  user-select: none;
-
-  -webkit-tap-highlight-color: transparent;
-
-  box-shadow: 0 2px 6px rgba(40, 127, 70, 0.12);
-
-  transition:
-
-    background-color 0.15s ease,
-
-    color 0.15s ease,
-
-    border-color 0.15s ease,
-
-    box-shadow 0.15s ease,
-
-    transform 0.12s ease;
-
-}
-
-.jr-add-btn:hover:not(:disabled) {
-
-  background: #287f46;
-
-  color: #ffffff;
-
-  box-shadow: 0 4px 12px rgba(40, 127, 70, 0.25);
-
-  transform: translateY(-1px);
-
-}
-
-.jr-add-btn:active:not(:disabled) {
-
-  transform: scale(0.96);
-
-}
-
-.jr-add-btn:focus-visible {
-
-  outline: 2px solid #287f46;
-
-  outline-offset: 2px;
-
-}
-
-.jr-add-btn--disabled {
-
-  border-color: #d8ded8;
-
-  color: #9aa49a;
-
-  background: #f4f6f4;
-
-  cursor: not-allowed;
-
+  min-height: 0;
+  margin: 0 0 clamp(12px, 3.2vw, 18px);
+  padding: clamp(14px, 3.6vw, 22px);
+  border: 2px solid #2f8050;
+  border-radius: clamp(14px, 3.5vw, 20px);
+  background: linear-gradient(135deg, #edf7e9 0%, #e7f8e3 100%);
   box-shadow: none;
-
-  font-size: 11px;
-
+  isolation: isolate;
 }
 
-.jr-hck-select-btn {
-
-  min-width: 90px;
-
+.jr-menu-page .jr-menu-welcome::after {
+  content: none;
 }
 
-.jr-hck-selected-btn {
-
-  border-color: #287f46 !important;
-
-  background: #287f46 !important;
-
-  color: #ffffff !important;
-
-  min-width: 104px;
-
-  cursor: pointer !important;
-
-  pointer-events: auto !important;
-
-  touch-action: manipulation !important;
-
-  box-shadow: 0 2px 8px rgba(40, 127, 70, 0.25) !important;
-
-  font-size: 12px !important;
-
-  transition: all 0.15s ease !important;
-
-}
-
-.jr-hck-selected-btn:hover {
-
-  background: #23703e !important;
-
-  border-color: #23703e !important;
-
-  color: #ffffff !important;
-
-}
-
-.jr-hck-selected-btn:active {
-
-  transform: scale(0.96) !important;
-
-}
-
-/* =========================================================
-
-   QUANTITY COUNTER: [-] {qty} [+]
-
-   ========================================================= */
-
-.jr-qty-counter {
-
-  display: inline-flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  min-width: 90px;
-
-  height: 35px;
-
-  border-radius: 8px;
-
-  background: #287f46;
-
-  color: #ffffff;
-
-  box-shadow: 0 3px 10px rgba(40, 127, 70, 0.26);
-
-  overflow: hidden;
-
-  user-select: none;
-
-}
-
-.jr-qty-btn {
-
-  display: inline-flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  width: 32px;
-
-  height: 100%;
-
-  padding: 0;
-
-  margin: 0;
-
-  border: none;
-
-  background: transparent;
-
-  color: #ffffff;
-
-  font-family: inherit;
-
-  font-size: 17px;
-
-  font-weight: 750;
-
-  line-height: 1;
-
-  cursor: pointer;
-
-  outline: none;
-
-  touch-action: manipulation;
-
-  -webkit-tap-highlight-color: transparent;
-
-  transition: background-color 0.14s ease;
-
-}
-
-.jr-qty-btn:hover {
-
-  background: rgba(255, 255, 255, 0.22);
-
-}
-
-.jr-qty-btn:active {
-
-  background: rgba(255, 255, 255, 0.38);
-
-}
-
-.jr-qty-btn:disabled,
-
-.jr-qty-btn--disabled {
-
-  opacity: 0.35 !important;
-
-  cursor: not-allowed !important;
-
-  pointer-events: none !important;
-
-}
-
-.jr-qty-value {
-
-  flex: 1 1 auto;
-
-  min-width: 22px;
-
-  text-align: center;
-
-  color: #ffffff;
-
-  font-size: 13.5px;
-
-  font-weight: 850;
-
-  line-height: 1;
-
-  font-variant-numeric: tabular-nums;
-
-}
-
-/* =========================================================
-
-   DESCRIPTION
-
-   ========================================================= */
-
-.jr-food-card__desc,
-
-.jr-product-info p {
-
+.jr-menu-page .jr-menu-welcome .jr-welcome-copy {
   width: 100%;
-
-  min-width: 0;
-
-  margin: 0;
-
-  color: #647065;
-
-  font-size: clamp(11.5px, 2.4vw, 13px);
-
-  line-height: 1.45;
-
-  font-weight: 450;
-
-  display: -webkit-box;
-
-  -webkit-box-orient: vertical;
-
-  -webkit-line-clamp: 2;
-
-  line-clamp: 2;
-
-  overflow: hidden;
-
-  text-overflow: ellipsis;
-
-}
-
-/* =========================================================
-
-   PRICE ROW
-
-   ========================================================= */
-
-.jr-product-bottom,
-
-.jr-food-card__price-row {
-
-  width: 100%;
-
-  min-width: 0;
-
-  display: flex;
-
-  align-items: baseline;
-
-  justify-content: space-between;
-
-  gap: 8px;
-
-  margin-top: auto;
-
-  padding-top: 4px;
-
-}
-
-.jr-food-card__price-group {
-
-  display: flex;
-
-  align-items: baseline;
-
-  gap: 8px;
-
-  flex-wrap: wrap;
-
-}
-
-.jr-product-price,
-
-.jr-food-card__price {
-
-  min-width: 0;
-
-  color: #162418;
-
-  font-size: clamp(16px, 3.4vw, 19px);
-
-  line-height: 1.1;
-
-  font-weight: 900;
-
-  letter-spacing: -0.01em;
-
-}
-
-.jr-food-card__tax-info {
-
-  color: #828e83;
-
-  font-size: 11px;
-
-  font-weight: 500;
-
-  line-height: 1;
-
-}
-
-/* =========================================================
-
-   EMPTY / LOADING STATE
-
-   ========================================================= */
-
-.jr-products-empty {
-
-  grid-column: 1 / -1;
-
-  width: 100%;
-
-  min-width: 0;
-
-  min-height: clamp(150px, 45vw, 220px);
-
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: center;
-
-  justify-content: center;
-
-  gap: 7px;
-
-  padding: clamp(18px, 6vw, 30px);
-
-  border: 1px dashed #dfe3db;
-
-  border-radius: clamp(12px, 3vw, 16px);
-
-  background: #ffffff;
-
-  text-align: center;
-
-}
-
-.jr-products-empty > span {
-
-  font-size: clamp(28px, 9vw, 40px);
-
-  line-height: 1;
-
-}
-
-.jr-products-empty strong {
-
-  color: #29362e;
-
-  font-size: clamp(11px, 3vw, 14px);
-
-  line-height: 1.2;
-
-  font-weight: 900;
-
-}
-
-.jr-products-empty p {
-
-  width: min(100%, 32ch);
-
-  margin: 0;
-
-  color: #929991;
-
-  font-size: clamp(8px, 2.2vw, 10px);
-
-  line-height: 1.4;
-
-}
-
-/* =========================================================
-
-   VERY SMALL PHONES
-
-   ========================================================= */
-
-@media (max-width: 359px) {
-
-  .jr-menu-page {
-
-    --jr-page-x: 7px;
-
-    --jr-gap: 7px;
-
-  }
-
-  .jr-header {
-
-    padding: 6px 8px;
-
-  }
-
-  .jr-location-pin {
-
-    width: 29px;
-
-    height: 29px;
-
-    min-width: 29px;
-
-    flex-basis: 29px;
-
-  }
-
-  .jr-header-location-copy strong {
-
-    font-size: 9px;
-
-  }
-
-  .jr-header-location-copy span {
-
-    font-size: 6.5px;
-
-  }
-
-  .jr-profile-button,
-
-  .jr-cart-button {
-
-    width: 32px;
-
-    height: 32px;
-
-    min-width: 32px;
-
-    min-height: 32px;
-
-    flex-basis: 32px;
-
-    border-radius: 9px;
-
-  }
-
-  .jr-menu-welcome {
-
-    gap: 7px;
-
-    padding: 12px;
-
-  }
-
-  .jr-welcome-copy h1 {
-
-    font-size: clamp(20px, 7vw, 24px);
-
-  }
-
-  .jr-welcome-copy p {
-
-    font-size: 7.5px;
-
-  }
-
-  .jr-welcome-icon {
-
-    width: 43px;
-
-    min-width: 43px;
-
-    font-size: 20px;
-
-  }
-
-  .jr-products {
-
-    grid-template-columns: 1fr;
-
-  }
-
-  .jr-product-info {
-
-    padding: 10px 12px;
-
-  }
-
-  .jr-food-card__title,
-
-  .jr-product-info h3 {
-
-    font-size: 14px;
-
-  }
-
-  .jr-food-card__desc,
-
-  .jr-product-info p {
-
-    font-size: 11.5px;
-
-  }
-
-  .jr-add-btn {
-
-    min-width: 76px;
-
-    height: 33px;
-
-    font-size: 12px;
-
-  }
-
-  .jr-qty-counter {
-
-    min-width: 82px;
-
-    height: 33px;
-
-  }
-
-  .jr-product-price,
-
-  .jr-food-card__price {
-
-    font-size: 15px;
-
-  }
-
-}
-
-/* =========================================================
-
-   WIDER PHONES
-
-   ========================================================= */
-
-@media (min-width: 430px) and (max-width: 599px) {
-
-  .jr-products {
-
-    gap: clamp(12px, 3vw, 16px);
-
-  }
-
-  .jr-product-image-wrap {
-
-    aspect-ratio: 16 / 10;
-
-  }
-
-  .jr-food-card__title,
-
-  .jr-product-info h3 {
-
-    font-size: 16px;
-
-  }
-
-  .jr-food-card__desc,
-
-  .jr-product-info p {
-
-    font-size: 12.5px;
-
-  }
-
-}
-
-/* =========================================================
-
-   SHORT PORTRAIT PHONES
-
-   ========================================================= */
-
-@media (orientation: portrait) and (max-height: 700px) {
-
-  .jr-menu-page {
-
-    padding-top: 8px;
-
-  }
-
-  .jr-menu-welcome {
-
-    padding-top: 12px;
-
-    padding-bottom: 12px;
-
-  }
-
-  .jr-welcome-copy p {
-
-    margin-top: 6px;
-
-  }
-
-  .jr-selected-machine-banner {
-
-    margin-bottom: 10px;
-
-  }
-
-  .jr-section-subtitle {
-
-    margin-bottom: 9px;
-
-  }
-
-  .jr-product-image-wrap {
-
-    aspect-ratio: 1.28 / 1;
-
-  }
-
-}
-
-/* =========================================================
-
-   LANDSCAPE SMARTPHONES
-
-   ========================================================= */
-
-@media (orientation: landscape) and (max-height: 500px) {
-
-  .jr-menu-page {
-
-    padding-top: 7px;
-
-    padding-bottom: 12px;
-
-  }
-
-  .jr-menu-welcome {
-
-    padding-top: 9px;
-
-    padding-bottom: 9px;
-
-    margin-bottom: 7px;
-
-  }
-
-  .jr-welcome-copy h1 {
-
-    font-size: clamp(19px, 5vw, 29px);
-
-  }
-
-  .jr-welcome-copy p {
-
-    margin-top: 5px;
-
-    font-size: clamp(7px, 1.7vw, 9px);
-
-  }
-
-  .jr-welcome-icon {
-
-    width: clamp(38px, 10vw, 54px);
-
-    min-width: clamp(38px, 10vw, 54px);
-
-    font-size: clamp(18px, 5vw, 27px);
-
-  }
-
-  .jr-selected-machine-banner {
-
-    margin-bottom: 7px;
-
-    padding-top: 5px;
-
-    padding-bottom: 5px;
-
-  }
-
-  .jr-section-subtitle {
-
-    margin-top: 3px;
-
-    margin-bottom: 6px;
-
-  }
-
-  .jr-product-image-wrap {
-
-    aspect-ratio: 1.35 / 1;
-
-  }
-
-  .jr-product-info {
-
-    padding-top: 5px;
-
-    padding-bottom: 6px;
-
-  }
-
-  .jr-product-info p {
-
-    margin-top: 2px;
-
-    margin-bottom: 4px;
-
-  }
-
-}
-
-/* =========================================================
-
-   SAFE AREA
-
-   ========================================================= */
-
-@supports (padding: max(0px)) {
-
-  .jr-menu-page {
-
-    padding-left: max(
-
-      var(--jr-page-x),
-
-      env(safe-area-inset-left, 0px)
-
-    );
-
-    padding-right: max(
-
-      var(--jr-page-x),
-
-      env(safe-area-inset-right, 0px)
-
-    );
-
-    padding-bottom: max(
-
-      clamp(18px, 4vw, 28px),
-
-      env(safe-area-inset-bottom, 0px)
-
-    );
-
-  }
-
-}
-
-/* =========================================================
-
-   ACCESSIBILITY / MOTION
-
-   ========================================================= */
-
-@media (prefers-reduced-motion: reduce) {
-
-  .jr-product-card,
-
-  .jr-product-image,
-
-  .jr-quantity-control,
-
-  .jr-quantity-button,
-
-  .jr-profile-button,
-
-  .jr-cart-button {
-
-    transition: none !important;
-
-  }
-
-}
-
-/* =========================================================
-
-   FINAL LANDSCAPE PRODUCT CARD FIX
-
-   ---------------------------------------------------------
-
-   Keep product cards compact in phone landscape mode.
-
-   Four products fit cleanly across wider landscape
-
-   viewports without oversized cards or vertical overflow.
-
-   ========================================================= */
-
-@media screen and (orientation: landscape) and (max-height: 600px) {
-
-  .jr-menu-page {
-
-    width: 100%;
-
-    min-width: 0;
-
-    overflow-x: hidden;
-
-    overflow-y: auto;
-
-    padding-top: 7px;
-
-    padding-bottom: 10px;
-
-  }
-
-  .jr-products {
-
-    width: 100%;
-
-    min-width: 0;
-
-    display: grid;
-
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-
-    gap: 8px;
-
-    align-items: stretch;
-
-  }
-
-  .jr-product-card {
-
-    min-width: 0;
-
-    width: 100%;
-
-    border-radius: 12px;
-
-    box-shadow: 0 3px 10px rgba(32, 55, 38, 0.045);
-
-  }
-
-  .jr-product-image-wrap {
-
-    width: 100%;
-
-    aspect-ratio: 1.45 / 1;
-
-    padding: 5px;
-
-  }
-
-  .jr-product-info {
-
-    min-width: 0;
-
-    padding:
-
-      6px
-
-      7px
-
-      7px;
-
-  }
-
-  .jr-product-info h3 {
-
-    font-size: clamp(10px, 1.8vw, 13px);
-
-    line-height: 1.1;
-
-  }
-
-  .jr-product-info p {
-
-    margin-top: 2px;
-
-    margin-bottom: 4px;
-
-    font-size: clamp(7px, 1.35vw, 9px);
-
-    line-height: 1.25;
-
-    -webkit-line-clamp: 2;
-
-    line-clamp: 2;
-
-  }
-
-  .jr-product-footer {
-
-    min-height: 26px;
-
-    gap: 5px;
-
-  }
-
-  .jr-product-price {
-
-    font-size: clamp(10px, 1.8vw, 14px);
-
-  }
-
-  .jr-quantity-control {
-
-    width: 62px;
-
-    min-width: 62px;
-
-    max-width: 62px;
-
-    height: 25px;
-
-  }
-
-  .jr-quantity-button {
-
-    font-size: 12px;
-
-  }
-
-  .jr-quantity-value {
-
-    min-width: 18px;
-
-    font-size: 9px;
-
-  }
-
-  .jr-fresh-badge {
-
-    left: 5px;
-
-    top: 5px;
-
-    padding: 3px 5px;
-
-    font-size: 6px;
-
-  }
-
-}
-
-/* Narrow landscape phones: three columns gives the cards
-
-   enough horizontal space for readable names and controls. */
-
-@media screen and (orientation: landscape)
-
-  and (max-height: 600px)
-
-  and (max-width: 700px) {
-
-  .jr-products {
-
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-
-    gap: 7px;
-
-  }
-
-  .jr-product-image-wrap {
-
-    aspect-ratio: 1.35 / 1;
-
-  }
-
-  .jr-product-info h3 {
-
-    font-size: 10px;
-
-  }
-
-  .jr-product-info p {
-
-    font-size: 7px;
-
-  }
-
-  .jr-product-price {
-
-    font-size: 10px;
-
-  }
-
-  .jr-quantity-control {
-
-    width: 58px;
-
-    min-width: 58px;
-
-    max-width: 58px;
-
-    height: 24px;
-
-  }
-
-}
-
-/* Very wide landscape: prevent cards from becoming
-
-   excessively wide. */
-
-@media screen and (orientation: landscape)
-
-  and (min-width: 1000px)
-
-  and (max-height: 700px) {
-
-  .jr-products {
-
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-
-    gap: 10px;
-
-  }
-
-  .jr-product-card {
-
-    max-width: 260px;
-
-    justify-self: center;
-
-  }
-
-}
-
-/* =========================================================
-
-   PERMANENT JSX CLASS COMPATIBILITY FIX
-
-   ---------------------------------------------------------
-
-   MenuScreen.jsx uses these exact classes:
-
-     jr-category-nav
-
-     jr-category-pills
-
-     jr-category-pill
-
-     jr-category-pill-count
-
-     jr-product-bottom
-
-     jr-product-quantity
-
-     jr-quantity-minus
-
-     jr-quantity-plus
-
-   These rules intentionally use the JSX class names instead
-
-   of the older jr-product-footer / jr-quantity-control names.
-
-   ========================================================= */
-
-.jr-menu-page .jr-category-nav {
-
-  width: 100%;
-
-  min-width: 0;
-
-  margin: 0 0 10px;
-
-  overflow-x: auto;
-
-  overflow-y: hidden;
-
-  scrollbar-width: none;
-
-  -webkit-overflow-scrolling: touch;
-
-}
-
-.jr-menu-page .jr-category-nav::-webkit-scrollbar {
-
-  display: none;
-
-  width: 0;
-
-  height: 0;
-
-}
-
-.jr-menu-page .jr-category-pills {
-
-  width: max-content;
-
-  min-width: 100%;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 6px;
-
-}
-
-.jr-menu-page .jr-category-pill {
-
-  flex: 0 0 auto;
-
-  min-width: 0;
-
-  height: 29px;
-
-  min-height: 29px;
-
-  display: inline-flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  gap: 4px;
-
-  margin: 0;
-
-  padding: 0 10px;
-
-  border: 1px solid #dfe4dc;
-
-  border-radius: 8px;
-
-  background: #ffffff;
-
-  color: #4f584f;
-
-  font-family: inherit;
-
-  font-size: 9px;
-
-  line-height: 1;
-
-  font-weight: 800;
-
-  white-space: nowrap;
-
-  cursor: pointer;
-
-  appearance: none;
-
-  -webkit-appearance: none;
-
-  -webkit-tap-highlight-color: transparent;
-
-  box-shadow: 0 2px 7px rgba(32, 55, 38, .035);
-
-  transition: background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
-
-}
-
-.jr-menu-page .jr-category-pill:hover {
-
-  border-color: #cbd9cd;
-
-  background: #f6faf5;
-
-}
-
-.jr-menu-page .jr-category-pill:active {
-
-  transform: scale(.97);
-
-}
-
-.jr-menu-page .jr-category-pill.is-active {
-
-  border-color: #2f8050;
-
-  background: #2f8050;
-
-  color: #ffffff;
-
-  box-shadow: 0 4px 10px rgba(47, 128, 80, .16);
-
-}
-
-.jr-menu-page .jr-category-pill-count {
-
-  min-width: 15px;
-
-  height: 15px;
-
-  display: inline-flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  padding: 0 4px;
-
-  border-radius: 5px;
-
-  background: #edf5eb;
-
-  color: #2f8050;
-
-  font-size: 7px;
-
-  line-height: 1;
-
-  font-weight: 900;
-
-}
-
-.jr-menu-page .jr-category-pill.is-active .jr-category-pill-count {
-
-  background: rgba(255, 255, 255, .20);
-
-  color: #ffffff;
-
-}
-
-.jr-menu-page .jr-category-reset-btn {
-
-  height: 34px;
-
-  min-height: 34px;
-
-  margin-top: 4px;
-
-  padding: 0 13px;
-
-  border: 0;
-
-  border-radius: 8px;
-
-  background: #2f8050;
-
-  color: #ffffff;
-
-  font-family: inherit;
-
-  font-size: 9px;
-
-  font-weight: 800;
-
-  cursor: pointer;
-
-}
-
-/* Exact JSX footer class */
-
-.jr-menu-page .jr-product-bottom {
-
-  width: 100%;
-
-  min-width: 0;
-
-  min-height: 28px;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  gap: 5px;
-
-  margin: auto 0 0;
-
-  padding: 0;
-
-}
-
-/* Exact JSX quantity class */
-
-.jr-menu-page .jr-product-quantity {
-
-  flex: 0 0 auto;
-
-  width: 64px;
-
-  min-width: 64px;
-
-  height: 27px;
-
-  min-height: 27px;
-
-  display: grid;
-
-  grid-template-columns: 1fr 22px 1fr;
-
-  align-items: center;
-
-  padding: 2px;
-
-  border: 1px solid #c9dfcc;
-
-  border-radius: 8px;
-
-  background: #f2f9f1;
-
-  overflow: hidden;
-
-  box-sizing: border-box;
-
-}
-
-.jr-menu-page .jr-product-quantity button {
-
-  width: 100%;
-
-  height: 100%;
-
-  min-width: 0;
-
-  min-height: 21px;
-
-  display: grid;
-
-  place-items: center;
-
-  margin: 0;
-
-  padding: 0;
-
-  border: 0;
-
-  border-radius: 6px;
-
-  background: transparent;
-
-  color: #2f8050;
-
-  font-family: inherit;
-
-  font-size: 14px;
-
-  line-height: 1;
-
-  font-weight: 900;
-
-  cursor: pointer;
-
-  appearance: none;
-
-  -webkit-appearance: none;
-
-  -webkit-tap-highlight-color: transparent;
-
-}
-
-.jr-menu-page .jr-product-quantity button:hover:not(:disabled) {
-
-  background: rgba(47, 128, 80, .10);
-
-}
-
-.jr-menu-page .jr-product-quantity button:active:not(:disabled) {
-
-  transform: scale(.88);
-
-}
-
-.jr-menu-page .jr-product-quantity button:disabled {
-
-  color: #aeb9af;
-
-  opacity: .55;
-
-  cursor: not-allowed;
-
-}
-
-.jr-menu-page .jr-product-quantity strong {
-
-  width: 22px;
-
-  min-width: 22px;
-
-  height: 100%;
-
-  display: grid;
-
-  place-items: center;
-
-  margin: 0;
-
-  padding: 0;
-
-  color: #245f39;
-
-  font-size: 10px;
-
-  line-height: 1;
-
-  font-weight: 900;
-
-  font-variant-numeric: tabular-nums;
-
-}
-
-/* Landscape: match the 829 × 440 type of viewport in the screenshot. */
-
-@media screen and (orientation: landscape) and (max-height: 600px) {
-
-  .jr-menu-page .jr-category-nav {
-
-    margin-bottom: 7px;
-
-  }
-
-  .jr-menu-page .jr-category-pills {
-
-    gap: 5px;
-
-  }
-
-  .jr-menu-page .jr-category-pill {
-
-    height: 26px;
-
-    min-height: 26px;
-
-    padding: 0 9px;
-
-    font-size: 8px;
-
-  }
-
-  .jr-menu-page .jr-category-pill-count {
-
-    min-width: 13px;
-
-    height: 13px;
-
-    font-size: 6px;
-
-  }
-
-  .jr-menu-page .jr-product-bottom {
-
-    min-height: 25px;
-
-    gap: 4px;
-
-  }
-
-  .jr-menu-page .jr-product-quantity {
-
-    width: 60px;
-
-    min-width: 60px;
-
-    height: 24px;
-
-    min-height: 24px;
-
-    grid-template-columns: 1fr 20px 1fr;
-
-    padding: 1px;
-
-  }
-
-  .jr-menu-page .jr-product-quantity strong {
-
-    width: 20px;
-
-    min-width: 20px;
-
-    font-size: 9px;
-
-  }
-
-  .jr-menu-page .jr-product-quantity button {
-
-    min-height: 20px;
-
-    font-size: 13px;
-
-  }
-
-}
-
-/* Very narrow landscape phones */
-
-@media screen and (orientation: landscape) and (max-height: 600px) and (max-width: 700px) {
-
-  .jr-menu-page .jr-product-bottom {
-
-    gap: 3px;
-
-  }
-
-  .jr-menu-page .jr-product-quantity {
-
-    width: 56px;
-
-    min-width: 56px;
-
-    height: 23px;
-
-    min-height: 23px;
-
-    grid-template-columns: 1fr 19px 1fr;
-
-  }
-
-  .jr-menu-page .jr-product-quantity strong {
-
-    width: 19px;
-
-    min-width: 19px;
-
-    font-size: 8px;
-
-  }
-
-  .jr-menu-page .jr-product-quantity button {
-
-    font-size: 12px;
-
-  }
-
-}
-
-/* Keep the real JSX footer/quantity classes responsive in portrait too. */
-
-@media screen and (max-width: 430px) {
-
-  .jr-menu-page .jr-product-bottom {
-
-    gap: 4px;
-
-  }
-
-  .jr-menu-page .jr-product-quantity {
-
-    width: 62px;
-
-    min-width: 62px;
-
-    height: 26px;
-
-  }
-
-}
-
-@media screen and (max-width: 360px) {
-
-  .jr-menu-page .jr-category-pill {
-
-    height: 27px;
-
-    min-height: 27px;
-
-    padding: 0 8px;
-
-    font-size: 8px;
-
-  }
-
-  .jr-menu-page .jr-product-quantity {
-
-    width: 56px;
-
-    min-width: 56px;
-
-    height: 24px;
-
-  }
-
-}
-
-/* =========================================================
-
-   FINAL JUICE ROBO LAYOUT
-
-   Bottom navigation + zero dead scroll space
-
-   ========================================================= */
-
-/*
-
- \* The content area and bottom navigation are siblings in the
-
- \* app viewport. The navigation is part of the layout instead
-
- \* of overlaying the page with position: fixed.
-
- */
-
-.jr-screen-container {
-
-  position: relative !important;
-
-  display: flex !important;
-
-  flex-direction: column !important;
-
-  width: 100% !important;
-
-  height: 100% !important;
-
-  min-height: 0 !important;
-
-  margin: 0 !important;
-
-  padding: 0 !important;
-
-  overflow: hidden !important;
-
-  box-sizing: border-box !important;
-
-}
-
-/* Menu is the only scrolling region. */
-
-.jr-screen-container .jr-menu-page {
-
-  flex: 1 1 auto !important;
-
-  width: 100% !important;
-
-  min-width: 0 !important;
-
-  min-height: 0 !important;
-
-  height: auto !important;
-
-  margin: 0 !important;
-
-  overflow-x: hidden !important;
-
-  overflow-y: auto !important;
-
-  /*
-
-   \* Clearance for fixed bottom navigation.
-
-   */
-
-  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
-
-  scrollbar-width: none !important;
-
-  -ms-overflow-style: none !important;
-
-  box-sizing: border-box !important;
-
-}
-
-.jr-screen-container .jr-menu-page::-webkit-scrollbar {
-
-  display: none !important;
-
-  width: 0 !important;
-
-  height: 0 !important;
-
-}
-
-/* Cart uses the same single-scroll-region model. */
-
-.jr-screen-container .jr-cart-page {
-
-  flex: 1 1 auto !important;
-
-  width: 100% !important;
-
-  min-width: 0 !important;
-
-  min-height: 0 !important;
-
-  height: auto !important;
-
-  margin: 0 !important;
-
-  overflow-x: hidden !important;
-
-  overflow-y: auto !important;
-
-  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
-
-  scrollbar-width: none !important;
-
-  -ms-overflow-style: none !important;
-
-  box-sizing: border-box !important;
-
-}
-
-.jr-screen-container .jr-cart-page::-webkit-scrollbar {
-
-  display: none !important;
-
-  width: 0 !important;
-
-  height: 0 !important;
-
-}
-
-/* =========================================================
-
-   BOTTOM NAV — COMPLETE REWRITE
-
-   ========================================================= */
-
-.jr-screen-container .jr-bottom-nav {
-
-  position: relative !important;
-
-  inset: auto !important;
-
-  left: auto !important;
-
-  right: auto !important;
-
-  bottom: auto !important;
-
-  top: auto !important;
-
-  transform: none !important;
-
-  flex: 0 0 60px !important;
-
-  width: 100% !important;
-
-  max-width: none !important;
-
-  height: 60px !important;
-
-  min-height: 60px !important;
-
-  display: grid !important;
-
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-
-  margin: 0 !important;
-
-  padding: 4px 8px !important;
-
-  box-sizing: border-box !important;
-
-  overflow: visible !important;
-
-  background: #ffffff !important;
-
-  border-top: 1px solid #e6e6e0 !important;
-
-  box-shadow: 0 -2px 10px rgba(20, 35, 25, 0.06) !important;
-
-  z-index: 20 !important;
-
-}
-
-/* Each navigation item occupies exactly half the bar. */
-
-.jr-screen-container .jr-bottom-nav > button {
-
-  width: 100% !important;
-
-  height: 52px !important;
-
-  min-height: 52px !important;
-
-  margin: 0 !important;
-
-  padding: 0 !important;
-
-  display: grid !important;
-
-  grid-template-rows: 24px 13px !important;
-
-  align-content: center !important;
-
-  justify-items: center !important;
-
-  align-items: center !important;
-
-  row-gap: 2px !important;
-
-  border: 0 !important;
-
-  outline: none !important;
-
-  background: transparent !important;
-
-  box-sizing: border-box !important;
-
-  line-height: 1 !important;
-
-  -webkit-tap-highlight-color: transparent !important;
-
-}
-
-/* Icon container */
-
-.jr-screen-container .jr-bottom-nav > button > span,
-
-.jr-screen-container .jr-bottom-nav .jr-nav-cart-icon {
-
-  width: 24px !important;
-
-  height: 24px !important;
-
-  min-width: 24px !important;
-
-  min-height: 24px !important;
-
-  margin: 0 !important;
-
-  padding: 0 !important;
-
-  display: grid !important;
-
-  place-items: center !important;
-
-  position: relative !important;
-
-  align-self: center !important;
-
-  justify-self: center !important;
-
-  line-height: 1 !important;
-
-}
-
-/* SVG icons */
-
-.jr-screen-container .jr-bottom-nav > button > span svg,
-
-.jr-screen-container .jr-bottom-nav .jr-nav-cart-icon svg {
-
-  width: 21px !important;
-
-  height: 21px !important;
-
-  display: block !important;
-
-  margin: 0 !important;
-
-  padding: 0 !important;
-
-}
-
-/* Labels */
-
-.jr-screen-container .jr-bottom-nav > button small {
-
-  width: auto !important;
-
-  height: 13px !important;
-
-  margin: 0 !important;
-
-  padding: 0 !important;
-
-  display: block !important;
-
-  font-size: 9px !important;
-
-  line-height: 13px !important;
-
-  font-weight: 700 !important;
-
-  text-align: center !important;
-
-  white-space: nowrap !important;
-
-}
-
-/* Cart badge */
-
-.jr-screen-container .jr-nav-cart-badge {
-
-  position: absolute !important;
-
-  top: -3px !important;
-
-  right: -5px !important;
-
-  min-width: 14px !important;
-
-  height: 14px !important;
-
-  padding: 0 3px !important;
-
-  display: grid !important;
-
-  place-items: center !important;
-
-  border-radius: 999px !important;
-
-  box-sizing: border-box !important;
-
-  font-size: 8px !important;
-
-  line-height: 14px !important;
-
-}
-
-/* =========================================================
-
-   LANDSCAPE — COMPACT NAV
-
-   ========================================================= */
-
-@media screen and (orientation: landscape) and (max-height: 600px) {
-
-  .jr-screen-container .jr-bottom-nav {
-
-    flex-basis: 52px !important;
-
-    height: 52px !important;
-
-    min-height: 52px !important;
-
-    padding: 2px 8px !important;
-
-  }
-
-  .jr-screen-container .jr-bottom-nav > button {
-
-    height: 48px !important;
-
-    min-height: 48px !important;
-
-    grid-template-rows: 21px 10px !important;
-
-    row-gap: 1px !important;
-
-  }
-
-  .jr-screen-container .jr-bottom-nav > button > span,
-
-  .jr-screen-container .jr-bottom-nav .jr-nav-cart-icon {
-
-    width: 21px !important;
-
-    height: 21px !important;
-
-    min-width: 21px !important;
-
-    min-height: 21px !important;
-
-  }
-
-  .jr-screen-container .jr-bottom-nav > button > span svg,
-
-  .jr-screen-container .jr-bottom-nav .jr-nav-cart-icon svg {
-
-    width: 19px !important;
-
-    height: 19px !important;
-
-  }
-
-  .jr-screen-container .jr-bottom-nav > button small {
-
-    height: 10px !important;
-
-    font-size: 8px !important;
-
-    line-height: 10px !important;
-
-  }
-
-  .jr-screen-container .jr-menu-page,
-
-  .jr-screen-container .jr-cart-page {
-
-    padding-bottom: 8px !important;
-
-  }
-
-}
-
-/* =========================================================
-
-   VERY SHORT LANDSCAPE
-
-   ========================================================= */
-
-@media screen and (orientation: landscape) and (max-height: 420px) {
-
-  .jr-screen-container .jr-bottom-nav {
-
-    flex-basis: 48px !important;
-
-    height: 48px !important;
-
-    min-height: 48px !important;
-
-  }
-
-  .jr-screen-container .jr-bottom-nav > button {
-
-    height: 44px !important;
-
-    min-height: 44px !important;
-
-  }
-
-  .jr-screen-container .jr-menu-page,
-
-  .jr-screen-container .jr-cart-page {
-
-    padding-bottom: 5px !important;
-
-  }
-
-}
-
-/* =========================================================
-
-   REMOVE LEGACY BOTTOM CLEARANCE
-
-   ========================================================= */
-
-.jr-screen-container .jr-menu-page,
-
-.jr-screen-container .jr-cart-page {
-
-  scroll-padding-bottom: 0 !important;
-
-}
-
-/* Prevent the document itself from becoming a second scroll area. */
-
-html,
-
-body,
-
-\#root {
-
   max-width: 100%;
-
-  min-height: 100%;
-
+  min-width: 0;
 }
 
-body {
-
-  overflow: hidden !important;
-
+.jr-menu-page .jr-menu-welcome .jr-eyebrow {
+  margin: 0 0 clamp(6px, 1.7vw, 9px);
+  color: #2f8050;
+  font-size: clamp(9px, 2.5vw, 12px);
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: 0.06em;
 }
 
-/* =========================================================
-
-   CART CTA BOTTOM NAV — 4 COLUMN LAYOUT
-
-   ========================================================= */
-
-.jr-screen-container .jr-bottom-nav.jr-bottom-nav--cart-cta {
-
-  position: relative !important;
-
-  display: grid !important;
-
-  /*
-
-   \* 4 items:
-
-   \* 1. Item summary
-
-   \* 2. Continue
-
-   \* 3. Menu
-
-   \* 4. Cart
-
-   */
-
-  grid-template-columns:
-
-    minmax(0, 1.25fr)
-
-    minmax(92px, 1fr)
-
-    62px
-
-    62px !important;
-
-  grid-template-rows: 1fr !important;
-
-  width: 100% !important;
-
-  height: 64px !important;
-
-  min-height: 64px !important;
-
-  flex: 0 0 64px !important;
-
-  padding:
-
-    5px
-
-    6px
-
-    calc(5px + env(safe-area-inset-bottom, 0px))
-
-    6px !important;
-
-  gap: 6px !important;
-
-  box-sizing: border-box !important;
-
-  background: #ffffff !important;
-
-  border-top: 1px solid #e6e6e0 !important;
-
-  box-shadow:
-
-    0 -2px 10px rgba(20, 35, 25, 0.06) !important;
-
-  overflow: visible !important;
-
-  z-index: 30 !important;
-
+.jr-menu-page .jr-menu-welcome h1 {
+  margin: 0;
+  color: #20251f;
+  font-size: clamp(23px, 6.8vw, 38px);
+  line-height: 1.04;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  overflow-wrap: normal;
 }
 
-/* =========================================================
-
-   COMMON CART CTA BUTTON RESET
-
-   ========================================================= */
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  > button {
-
-  width: 100% !important;
-
-  height: 100% !important;
-
-  min-width: 0 !important;
-
-  min-height: 0 !important;
-
-  margin: 0 !important;
-
-  padding: 0 !important;
-
-  box-sizing: border-box !important;
-
-  border: 0 !important;
-
-  outline: 0 !important;
-
-  background: transparent !important;
-
-  cursor: pointer !important;
-
-  -webkit-tap-highlight-color: transparent !important;
-
+.jr-menu-page .jr-menu-welcome h1 em {
+  color: #2f8050;
+  font-style: normal;
+  font-weight: 900;
 }
 
-/* =========================================================
-
-   ITEM SUMMARY
-
-   ========================================================= */
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-cta-summary {
-
-  min-width: 0 !important;
-
-  display: flex !important;
-
-  flex-direction: column !important;
-
-  align-items: flex-start !important;
-
-  justify-content: center !important;
-
-  gap: 2px !important;
-
-  padding: 0 5px !important;
-
-  text-align: left !important;
-
-  overflow: hidden !important;
-
+.jr-menu-page .jr-menu-welcome p {
+  width: 100%;
+  max-width: 48ch;
+  margin: clamp(8px, 2.2vw, 12px) 0 0;
+  color: #6f776f;
+  font-size: clamp(11px, 3.1vw, 16px);
+  line-height: 1.45;
+  font-weight: 500;
+  overflow-wrap: break-word;
 }
 
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-cta-item-count {
-
-  display: block !important;
-
-  max-width: 100% !important;
-
-  margin: 0 !important;
-
-  padding: 0 !important;
-
-  color: #555555 !important;
-
-  font-size: 9px !important;
-
-  line-height: 12px !important;
-
-  font-weight: 700 !important;
-
-  white-space: nowrap !important;
-
-}
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-cta-total {
-
-  display: block !important;
-
-  max-width: 100% !important;
-
-  margin: 0 !important;
-
-  padding: 0 !important;
-
-  color: #151515 !important;
-
-  font-size: 12px !important;
-
-  line-height: 16px !important;
-
-  font-weight: 900 !important;
-
-  white-space: nowrap !important;
-
-  overflow: hidden !important;
-
-  text-overflow: ellipsis !important;
-
-}
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-cta-total small {
-
-  font-size: 8px !important;
-
-  line-height: 1 !important;
-
-  font-weight: 600 !important;
-
-  color: #888888 !important;
-
-}
-
-/* =========================================================
-
-   CONTINUE BUTTON
-
-   ========================================================= */
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-cta-continue {
-
-  display: flex !important;
-
-  flex-direction: row !important;
-
-  align-items: center !important;
-
-  justify-content: center !important;
-
-  gap: 5px !important;
-
-  min-width: 0 !important;
-
-  padding: 0 12px !important;
-
-  border-radius: 10px !important;
-
-  background: #287f46 !important;
-
-  color: #ffffff !important;
-
-  font-family:
-
-    Poppins,
-
-    -apple-system,
-
-    BlinkMacSystemFont,
-
-    "Segoe UI",
-
-    sans-serif !important;
-
-  font-size: 11px !important;
-
-  line-height: 1 !important;
-
-  font-weight: 800 !important;
-
-}
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-cta-continue:active {
-
-  transform: scale(0.97) !important;
-
-}
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-cta-arrow {
-
-  font-size: 19px !important;
-
-  line-height: 1 !important;
-
-}
-
-/* =========================================================
-
-   MENU / CART NAV BUTTONS
-
-   ========================================================= */
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-cta-menu,
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-cta-cart {
-
-  display: flex !important;
-
-  flex-direction: column !important;
-
-  align-items: center !important;
-
-  justify-content: center !important;
-
-  gap: 2px !important;
-
-  border-radius: 9px !important;
-
-  color: #777777 !important;
-
-  font-family:
-
-    Poppins,
-
-    -apple-system,
-
-    BlinkMacSystemFont,
-
-    "Segoe UI",
-
-    sans-serif !important;
-
-  font-size: 8px !important;
-
-  line-height: 11px !important;
-
-  font-weight: 800 !important;
-
-  white-space: nowrap !important;
-
-}
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-cta-menu
-
-  > span:first-child {
-
-  font-size: 17px !important;
-
-  line-height: 20px !important;
-
-}
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-cta-cart
-
-  > span:last-child {
-
-  display: block !important;
-
-}
-
-/* =========================================================
-
-   CART ICON + BADGE
-
-   ========================================================= */
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-icon-wrapper {
-
-  position: relative !important;
-
-  width: 22px !important;
-
-  height: 22px !important;
-
-  display: flex !important;
-
-  align-items: center !important;
-
-  justify-content: center !important;
-
-  font-size: 17px !important;
-
-  line-height: 1 !important;
-
-}
-
-.jr-screen-container
-
-  .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-  .jr-cart-count {
-
-  position: absolute !important;
-
-  top: -5px !important;
-
-  right: -7px !important;
-
-  min-width: 14px !important;
-
-  height: 14px !important;
-
-  padding: 0 3px !important;
-
-  display: flex !important;
-
-  align-items: center !important;
-
-  justify-content: center !important;
-
-  border-radius: 999px !important;
-
-  background: #f07800 !important;
-
-  color: #ffffff !important;
-
-  font-size: 7px !important;
-
-  line-height: 14px !important;
-
-  font-weight: 900 !important;
-
-  box-sizing: border-box !important;
-
-}
-
-/* =========================================================
-
-   VERY SMALL PHONES
-
-   ========================================================= */
-
-@media screen and (max-width: 380px) {
-
-  .jr-screen-container
-
-    .jr-bottom-nav.jr-bottom-nav--cart-cta {
-
-    grid-template-columns:
-
-      minmax(0, 1.15fr)
-
-      minmax(82px, 0.95fr)
-
-      54px
-
-      54px !important;
-
-    gap: 4px !important;
-
-    height: 62px !important;
-
-    min-height: 62px !important;
-
-    flex-basis: 62px !important;
-
+@media (min-width: 600px) {
+  .jr-menu-page .jr-menu-welcome {
+    padding: 22px 24px;
   }
-
-  .jr-screen-container
-
-    .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-    .jr-cart-cta-total {
-
-    font-size: 11px !important;
-
-  }
-
-  .jr-screen-container
-
-    .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-    .jr-cart-cta-total small {
-
-    font-size: 7px !important;
-
-  }
-
-  .jr-screen-container
-
-    .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-    .jr-cart-cta-continue {
-
-    padding: 0 8px !important;
-
-    font-size: 10px !important;
-
-  }
-
 }
 
 /* =========================================================
-
-   LANDSCAPE PHONES
-
+   MENU CONTENT LAYOUT
    ========================================================= */
 
-@media screen and (orientation: landscape) and (max-height: 600px) {
+.jr-content {
+  width: 100%;
+  min-width: 0;
+}
 
-  .jr-screen-container
+.jr-menu-page {
+  --jr-green: #2f8050;
+  --jr-green-dark: #21663d;
+  --jr-green-soft: #edf7ed;
+  --jr-ink: #202a22;
+  --jr-muted: #737d74;
+}
 
-    .jr-bottom-nav.jr-bottom-nav--cart-cta {
+.jr-menu-page .jr-menu-section {
+  min-width: 0;
+}
 
-    height: 54px !important;
+.jr-menu-page .jr-section-eyebrow {
+  display: block;
+  margin: 0 0 clamp(4px, 1vw, 6px);
+  color: #e97800;
+  font-size: clamp(8px, 2vw, 10px);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
 
-    min-height: 54px !important;
+.jr-menu-page .jr-section-heading h2 {
+  line-height: 1.12;
+}
 
-    flex-basis: 54px !important;
-
-    grid-template-columns:
-
-      minmax(0, 1.3fr)
-
-      minmax(100px, 1fr)
-
-      58px
-
-      58px !important;
-
-  }
-
-  .jr-screen-container
-
-    .jr-bottom-nav.jr-bottom-nav--cart-cta
-
-    .jr-cart-cta-total {
-
-    font-size: 11px !important;
-
-  }
-
+.jr-menu-page .jr-section-subtitle {
+  margin-bottom: clamp(12px, 3vw, 18px);
 }
 
 /* =========================================================
-   PRODUCT IMAGE PRESENTATION
-   Keep the existing product assets; never crop or zoom them.
+   STICKY COLLECTION LOCATION BANNER
+   Keeps the selected location and machine visible on scroll.
+   ========================================================= */
+
+.jr-menu-page .jr-selected-machine-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(20, 44, 24, 0.08);
+  margin-top: 0;
+  isolation: isolate;
+}
+
+/* =========================================================
+   PRODUCT GRID
+   Single-column mobile layout; expands naturally on desktop.
+   ========================================================= */
+
+.jr-menu-page .jr-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  align-items: stretch;
+  gap: clamp(12px, 2.8vw, 20px);
+  width: 100%;
+  min-width: 0;
+  padding: 0 0 clamp(22px, 6vw, 40px);
+}
+
+.jr-menu-page .jr-product-card,
+.jr-menu-page .jr-food-card {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #e4eae3;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #202a22;
+  text-align: left;
+  box-shadow: 0 4px 14px rgba(20, 44, 24, 0.055);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jr-menu-page .jr-product-card:hover,
+.jr-menu-page .jr-food-card:hover {
+  border-color: #cbdccb;
+  box-shadow: 0 7px 20px rgba(20, 44, 24, 0.09);
+}
+
+.jr-menu-page .jr-product-card:focus-visible,
+.jr-menu-page .jr-food-card:focus-visible {
+  outline: 2px solid #2f8050;
+  outline-offset: 3px;
+}
+
+.jr-menu-page .jr-product-card-in-cart,
+.jr-menu-page .jr-food-card--selected {
+  border-color: #b8d7bb;
+}
+
+.jr-menu-page .jr-product-card-unavailable,
+.jr-menu-page .jr-food-card--unavailable {
+  opacity: 0.72;
+}
+
+/* =========================================================
+   PRODUCT IMAGE / BADGES
    ========================================================= */
 
 .jr-menu-page .jr-product-image-wrap,
 .jr-menu-page .jr-food-card__media {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   width: 100%;
-  height: clamp(132px, 36vw, 172px);
-  min-width: 0;
-  min-height: 0;
-  max-height: none;
-  aspect-ratio: auto;
-  margin: 0;
-  padding: 8px;
+  height: clamp(132px, 38vw, 190px);
+  min-height: 132px;
+  padding: 12px 14px;
   overflow: hidden;
-  box-sizing: border-box;
-  background: #fff;
-  border-bottom: 1px solid #edf1eb;
+  background: #f0f5ef;
 }
 
-.jr-menu-page .jr-product-image-wrap > img,
-.jr-menu-page .jr-food-card__media > img,
-.jr-menu-page img.jr-product-image,
-.jr-menu-page img.jr-food-card__image {
+.jr-menu-page .jr-product-image,
+.jr-menu-page .jr-food-card__image {
   display: block;
-  flex: 0 1 auto;
   width: 100%;
   height: 100%;
-  min-width: 0;
-  min-height: 0;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   object-position: center;
-  margin: 0;
-  padding: 0;
   border: 0;
-  border-radius: 0;
-  transform: none;
-  transition: none;
-}
-
-/* Do not zoom product photos on hover; keep the complete image visible. */
-.jr-menu-page .jr-product-card:hover .jr-product-image,
-.jr-menu-page .jr-food-card:hover .jr-food-card__image {
-  transform: none;
+  border-radius: 8px;
 }
 
 .jr-menu-page .jr-product-image-placeholder,
 .jr-menu-page .jr-food-card__placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   width: 100%;
   height: 100%;
-  min-width: 0;
-  min-height: 0;
-  background: #fff;
+  min-height: 108px;
+  color: #2f8050;
 }
 
-@media screen and (max-width: 380px) {
+.jr-menu-page .jr-fallback-juice-icon {
+  display: block;
+  width: clamp(46px, 13vw, 64px);
+  height: clamp(46px, 13vw, 64px);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.jr-menu-page .jr-food-card__badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 20px);
+}
+
+.jr-menu-page .jr-badge,
+.jr-menu-page .jr-fresh-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  max-width: 100%;
+  min-height: 20px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 8px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0.045em;
+  white-space: nowrap;
+}
+
+.jr-menu-page .jr-badge--fresh {
+  color: #2c6d3f;
+  background: #e0f4c8;
+  border-color: #d2eeb4;
+}
+
+.jr-menu-page .jr-badge--soldout {
+  color: #9a3434;
+  background: #fff0ef;
+  border-color: #f3d0cc;
+}
+
+.jr-menu-page .jr-badge__dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: #4b9c35;
+}
+
+/* =========================================================
+   PRODUCT DETAILS
+   ========================================================= */
+
+.jr-menu-page .jr-product-info,
+.jr-menu-page .jr-food-card__content {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  gap: 9px;
+  padding: 13px 14px 15px;
+  background: #ffffff;
+}
+
+.jr-menu-page .jr-food-card__header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.jr-menu-page .jr-product-main,
+.jr-menu-page .jr-food-card__title-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.jr-menu-page .jr-food-card__title {
+  margin: 0;
+  color: #202a22;
+  font-size: clamp(14px, 3.7vw, 17px);
+  line-height: 1.3;
+  font-weight: 850;
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+}
+
+.jr-menu-page .jr-food-card__action-wrap {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.jr-menu-page .jr-food-card__desc {
+  margin: 0;
+  color: #737d74;
+  font-size: clamp(11px, 2.9vw, 13px);
+  line-height: 1.45;
+  font-weight: 450;
+  overflow-wrap: anywhere;
+}
+
+.jr-menu-page .jr-product-bottom,
+.jr-menu-page .jr-food-card__price-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  margin-top: auto;
+  padding-top: 3px;
+}
+
+.jr-menu-page .jr-food-card__price-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.jr-menu-page .jr-product-price,
+.jr-menu-page .jr-food-card__price {
+  display: block;
+  margin: 0;
+  color: #172c1d;
+  font-size: clamp(14px, 3.8vw, 17px);
+  line-height: 1.2;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.jr-menu-page .jr-food-card__tax-info {
+  display: block;
+  color: #7b847c;
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+/* =========================================================
+   ADD / SELECT BUTTONS
+   ========================================================= */
+
+.jr-menu-page .jr-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  min-height: 36px;
+  padding: 0 13px;
+  margin: 0;
+  border: 1px solid #2f8050;
+  border-radius: 10px;
+  background: #2f8050;
+  color: #ffffff;
+  box-shadow: 0 2px 5px rgba(47, 128, 80, 0.13);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-align: center;
+  white-space: nowrap;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jr-menu-page .jr-add-btn:hover:not(:disabled) {
+  border-color: #21663d;
+  background: #21663d;
+}
+
+.jr-menu-page .jr-add-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.jr-menu-page .jr-add-btn:focus-visible {
+  outline: 2px solid #2f8050;
+  outline-offset: 3px;
+}
+
+.jr-menu-page .jr-add-btn:disabled,
+.jr-menu-page .jr-add-btn--disabled {
+  border-color: #d6dcd6;
+  background: #e7ebe7;
+  color: #7c857d;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.jr-menu-page .jr-hck-select-btn {
+  color: #2f8050;
+  background: #ffffff;
+  border-color: #2f8050;
+}
+
+.jr-menu-page .jr-hck-select-btn:hover:not(:disabled) {
+  color: #ffffff;
+  background: #2f8050;
+}
+
+.jr-menu-page .jr-hck-selected-btn {
+  color: #ffffff;
+  background: #21663d;
+  border-color: #21663d;
+}
+
+/* =========================================================
+   QUANTITY CONTROL
+   ========================================================= */
+
+.jr-menu-page .jr-qty-counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0;
+  min-width: 104px;
+  min-height: 36px;
+  padding: 3px;
+  border: 1px solid #cfe2cf;
+  border-radius: 11px;
+  background: #edf7ed;
+  color: #205f38;
+}
+
+.jr-menu-page .jr-qty-btn {
+  display: grid;
+  place-items: center;
+  flex: 0 0 29px;
+  width: 29px;
+  height: 29px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #287f46;
+  font-family: inherit;
+  font-size: 19px;
+  line-height: 1;
+  font-weight: 700;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jr-menu-page .jr-qty-btn:hover:not(:disabled) {
+  background: #dcefdc;
+}
+
+.jr-menu-page .jr-qty-btn:focus-visible {
+  outline: 2px solid #2f8050;
+  outline-offset: 1px;
+}
+
+.jr-menu-page .jr-qty-btn:disabled,
+.jr-menu-page .jr-qty-btn--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.jr-menu-page .jr-qty-value {
+  display: inline-block;
+  min-width: 25px;
+  padding: 0 4px;
+  color: #205f38;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 900;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+   EMPTY / LOADING-FRIENDLY EMPTY STATE
+   ========================================================= */
+
+.jr-menu-page .jr-products-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 30px 18px;
+  border: 1px dashed #cfdccf;
+  border-radius: 16px;
+  background: #f7faf5;
+  text-align: center;
+}
+
+.jr-menu-page .jr-products-empty > span {
+  display: grid;
+  place-items: center;
+  color: #2f8050;
+}
+
+.jr-menu-page .jr-products-empty strong {
+  color: #26392b;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 850;
+}
+
+.jr-menu-page .jr-products-empty p {
+  max-width: 38ch;
+  margin: 0;
+  color: #737d74;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   RESPONSIVE REFINEMENTS
+   ========================================================= */
+
+@media (max-width: 380px) {
+  .jr-menu-page {
+    --jr-page-x: 10px;
+  }
+
+  .jr-menu-page .jr-products {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
   .jr-menu-page .jr-product-image-wrap,
   .jr-menu-page .jr-food-card__media {
-    height: 128px;
-    padding: 6px;
+    height: 136px;
+  }
+
+  .jr-menu-page .jr-product-info,
+  .jr-menu-page .jr-food-card__content {
+    padding: 12px;
+  }
+
+  .jr-menu-page .jr-food-card__header-row {
+    gap: 7px;
+  }
+
+  .jr-menu-page .jr-add-btn {
+    min-width: 56px;
+    padding: 0 10px;
   }
 }
 
-@media screen and (min-width: 600px) {
+@media (min-width: 700px) {
+  .jr-menu-page .jr-products {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 285px), 1fr));
+    gap: 18px;
+  }
+
   .jr-menu-page .jr-product-image-wrap,
   .jr-menu-page .jr-food-card__media {
     height: 180px;
   }
 }
 
-@media screen and (orientation: landscape) and (max-height: 600px) {
-  .jr-menu-page .jr-product-image-wrap,
-  .jr-menu-page .jr-food-card__media {
-    height: clamp(92px, 22vh, 132px);
-    padding: 5px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .jr-menu-page .jr-product-image,
-  .jr-menu-page .jr-food-card__image {
+  .jr-menu-page .jr-product-card,
+  .jr-menu-page .jr-food-card,
+  .jr-menu-page .jr-add-btn {
     transition: none;
   }
 }
 
-/* ==========================================================================
-   JUICE ROBO — SWIGGY-STYLE HORIZONTAL PRODUCT CARDS
-   Final override: keeps the existing JSX, product data and cart behavior.
-   Product details stay on the left; existing image sits on the right.
-   ========================================================================== */
 
-.jr-menu-page .jr-products {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  align-items: stretch;
-}
+/* =========================================================
+   FIX: FORCE THE GREEN OUTLINE AROUND THE MENU WELCOME CARD
+   Covers the full "FRESHLY MADE" hero content.
+   ========================================================= */
 
-.jr-menu-page .jr-product-card,
-.jr-menu-page .jr-food-card {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(112px, 35%, 148px);
-  grid-template-rows: minmax(145px, auto);
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-  min-height: 145px;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid #e7e9e5;
-  border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 2px 9px rgba(28, 45, 31, 0.045);
-  text-align: left;
-}
-
-.jr-menu-page .jr-product-card:hover,
-.jr-menu-page .jr-food-card:hover {
-  transform: none;
-  border-color: #d9e5da;
-  box-shadow: 0 4px 13px rgba(28, 45, 31, 0.075);
-}
-
-/* The media remains the existing product image element. */
-.jr-menu-page .jr-product-card > .jr-product-image-wrap,
-.jr-menu-page .jr-food-card > .jr-food-card__media {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: stretch;
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
-  max-height: none;
-  aspect-ratio: auto;
-  padding: 10px;
-  margin: 0;
-  border: 0;
-  background: #ffffff;
-  overflow: hidden;
-}
-
-/* Also supports the image wrapper when it is nested one level deeper. */
-.jr-menu-page .jr-product-image-wrap,
-.jr-menu-page .jr-food-card__media {
-  position: relative;
-  box-sizing: border-box;
-}
-
-.jr-menu-page .jr-product-image-wrap > img,
-.jr-menu-page .jr-food-card__media > img,
-.jr-menu-page img.jr-product-image,
-.jr-menu-page img.jr-food-card__image {
-  display: block;
-  width: 88%;
-  height: 88%;
-  min-width: 0;
-  min-height: 0;
-  max-width: 88%;
-  max-height: 88%;
-  object-fit: contain;
-  object-position: center;
-  border-radius: 8px;
-  padding: 0;
-  margin: 0;
-  transform: none;
-}
-
-/* Put the text column on the left. */
-.jr-menu-page .jr-product-card > .jr-product-info,
-.jr-menu-page .jr-food-card > .jr-food-card__content,
-.jr-menu-page .jr-product-card > .jr-food-card__content,
-.jr-menu-page .jr-food-card > .jr-product-info {
-  grid-column: 1;
-  grid-row: 1;
-  align-self: stretch;
-  width: 100%;
-  min-width: 0;
-  padding: 14px 12px 13px;
-  gap: 7px;
-  background: #ffffff;
-}
-
-/* If the card's media/content wrappers are siblings but the card uses
-   nested markup, retain the same two-column presentation. */
-.jr-menu-page .jr-product-info,
-.jr-menu-page .jr-food-card__content {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.jr-menu-page .jr-food-card__header-row {
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 6px;
-  min-width: 0;
-}
-
-.jr-menu-page .jr-food-card__title,
-.jr-menu-page .jr-product-info h3 {
-  margin: 0;
-  font-size: clamp(14px, 3.5vw, 16px);
-  line-height: 1.25;
-  font-weight: 800;
-  overflow-wrap: anywhere;
-}
-
-.jr-menu-page .jr-food-card__desc,
-.jr-menu-page .jr-product-info p {
-  margin: 2px 0 0;
-  color: #687168;
-  font-size: 11px;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-}
-
-/* Keep the existing ADD/quantity control visible over the lower edge of
-   the image, matching the reference food-delivery layout. */
-.jr-menu-page .jr-product-card .jr-food-card__action-wrap,
-.jr-menu-page .jr-food-card .jr-food-card__action-wrap {
-  position: absolute;
-  z-index: 4;
-  right: 16px;
-  bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-}
-
-.jr-menu-page .jr-product-card .jr-add-btn,
-.jr-menu-page .jr-food-card .jr-add-btn {
-  min-width: 92px;
-  height: 34px;
-  padding: 0 14px;
-  border-radius: 9px;
-  background: #ffffff;
-  color: #168653;
-  border: 1px solid #e0e4df;
-  box-shadow: 0 3px 9px rgba(20, 40, 25, 0.12);
-  font-size: 12px;
-  letter-spacing: 0;
-}
-
-.jr-menu-page .jr-product-card .jr-add-btn:hover:not(:disabled),
-.jr-menu-page .jr-food-card .jr-add-btn:hover:not(:disabled) {
-  background: #f7fcf8;
-  color: #117443;
-  transform: none;
-}
-
-.jr-menu-page .jr-product-card .jr-product-bottom,
-.jr-menu-page .jr-food-card .jr-product-bottom {
-  min-width: 0;
-  gap: 6px;
-  margin-top: auto;
-  padding-top: 2px;
-}
-
-.jr-menu-page .jr-product-price,
-.jr-menu-page .jr-food-card__price {
-  font-size: 16px;
-  line-height: 1.15;
-  font-weight: 900;
-}
-
-.jr-menu-page .jr-food-card__price-row {
-  align-items: baseline;
-  justify-content: flex-start;
-  gap: 6px;
-  margin-top: auto;
-  padding-top: 2px;
-}
-
-.jr-menu-page .jr-food-card__tax-info {
-  font-size: 9px;
-  line-height: 1.2;
-}
-
-/* Small phones: preserve a useful image size without squeezing the text. */
-@media screen and (max-width: 380px) {
-  .jr-menu-page .jr-products {
-    gap: 10px;
-  }
-
-  .jr-menu-page .jr-product-card,
-  .jr-menu-page .jr-food-card {
-    grid-template-columns: minmax(0, 1fr) 108px;
-    grid-template-rows: minmax(140px, auto);
-    min-height: 140px;
-    border-radius: 12px;
-  }
-
-  .jr-menu-page .jr-product-card > .jr-product-info,
-  .jr-menu-page .jr-food-card > .jr-food-card__content,
-  .jr-menu-page .jr-product-card > .jr-food-card__content,
-  .jr-menu-page .jr-food-card > .jr-product-info {
-    padding: 12px 9px 11px;
-    gap: 6px;
-  }
-
-  .jr-menu-page .jr-product-card .jr-food-card__action-wrap,
-  .jr-menu-page .jr-food-card .jr-food-card__action-wrap {
-    right: 12px;
-    bottom: 8px;
-  }
-
-  .jr-menu-page .jr-product-card .jr-add-btn,
-  .jr-menu-page .jr-food-card .jr-add-btn {
-    min-width: 82px;
-    height: 31px;
-    padding: 0 10px;
-    font-size: 11px;
-  }
-
-  .jr-menu-page .jr-food-card__desc,
-  .jr-menu-page .jr-product-info p {
-    font-size: 10px;
-  }
-}
-
-/* Tablet/desktop: use a slightly larger image tile but keep one item per row. */
-@media screen and (min-width: 600px) {
-  .jr-menu-page .jr-products {
-    gap: 14px;
-  }
-
-  .jr-menu-page .jr-product-card,
-  .jr-menu-page .jr-food-card {
-    grid-template-columns: minmax(0, 1fr) 164px;
-    grid-template-rows: minmax(166px, auto);
-    min-height: 166px;
-  }
-
-  .jr-menu-page .jr-product-card > .jr-product-info,
-  .jr-menu-page .jr-food-card > .jr-food-card__content,
-  .jr-menu-page .jr-product-card > .jr-food-card__content,
-  .jr-menu-page .jr-food-card > .jr-product-info {
-    padding: 16px;
-    gap: 9px;
-  }
-
-  .jr-menu-page .jr-product-card .jr-food-card__action-wrap,
-  .jr-menu-page .jr-food-card .jr-food-card__action-wrap {
-    right: 18px;
-    bottom: 12px;
-  }
-}
-
-/* Landscape overrides from earlier in the file must not force a four-column
-   catalogue; keep the reference-style list readable in landscape too. */
-@media screen and (orientation: landscape) and (max-height: 600px) {
-  .jr-menu-page .jr-products {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .jr-menu-page .jr-product-card,
-  .jr-menu-page .jr-food-card {
-    grid-template-columns: minmax(0, 1fr) 126px;
-    grid-template-rows: minmax(132px, auto);
-    min-height: 132px;
-  }
-
-  .jr-menu-page .jr-product-card > .jr-product-info,
-  .jr-menu-page .jr-food-card > .jr-food-card__content,
-  .jr-menu-page .jr-product-card > .jr-food-card__content,
-  .jr-menu-page .jr-food-card > .jr-product-info {
-    padding: 10px;
-    gap: 5px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .jr-menu-page .jr-product-card,
-  .jr-menu-page .jr-food-card,
-  .jr-menu-page .jr-product-image,
-  .jr-menu-page .jr-food-card__image {
-    transition: none !important;
-  }
-}
-
-
-/* ==========================================================================
-   MATCH MENU PRODUCT IMAGES TO THE PRODUCT DETAIL IMAGE PRESENTATION
-   Uses existing image URLs/assets; only changes sizing and framing.
-   ========================================================================== */
-
-.jr-menu-page .jr-product-image-wrap {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-sizing: border-box !important;
-  padding: 10px !important;
-  overflow: hidden !important;
-  background: #ffffff !important;
-}
-
-.jr-menu-page .jr-product-image-wrap .jr-product-image {
+.jr-content.jr-menu-page > section.jr-welcome.jr-menu-welcome {
   display: block !important;
-  width: 82% !important;
-  height: 82% !important;
+  width: 100% !important;
   min-width: 0 !important;
-  min-height: 0 !important;
-  max-width: 290px !important;
-  max-height: 100% !important;
-  object-fit: contain !important;
-  object-position: center center !important;
-  margin: 0 auto !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  transform: none !important;
+  margin: 0 0 clamp(12px, 3.2vw, 18px) !important;
+  padding: clamp(14px, 3.6vw, 22px) !important;
+  border: 2px solid #2f8050 !important;
+  border-radius: clamp(14px, 3.5vw, 20px) !important;
+  background: linear-gradient(135deg, #edf7e9 0%, #e7f8e3 100%) !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  isolation: isolate;
 }
 
-/* Keep the existing image scale balanced on narrow phones. */
-@media (max-width: 380px) {
-  .jr-menu-page .jr-product-image-wrap {
-    padding: 8px !important;
-  }
-
-  .jr-menu-page .jr-product-image-wrap .jr-product-image {
-    width: 86% !important;
-    height: 86% !important;
-  }
+.jr-content.jr-menu-page > section.jr-welcome.jr-menu-welcome::after {
+  content: none !important;
 }
 
-/* Remove image zoom on hover so menu and detail views stay consistent. */
-.jr-menu-page .jr-product-card:hover .jr-product-image {
-  transform: none !important;
+.jr-content.jr-menu-page > section.jr-welcome.jr-menu-welcome > .jr-welcome-copy {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
 }

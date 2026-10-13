@@ -1,0 +1,696 @@
+all about App.jsx
+1. Imports
+The imports bring the required React features, QR-scanning functionality, backend API functions, authentication utilities, and payment utilities into App.jsx.
+React Hooks
+	•	useState → Stores and updates application data/state.
+	•	useEffect → Performs actions/side effects when the component loads or when specific data changes.
+	•	useRef → Stores a value or reference without causing the component to re-render when that value changes.
+	•	useMemo → Stores a calculated value and avoids recalculating it unnecessarily.
+	•	useCallback → Stores a function so that the function is not unnecessarily recreated during every render.
+QR Scanner
+	•	jsQR → Reads camera/image pixel data and detects QR codes.
+	•	It is used to scan the Juice Robo location QR code.
+	•	The QR code identifies the outlet so the app can load the menu for that specific location.
+Backend and Authentication
+	•	api → Handles communication between the frontend and the backend APIs.
+	•	onSessionExpired → Handles situations where the user’s login session has expired.
+	•	isTokenValid → Checks whether the user’s authentication token is still valid.
+
+
+⸻
+
+
+2. Feature Flags
+Feature flags are simple ON/OFF switches that control whether specific features or behaviours are enabled in the application.
+They allow functionality to be enabled or disabled without making major changes to the application logic.
+
+
+⸻
+
+
+3. Payment Engine Imports
+These utilities control the UPI payment process.
+	•	isMobileDevice → Checks whether the application is running on a mobile device.
+	•	persistPaymentSession → Saves the current payment session so it can be recovered when the user returns from the UPI app.
+	•	clearPaymentSession → Removes the saved payment session after the payment flow is completed or cancelled.
+	•	formatUpiAmount → Formats the payment amount correctly for the UPI payment URL.
+	•	validateBackendUpiUrl → Checks whether the UPI URL received from the backend is valid.
+	•	buildBackendUpiPaymentUrl → Creates the final UPI payment URL used to launch the selected UPI application.
+
+
+⸻
+
+
+4. Constants and Configuration
+In the application, constants and configuration values control how the application behaves.
+Constants: values that are intended to remain fixed throughout the application.
+Examples include:
+	•	Payment limits
+	•	Polling limits
+	•	GST values
+	•	Screen names
+	•	Storage keys
+	•	Default values
+Configuration
+Configuration controls how particular features of the application operate.
+This allows behaviour to be changed through settings instead of modifying the core application logic.
+
+
+⸻
+
+
+5. Outlet Resolution Helpers
+Outlet resolution helpers determine which Juice Robo outlet is currently selected.
+An outlet is identified using information such as:
+	•	Location
+	•	Machine
+The resolved outlet information is then used throughout the application to load the correct menu, cart, and order information.
+
+
+⸻
+
+
+6. Storage and Cart Utilities
+Storage Utilities-manage information that needs to be remembered by the application.
+They are used for things such as:
+	•	Login/session information
+	•	Selected outlet
+	•	Screen state
+	•	Payment session
+	•	Cart information
+Cart Utilities-keep cart products and quantities organized.
+They ensure that:
+	•	Products are correctly identified.
+	•	Quantities are correctly maintained.
+	•	Guest and logged-in carts can be handled separately.
+	•	Cart data can be merged when required.
+
+
+⸻
+
+
+7. Product and Pricing Utilities
+These helper functions manage product information and pricing calculations.
+They are responsible for:
+	•	Product details
+	•	Product quantities
+	•	Subtotal calculation
+	•	GST calculation
+	•	Final payable amount
+	•	Price formatting
+	•	Updating quantities and prices
+This keeps pricing logic separate from the main UI logic.
+
+
+⸻
+
+
+8. Centralized Router and URL Utilities
+These utilities manage application navigation and URLs from one central location.
+They are responsible for:
+	•	Creating application URLs
+	•	Updating URLs
+	•	Validating URLs
+	•	Reading outlet information from URLs
+	•	Handling navigation
+	•	Keeping the browser URL synchronized with the current application state
+The URL remains the source of truth for identifying the current outlet and relevant navigation state.
+
+
+⸻
+
+
+9. Subcomponents
+App.jsx contains smaller UI components that handle specific parts of the application.
+Scan QR-Scans the QR code and identifies the Juice Robo outlet.
+Header-
+Displays:
+	•	Juice Robo logo
+	•	Current location
+	•	Key actions
+Bottom Navigation-Provides quick navigation to the main sections of the application, such as:
+	•	Menu
+	•	Cart
+It can also display cart-related information and checkout actions.
+Toast: Displays short, temporary notifications to the user.
+For example:
+	•	Item added to cart
+	•	Login required
+	•	Payment failed
+	•	Location selected
+
+
+⸻
+
+
+10. Extract Outlet ID from QR Value
+This logic reads the data contained inside the scanned QR code.
+It:
+	1.	Reads the QR value.
+	2.	Identifies the outlet information.
+	3.	Extracts the corresponding Outlet ID.
+	4.	Uses that outlet ID to load the correct Juice Robo location/menu.
+
+
+
+⸻
+
+
+11. URL as the Source of Truth
+The application treats the URL as the source of truth for outlet/navigation information.
+This means the application can determine the current outlet and screen from the URL rather than relying only on temporary React state.
+This also allows browser navigation and page restoration to work correctly.
+
+
+⸻
+
+
+12. Scan Camera Frame
+The camera frame scanning logic:
+	1.	Captures the current camera image.
+	2.	Converts the camera frame into image/pixel data.
+	3.	Passes the pixel data to jsQR.
+	4.	Checks whether a QR code is present.
+	5.	Extracts the QR value when detected.
+	6.	Resolves the corresponding outlet.
+This enables live QR scanning using the device camera.
+
+
+⸻
+
+
+13. Request Camera Permission
+The application requests permission to access the device camera.
+Camera access is required because the camera is used to scan the Juice Robo outlet QR code.
+
+
+⸻
+
+
+14. Cleanup
+useEffect cleanup is used to release resources when they are no longer required.
+It can clean up:
+	•	Timers
+	•	Camera streams
+	•	Event listeners
+	•	Polling
+	•	Other temporary resources
+This prevents unnecessary background activity and memory/resource leaks.
+
+
+⸻
+
+
+15. Scanner Frame
+renderScanner displays the camera preview area used for QR scanning.
+It provides the visual scanner interface while the camera continuously captures frames.
+
+
+⸻
+
+
+16. Main UI
+The Main UI displays the primary application interface.
+It contains the major parts of the application, including:
+	•	Header
+	•	Main content
+	•	Navigation
+	•	User actions
+	•	Menu
+	•	Cart
+	•	Account-related screens
+When QR scanning is required, the live camera interface is also displayed.
+
+
+⸻
+
+
+17. Header
+The Header() component renders the top navigation area.
+It displays:
+	•	Juice Robo logo
+	•	Current location
+	•	Important actions
+It provides the user with the current outlet context while navigating through the application.
+
+
+⸻
+
+
+18. Camera Permission Screen
+The permission screen is responsible for guiding the user through granting camera access.
+Once permission is granted, the application can start the QR scanner.
+
+
+⸻
+
+
+19. Header and Bottom Navigation Components
+Header()
+Renders the top navigation area containing:
+	•	Logo
+	•	Location
+	•	Key actions
+BottomNav()
+Renders the bottom navigation area.
+It provides quick access to:
+	•	Menu
+	•	Cart
+It can also display the cart summary and checkout-related actions.
+Toast()
+Displays temporary notifications without requiring the user to navigate away from the current screen.
+
+
+⸻
+
+
+20. Main Application Controller
+App.jsx acts as the main controller of the application.
+It coordinates:
+	•	URL and outlet
+	•	Authentication
+	•	Navigation
+	•	Products
+	•	Cart
+	•	Orders
+	•	Payments
+	•	Payment verification
+	•	Session management
+
+
+⸻
+
+
+21. URL and Outlet State
+The application uses the URL to determine the outlet ID.
+The outlet ID is then used to:
+	1.	Identify the Juice Robo location.
+	2.	Load the appropriate outlet information.
+	3.	Load the available menu.
+	4.	Associate the cart and order with that outlet.
+
+
+⸻
+
+
+22. Authentication State
+Authentication state tracks the user’s login status.
+The application can determine whether the user is:
+	•	Logged in
+	•	Logged out
+	•	Session expired
+This state controls access to authentication-required functionality such as payment and profile features.
+
+
+⸻
+
+
+23. Screen and Navigation State
+The application maintains the current screen and navigation state.
+It can restore saved information from localStorage, including:
+	•	Current screen
+	•	Payment information
+	•	Order information
+	•	Other persisted application state
+The application also updates the browser URL to match the current screen and outlet.
+It uses:
+	•	pushState
+	•	replaceState
+without reloading the page.
+
+
+⸻
+
+
+24. Product and Location State
+This state stores:
+	•	Selected product information
+	•	Current Juice Robo outlet
+	•	Current location
+	•	Machine information
+These values are used throughout the application to ensure the user is interacting with the correct outlet and products.
+
+
+⸻
+
+
+25. Cart State and Calculations
+Cart state manages:
+	•	Cart items
+	•	Product quantities
+	•	Subtotal
+	•	GST
+	•	Final payable amount
+The application continuously updates these values whenever the cart changes.
+
+
+⸻
+
+
+26. Orders, Payment and Status State
+This state manages information related to:
+	•	Current order
+	•	Payment process
+	•	Payment status
+	•	Order status
+	•	Collection code
+It allows the application to track the complete checkout process from order creation through payment verification.
+
+
+⸻
+
+
+27. Payment Polling Refs and Controls
+Payment polling checks the backend repeatedly to determine whether the payment has been completed.
+The application limits polling to 5 attempts.
+This prevents the application from continuously requesting the backend if the payment status cannot be confirmed.
+
+
+⸻
+
+
+28. Payment Verification Function
+The payment verification function contacts the backend and checks the current payment status.
+The application verifies the backend response before displaying the final payment status screen.
+This prevents the frontend from incorrectly showing payment success simply because the user returned from the UPI application.
+
+
+⸻
+
+
+29. paymentCandidates
+paymentCandidates is a list of possible field names and response locations where the backend may return payment status.
+Different backend responses may use different names.
+For example, the payment status may be returned as:
+	•	payment_status
+	•	paymentStatus
+	•	payment_state
+	•	paymentState
+	•	status
+	•	orderStatus
+	•	order_status
+It can also exist inside nested response objects.
+The application checks these possible locations to reliably find the payment status.
+
+⸻
+
+30. normalizedPaymentState
+Out converts different payment statuses received from the backend into one consistent format
+
+⸻
+
+31.paidStates
+paidStates defines the possible backend values that represent a successful payment.
+
+The verification logic compares the backend response against these values.
+
+⸻
+
+32.failed states
+failedStates defines the possible backend values that represent a failed payment.
+
+If the normalized payment state matches one of these values, the application treats the payment as failed.
+
+⸻
+
+33.Backend collection Code
+The backend collection code logic searches multiple possible response fields and response locations.
+
+⸻
+
+34.MergeOrder
+Merge order combines newly received order information with the existing order information. 
+
+⸻
+
+35. Successful Payment 
+When the backend confirms that payment is successful:
+	1.	Payment polling stops.
+	2.	The payment state becomes successful.
+	3.	The order is treated as paid.
+	4.	The collection code can be extracted.
+	5.	The application displays the payment-success screen.
+
+⸻
+
+36.Payment Poll Attempts 
+Maximum Number of Payment verification attempts = 5 
+
+⸻
+
+37. After maximum polling attempts 
+Payment is not declared as successful
+Resulting in pending/unconfirmed. 
+User is shown correctly-payment pending/unconfirmed
+
+⸻
+
+38. Cancel Payment — handleCancelPayment()
+Purpose: Allows the user to leave the current payment flow without falsely marking the order as paid.
+The function handles cancellation of the pending UPI payment process.
+Its responsibilities include:
+- Stopping active payment polling.
+- Clearing or resetting relevant payment UI state.
+- Returning the user to the appropriate screen.
+- Managing the persisted payment session according to the cancellation logic.
+Important distinction: Cancelling the frontend payment flow does not necessarily cancel a transaction already initiated in a UPI application. Payment status must still be verified with the backend when necessary.
+
+⸻
+
+39.Polling Lifecycle and Cleanup
+This section uses useEffect() to control when payment polling is allowed to run.
+The cleanup logic calls stopPolling() when:
+- The user leaves the upi-payment screen.
+- The payment session is no longer available.
+- The effect is cleaned up before it runs again.
+Why this matters: It prevents a previous payment-verification process from continuing unnecessarily after the user changes screens.
+
+⸻
+
+40.Detect Returning From the UPI App
+The browser-return handler detects when the user returns to Juice Robo after opening a UPI application.
+It listens for three browser events:
+- pageshow
+- focus
+- visibilitychange
+Before starting polling, it checks that:
+1. The current screen is upi-payment.
+2. A payment session exists.
+3. A UPI app was launched.
+4. The browser was previously backgrounded.
+5. The five-attempt polling limit has not been reached.
+6. Another polling process is not already active.
+
+If these conditions are satisfied, it calls startPolling(false).
+This prevents the three browser events from accidentally starting duplicate payment-verification loops.Detect Returning From the UPI App
+The browser-return handler detects when the user returns to Juice Robo after opening a UPI application.
+It listens for three browser events:
+- pageshow
+- focus
+- visibilitychange
+Before starting polling, it checks that:
+1. The current screen is upi-payment.
+2. A payment session exists. 
+3. A UPI app was launched.
+4. The browser was previously backgrounded.
+5. The five-attempt polling limit has not been reached.
+6. Another polling process is not already active.
+If these conditions are satisfied, it calls startPolling(false).
+This prevents the three browser events from accidentally starting duplicate payment-verification loops.
+
+⸻
+
+41. Detect Outlet Changes
+The prevOutletRef reference stores the previously selected outlet.
+When the outlet changes, the application:
+1. Updates the stored previous outlet.
+2. Clears the existing product list.
+3. Resets the selected product and variant.
+4. Loads the cart associated with the new outlet.
+5. Updates the cart state.
+Purpose: Prevents products and cart information from one outlet from being carried over incorrectly to another outlet.
+
+⸻
+
+42. Load Location, Machine, and Menu Data
+The loadData() function runs inside a useEffect() whenever outlet or menuItemCode changes.
+
+⸻
+
+43. Browser Back/Forward Navigation — popstate
+Browser Back/Forward Navigation — popstate
+
+⸻
+
+44.Protect the Profile Screen
+A separate useEffect() checks whether the current screen is profile
+
+⸻
+ 
+45. Handle Session Expiration
+The handleSessionExpiry() function resets the authentication state when the login session expires.
+
+⸻
+
+46. Monitor Authentication Validity:
+auth utilizes from api.js are imported to app.jsx - helps in session monitoring
+
+⸻
+
+47. Login — handleLogin(event)
+Authenticates the user and restores their cart after login.
+if the login fails, the session displays an error - EG:login occured when wrong credentials are entered
+
+⸻
+ 
+48. Logout — handleSignOut()
+This function signs the user out of the application.
+
+⸻
+
+49. Save Profile — handleSaveProfile(event)
+Saves the user's profile information in the application
+this only updates the frontend, it doesn't call backend profile update-API
+
+⸻
+
+50. Add Product to Cart — handleAddToCart()
+This function adds a selected product and variant to the cart.
+handleAddToCart() function saves the cart locally, it does not call backend add -to-cart api.
+
+⸻
+
+51.Update Cart Quantity — updateQuantity()
+52.Remove a Product — removeProduct()
+53.Clear Cart — clearCart()
+
+⸻
+
+54.Open Cart — openCart()
+The HCK restriction keeps the Juice Robo cart navigation separate from the helmet-cleaning flow.
+
+⸻
+
+55.Begin Checkout — startCheckout()
+This function validates whether the user can proceed to payment.
+
+⸻
+
+56.Create or Resume Payment — handlePayment()
+This function either resumes an existing payment session or creates a new order.
+- Resume payment: Resets the polling state and opens the payment screen without creating another order.
+- Create new order: Validates the cart, calls api.createOrder(), retrieves the order IDs, builds and validates the UPI URL, and saves the payment session.
+- Error handling: Displays an error and resets the payment status if order creation or UPI validationpayment fails.
+
+Important: Creating an order does not mean the payment is successful so, must be verified separately.
+
+⸻
+
+57. Prepare the UPI Payment Flow — handleProceedWithUpi()
+This function makes the existing payment session ready for UPI payment.
+
+this function does not itself launch the UPI app or open the app chooser. It prepares the payment state; the actual app-selection handler is handleSelectUpiApp.
+
+⸻
+
+58. Manually Check Payment Status — handleCheckPaymentStatus
+This function (bbutton in the UPI payments screen) starts payment verification for an existing order.
+
+
+⸻
+59.Launch the Selected UPI App — handleSelectUpiApp()
+This function handles the actual UPI-app launch.
+
+
+⸻
+60.Open Order History — openOrderHistory()
+
+
+⸻
+61.Main Screen Renderer
+- Error state: Displays the relevant logo, error message, details, and a Retry button when initial data loading fails.
+- Loading state: Displays the logo, loading indicator, and a message while data is loading.
+
+
+⸻
+62.QR Scanner Screen
+When screen === "scan" or no outlet is available, the application renders ScanQRScreen.
+The scanner component handles:
+- Camera permission.
+- Live camera access.
+- Frame capture and QR decoding.
+- Outlet extraction
+Once a valid outlet is resolved, the application can load the appropriate menu.
+
+
+⸻
+63.Login Screen Rendering
+When screen === "login", the application renders LoginScreen.
+The login handler validates the credentials, communicates with the backend, restores the cart, and redirects the user to the intended screen.
+
+
+⸻
+64.Main Application Layout-
+- DesktopBlocker: Handles the desktop-blocking screen.
+- Header: Shows the logo and profile navigation.
+- Screen Container: Displays the current screen.
+- BottomNav: Provides navigation and cart actions.
+- UPI App Chooser: Allows users to select a payment app.
+- Toast: Shows temporary messages.
+- Global Error: Displays application errors.
+
+
+⸻
+67. Profile and Order History
+- Profile: Displays user details and provides options to save the profile, log out, view orders, and navigate.
+- Order History: Displays previous orders with formatted prices and a Back button.
+
+
+⸻
+68. Location and Machine Selection
+Displays available locations and machines. Users can select them and continue to the menu if location selection is enabled.
+
+
+⸻
+69. Home Screen
+Displays products, location, and machine details. Users can open the menu, view products, access their profile, or view order history.
+
+⸻
+70. Menu Screen
+Displays products and cart details. Users can select products, update quantities, and add items to the cart. HCK users can also select packages.
+
+⸻
+71. Product Detail Screen
+Displays the selected product, variants, image, and quantity. Users can select a variant, update the quantity, add the product to the cart, or return to the menu.
+
+⸻
+72. Cart Screen
+Displays cart items, subtotal, GST, and total amount. Users can update quantities, remove items, clear the cart, change the collection location, or proceed to checkout.
+
+⸻
+73. Location Confirmation Screen
+Displays the selected location, machine, and order total. Users can return to the cart or confirm the order to start payment.
+
+⸻
+74. UPI Payment Screen
+Displays payment details, amount, and current payment status. Users can proceed with UPI, check payment status, or cancel. The main controller handles payment verification.
+
+⸻
+75. Payment Failure Screen
+Displays the failed payment details and error message. Users can retry payment or return to the cart or menu.
+
+⸻
+76. Payment Success Screen
+Displays successful order details and the collection code. Users can return home, open the menu, or view order history. Success is determined by payment verification.
+
+
+⸻
+77. Bottom Navigation -bottom nav bar
+Displays navigation and cart actions on supported screens. It is hidden on screens such as profile, order history, product details, and payment screens.
+
+
+⸻
+78. UPI App Chooser, Toasts, and Global Errors
+- UPI App Chooser: Contains options for PhonePe, Google Pay, Paytm, BHIM, and CRED.
+- Toast: Displays temporary messages that disappear after 2.4 seconds.
+- Global Errors: Displays application errors outside the login and UPI payment screens.

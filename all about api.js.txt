@@ -1,0 +1,109 @@
+eall about api.js
+
+Lesson - 01: API.js Foundations
+An API (Application Programming Interface) allows two software systems to communicate and exchange data.
+In Juice Robo:
+- Frontend: Displays the menu, cart, and checkout screens.
+- Backend: Processes requests and provides data.
+- API: Carries requests and responses between them.
+APIs help us the frontend to talk with the backend 
+sends & processes requests
+=========================================================
+It connects several major parts of Juice Robo:
+- Login and registration
+- Menu and product loading
+- Location and machine selection
+- Cart synchronization
+- Order submission
+- UPI payment information and order status
+==========================================================
+Lesson - 2: API Configuration
+API_BASE (https://tptest.juicerobo.com/tporder/api) handles Juice Robo login, location loading, and menu item retrieval.
+ORDER_API_BASE (https://tptest.juicerobo.com/tpordermaster/api) handles order retrieval and payment-status checks.
+
+import.meta.env
+import.meta.env lets your Vite application access environment variables, such as API URLs, configured in .env files.
+VITE_JR_API_BASE — the environment variable containing the API URL.
+|| — uses the default URL if the variable is missing or empty.
+Security: Variables prefixed with VITE_ are exposed to frontend code, so never store secret API keys or passwords in them.
+===========================================================
+Lesson - 3: JavaScript Helpers
+getOrgId() – Retrieves the organization ID from storage, URL parameters, or the default configuration.
+getStoreId() – Retrieves the saved collection store ID.
+saveStoreId() – Saves the selected store ID in browser storage.
+unwrap() – Removes nested data wrappers from API responses.
+asArray() – Extracts arrays of products, locations, orders, or other records from API responses.
+normalizeError() – Converts backend error responses into readable messages.
+firstDefined() – Returns the first value that is not undefined, null, or an empty string.
+===========================================================
+Lesson - 4: API Requests and Errors
+request() – Sends HTTP requests from the frontend to the Juice Robo backend.
+buildHeaders() – Adds required headers, API credentials, and the Bearer token when needed.
+fetch() – Sends the actual network request to the backend.
+Response parsing – Reads the backend response as JSON or text.
+Error handling – Converts failed requests into readable error messages.
+skipAuth: true – Sends the request without adding the stored Bearer token.
+401 Unauthorized – Triggers session-expiration handling when authentication is required.
+Successful request – Returns the parsed response data to the calling function.
+===========================================================
+Lesson 5 — Data Normalization
+unwrap() extracts nested data, while asArray() finds and returns arrays from API responses. normalizeError() converts backend errors into readable messages.
+===========================================================
+Lesson 6: Login and User Profile
+api.login() — Accepts an email or phone number and password.
+/v1/auth/signin — Backend endpoint used to log in.
+Input validation — Checks that the identifier and password are provided.
+normalizeAuth() — Standardizes the login response and user details.
+Token storage — Saves the returned token in localStorage under three keys.
+User storage — Saves normalized user details under juice_robo_user and user.
+isAuthenticated — Set to true when a token exists in the normalized response.
+Login flow->Enter credentials → Validate → Call API → Normalize response → Save token and user.
+Your file stores user data locally after login. That alone does not guarantee the token is valid or that the session remains authenticated.
+============================================================
+Lesson 7: Menu, Locations and Machines
+api.menuItems() — Fetches menu items from the Item Master API.
+api.products() — Retrieves product data through its configured API method.
+api.locations() — Fetches available outlets using the organization ID.
+api.machines() — Retrieves machines associated with the available locations.
+asArray() — Helps convert different response formats into arrays for processing.
+Flow: Load locations → Fetch menu items and machines → Normalize data → Display in the UI
+============================================================
+Lesson 8: Cart and Order Flow
+- api.addCart() — Sends cart items and location information to the Order Master API.
+- /v1/addcart — Adds or updates cart data and returns the cart ID.
+- api.submitOrder() — Submits the cart using its cart ID.
+- /v1/order/submit — Creates the order from the submitted cart.
+- api.orders() — Retrieves orders; can help recover an order ID if submission does not return one.
+- api.orderStatus() — Checks order status using both cart ID and order ID. api(20260903-053938).js
+
+Order flow -> Add cart → Obtain valid cart UUID → Submit order → Resolve order ID → Check order status
+The cart ID and order ID are different values and must not be substituted for each other.
+============================================================
+Lesson 9: UPI and Payment Status
+createOrder() — Creates the cart and submits the order.
+qrString — Contains the backend-provided UPI payment details.
+api.orderStatus(cartId, orderId) — Checks payment/order status through the backend.
+api.orders() — Retrieves recent orders when order details need to be recovered.
+normalizeOrder() — Standardizes the order response.
+
+Payment Flow: Create order → Get UPI details → Open UPI app → Verify payment with backend → Show success or failure
+returning from the upi doesn't mean payment succeeded, JR must onfirm payment status from backend - success/failure/processing.
+============================================================
+Lesson 10: Debugging and Practical Review
+a. How to debug an API request?
+Step 1: Check the Console - Look for the [Juice Robo] GET/POST URL log.
+Step 2: Inspect the Network Tab -  Verify the request URL, method, payload, status code, and response in the Network tab.
+Step 3: Check the error message - normalizeError() helps by extracting error messages.
+b. Common problems and what to check?
+401 Unauthorized: Check if the Bearer token is valid.
+Network Error: Check the API URL and internet connection.
+Empty Menu/Locations: Check the response data and asArray().
+Cart/Order Failure: Check the payload, cart ID, and backend response.
+Payment Pending: Check the backend order status before showing success.
+c. Practical debugging checklist
+Confirm the endpoint — make sure the correct Juice Robo API base and path are being used.
+Check the request — verify the method, headers, payload, and required IDs.
+Read the status code — distinguish authentication failures, backend errors, and network failures.
+Inspect the response — confirm whether the backend returned the expected data structure.
+Retest the complete flow — for payments, verify backend confirmation before displaying Payment Success.
+NOTE->Avoid logging access tokens, API secrets, or sensitive payment information, especially in production.

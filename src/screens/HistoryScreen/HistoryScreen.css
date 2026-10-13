@@ -51,7 +51,8 @@
 }
 
 /* =========================================================
-   BACK BUTTON
+   BACK TO PROFILE BUTTON
+   Styled to match .jr-profile-back on the Profile screen.
    ========================================================= */
 
 .jr-history-back {
@@ -63,21 +64,21 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: 7px !important;
 
   margin: 0 0 16px !important;
-  padding: 0 14px !important;
+  padding: 0 12px 0 8px !important;
 
-  border: 1px solid #e8e8e1 !important;
-  border-radius: 8px !important;
+  border: 1px solid #dcebd8 !important;
+  border-radius: 999px !important;
 
-  background: #f3f3ed !important;
-  color: #171717 !important;
+  background: #eaf6e5 !important;
+  color: #246b3b !important;
 
   font-family: inherit !important;
   font-size: 12px !important;
   line-height: 1 !important;
-  font-weight: 700 !important;
+  font-weight: 750 !important;
   letter-spacing: -0.01em !important;
   white-space: nowrap !important;
   text-align: center !important;
@@ -87,17 +88,49 @@
   -webkit-appearance: none !important;
   -webkit-tap-highlight-color: transparent !important;
 
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  box-shadow: 0 2px 5px rgba(40, 127, 70, 0.06) !important;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease !important;
 }
 
+.jr-history-back-arrow {
+  width: 20px !important;
+  height: 20px !important;
+  flex: 0 0 20px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border-radius: 6px !important;
+  background: #d9f0ce !important;
+  color: #287f46 !important;
+
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+
+.jr-history-back-label {
+  display: inline-block;
+  color: #246b3b !important;
+}
+
 .jr-history-back:hover:not(:disabled) {
-  background: #eaeae3 !important;
-  border-color: #d6d6ce !important;
+  background: #def0d7 !important;
+  border-color: #c9e3c1 !important;
+}
+
+.jr-history-back:hover:not(:disabled) .jr-history-back-arrow {
+  background: #cde9c0 !important;
 }
 
 .jr-history-back:active:not(:disabled) {
   transform: scale(0.97) !important;
+}
+
+.jr-history-back:focus-visible {
+  outline: 2px solid #287f46 !important;
+  outline-offset: 2px !important;
 }
 
 .jr-history-back:disabled {
@@ -1010,7 +1043,6 @@
     font-size: 9px;
   }
 }
-.jr-history-back:focus-visible,
 .jr-order-summary:focus-visible,
 .jr-history-empty-reset:focus-visible,
 .jr-history-clear:focus-visible {

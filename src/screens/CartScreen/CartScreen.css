@@ -33,22 +33,52 @@
 .jr-cart-page *, .jr-cart-page *::before, .jr-cart-page *::after { box-sizing:border-box; }
 .jr-cart-page button { font: inherit; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 
-.jr-cart-back {
-  align-self:flex-start !important;
-  height:34px !important;
-  min-height:34px !important;
-  margin:0 0 18px !important;
-  padding:0 13px !important;
-  border:1px solid var(--jr-border) !important;
-  border-radius:9px !important;
-  background:var(--jr-soft) !important;
-  color:var(--jr-text) !important;
-  font-size:12px !important;
-  font-weight:700 !important;
-  line-height:1 !important;
-  white-space:nowrap !important;
+.jr-cart-page .jr-cart-back {
+  align-self: flex-start !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: fit-content !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  margin: 0 0 18px !important;
+  padding: 0 15px !important;
+  border: 1px solid rgba(47, 128, 80, .10) !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #f0fae9 0%, #e7f5df 100%) !important;
+  color: #155634 !important;
+  box-shadow:
+    0 3px 10px rgba(33, 107, 67, .07),
+    inset 0 1px 0 rgba(255, 255, 255, .8) !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  transition:
+    background .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease !important;
 }
-.jr-cart-back:active { transform:scale(.98); }
+
+.jr-cart-page .jr-cart-back:hover {
+  background: #e5f4dc !important;
+  box-shadow: 0 4px 12px rgba(33, 107, 67, .12) !important;
+}
+
+.jr-cart-page .jr-cart-back:active {
+  transform: scale(.97) !important;
+}
+
+.jr-cart-page .jr-cart-back:focus-visible {
+  outline: 2px solid var(--jr-green) !important;
+  outline-offset: 3px !important;
+}
 
 .jr-cart-heading { margin:0 0 18px !important; }
 .jr-cart-heading .jr-eyebrow,

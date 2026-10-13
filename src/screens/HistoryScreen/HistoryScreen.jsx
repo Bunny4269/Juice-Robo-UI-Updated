@@ -45,6 +45,19 @@ export default function HistoryScreen({
   );
 
   /* =======================================================
+     BACK TO PROFILE NAVIGATION
+
+     App.jsx owns screen navigation. The history screen invokes
+     its callback instead of hard-coding a URL or reloading the app.
+     ======================================================= */
+
+  function handleBackToProfile() {
+    if (typeof onBack === "function") {
+      onBack();
+    }
+  }
+
+  /* =======================================================
      KEEP FIRST ORDER OPEN WHEN DATA CHANGES
      ======================================================= */
 
@@ -531,14 +544,15 @@ export default function HistoryScreen({
       <button
         type="button"
         className="jr-history-back"
-        onClick={onBack}
+        onClick={handleBackToProfile}
         aria-label="Back to Profile"
+        title="Return to your profile"
       >
-        <span aria-hidden="true">
+        <span className="jr-history-back-arrow" aria-hidden="true">
           ←
         </span>
 
-        <span>
+        <span className="jr-history-back-label">
           Back to Profile
         </span>
       </button>

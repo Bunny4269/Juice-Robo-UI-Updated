@@ -33,7 +33,7 @@ export default function HomeScreen({
   const activeLogo = isHck ? HCK_LOGO : JUICE_ROBO_LOGO;
 
   return (
-    <main className="jr-content jr-home-page">
+    <main className={`jr-content jr-home-page${isHck ? " jr-home-page--hck" : ""}`}>
 
       {/* =================================================
           HERO / WELCOME
@@ -56,9 +56,7 @@ export default function HomeScreen({
               </>
             ) : (
               <>
-                Your favourite
-                <br />
-                <em>juice, your way.</em>
+                Welcome to <span className="jr-brand-highlight">Juice Robo</span>
               </>
             )}
           </h1>
@@ -66,7 +64,7 @@ export default function HomeScreen({
           <p>
             {isHck
               ? "Choose your cleaning package and refresh your helmet in minutes."
-              : "Pick your juice, choose your quantity and collect it fresh from your Juice Robo machine."}
+              : "Choose your favourite juice and skip the queue. Freshly pressed, pure sugarcane craft."}
           </p>
 
         </div>
@@ -232,6 +230,17 @@ export default function HomeScreen({
 
       </section>
 
+      {!isHck && (
+        <section className="jr-loyalty-banner" aria-label="Juice Robo loyalty programme">
+          <div className="jr-loyalty-copy">
+            <span>LOYALTY PROGRAM</span>
+            <h2>Earn points on every sip.</h2>
+            <p>Enjoy more of your favourites with Juice Robo rewards.</p>
+          </div>
+          <div className="jr-loyalty-mark" aria-hidden="true">★</div>
+        </section>
+      )}
+
     </main>
   );
 }
@@ -303,7 +312,7 @@ function ProductCard({
 
   return (
     <button
-      className="jr-product-card"
+      className={`jr-product-card${isHck ? " jr-product-card--hck" : ""}`}
       type="button"
       onClick={handleSelect}
       aria-label={`Select ${name}`}

@@ -1,0 +1,262 @@
+all about App.css
+
+Lesson-01 : CSS Foundations
+-CSS stands for Cascading Style Sheets. 
+-It tells the browser how HTML elements should appear.
+CSS styles a button by adding - width, height, border radius, background & color.
+- React creates the button.
+- CSS styles the button.
+- JavaScript handles what happens when you click it.
+
+1. The 3 main parts of CSS: Selector, property & value
+Selector - identifies which element to style
+Property - E.g.: width - identifies which element you want to change
+Value - defines the setting assigned to it - E.g.: width = 42px
+Example syntax  : selector {
+  		property: value;
+		}
+
+2. CSS selectors — choosing what to style
+Eg: .jr-header - element in JR class
+#root - element with ID - root button - all buttons
+.jr-header select - select an element inside header
+.jr-cart-button:active - Cart button's action while pressed
+.jr-bottom-nav > button - select buttons that are directly inside the bottom navigation bar.
+> means one level down — no extra container in between.
+the . selects a class
+the # selects an ID
+The > symbol is more restrictive
+Eg: .jr-bottom-nav > button {
+  flex: 1 1 0;
+}
+This selects buttons directly inside .jr-bottom-nav, not buttons nested inside another element.
+
+3.Your Design Variables:
+Design variables are reusable values (like colors, spacing, and font sizes) defined once in CSS and used throughout the application for consistent styling.
+Eg: .jr-bottom-nav > button {
+  			     color: green;
+				}
+- .jr-bottom-nav → Bottom navigation bar.
+- > → Directly inside.
+- button → A button.
+- color: green; → Makes the button text green.
+Make the text green on buttons that are directly inside the bottom navigation bar.
+
+=======================================================================
+
+Lesson-02: CSS Specificity and the Cascade
+-What is CSS specificity? Specificity means how strongly a CSS selector targets an element.
+Eg: Imagine your Cart button matches both rules.
+- button says: Make the text black.
+- .jr-cart-button says: Make the text green.
+Result: The text becomes green because a class selector is more specific than a simple element selector.
+-CSS specificity determines which matching style gets priority.
+CSS cascade - The cascade decides which CSS declaration applies when multiple rules compete.
+Eg: .jr-header-logo {
+  width: 100px;
+}
+
+.jr-header-logo {
+  width: 150px;
+}
+second rule wins because it appears later (latest).
+Therefore, width = 150px
+
+We use CSS specificity to avoid any other rule ovveride CSS of same element.
+
+What about !important? - !important gives that declaration priority over normal declarations in the cascade.
+=======================================================================
+Lesson-03: CSS Box Model and Spacing
+Box Sizing:
+box-sizing controls whether an element’s width and height include its padding and border.
+The important part is border-box makes the declared width include the content, padding, and border.
+bordeer box width = total width including content, padding & border.
+=======================================================================
+Lesson-04: Flexbox and Layout
+Flexbox helps you to arrange elements horizontally or vertically and control their alignment and spacing.
+a. Display: flex - this turns a container into a flexbox layout
+Eg: .jr-bottom-nav {
+  	display: flex;
+	}
+By default, its direct children are arranged side by side.
+b. Flex Direction: Controls the direction of the elements.
+Eg: flex-direction: row; - Elements appear horizontally, side by side
+    flex-direction: column; - elements appear vertically, one below other.
+c. justify-content; - Controls how items are positioned along the main axis.
+Eg: justify-content: space-between; - This puts space between the items.
+frequently used values
+========================================================================
+Lesson-05
+- flex-start — items at the start.
+- center — items in the center.
+- flex-end — items at the end.
+- space-between — maximum available space between items.
+d. Align items:
+align-items controls how items align across the cross-axis of a Flexbox container.
+Eg: .jr-bottom-nav {
+  		display: flex;
+  		align-items: center;
+		}
+align-items: center aligns items in the center across the cross-axis.
+=======================================================================
+Lesson-06: Positioning & overflow
+a.position - Controls how an element is positioned on the page.
+static = normal position; relative = moves from normal position; absolute = positioned relative to an ancestor; fixed = stays fixed on screen; sticky = sticks while scrolling.
+b. top, right, bottom, left
+top, right, bottom, and left control how far an element moves from its reference position.
+Eg: .jr-cart-button {
+  	position: absolute;
+  	top: 10px;
+  	right: 10px;
+	}
+This positions the cart button 10px from the top and right of its positioning reference.
+c. Overflow:Controls what happens when content exceeds its container.
+visible = content overflows; hidden = clips extra content; auto = scrolls when needed; scroll = always enables scrolling.
+Eg: .jr-mobile-frame {
+  	overflow-y: auto;0
+	}
+This allows vertical scrolling when the content is taller than the mobile frame.
+
+d. z-index : 
+Controls which overlapping element appears in front.
+z-index controls which element appears in front when elements overlap; a higher value usually appears on top.
+Eg: A Juice Robo header with z-index: 10 can appear above content with z-index: 1.
+=======================================================================
+Lesson - 07: Colors, Typography & Design
+These CSS properties control how Juice Robo looks and feels.
+a. Colors: Colors define the background, text, borders, and buttons.
+Eg: .jr-button {
+  	background-color: #2f8050;
+  	color: white;
+	}
+background-color — color behind the content.
+color — text color.
+b. Typography: Typography controls how text looks.
+Eg: .jr-title {
+ 	  font-size: 24px;
+	  font-weight: 700;
+	  font-family: Arial, sans-serif;
+	}
+font-size — text size.
+font-weight — text thickness.
+font-family — font style.
+c. Borders and Rounded Corners
+Eg: .jr-card {
+  	border: 1px solid #e9e8e1;
+  	border-radius: 16px;
+	}	
+- border — adds an outline around an element.
+- border-radius — rounds the corners.
+d. Shadows:
+Shadows help cards and buttons stand out from the background.
+Eg: .jr-card {
+  	box-shadow: 0 4px 16px rgba(20, 33, 20, 0.045);
+	}
+box-shadow adds a shadow around an element
+e. CSS variables: 
+Your stylesheet defines reusable design values inside :root.
+Benefit: Change the variable once to update the color wherever it is used.
+
+quick recap:
+color = text color; 
+background-color = background; 
+font-size = text size; 
+font-weight = thickness; 
+border-radius = rounded corners; 
+box-shadow = shadow; 
+var() = reuse a CSS variable.
+=======================================================================
+Lesson - 06: Responsive Design
+Responsive design means making your Juice Robo UI fit different screen sizes, such as mobile phones, tablets, and desktops.
+a. media queries: 
+A media query applies CSS only when a specified condition is met.
+Eg: @media (max-width: 400px) {
+  .jr-header-logo {
+    width: 90px;
+  }
+}
+When the screen width is 400px or less, the logo becomes 90px wide.
+b. Adjust layouts for smaller screens
+.jr-product-list {
+  display: flex;
+  gap: 16px;
+}
+
+@media (max-width: 400px) {
+  .jr-product-list {
+    gap: 8px;
+  }
+}
+On narrow screens, the gap between products reduces from 16px to 8px.
+c. Use flexible widths
+Eg: .jr-card {
+  width: 100%;
+  max-width: 400px;
+}
+- width: 100% — fills the available container width.
+- max-width: 400px — prevents the card from growing beyond 400px.
+
+-This helps avoid layouts that are too wide on smaller screens.
+
+d. Avoid fixed widths when flexibility is needed
+for more flexibility, add max-width when needed.
+
+quick recap:
+Responsive design: Adapts UI to different screen sizes.
+Media query: Applies CSS under specified conditions.
+max-width: Sets the maximum width.
+width: 100%: Uses the available container width.
+=======================================================================
+Lesson - 07: Components and CSS debugging
+a. What is a component?
+A component is a reusable part of your UI - eg: header, product card or cart button
+Eg: .jr-header {
+  background-color: white;
+  padding: 16px;
+}
+This CSS styles elements with the class jr-header.
+A React component creates UI; CSS controls how it looks.
+
+b. How do you find the CSS for an element?
+Search in app.css for desired button to find its styling rules.
+If the class appears multiple times, check every matching rule.
+
+c.How do you debug a CSS problem?
+Inspect the element in your browser's developer tools.
+Find its CSS class in app.css.
+Check whether any another rule overrides the property.
+Test one small change.
+Verify the result on the relevant screen sizes.
+
+d.Common Juice Robo CSS problems
+- Logo too small: Check width and repeated rules.
+- Button color wrong: Check specificity and later rules.
+- Page won't scroll: Check overflow and height.
+- Mobile layout broken: Check media queries and fixed widths.
+- Element behind another: Check z-index and position.
+
+e. Debugging Example:
+Imagine you change the cart button to green, but it remains black.
+.jr-cart-button {
+  background-color: green;
+}
+.jr-cart-button {
+  background-color: black;
+}
+latest rule is the second one, so color = black
+fix: Update or remove the conflicting rule rather than adding more CSS unnecessarily.
+=======================================================================
+Quick revision
+- Component: A reusable UI part.
+- CSS class: Identifies elements to style.
+- Inspect: Examine an element and its applied styles.
+- Override: A competing CSS rule takes priority.
+- Debugging: Find the cause of a problem and fix it.
+5-rules to remember
+padding = inside; margin = outside.
+display: flex = arrange items.
+overflow-y: auto = vertical scrolling when needed.
+z-index = control which overlapping element appears in front.
+Repeated CSS rules can override earlier styles.
+
+

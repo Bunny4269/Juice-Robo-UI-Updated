@@ -564,17 +564,45 @@ function HomeIcon() {
    ========================================================= */
 
 function PaymentSuccessGif() {
-  const gifSrc =
-    `${import.meta.env.BASE_URL}assets/Payment-successful.gif`;
-
   return (
     <div className="jr-payment-success-animation" aria-hidden="true">
-      <img
-        src={gifSrc}
-        alt=""
-        className="jr-payment-success-gif"
-        draggable="false"
-      />
+      <svg
+        className="jr-payment-success-hero-art"
+        viewBox="0 0 320 230"
+        role="presentation"
+      >
+        <defs>
+          <linearGradient id="jr-success-circle" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#c9f0a8" />
+            <stop offset="100%" stopColor="#8edb76" />
+          </linearGradient>
+          <linearGradient id="jr-success-leaf" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#83c83e" />
+            <stop offset="100%" stopColor="#27864b" />
+          </linearGradient>
+          <linearGradient id="jr-success-splash" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#e5f6a2" />
+            <stop offset="100%" stopColor="#bfe77e" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M35 166c31-10 43-31 63-25 22 6 25 34 54 35 33 1 42-28 65-24 17 3 24 19 45 15l23-7-12 39H49Z"
+          fill="url(#jr-success-splash)"
+          opacity=".8"
+        />
+        <path d="M63 100C37 83 32 61 35 43c26 4 45 23 46 48-5 8-10 11-18 9Z" fill="url(#jr-success-leaf)" />
+        <path d="M255 111c14-30 36-40 57-37-7 25-26 43-50 43Z" fill="url(#jr-success-leaf)" />
+        <path d="M80 146c-19-12-24-28-19-42 18 7 28 20 27 37Z" fill="#b6df5e" opacity=".8" />
+        <path d="M234 153c13-19 28-24 43-19-7 17-21 25-38 24Z" fill="#b6df5e" opacity=".8" />
+        <g stroke="#2c9a55" strokeWidth="5" strokeLinecap="round">
+          <path d="M160 15v15" /><path d="m111 31 7 13" /><path d="m209 31-7 13" />
+          <path d="m78 62 12 8" /><path d="m242 62-12 8" /><path d="m62 113 14 3" /><path d="m258 113-14 3" />
+        </g>
+        <circle cx="160" cy="111" r="65" fill="#ffffff" opacity=".9" />
+        <circle cx="160" cy="105" r="53" fill="url(#jr-success-circle)" />
+        <path d="m132 105 18 18 39-42" fill="none" stroke="#16814a" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="99" cy="86" r="4" fill="#b8e76c" /><circle cx="224" cy="91" r="4" fill="#b8e76c" />
+      </svg>
     </div>
   );
 }

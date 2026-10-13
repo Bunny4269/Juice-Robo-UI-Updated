@@ -20,6 +20,7 @@ import "./App.css";
    ========================================================= */
 
 import DesktopBlocker from "./components/DesktopBlocker/DesktopBlocker";
+import SplashScreen from "./components/SplashScreen/SplashScreen";
 
 /* =========================================================
    SCREENS
@@ -3998,7 +3999,32 @@ export default function App() {
   useEffect(() => {
     if (screen === "profile" && (!user || !loggedIn)) {
       setScreen("login", { replace: true });
+      return undefined;
     }
+
+    // Load the order count as soon as the profile opens, instead of waiting
+    // for the user to click "My orders". Keep the request scoped to this
+    // profile session so a late response cannot update state after navigation.
+    if (screen !== "profile" || !loggedIn) return undefined;
+
+    let cancelled = false;
+
+    api
+      .orders()
+      .then((backendOrders) => {
+        if (!cancelled && Array.isArray(backendOrders)) {
+          setHistoryOrders(backendOrders.filter(Boolean));
+        }
+      })
+      .catch((historyError) => {
+        if (!cancelled) {
+          console.error("[Juice Robo] Profile order count load error:", historyError);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [screen, user, loggedIn, setScreen]);
 
   useEffect(() => {
@@ -4674,6 +4700,20 @@ export default function App() {
   /* -----------------------------------------------------------
      R. SCREEN RENDERER
      ----------------------------------------------------------- */
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const path = String(window.location.pathname || "").toLowerCase();
+    return !path.includes("/scan") && !path.includes("/login");
+  });
+
+  useEffect(() => {
+    if (!showSplash) return undefined;
+    const splashTimer = window.setTimeout(() => {
+      setShowSplash(false);
+    }, 1800);
+    return () => window.clearTimeout(splashTimer);
+  }, [showSplash]);
+
   if (error && !locations.length && !products.length) {
     return (
       <div className="jr-app">
@@ -4796,6 +4836,9 @@ export default function App() {
 
   return (
     <div className="jr-app">
+      {showSplash && !isHck && (
+        <SplashScreen onComplete={() => setShowSplash(false)} />
+      )}
       <DesktopBlocker isHck={isHck} />
       <div className="jr-mobile-frame">
         <Header
@@ -5033,6 +5076,59 @@ export default function App() {
             />
           )}
         </div>
+
+        {!isHck && screen === "menu" && cartCount > 0 && (
+          <button
+            type="button"
+            className="jr-proceed-to-pay-floating"
+            onClick={startCheckout}
+            aria-label="Proceed to pay for items in your cart"
+            style={{
+              position: "absolute",
+              left: "16px",
+              right: "16px",
+              bottom: "calc(72px + env(safe-area-inset-bottom, 0px))",
+              zIndex: 35,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+              minHeight: "70px",
+              padding: "10px 16px",
+              border: "1px solid rgba(255,255,255,0.18)",
+              borderRadius: "14px",
+              background: "linear-gradient(115deg, #278451 0%, #176b3c 100%)",
+              color: "#ffffff",
+              boxShadow: "0 4px 14px rgba(25, 112, 61, 0.22)",
+              fontFamily: "Inter, Poppins, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+              fontSize: "14px",
+              fontWeight: 800,
+              letterSpacing: "0.01em",
+              cursor: "pointer",
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
+            <span aria-hidden="true" style={{ display: "grid", placeItems: "center", flex: "0 0 32px", width: "32px", color: "#ffffff" }}>
+              <svg viewBox="0 0 24 24" width="25" height="25" fill="none">
+                <path d="M5.5 8.5h13l1.2 12h-15.4l1.2-12Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                <path d="M8.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+              </svg>
+            </span>
+            <span style={{ display: "flex", flex: "1 1 auto", minWidth: 0, flexDirection: "column", alignItems: "flex-start", justifyContent: "center", gap: "5px" }}>
+              <span style={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: "8px", color: "#ffffff", fontSize: "13px", lineHeight: "17px", fontWeight: 800, whiteSpace: "nowrap" }}>
+                <span>Proceed to pay</span>
+                <span aria-hidden="true" style={{ opacity: 0.7 }}>|</span>
+                <strong style={{ fontSize: "14px", fontWeight: 900 }}>{money(finalTotal)}</strong>
+              </span>
+              <span style={{ color: "rgba(255,255,255,0.82)", fontSize: "10px", lineHeight: "13px", fontWeight: 500, whiteSpace: "nowrap" }}>
+                {cartCount} {cartCount === 1 ? "item" : "items"} · Incl. 5% GST
+              </span>
+            </span>
+            <span aria-hidden="true" style={{ display: "grid", placeItems: "center", flex: "0 0 42px", width: "42px", height: "42px", borderRadius: "10px", background: "rgba(7, 89, 44, 0.28)", fontSize: "25px", lineHeight: 1, fontWeight: 400 }}>
+              →
+            </span>
+          </button>
+        )}
 
         {screen !== "profile" &&
           screen !== "history" &&
