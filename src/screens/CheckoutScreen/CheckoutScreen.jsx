@@ -99,14 +99,14 @@ export default function CheckoutScreen({
           <strong>{formatMoney(subtotal)}</strong>
         </div>
         <div className="jr-checkout-total-row">
-          <span>GST <small>5%</small></span>
+          <span>GST <small>{isHck ? "18%" : "5%"}</small></span>
           <strong>{formatMoney(gst)}</strong>
         </div>
         <div className="jr-checkout-divider" />
         <div className="jr-checkout-total-row jr-checkout-grand-total">
           <div>
             <span>Total</span>
-            <small>Inclusive of 5% GST</small>
+            <small>Inclusive of {isHck ? "18%" : "5%"} GST</small>
           </div>
           <strong>{formatMoney(total)}</strong>
         </div>

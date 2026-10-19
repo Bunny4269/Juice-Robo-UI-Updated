@@ -1177,3 +1177,42 @@
     transition: none;
   }
 }
+
+/* =========================================================
+   AUTH TABS (SIGN IN / SIGN UP)
+   ========================================================= */
+
+.jr-auth-tabs {
+  display: flex;
+  background: #e7ecdc;
+  border-radius: 14px;
+  padding: 4px;
+  margin-bottom: 22px;
+  gap: 4px;
+}
+
+.jr-auth-tab {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: #4b6b58;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.jr-auth-tab.active {
+  background: #ffffff;
+  color: #12452a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.jr-auth-tab:focus-visible {
+  outline: 2px solid #287b4d;
+  outline-offset: 1px;
+}

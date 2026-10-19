@@ -10,6 +10,11 @@ import {
   validateBackendUpiUrl,
 } from "./payment/paymentEngine.js";
 
+import {
+  OUTLET_CONFIG,
+  resolveOutletKey,
+} from "./shared/config/outletConfig.js";
+
 const API_BASE = String(
   import.meta.env.VITE_JR_API_BASE ||
     "https://tptest.juicerobo.com/tporder/api"
@@ -23,30 +28,26 @@ const ORDER_API_BASE = String(
 /*
  * JUICE ROBO MENU ITEMMASTER
  *
- * The redesigned website must load menu items from this exact
- * Item Master location UUID. Keep this separate from storeId:
- *
- * https://tptest.juicerobo.com/tporder/api/v1/itemmaster/items/
- * f9eef7a2-bbf5-4a98-a1ce-ceb69b171996
- *
- * The API response is still passed through normalizeProduct()
- * so the existing Menu / Cart contract remains unchanged.
+ * Menu items are loaded dynamically by outlet menu UUID.
  */
 const MENU_LOCATION_ID = String(
   import.meta.env.VITE_JR_MENU_LOCATION_ID ||
-    "f9eef7a2-bbf5-4a98-a1ce-ceb69b171996"
+    OUTLET_CONFIG.jr.menuLocationId
 ).trim();
 
 /*
- * Known Juice Robo Item Master menu UUIDs.
- * These are menu identifiers, NOT store IDs and NOT cart locIds.
- * A location-specific menu UUID supplied by the outlet API takes
- * precedence over these defaults.
+ * Known Item Master menu UUIDs derived from centralized outlet configuration.
  */
-const KNOWN_MENU_LOCATION_IDS = Object.freeze({
-  JR: "f9eef7a2-bbf5-4a98-a1ce-ceb69b171996",
-  HCK: "829f12b5-915d-44c2-9e9d-c024b6572b4a",
-});
+const KNOWN_MENU_LOCATION_IDS = Object.freeze(
+  Object.fromEntries(
+    Object.entries(OUTLET_CONFIG)
+      .filter(([, cfg]) => Boolean(cfg?.menuLocationId))
+      .map(([k, cfg]) => [
+        k.toUpperCase(),
+        cfg.menuLocationId,
+      ])
+  )
+);
 
 function isMenuLocationUuid(value) {
   return isUuid(value);
@@ -70,6 +71,8 @@ function findMenuLocationId(source, depth = 0) {
   if (typeof source !== "object") return "";
 
   const preferredKeys = [
+    "locId",
+    "locID",
     "menuItemCode",
     "menu_item_code",
     "menuLocationId",
@@ -114,22 +117,16 @@ function findMenuLocationId(source, depth = 0) {
 
 function resolveMenuLocationId(location = null, explicitMenuLocationId = "") {
   const explicit = clean(explicitMenuLocationId);
-
-  if (explicit.toLowerCase() === "jr") {
-    return KNOWN_MENU_LOCATION_IDS.JR;
-  }
-
-  if (explicit.toLowerCase() === "hck") {
-    return KNOWN_MENU_LOCATION_IDS.HCK;
+  const explicitKey = resolveOutletKey(explicit);
+  if (explicitKey && OUTLET_CONFIG[explicitKey]?.menuLocationId) {
+    return OUTLET_CONFIG[explicitKey].menuLocationId;
   }
 
   if (isMenuLocationUuid(explicit)) return explicit;
 
-  /*
-   * Standard /order_now/ entry-point mapping for the current test
-   * outlets. The outlet API exposes the outlet/machine name, while
-   * Item Master requires a separate menu UUID.
-   */
+  const fromLocation = findMenuLocationId(location);
+  if (fromLocation) return fromLocation;
+
   const locationText = [
     location?.storeName,
     location?.name,
@@ -143,23 +140,20 @@ function resolveMenuLocationId(location = null, explicitMenuLocationId = "") {
     .filter(Boolean)
     .join(" ");
 
-  if (/(^|\s)hck(\s|$)/i.test(locationText)) {
-    return KNOWN_MENU_LOCATION_IDS.HCK;
+  for (const cfg of Object.values(OUTLET_CONFIG)) {
+    if (cfg.name && locationText.includes(cfg.name.toLowerCase())) {
+      return cfg.menuLocationId;
+    }
+    if (cfg.id && locationText.includes(cfg.id.toLowerCase())) {
+      return cfg.menuLocationId;
+    }
   }
-
-  if (/(^|\s)jr(\s|$)/i.test(locationText)) {
-    return KNOWN_MENU_LOCATION_IDS.JR;
-  }
-
-  const fromLocation = findMenuLocationId(location);
-  if (fromLocation) return fromLocation;
 
   return "";
 }
 
 const DEFAULT_ORG_ID = String(
-  import.meta.env.VITE_JR_ORG_ID ||
-    "d2006bfc-95df-4925-a617-6d10d06b99bc"
+  import.meta.env.VITE_JR_ORG_ID || ""
 ).trim();
 
 const JR_API_KEY = String(
@@ -1881,13 +1875,7 @@ export const api = {
     let storeId = clean(requestedStoreId) || getStoreId();
 
     if (!storeId) {
-      const availableLocations = await api.locations();
-      storeId = availableLocations?.[0]?.storeId || "";
-      if (storeId) saveStoreId(storeId);
-    }
-
-    if (!storeId) {
-      throw new Error("No Juice Robo collection location is selected.");
+      throw new Error("No collection location is selected.");
     }
 
     const response = await request(
@@ -1904,9 +1892,9 @@ export const api = {
   getMenuItems: async (menuLocationId) =>
     api.menuItems(menuLocationId),
 
-  locations: async () => {
-    const orgId = getOrgId();
-    if (!orgId) throw new Error("Juice Robo organization ID is not configured.");
+  locations: async (requestedOrgId = "") => {
+    const orgId = clean(requestedOrgId) || getOrgId();
+    if (!orgId) throw new Error("No organization or outlet ID is configured.");
 
     const response = await request(
       `/v1/getoutlets/${encodeURIComponent(orgId)}`,
@@ -1915,20 +1903,17 @@ export const api = {
     );
 
     const locationsList = normalizeOutlets(response);
-
-    if (locationsList.length) {
-      const current = getStoreId();
-      const exists = locationsList.some(
-        (location) => String(location.storeId) === String(current)
-      );
-      if (!exists) saveStoreId(locationsList[0].storeId);
-    }
-
     console.log("[Juice Robo] Parsed locations:", locationsList);
     return locationsList;
   },
 
-  getLocations: async () => api.locations(),
+  getLocations: async (requestedOrgId = "") => api.locations(requestedOrgId),
+
+  getOutlet: async (outletId = "") => {
+    const id = clean(outletId) || getOrgId();
+    if (!id) throw new Error("Outlet ID is required.");
+    return api.locations(id);
+  },
 
   machines: async (suppliedLocations = null) => {
     const locationsList = Array.isArray(suppliedLocations)

@@ -387,6 +387,7 @@ export default function MenuScreen({
   isHck = false,
   selectedHckPackage,
   onToggleHckPackage,
+  onEditLocation,
 }) {
   /* =======================================================
      HCK SINGLE SELECTION STATE
@@ -583,10 +584,23 @@ export default function MenuScreen({
           SELECTED LOCATION / COLLECTION MACHINE
           =================================================== */}
 
-      {!isHck && (selectedLocation || selectedMachine) ? (
+      {(selectedLocation || selectedMachine) ? (
         <section
-          className="jr-selected-machine-banner"
-          aria-label="Selected collection location and machine"
+          className={`jr-selected-machine-banner ${onEditLocation ? "clickable" : ""}`}
+          aria-label="Selected collection location and machine. Tap to edit location"
+          onClick={onEditLocation}
+          role={onEditLocation ? "button" : undefined}
+          tabIndex={onEditLocation ? 0 : undefined}
+          onKeyDown={
+            onEditLocation
+              ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onEditLocation();
+                  }
+                }
+              : undefined
+          }
         >
           <div className="jr-selected-machine-icon" aria-hidden="true">
             {collectionPointImage ? (
@@ -618,10 +632,27 @@ export default function MenuScreen({
             {collectionSecondary ? (
               <span>{collectionSecondary}</span>
             ) : (
-              <span>Your selected Juice Robo location</span>
+              <span>Your selected {isHck ? "HCK kiosk" : "Juice Robo"} location</span>
             )}
           </div>
 
+          {onEditLocation && (
+            <div
+              className="jr-selected-machine-edit"
+              title="Tap to edit location"
+              aria-label="Edit location"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                <path
+                  d="m9 6 6 6-6 6"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          )}
         </section>
       ) : null}
 

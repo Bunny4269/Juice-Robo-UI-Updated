@@ -11,12 +11,15 @@ export default function LoginScreen({
   customer,
   setCustomer,
   onLogin,
+  onSignup,
   busy = false,
   error = "",
   onContinueWithoutLogin,
   isHck = false,
 }) {
+  const [authMode, setAuthMode] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [rememberMe, setRememberMe] = useState(
     () => localStorage.getItem(REMEMBER_KEY) === "true"
@@ -24,8 +27,11 @@ export default function LoginScreen({
 
   const [formError, setFormError] = useState("");
 
+  const name = customer?.name || "";
   const email = customer?.email || "";
+  const phone = customer?.phone || "";
   const password = customer?.password || "";
+  const confirmPassword = customer?.confirmPassword || "";
 
   useEffect(() => {
     const remembered =
@@ -115,48 +121,55 @@ export default function LoginScreen({
 
   function handleSubmit(event) {
     event.preventDefault();
-
     setFormError("");
 
-    const trimmedEmail =
-      String(email).trim();
-
+    const trimmedEmail = String(email).trim();
     if (!trimmedEmail) {
-      setFormError(
-        "Enter your email address."
-      );
+      setFormError("Enter your email address.");
       return;
     }
 
     if (!password) {
-      setFormError(
-        "Enter your password."
-      );
+      setFormError("Enter your password.");
       return;
     }
 
-    /*
-     * Remember ONLY the email.
-     * Never save the password.
-     */
+    if (authMode === "signup") {
+      const trimmedName = String(name).trim();
+      if (!trimmedName) {
+        setFormError("Enter your full name.");
+        return;
+      }
+
+      if (password.length < 6) {
+        setFormError("Password must be at least 6 characters.");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setFormError("Passwords do not match.");
+        return;
+      }
+
+      if (typeof onSignup === "function") {
+        onSignup({
+          name: trimmedName,
+          email: trimmedEmail,
+          phone: String(phone).trim(),
+          password,
+          confirmPassword,
+        });
+      }
+      return;
+    }
+
+    // SIGN IN MODE
     if (rememberMe) {
-      localStorage.setItem(
-        REMEMBER_KEY,
-        "true"
-      );
-
-      localStorage.setItem(
-        SAVED_EMAIL_KEY,
-        trimmedEmail
-      );
+      localStorage.setItem(REMEMBER_KEY, "true");
+      localStorage.setItem(SAVED_EMAIL_KEY, trimmedEmail);
     } else {
-      localStorage.removeItem(
-        REMEMBER_KEY
-      );
-
-      localStorage.removeItem(
-        SAVED_EMAIL_KEY
-      );
+      localStorage.removeItem(REMEMBER_KEY);
+      localStorage.removeItem(SAVED_EMAIL_KEY);
     }
 
     if (typeof onLogin === "function") {
@@ -195,16 +208,58 @@ export default function LoginScreen({
           </span>
 
           <h1>
-            Welcome
-            <br />
-            <em>back.</em>
+            {authMode === "signup" ? (
+              <>
+                Create
+                <br />
+                <em>account.</em>
+              </>
+            ) : (
+              <>
+                Welcome
+                <br />
+                <em>back.</em>
+              </>
+            )}
           </h1>
 
           <p>
-            {isHck
+            {authMode === "signup"
+              ? "Sign up to start your ordering experience."
+              : isHck
               ? "Sign in to continue to your HCK services."
               : "Sign in to continue your Juice Robo experience."}
           </p>
+        </div>
+
+        {/* AUTH TABS: SIGN IN / SIGN UP */}
+        <div className="jr-auth-tabs" role="tablist" aria-label="Sign in or Sign up">
+          <button
+            type="button"
+            className={`jr-auth-tab ${authMode === "login" ? "active" : ""}`}
+            onClick={() => {
+              setAuthMode("login");
+              setFormError("");
+            }}
+            role="tab"
+            aria-selected={authMode === "login"}
+            disabled={busy}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            className={`jr-auth-tab ${authMode === "signup" ? "active" : ""}`}
+            onClick={() => {
+              setAuthMode("signup");
+              setFormError("");
+            }}
+            role="tab"
+            aria-selected={authMode === "signup"}
+            disabled={busy}
+          >
+            Sign Up
+          </button>
         </div>
 
         {/* FORM */}
@@ -212,6 +267,26 @@ export default function LoginScreen({
           className="jr-login-form"
           onSubmit={handleSubmit}
         >
+          {/* FULL NAME (SIGNUP ONLY) */}
+          {authMode === "signup" && (
+            <div className="jr-login-field">
+              <label htmlFor="jr-login-name">
+                FULL NAME
+              </label>
+
+              <input
+                id="jr-login-name"
+                type="text"
+                value={name}
+                onChange={(e) => updateCustomer("name", e.target.value)}
+                placeholder="Enter your full name"
+                autoComplete="name"
+                disabled={busy}
+                required
+              />
+            </div>
+          )}
+
           {/* EMAIL */}
           <div className="jr-login-field">
             <label htmlFor="jr-login-email">
@@ -230,6 +305,25 @@ export default function LoginScreen({
             />
           </div>
 
+          {/* PHONE (SIGNUP ONLY) */}
+          {authMode === "signup" && (
+            <div className="jr-login-field">
+              <label htmlFor="jr-login-phone">
+                PHONE NUMBER <small style={{ fontWeight: 400, opacity: 0.7 }}>(Optional)</small>
+              </label>
+
+              <input
+                id="jr-login-phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => updateCustomer("phone", e.target.value)}
+                placeholder="Enter 10-digit phone number"
+                autoComplete="tel"
+                disabled={busy}
+              />
+            </div>
+          )}
+
           {/* PASSWORD */}
           <div className="jr-login-field">
             <label htmlFor="jr-login-password">
@@ -247,8 +341,8 @@ export default function LoginScreen({
                 }
                 value={password}
                 onChange={handlePasswordChange}
-                placeholder="Enter your password"
-                autoComplete="current-password"
+                placeholder={authMode === "signup" ? "Create a password (min 6 chars)" : "Enter your password"}
+                autoComplete={authMode === "signup" ? "new-password" : "current-password"}
                 disabled={busy}
                 required
               />
@@ -335,34 +429,92 @@ export default function LoginScreen({
             </div>
           </div>
 
-          {/* OPTIONS */}
-          <div className="jr-login-options">
-            <label className="jr-login-remember">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={
-                  handleRememberChange
+          {/* CONFIRM PASSWORD (SIGNUP ONLY) */}
+          {authMode === "signup" && (
+            <div className="jr-login-field">
+              <label htmlFor="jr-login-confirm-password">
+                CONFIRM PASSWORD
+              </label>
+
+              <div className="jr-login-password-wrap">
+                <input
+                  id="jr-login-confirm-password"
+                  className="jr-login-password-input"
+                  type={
+                    showConfirmPassword
+                      ? "text"
+                      : "password"
+                  }
+                  value={confirmPassword}
+                  onChange={(e) => updateCustomer("confirmPassword", e.target.value)}
+                  placeholder="Repeat your password"
+                  autoComplete="new-password"
+                  disabled={busy}
+                  required
+                />
+
+                <button
+                  className="jr-login-password-toggle"
+                  type="button"
+                  onClick={() =>
+                    setShowConfirmPassword(
+                      (current) => !current
+                    )
+                  }
+                  disabled={busy}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                  aria-pressed={showConfirmPassword}
+                >
+                  {showConfirmPassword ? (
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M3 3l18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                      <circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* OPTIONS (LOGIN ONLY) */}
+          {authMode === "login" && (
+            <div className="jr-login-options">
+              <label className="jr-login-remember">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={
+                    handleRememberChange
+                  }
+                  disabled={busy}
+                />
+
+                <span>
+                  Remember me
+                </span>
+              </label>
+
+              <button
+                className="jr-login-forgot"
+                type="button"
+                onClick={
+                  handleForgotPassword
                 }
                 disabled={busy}
-              />
-
-              <span>
-                Remember me
-              </span>
-            </label>
-
-            <button
-              className="jr-login-forgot"
-              type="button"
-              onClick={
-                handleForgotPassword
-              }
-              disabled={busy}
-            >
-              Forgot password?
-            </button>
-          </div>
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
 
           {/* ERROR */}
           {(formError || error) && (
@@ -380,7 +532,7 @@ export default function LoginScreen({
             </div>
           )}
 
-          {/* SIGN IN */}
+          {/* SUBMIT BUTTON */}
           <button
             className="jr-button jr-button-primary jr-login-button"
             type="submit"
@@ -389,6 +541,8 @@ export default function LoginScreen({
             <span>
               {busy
                 ? "PLEASE WAIT..."
+                : authMode === "signup"
+                ? "CREATE ACCOUNT"
                 : "SIGN IN"}
             </span>
 
@@ -400,25 +554,59 @@ export default function LoginScreen({
           </button>
         </form>
 
-        {/* CONTINUE WITHOUT LOGIN */}
-        <button
-          type="button"
-          className="jr-continue-without-login"
-          onClick={
-            handleContinueWithoutLogin
-          }
-          disabled={busy}
-        >
-          CONTINUE WITHOUT LOGIN
-        </button>
-
-        <p className="jr-login-guest-note">
-          Browse the menu first. Sign in when
-          you are ready to add items to your cart.
-        </p>
+        {/* SWITCH MODE HELPER */}
+        <div style={{ textAlign: "center", marginTop: "16px" }}>
+          <p style={{ margin: 0, fontSize: "13px", color: "#64748b" }}>
+            {authMode === "login" ? (
+              <>
+                Don&apos;t have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode("signup");
+                    setFormError("");
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    color: "#1d6f42",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Sign Up
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode("login");
+                    setFormError("");
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    color: "#1d6f42",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Sign In
+                </button>
+              </>
+            )}
+          </p>
+        </div>
 
         {/* SECURITY NOTE */}
-        <div className="jr-login-note">
+        <div className="jr-login-note" style={{ marginTop: "24px" }}>
           <span
             className="jr-login-lock"
             aria-hidden="true"
@@ -427,7 +615,7 @@ export default function LoginScreen({
           </span>
 
           <span>
-            Your login details are securely protected.
+            Your account and login details are securely protected.
           </span>
         </div>
 

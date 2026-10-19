@@ -1,3 +1,7 @@
+import { generateQrMatrix, generateQrSvg, generateQrDataUrl } from "./qrCode.js";
+
+export { generateQrMatrix, generateQrSvg, generateQrDataUrl };
+
 export const PAYMENT_STATUS = Object.freeze({
   IDLE: "idle",
   PENDING: "pending",
@@ -107,13 +111,25 @@ export function generateAppQrStrings(backendUpiUrl) {
   if (!query) return { generic: genericUrl };
 
   const phonepeQuery = formatAppUpiQuery(query, "phonepe");
+  const fullGenericUrl = `upi://pay?${query}`;
+
+  let qrSvg = "";
+  let qrDataUrl = "";
+  try {
+    qrSvg = generateQrSvg(fullGenericUrl);
+    qrDataUrl = generateQrDataUrl(fullGenericUrl);
+  } catch (qrErr) {
+    console.warn("[Juice Robo] QR code render warning:", qrErr);
+  }
 
   return {
     phonepe: `phonepe://pay?${phonepeQuery}`,
     gpay: `tez://upi/pay?${query}`,
     gpay_ios: `gpay://upi/pay?${query}`,
     google_pay: `tez://upi/pay?${query}`,
-    generic: `upi://pay?${query}`,
+    generic: fullGenericUrl,
+    qrSvg,
+    qrDataUrl,
   };
 }
 

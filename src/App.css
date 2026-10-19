@@ -3874,3 +3874,50 @@ textarea:focus-visible {
     transition: none;
   }
 }
+
+
+/* =========================================================
+   FINAL HEADER LOGO FIX
+   Keep the brand logo legible in the mobile navigation bar.
+   ========================================================= */
+.jr-header .jr-header-logo-button {
+  flex: 0 0 auto !important;
+  width: 150px !important;
+  min-width: 150px !important;
+  max-width: 150px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+
+.jr-header .jr-header-logo {
+  display: block !important;
+  width: 150px !important;
+  min-width: 0 !important;
+  max-width: 150px !important;
+  height: auto !important;
+  max-height: 36px !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+  border-radius: 0 !important;
+  transform: none !important;
+}
+
+@media screen and (max-width: 375px) {
+  .jr-header .jr-header-logo-button {
+    width: 132px !important;
+    min-width: 132px !important;
+    max-width: 132px !important;
+  }
+
+  .jr-header .jr-header-logo {
+    width: 132px !important;
+    max-width: 132px !important;
+    max-height: 32px !important;
+  }
+}

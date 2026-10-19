@@ -683,35 +683,55 @@
    ========================================================= */
 
 .jr-selected-machine-banner {
-
   width: 100%;
-
   min-width: 0;
-
   display: grid;
-
-  grid-template-columns: auto minmax(0, 1fr);
-
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-
   gap: clamp(7px, 2.5vw, 11px);
-
   padding: clamp(7px, 2.2vw, 10px);
-
   margin: 0 0 clamp(12px, 3.5vw, 18px);
-
   border: 1px solid #e2e8df;
-
   border-radius: clamp(10px, 3vw, 15px);
-
   background: #ffffff;
-
   box-shadow: 0 4px 13px rgba(36, 61, 41, 0.035);
-
   color: inherit;
-
   text-align: left;
+}
 
+.jr-selected-machine-banner.clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.jr-selected-machine-banner.clickable:hover {
+  border-color: #2f8150;
+  box-shadow: 0 4px 14px rgba(47, 129, 80, 0.12);
+}
+
+.jr-selected-machine-banner.clickable:active {
+  transform: scale(0.99);
+}
+
+.jr-selected-machine-edit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e4eae1;
+  background: #fbfdfa;
+  color: #2f8150;
+  margin-right: 2px;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.jr-selected-machine-banner.clickable:hover .jr-selected-machine-edit {
+  background: #eef7ed;
+  border-color: #2f8150;
+  transform: translateX(1px);
 }
 
 .jr-selected-machine-icon {

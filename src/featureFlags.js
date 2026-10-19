@@ -30,5 +30,5 @@
    when the flags are set to 1.
    ============================================================ */
 
-export const LOCATION_ENABLED = 0;
-export const MACHINE_ENABLED  = 0;
+export const LOCATION_ENABLED = 1;
+export const MACHINE_ENABLED  = 1;

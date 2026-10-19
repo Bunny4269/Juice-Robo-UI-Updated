@@ -8,17 +8,17 @@ const __dirname = fileURLToPath(
   new URL(".", import.meta.url)
 );
 
-const certificatePath = resolve(
-  __dirname,
-  "certs",
-  "192.168.100.6.pem"
-);
+const certificatePath = fs.existsSync(resolve(__dirname, "certs", "192.168.6.12.pem"))
+  ? resolve(__dirname, "certs", "192.168.6.12.pem")
+  : fs.existsSync(resolve(__dirname, "certs", "192.168.100.6.pem"))
+  ? resolve(__dirname, "certs", "192.168.100.6.pem")
+  : resolve(__dirname, "certs", "localhost.pem");
 
-const privateKeyPath = resolve(
-  __dirname,
-  "certs",
-  "192.168.100.6-key.pem"
-);
+const privateKeyPath = fs.existsSync(resolve(__dirname, "certs", "192.168.6.12-key.pem"))
+  ? resolve(__dirname, "certs", "192.168.6.12-key.pem")
+  : fs.existsSync(resolve(__dirname, "certs", "192.168.100.6-key.pem"))
+  ? resolve(__dirname, "certs", "192.168.100.6-key.pem")
+  : resolve(__dirname, "certs", "localhost-key.pem");
 
 // Validate the HTTPS certificate files.
 if (

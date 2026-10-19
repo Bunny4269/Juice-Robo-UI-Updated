@@ -57,10 +57,10 @@ export default function ScannerScreen({
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
-  // Persistent permission keys (one-time request per device)
-  const CAMERA_REQUESTED_KEY = "juice_robo_camera_permission_requested";
+  // Persistent permission flags (stored per device/browser profile)
   const CAMERA_GRANTED_KEY = "juice_robo_camera_permission_granted";
   const CAMERA_DENIED_KEY = "juice_robo_camera_permission_denied";
+
 
   // Permission & camera states: 'prompt' | 'granted' | 'denied' | 'unsupported'
   const [permissionStatus, setPermissionStatus] = useState("prompt");
@@ -195,7 +195,6 @@ export default function ScannerScreen({
       await startCameraStream(targetFacing);
 
       try {
-        localStorage.setItem(CAMERA_REQUESTED_KEY, "true");
         localStorage.setItem(CAMERA_GRANTED_KEY, "true");
         localStorage.removeItem(CAMERA_DENIED_KEY);
       } catch (storageErr) {
@@ -204,10 +203,6 @@ export default function ScannerScreen({
     } catch (err) {
       console.warn("[Juice Robo] Camera request error:", err?.name, err?.message);
       stopCamera();
-
-      try {
-        localStorage.setItem(CAMERA_REQUESTED_KEY, "true");
-      } catch {}
 
       if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
         try {
@@ -277,14 +272,16 @@ export default function ScannerScreen({
     }
   }
 
-  // Permission check and auto-start on mount
+  // Permission check on mount.
+  // IMPORTANT: Never automatically request camera permission on first visit.
+  // The browser's native camera permission prompt must only appear after the
+  // user explicitly taps the "Allow Camera" button. Auto-requesting is both
+  // a UX violation and a browser security policy violation on some platforms.
   useEffect(() => {
-    let hasRequested = false;
     let isGranted = false;
     let isDenied = false;
 
     try {
-      hasRequested = localStorage.getItem(CAMERA_REQUESTED_KEY) === "true";
       isGranted = localStorage.getItem(CAMERA_GRANTED_KEY) === "true";
       isDenied = localStorage.getItem(CAMERA_DENIED_KEY) === "true";
     } catch (e) {
@@ -292,32 +289,35 @@ export default function ScannerScreen({
     }
 
     if (isDenied) {
+      // Previously denied — show denied state so user can tap retry
       setPermissionStatus("denied");
       setCameraError(
         "Camera permission was denied. Please allow camera access in your browser settings, or select your location manually."
       );
-      return;
+      return () => {
+        stopCamera();
+      };
     }
 
     if (isGranted) {
+      // Previously granted — it is safe to auto-restart the stream
+      // (the browser will not show the permission prompt again)
       requestCameraAccess(false, "environment");
-      return;
+      return () => {
+        stopCamera();
+      };
     }
 
-    if (!hasRequested) {
-      try {
-        localStorage.setItem(CAMERA_REQUESTED_KEY, "true");
-      } catch {}
-      requestCameraAccess(true, "environment");
-      return;
-    }
-
+    // First visit or permission not yet decided — show the permission
+    // explanation screen. Do NOT call getUserMedia here. The camera will
+    // only be started when the user taps the "Allow Camera" button.
     setPermissionStatus("prompt");
 
     return () => {
       stopCamera();
     };
   }, []);
+
 
   // Ensure stream plays on video element whenever camera becomes active
   useEffect(() => {
@@ -397,7 +397,7 @@ export default function ScannerScreen({
         const result = await onScanSuccess(rawData);
         // If handler explicitly returned false, treat as unverified
         if (result === false) {
-          setCameraError("Invalid Juice Robo QR code. Please scan the QR code displayed on the machine.");
+          setCameraError("Invalid or unrecognised QR code. Please scan the QR code displayed on the machine.");
           setScanFeedback("");
           setIsProcessingScan(false);
           return;
@@ -408,7 +408,7 @@ export default function ScannerScreen({
       stopCamera();
     } catch (err) {
       console.warn("[Juice Robo] Scan processing error:", err);
-      setCameraError("Invalid Juice Robo QR code. Please scan the QR code displayed on the machine.");
+      setCameraError("Invalid or unrecognised QR code. Please scan the QR code displayed on the machine.");
       setScanFeedback("");
       setIsProcessingScan(false);
     }

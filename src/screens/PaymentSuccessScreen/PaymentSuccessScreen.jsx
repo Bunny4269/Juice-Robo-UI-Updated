@@ -619,6 +619,7 @@ export default function PaymentSuccessScreen({
   onHome,
   onBack,
   onHistory,
+  isHck = false,
 }) {
   const collectionCode = useMemo(
     () => getCollectionCode(order),
@@ -664,13 +665,15 @@ export default function PaymentSuccessScreen({
     [order]
   );
 
+  const currentGstRate = isHck ? 0.18 : 0.05;
+
   const taxableSubtotal = useMemo(() => {
     const total = Number(totalPaid) || 0;
 
     return Math.round(
-      (total / (1 + GST_RATE) + Number.EPSILON) * 100
+      (total / (1 + currentGstRate) + Number.EPSILON) * 100
     ) / 100;
-  }, [totalPaid]);
+  }, [totalPaid, currentGstRate]);
 
   const gstAmount = useMemo(() => {
     const total = Number(totalPaid) || 0;
@@ -712,9 +715,9 @@ export default function PaymentSuccessScreen({
         <p className="jr-payment-success-message">
           Your order has been verified and confirmed.
           <br />
-          Enter your pickup code at the machine to collect
-          <br />
-          your fresh juice.
+          {isHck
+            ? "Enter your collection code at the kiosk to start your helmet cleaning service."
+            : "Enter your pickup code at the machine to collect your fresh juice."}
         </p>
 
         {/* =================================================
@@ -871,7 +874,7 @@ export default function PaymentSuccessScreen({
                     ))}
                   </strong>
                 ) : (
-                  <strong>Sugarcane Juice</strong>
+                  <strong>{isHck ? "Helmet Cleaning Service" : "Sugarcane Juice"}</strong>
                 )}
               </div>
             </div>
@@ -887,7 +890,7 @@ export default function PaymentSuccessScreen({
             <div className="jr-payment-success-total-value">
               <strong>{formatMoney(totalPaid, money)}</strong>
               <small>
-                (Includes 5% GST)
+                (Includes {isHck ? "18%" : "5%"} GST)
               </small>
             </div>
           </div>
@@ -897,7 +900,7 @@ export default function PaymentSuccessScreen({
               Item subtotal {formatMoney(taxableSubtotal, money)}
             </span>
             <span>
-              GST 5% {formatMoney(gstAmount, money)}
+              GST {isHck ? "18%" : "5%"} {formatMoney(gstAmount, money)}
             </span>
           </div>
         </section>

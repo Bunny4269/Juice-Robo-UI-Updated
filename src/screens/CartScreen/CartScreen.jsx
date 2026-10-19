@@ -101,7 +101,7 @@ export default function CartScreen({
     0
   );
 
-  const GST_RATE = 0.05;
+  const GST_RATE = isHck ? 0.18 : 0.05;
 
   // Product prices are already GST-inclusive.
   // Do not add GST on top of the cart total.
@@ -509,7 +509,7 @@ export default function CartScreen({
             </span>
 
             <small>
-              Inclusive of 5% GST
+              Inclusive of {isHck ? "18%" : "5%"} GST
             </small>
           </div>
 
