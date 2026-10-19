@@ -74,38 +74,34 @@ import {
    1. CONSTANTS & CONFIGURATION
    ============================================================ */
 
-const BASE_PATH = "/order_now";
+import {
+  BASE_PATH,
+  OUTLET_CONFIG,
+  OUTLET_ID_TO_KEY,
+  resolveOutletKey,
+  getCanonicalOutletUuid,
+  isValidOutlet,
+  getOutletConfig,
+  resolveScannedOutlet,
+} from "./shared/config/outletConfig.js";
+
+export {
+  BASE_PATH,
+  OUTLET_CONFIG,
+  OUTLET_ID_TO_KEY,
+  resolveOutletKey,
+  getCanonicalOutletUuid,
+  isValidOutlet,
+  getOutletConfig,
+  resolveScannedOutlet,
+};
+
 const HCK_LOGO = `${import.meta.env.BASE_URL}assets/hck-logo.svg`;
-const JUICE_ROBO_LOGO = `${import.meta.env.BASE_URL}assets/juice-robo-logo-white.jpg`;
+const JUICE_ROBO_LOGO = `${import.meta.env.BASE_URL}assets/juice-robo-logo-transparent.png`;
 const GST_RATE = 0.05;
 
 const ITEM_MASTER_API_BASE =
   "https://tptest.juicerobo.com/tporder/api/v1/itemmaster/items";
-
-export const OUTLET_CONFIG = Object.freeze({
-  jr: {
-    id: "jr",
-    name: "Juice Robo",
-    menuLocationId: "f9eef7a2-bbf5-4a98-a1ce-ceb69b171996",
-    /* Canonical UUID used in the URL: /order_now/<outletId>/ */
-    outletId: "d2006bfc-95df-4925-a617-6d10d06b99bc",
-  },
-  hck: {
-    id: "hck",
-    name: "HCK",
-    menuLocationId: "829f12b5-915d-44c2-9e9d-c024b6572b4a",
-    /* Canonical UUID used in the URL: /order_now/<outletId>/ */
-    outletId: "829f12b5-915d-44c2-9e9d-c024b6572b4a",
-  },
-});
-
-const OUTLET_ID_TO_KEY = Object.freeze(
-  Object.fromEntries(
-    Object.entries(OUTLET_CONFIG)
-      .filter(([, cfg]) => cfg.outletId)
-      .map(([key, cfg]) => [cfg.outletId.toLowerCase(), key])
-  )
-);
 
 const STORAGE = Object.freeze({
   loggedIn: "jr_logged_in",
@@ -138,32 +134,55 @@ const EMPTY_CUSTOMER = Object.freeze({
    2. OUTLET RESOLUTION HELPERS
    ============================================================ */
 
-export function resolveOutletKey(segment = "") {
-  const raw = String(segment || "").trim();
-  if (!raw) return "";
-  const lower = raw.toLowerCase();
-  if (OUTLET_CONFIG[lower]) return lower;
-  if (OUTLET_ID_TO_KEY[lower]) return OUTLET_ID_TO_KEY[lower];
-  return raw;
-}
-
-export function getCanonicalOutletUuid(outletOrKey = "") {
-  const raw = String(outletOrKey || "").trim();
-  if (!raw) return "";
-  const lower = raw.toLowerCase();
-  if (OUTLET_CONFIG[lower]?.outletId) return OUTLET_CONFIG[lower].outletId;
-  if (OUTLET_ID_TO_KEY[lower]) {
-    const key = OUTLET_ID_TO_KEY[lower];
-    return OUTLET_CONFIG[key].outletId;
-  }
-  return raw;
-}
-
 function resolveOutletLocationAndMachine(locationsList = [], outletKey = "") {
   const safeList = Array.isArray(locationsList) ? locationsList : [];
-  const outletTarget = String(outletKey || "").trim().toLowerCase();
-  const cfg = OUTLET_CONFIG[outletTarget] || OUTLET_CONFIG.jr;
+  const canonicalKey = resolveOutletKey(outletKey);
+  const cfg = canonicalKey ? OUTLET_CONFIG[canonicalKey] : null;
 
+  if (!cfg) {
+    return {
+      location: null,
+      locationId: "",
+      machine: null,
+      machineId: "",
+    };
+  }
+
+  // 1. JR — Juice Robo: Outlet details resolved from verified existing configuration.
+  // Do NOT use HCK outlet API or HCK item UUID for Juice Robo.
+  if (canonicalKey === "jr") {
+    const jrLocation = {
+      id: cfg.menuLocationId,
+      storeId: cfg.menuLocationId,
+      locId: cfg.menuLocationId,
+      locationId: cfg.menuLocationId,
+      locationUuid: cfg.menuLocationId,
+      name: cfg.name,
+      storeName: cfg.name,
+      address: "Juice Robo Dispenser",
+      locAddress: "Juice Robo Dispenser",
+      machineTypeName: "JR",
+      is_active: true,
+    };
+
+    const jrMachine = {
+      id: "jr-dispenser-1",
+      machineId: "jr-dispenser-1",
+      machine_code: "JR-1",
+      name: "Juice Robo Dispenser",
+      location_id: cfg.menuLocationId,
+      status: "ONLINE",
+    };
+
+    return {
+      location: jrLocation,
+      locationId: cfg.menuLocationId,
+      machine: jrMachine,
+      machineId: jrMachine.id,
+    };
+  }
+
+  // 2. HCK — Helmet Cleaning Kiosk: Outlet details resolved from HCK Outlet API response.
   let matchedLocation = safeList.find((loc) => {
     const locIds = [
       loc?.id,
@@ -179,7 +198,11 @@ function resolveOutletLocationAndMachine(locationsList = [], outletKey = "") {
       .filter((v) => v !== undefined && v !== null && v !== "")
       .map((v) => String(v).trim().toLowerCase());
 
-    if (locIds.includes(outletTarget)) return true;
+    if (cfg.outletId && locIds.includes(cfg.outletId.toLowerCase())) return true;
+    if (cfg.menuLocationId && locIds.includes(cfg.menuLocationId.toLowerCase())) return true;
+
+    const locType = String(loc?.machineTypeName || "").trim().toLowerCase();
+    if (locType === "hck") return true;
 
     const locName = [
       loc?.storeName,
@@ -194,28 +217,16 @@ function resolveOutletLocationAndMachine(locationsList = [], outletKey = "") {
       .filter(Boolean)
       .join(" ");
 
-    if (outletTarget === "jr") {
-      return (
-        /(^|\s)jr(\s|$)/i.test(locName) ||
-        /(^|\s)juice\s*robo(\s|$)/i.test(locName)
-      );
-    }
-    if (outletTarget === "hck") {
-      return /(^|\s)hck(\s|$)/i.test(locName);
-    }
-    return false;
+    return /(^|\s)hck(\s|$)/i.test(locName);
   });
 
   if (!matchedLocation && safeList.length) {
-    if (outletTarget === "jr") {
-      const nonHck = safeList.find((loc) => {
-        const n = String(loc?.name || loc?.storeName || "").toLowerCase();
-        return !n.includes("hck");
-      });
-      if (nonHck) matchedLocation = nonHck;
-    } else {
-      matchedLocation = safeList[0];
-    }
+    const isHckLoc = safeList.find((loc) => {
+      const type = String(loc?.machineTypeName || "").toLowerCase();
+      const n = String(loc?.name || loc?.storeName || "").toLowerCase();
+      return type === "hck" || n.includes("hck");
+    });
+    if (isHckLoc) matchedLocation = isHckLoc;
   }
 
   if (!matchedLocation) {
@@ -223,22 +234,33 @@ function resolveOutletLocationAndMachine(locationsList = [], outletKey = "") {
       id: cfg.menuLocationId,
       storeId: cfg.menuLocationId,
       locId: cfg.menuLocationId,
+      locationId: cfg.menuLocationId,
+      locationUuid: cfg.menuLocationId,
       name: cfg.name,
-      address: cfg.name,
+      storeName: cfg.name,
+      address: "HCK Machine",
+      locAddress: "HCK Machine",
+      machineTypeName: "HCK",
+      is_active: true,
     };
   }
 
   const locationId = String(
-    matchedLocation?.id ??
-      matchedLocation?.storeId ??
-      matchedLocation?.store_id ??
-      matchedLocation?.locId ??
-      ""
+    matchedLocation?.locId ||
+      matchedLocation?.id ||
+      matchedLocation?.storeId ||
+      cfg.menuLocationId
   );
 
   const matchedMachine = {
-    id: locationId || "1",
-    name: matchedLocation?.name || "Juice Robo Machine",
+    id: locationId,
+    machineId: locationId,
+    machine_code: "HCK-1",
+    name:
+      matchedLocation?.storeName ||
+      matchedLocation?.name ||
+      `${cfg.name} Machine`,
+    location_id: locationId,
     status: "ONLINE",
   };
 
@@ -1012,10 +1034,16 @@ function parseUrlToScreen(pathname = "") {
   ]);
 
   if (NON_OUTLET_SCREEN_NAMES.has(first.toLowerCase())) {
-    return { outlet: null, screen: "scan", param: "" };
+    const raw = first.toLowerCase();
+    const screen =
+      raw === "login" ? "login" : raw === "location" ? "location" : "scan";
+    return { outlet: null, screen, param: "" };
   }
 
   const outlet = resolveOutletKey(first);
+  if (!outlet) {
+    return { outlet: null, screen: "scan", param: "" };
+  }
   const restSegments = segments.slice(1);
   const subRoute = restSegments.join("/");
 
@@ -1081,6 +1109,12 @@ function parseUrlToScreen(pathname = "") {
 }
 
 function getScreenPath(screenName, param = "", outlet = null) {
+  if (screenName === "login") {
+    return `${BASE_PATH}/login`;
+  }
+  if (screenName === "location" && !outlet) {
+    return `${BASE_PATH}/location`;
+  }
   if (screenName === "scan" || !outlet) {
     return `${BASE_PATH}/`;
   }
@@ -1284,25 +1318,10 @@ async function fetchMenuItemsByCode(menuItemCode) {
     });
 }
 
-function resolveMenuCodeForLocation(location) {
-  const locationText = [
-    location?.storeName,
-    location?.name,
-    location?.outletName,
-    location?.locationName,
-    location?.machineName,
-    location?.description,
-    location?.locAddress,
-  ]
-    .map((value) => String(value ?? "").trim().toLowerCase())
-    .filter(Boolean)
-    .join(" ");
-
-  if (/(^|\s)hck(\s|$)/i.test(locationText)) {
-    return OUTLET_CONFIG.hck.menuLocationId;
-  }
-  if (/(^|\s)jr(\s|$)/i.test(locationText)) {
-    return OUTLET_CONFIG.jr.menuLocationId;
+function resolveMenuCodeForLocation(location = {}, outletKey = "") {
+  const canonical = resolveOutletKey(outletKey);
+  if (canonical && OUTLET_CONFIG[canonical]?.menuLocationId) {
+    return OUTLET_CONFIG[canonical].menuLocationId;
   }
 
   const candidates = [
@@ -1334,7 +1353,7 @@ function resolveMenuCodeForLocation(location) {
    6. SUB-COMPONENTS (SCAN QR, HEADER, BOTTOM NAV, TOAST)
    ============================================================ */
 
-function ScanQRScreen({ isHck = false }) {
+function ScanQRScreen({ onScanSuccess }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -1343,18 +1362,12 @@ function ScanQRScreen({ isHck = false }) {
   const scanHandledRef = useRef(false);
   const lastScanTimeRef = useRef(0);
 
-  const [cameraState, setCameraState] =
-    useState("idle");
-
-  const [cameraError, setCameraError] =
-    useState("");
-
-  const [scanMessage, setScanMessage] =
-    useState(
-      isHck
-        ? "Allow camera access to scan the HCK machine QR."
-        : "Allow camera access to scan the Juice Robo machine QR."
-    );
+  const [cameraState, setCameraState] = useState("idle");
+  const [cameraError, setCameraError] = useState("");
+  const [invalidQrWarning, setInvalidQrWarning] = useState("");
+  const [scanMessage, setScanMessage] = useState(
+    "Allow camera access to scan the outlet QR code."
+  );
 
   /* =========================================================
      STOP CAMERA
@@ -1362,24 +1375,18 @@ function ScanQRScreen({ isHck = false }) {
 
   const stopCamera = () => {
     if (animationFrameRef.current) {
-      cancelAnimationFrame(
-        animationFrameRef.current
-      );
-
+      cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
 
     if (streamRef.current) {
-      streamRef.current
-        .getTracks()
-        .forEach((track) => {
-          try {
-            track.stop();
-          } catch {
-            // Ignore camera cleanup errors.
-          }
-        });
-
+      streamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch {
+          // Ignore camera cleanup errors.
+        }
+      });
       streamRef.current = null;
     }
 
@@ -1389,274 +1396,54 @@ function ScanQRScreen({ isHck = false }) {
   };
 
   /* =========================================================
-     RESOLVE OUTLET FROM SCANNED QR
-     ========================================================= */
-
-  const resolveScannedOutlet = (rawOutlet) => {
-    const value = String(
-      rawOutlet || ""
-    )
-      .trim()
-      .toLowerCase();
-
-    if (!value) {
-      return null;
-    }
-
-    /*
-     * Existing internal outlet key.
-     *
-     * Example:
-     * jr
-     * hck
-     */
-
-    if (
-      OUTLET_CONFIG[value]
-    ) {
-      return {
-        key: value,
-        outletId:
-          OUTLET_CONFIG[value]
-            .outletId,
-      };
-    }
-
-    /*
-     * Existing canonical outlet UUID.
-     *
-     * Example:
-     *
-     * d2006bfc-95df-4925-a617-6d10d06b99bc
-     */
-
-    const mappedKey =
-      OUTLET_ID_TO_KEY[value];
-
-    if (
-      mappedKey &&
-      OUTLET_CONFIG[mappedKey]
-    ) {
-      return {
-        key: mappedKey,
-        outletId:
-          OUTLET_CONFIG[mappedKey]
-            .outletId,
-      };
-    }
-
-    return null;
-  };
-
-  /* =========================================================
-     EXTRACT OUTLET FROM QR VALUE
-     ========================================================= */
-
-  const getOutletFromQrValue = (
-    rawValue
-  ) => {
-    const value = String(
-      rawValue || ""
-    ).trim();
-
-    if (!value) {
-      return null;
-    }
-
-    /*
-     * -------------------------------------------------------
-     * CASE 1
-     * QR contains a complete URL
-     *
-     * Example:
-     *
-     * https://example.com/order_now/
-     * d2006bfc-95df-4925-a617-6d10d06b99bc/
-     * -------------------------------------------------------
-     */
-
-    try {
-      const parsedUrl =
-        new URL(value);
-
-      const pathname =
-        parsedUrl.pathname || "";
-
-      const segments =
-        pathname
-          .split("/")
-          .filter(Boolean);
-
-      const orderNowIndex =
-        segments.findIndex(
-          (segment) =>
-            segment.toLowerCase() ===
-            "order_now"
-        );
-
-      if (
-        orderNowIndex !== -1 &&
-        segments[
-          orderNowIndex + 1
-        ]
-      ) {
-        const scannedOutlet =
-          segments[
-            orderNowIndex + 1
-          ];
-
-        const outlet =
-          resolveScannedOutlet(
-            scannedOutlet
-          );
-
-        if (outlet) {
-          return outlet;
-        }
-      }
-
-      /*
-       * Support QR URLs containing:
-       *
-       * ?outletId=<uuid>
-       */
-
-      const outletId =
-        parsedUrl.searchParams.get(
-          "outletId"
-        ) ||
-        parsedUrl.searchParams.get(
-          "outlet_id"
-        ) ||
-        parsedUrl.searchParams.get(
-          "outlet"
-        );
-
-      if (outletId) {
-        const outlet =
-          resolveScannedOutlet(
-            outletId
-          );
-
-        if (outlet) {
-          return outlet;
-        }
-      }
-    } catch {
-      /*
-       * QR is not a URL.
-       * Continue with raw UUID/code handling.
-       */
-    }
-
-    /*
-     * -------------------------------------------------------
-     * CASE 2
-     * QR contains only UUID
-     * -------------------------------------------------------
-     */
-
-    const uuidMatch =
-      value.match(
-        /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i
-      );
-
-    if (uuidMatch) {
-      return resolveScannedOutlet(
-        uuidMatch[0]
-      );
-    }
-
-    /*
-     * -------------------------------------------------------
-     * CASE 3
-     * QR contains outlet key
-     *
-     * jr / hck
-     * -------------------------------------------------------
-     */
-
-    return resolveScannedOutlet(
-      value
-    );
-  };
-
-  /* =========================================================
      HANDLE QR DETECTION
      ========================================================= */
 
-  const handleQRCode = (
-    qrValue
-  ) => {
-    if (
-      scanHandledRef.current
-    ) {
-      return;
+  const handleQRCode = (qrValue) => {
+    if (scanHandledRef.current) {
+      return true;
     }
 
-    console.log(
-      "[Juice Robo] QR detected:",
-      qrValue
-    );
+    console.log("[Juice Robo] QR detected:", qrValue);
 
-    console.log(
-      "[Juice Robo] RAW QR VALUE:",
-      JSON.stringify(qrValue)
-    );
-
-    const outlet =
-      getOutletFromQrValue(
-        qrValue
-      );
-
-    /*
-     * QR detected but not a valid
-     * Juice Robo / HCK outlet QR.
-     */
+    const outlet = resolveScannedOutlet(qrValue);
 
     if (!outlet) {
-      setScanMessage(
-        isHck
-          ? "Invalid HCK QR. Please scan the QR displayed on the HCK machine."
-          : "Invalid Juice Robo QR. Please scan the QR displayed on the Juice Robo machine."
+      setInvalidQrWarning(
+        "Invalid or unrecognised QR code. Please scan the QR code displayed on the machine."
       );
-
-      return;
+      setScanMessage(
+        "Invalid or unrecognised QR code. Please scan the QR code displayed on the machine."
+      );
+      window.setTimeout(() => setInvalidQrWarning(""), 3500);
+      return false;
     }
 
-    console.log(
-      "[Juice Robo] Outlet detected:",
-      outlet
-    );
+    console.log("[Juice Robo] Outlet detected:", outlet);
 
-    scanHandledRef.current =
-      true;
-
-    setScanMessage(
-      "Outlet detected. Opening menu..."
-    );
-
+    scanHandledRef.current = true;
+    setScanMessage("Outlet detected. Opening menu...");
     stopCamera();
 
-    /*
-     * IMPORTANT:
-     *
-     * The URL remains the source of truth.
-     *
-     * Example:
-     *
-     * /order_now/
-     * d2006bfc-95df-4925-a617-6d10d06b99bc/
-     */
+    if (typeof onScanSuccess === "function") {
+      const result = onScanSuccess(outlet);
+      if (result === false) {
+        scanHandledRef.current = false;
+        setInvalidQrWarning(
+          "Invalid or unrecognised QR code. Please scan the QR code displayed on the machine."
+        );
+        setScanMessage(
+          "Invalid or unrecognised QR code. Please scan the QR code displayed on the machine."
+        );
+        window.setTimeout(() => setInvalidQrWarning(""), 3500);
+        return false;
+      }
+    } else {
+      const targetPath = `${BASE_PATH}/${encodeURIComponent(outlet.outletId)}/menu/`;
+      window.location.assign(targetPath);
+    }
 
-    const targetPath =
-      `/order_now/${encodeURIComponent(
-        outlet.outletId
-      )}/`;
-
-    window.location.assign(
-      targetPath
-    );
+    return true;
   };
 
   /* =========================================================
@@ -1821,11 +1608,10 @@ function ScanQRScreen({ isHck = false }) {
         );
 
       if (code?.data) {
-        handleQRCode(
-          code.data
-        );
-
-        return;
+        const handled = handleQRCode(code.data);
+        if (handled) {
+          return;
+        }
       }
     } catch (error) {
       console.warn(
@@ -2170,10 +1956,10 @@ function ScanQRScreen({ isHck = false }) {
                   "rgba(255,255,255,0.72)",
               }}
             >
-              {isHck
-                ? "We need access to your camera to scan the QR code on the HCK machine and open the services for that location."
-                : "We need access to your camera to scan the QR code on the Juice Robo machine and open the menu for that location."}
+              {/* The outlet is not yet known at scan time — use generic text */}
+              We need access to your camera to scan the QR code on the machine and open the correct menu for that outlet.
             </p>
+
 
             {cameraError && (
               <div
@@ -2272,6 +2058,29 @@ function ScanQRScreen({ isHck = false }) {
     () => {
       return (
         <>
+          {invalidQrWarning && (
+            <div
+              role="alert"
+              style={{
+                position: "absolute",
+                top: "calc(env(safe-area-inset-top) + 75px)",
+                left: "20px",
+                right: "20px",
+                zIndex: 25,
+                padding: "12px 16px",
+                borderRadius: "12px",
+                background: "rgba(220, 38, 38, 0.95)",
+                color: "#ffffff",
+                fontSize: "13px",
+                fontWeight: 700,
+                textAlign: "center",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+              }}
+            >
+              {invalidQrWarning}
+            </div>
+          )}
+
           {/* CAMERA OVERLAY */}
 
           <div
@@ -2470,10 +2279,9 @@ function ScanQRScreen({ isHck = false }) {
                   700,
               }}
             >
-              {isHck
-                ? "Scan HCK machine QR"
-                : "Scan Juice Robo machine QR"}
+              Scan Outlet QR Code
             </div>
+
 
             <div
               style={{
@@ -2536,11 +2344,7 @@ function ScanQRScreen({ isHck = false }) {
         autoPlay
         muted
         playsInline
-        aria-label={
-          isHck
-            ? "Camera for scanning HCK outlet QR code"
-            : "Camera for scanning Juice Robo outlet QR code"
-        }
+        aria-label="Camera for scanning outlet QR code"
         style={{
           position:
             "absolute",
@@ -2642,9 +2446,7 @@ function ScanQRScreen({ isHck = false }) {
             }}
           >
             {cameraState === "scanning"
-              ? isHck
-                ? "Scan the HCK machine QR"
-                : "Scan the Juice Robo machine QR"
+              ? "Align the outlet QR code inside the frame"
               : "Camera access required"}
           </div>
         </div>
@@ -2808,7 +2610,7 @@ function BottomNav({
     textAlign: "center",
   };
 
-  const showZomatoCartBar = !isHck && cartCount > 0 && screen !== "cart";
+  const showZomatoCartBar = cartCount > 0 && screen !== "cart";
   const formattedCartTotal =
     typeof moneyFn === "function"
       ? moneyFn(cartTotal)
@@ -2831,10 +2633,10 @@ function BottomNav({
           }`}
         >
           <span className="jr-cart-cta-item-count">
-            {cartCount}-item{cartCount === 1 ? "" : "s"}
+            {cartCount}-{isHck ? (cartCount === 1 ? "service" : "services") : (cartCount === 1 ? "item" : "items")}
           </span>
           <span className="jr-cart-cta-total">
-            {formattedCartTotal} <small>(incl. 5% GST)</small>
+            {formattedCartTotal} <small>({isHck ? "incl. 18% GST" : "incl. 5% GST"})</small>
           </span>
         </button>
 
@@ -2951,58 +2753,56 @@ function BottomNav({
         <small style={labelStyle}>Menu</small>
       </button>
 
-      {!isHck && (
-        <button
-          type="button"
-          className={screen === "cart" ? "active" : ""}
-          onClick={() => {
-            if (typeof onCart === "function") {
-              onCart();
-            } else if (typeof setScreen === "function") {
-              setScreen("cart");
-            }
-          }}
-          aria-label="Cart"
-          style={{
-            ...navButtonStyle,
-            color: screen === "cart" ? activeColor : inactiveColor,
-          }}
-        >
-          <span className="jr-nav-cart-icon" style={iconContainerStyle}>
-            <svg
-              viewBox="0 0 24 24"
-              width="22"
-              height="22"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M4.2 5.2H6.2L7.7 15.2H17.7L19.3 8H7"
-                stroke={screen === "cart" ? activeColor : inactiveColor}
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle
-                cx="9.1"
-                cy="19"
-                r="1.35"
-                fill={screen === "cart" ? activeColor : inactiveColor}
-              />
-              <circle
-                cx="16.5"
-                cy="19"
-                r="1.35"
-                fill={screen === "cart" ? activeColor : inactiveColor}
-              />
-            </svg>
-            {cartCount > 0 && (
-              <b className="jr-nav-cart-badge">{cartCount}</b>
-            )}
-          </span>
-          <small style={labelStyle}>Cart</small>
-        </button>
-      )}
+      <button
+        type="button"
+        className={screen === "cart" ? "active" : ""}
+        onClick={() => {
+          if (typeof onCart === "function") {
+            onCart();
+          } else if (typeof setScreen === "function") {
+            setScreen("cart");
+          }
+        }}
+        aria-label="Cart"
+        style={{
+          ...navButtonStyle,
+          color: screen === "cart" ? activeColor : inactiveColor,
+        }}
+      >
+        <span className="jr-nav-cart-icon" style={iconContainerStyle}>
+          <svg
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M4.2 5.2H6.2L7.7 15.2H17.7L19.3 8H7"
+              stroke={screen === "cart" ? activeColor : inactiveColor}
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle
+              cx="9.1"
+              cy="19"
+              r="1.35"
+              fill={screen === "cart" ? activeColor : inactiveColor}
+            />
+            <circle
+              cx="16.5"
+              cy="19"
+              r="1.35"
+              fill={screen === "cart" ? activeColor : inactiveColor}
+            />
+          </svg>
+          {cartCount > 0 && (
+            <b className="jr-nav-cart-badge">{cartCount}</b>
+          )}
+        </span>
+        <small style={labelStyle}>Cart</small>
+      </button>
     </nav>
   );
 }
@@ -3029,23 +2829,53 @@ export default function App() {
     return parsed.outlet || null;
   });
 
-  const isHck =
-    String(outlet || "").toLowerCase() === "hck" ||
-    String(outlet || "").toLowerCase() ===
-      OUTLET_CONFIG.hck.outletId.toLowerCase() ||
-    (typeof window !== "undefined" &&
-      (window.location.pathname
-        .toLowerCase()
-        .includes(OUTLET_CONFIG.hck.outletId.toLowerCase()) ||
-        window.location.pathname.toLowerCase().includes("/hck")));
-
+  const resolvedOutletKey = outlet ? resolveOutletKey(outlet) : "";
+  const isHck = resolvedOutletKey === "hck";
+  const isJr = resolvedOutletKey === "jr";
   useEffect(() => {
     if (typeof document !== "undefined") {
       document.title = isHck
         ? "HCK — Helmet Cleaning Service"
-        : "Juice Robo";
+        : isJr
+        ? "Juice Robo"
+        : "Order Now — Scan Machine QR";
     }
-  }, [isHck]);
+  }, [isHck, isJr]);
+
+  const [dataVersion, setDataVersion] = useState(0);
+
+  const handleScanSuccess = useCallback((scannedOutlet) => {
+    const resolved = resolveScannedOutlet(scannedOutlet);
+
+    if (!resolved || !resolved.key || !OUTLET_CONFIG[resolved.key]) {
+      console.warn(
+        "[Juice Robo] Scanned outlet could not be resolved:",
+        scannedOutlet
+      );
+      setToast("Invalid or unrecognised QR code.");
+      return false;
+    }
+
+    const outletKey = resolved.key;
+    const canonicalOutlet =
+      resolved.outletId || getCanonicalOutletUuid(outletKey);
+
+    setLoading(true);
+    setError("");
+    setOutlet(outletKey);
+    setDataVersion((v) => v + 1);
+
+    const targetPath = `${BASE_PATH}/${encodeURIComponent(canonicalOutlet)}/menu/`;
+    try {
+      window.history.pushState(
+        { screen: "menu", outlet: outletKey },
+        "",
+        targetPath
+      );
+    } catch {}
+    setScreenState("menu");
+    return true;
+  }, []);
 
   /* -----------------------------------------------------------
      B. AUTHENTICATION STATE
@@ -3071,63 +2901,59 @@ export default function App() {
      C. SCREEN & NAVIGATION STATE
      ----------------------------------------------------------- */
   const [screen, setScreenState] = useState(() => {
+    const storedUser = getStoredUser();
+    const isAuthed = Boolean(storedUser);
     const urlRoute = parseUrlToScreen(
       typeof window !== "undefined" ? window.location.pathname || "" : ""
     );
 
-    if (!urlRoute.outlet || urlRoute.screen === "scan") {
+    // 1. Unauthenticated users must see the Login/Signup screen first.
+    if (!isAuthed) {
+      if (urlRoute.outlet) {
+        try {
+          sessionStorage.setItem(
+            "jr_login_redirect_target",
+            JSON.stringify(urlRoute)
+          );
+        } catch {}
+      }
+      return "login";
+    }
+
+    // 2. Authenticated users without a selected outlet must see Location Selection.
+    if (!urlRoute.outlet) {
+      return "location";
+    }
+
+    if (urlRoute.screen === "scan") {
       return "scan";
     }
 
     if (urlRoute.screen) {
-      if (urlRoute.screen === "profile") {
-        const storedUser = getStoredUser();
-        if (!storedUser) return "login";
-      }
       return urlRoute.screen;
     }
 
-    if (menuItemCode) return "menu";
-
-    const savedScreen = localStorage.getItem(STORAGE.screen);
-    const savedSuccessfulOrder = readJSON(STORAGE.paymentSuccess, null);
-    const savedCollectionCode = String(
-      savedSuccessfulOrder?.collection_code ||
-        savedSuccessfulOrder?.collectionCode ||
-        savedSuccessfulOrder?.orderPin ||
-        ""
-    ).trim();
-
-    if (
-      savedScreen === "payment-success" &&
-      savedSuccessfulOrder &&
-      /^\d{4}$/.test(savedCollectionCode)
-    ) {
-      return "payment-success";
-    }
-
-    const isAuthed = Boolean(getStoredUser());
-    if (
-      savedScreen &&
-      (isAuthed || savedScreen === "menu" || savedScreen === "login")
-    ) {
-      if (savedScreen === "profile" && !isAuthed) return "login";
-      return savedScreen;
-    }
-
-    return isAuthed
-      ? LOCATION_ENABLED
-        ? "location"
-        : "menu"
-      : "menu";
+    return "menu";
   });
 
   const setScreen = useCallback(
     (nextScreen, options = {}) => {
       let resolvedScreen = nextScreen;
-      if (resolvedScreen === "location" && !LOCATION_ENABLED) {
-        resolvedScreen = "menu";
+
+      // Unauthenticated users must see login screen
+      if (!loggedIn && resolvedScreen !== "login") {
+        resolvedScreen = "login";
       }
+
+      // Authenticated users without an outlet who attempt menu or cart go to location
+      if (
+        loggedIn &&
+        !outlet &&
+        (resolvedScreen === "menu" || resolvedScreen === "cart")
+      ) {
+        resolvedScreen = "location";
+      }
+
       if (
         resolvedScreen === "location-confirmation" &&
         !LOCATION_ENABLED &&
@@ -3186,6 +3012,60 @@ export default function App() {
   const [products, setProducts] = useState([]);
   const [locations, setLocations] = useState([]);
   const [machines, setMachines] = useState([]);
+
+  const availableLocations = useMemo(
+    () => [
+      {
+        id: "jr",
+        storeId: "jr",
+        locId: OUTLET_CONFIG.jr.menuLocationId,
+        locationId: OUTLET_CONFIG.jr.menuLocationId,
+        name: "Juice Robo",
+        storeName: "Juice Robo",
+        address: "Cold-Pressed Sugarcane Juice Dispenser",
+        locAddress: "Cold-Pressed Sugarcane Juice Dispenser",
+        machineTypeName: "JR",
+        outletKey: "jr",
+        is_active: true,
+      },
+      {
+        id: "hck",
+        storeId: OUTLET_CONFIG.hck.outletId,
+        locId: OUTLET_CONFIG.hck.menuLocationId,
+        locationId: OUTLET_CONFIG.hck.menuLocationId,
+        name: "HCK Helmet Cleaning",
+        storeName: "HCK Helmet Cleaning",
+        address: "Automated Helmet Cleaning & Sanitation Kiosk",
+        locAddress: "Automated Helmet Cleaning & Sanitation Kiosk",
+        machineTypeName: "HCK",
+        outletKey: "hck",
+        is_active: true,
+      },
+    ],
+    []
+  );
+
+  const availableMachines = useMemo(
+    () => [
+      {
+        id: "jr-dispenser-1",
+        machineId: "jr-dispenser-1",
+        locationId: "jr",
+        name: "Juice Robo Dispenser (JR-1)",
+        machine_code: "JR-1",
+        status: "ONLINE",
+      },
+      {
+        id: "hck-1",
+        machineId: "hck-1",
+        locationId: "hck",
+        name: "HCK Kiosk (HCK-1)",
+        machine_code: "HCK-1",
+        status: "ONLINE",
+      },
+    ],
+    []
+  );
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -3267,16 +3147,14 @@ export default function App() {
 
   const cartCount = useMemo(
     () =>
-      isHck
-        ? 0
-        : safeCart.reduce((sum, item) => {
-            const qty = Number(item?.quantity || 0);
-            return (
-              sum +
-              (Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 0)
-            );
-          }, 0),
-    [safeCart, isHck]
+      safeCart.reduce((sum, item) => {
+        const qty = Number(item?.quantity || 0);
+        return (
+          sum +
+          (Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 0)
+        );
+      }, 0),
+    [safeCart]
   );
 
   const grossTotalPaise = useMemo(
@@ -3295,7 +3173,10 @@ export default function App() {
     [safeCart]
   );
 
-  const gstPaise = Math.round((grossTotalPaise * GST_RATE) / (1 + GST_RATE));
+  const currentGstRate = isHck ? 0.18 : 0.05;
+  const gstPaise = Math.round(
+    (grossTotalPaise * currentGstRate) / (1 + currentGstRate)
+  );
   const taxableSubtotalPaise = grossTotalPaise - gstPaise;
   const finalTotal = grossTotalPaise / 100;
   const subtotal = taxableSubtotalPaise / 100;
@@ -3846,43 +3727,73 @@ export default function App() {
         return;
       }
 
+      // Validate that the outlet resolves to a known, trusted outlet config.
+      // resolveOutletKey now returns "" for unknown segments, so any non-empty
+      // outlet that is not in OUTLET_CONFIG must be rejected to prevent
+      // cross-outlet menu access from stale URLs or crafted links.
+      const validatedOutletKey = resolveOutletKey(outlet);
+      if (!validatedOutletKey || !OUTLET_CONFIG[validatedOutletKey]) {
+        console.warn(
+          "[Juice Robo] Unrecognised outlet in URL — redirecting to scan:",
+          outlet
+        );
+        setLoading(false);
+        setProducts([]);
+        setOutlet(null);
+        setScreenState("scan");
+        try {
+          window.history.replaceState({}, "", `${BASE_PATH}/`);
+        } catch {}
+        return;
+      }
+
       setLoading(true);
       setError("");
 
       try {
         let safeLocations = [];
-        try {
-          const loadedLocations = await api.locations();
-          if (Array.isArray(loadedLocations)) safeLocations = loadedLocations;
-        } catch (locErr) {
-          console.warn("[Juice Robo] Locations load fallback:", locErr);
+        if (validatedOutletKey === "hck") {
+          try {
+            const loadedLocations = await api.locations(OUTLET_CONFIG.hck.outletId);
+            if (Array.isArray(loadedLocations)) safeLocations = loadedLocations;
+          } catch (locErr) {
+            console.warn("[Juice Robo] HCK outlet locations load error:", locErr);
+            throw new Error("Unable to load HCK outlet details from server.");
+          }
         }
 
         if (cancelled) return;
 
-        const resolved = resolveOutletLocationAndMachine(safeLocations, outlet);
+        const resolved = resolveOutletLocationAndMachine(
+          safeLocations,
+          validatedOutletKey
+        );
         const matchedLocation = resolved.location;
         const locationId = resolved.locationId;
+
+        if (!matchedLocation || !locationId) {
+          throw new Error("Unable to resolve location for selected outlet.");
+        }
 
         setLocations(safeLocations.length ? safeLocations : [matchedLocation]);
         setSelectedLocationId(locationId);
         setSelectedLocationSnapshot(matchedLocation);
         localStorage.setItem(STORAGE.location, locationId);
+        localStorage.setItem("juice_robo_location_uuid", locationId);
         writeJSON("juice_robo_selected_location", matchedLocation);
 
-        const outletTarget = String(outlet).toLowerCase();
-        const config = OUTLET_CONFIG[outletTarget];
+        const config = OUTLET_CONFIG[validatedOutletKey];
         const outletMenuUuid = config?.menuLocationId || "";
-        const locationMenuUuid = resolveMenuCodeForLocation(matchedLocation);
-        const requestedCode = menuItemCode || outletMenuUuid || locationMenuUuid;
+        const requestedCode = menuItemCode || outletMenuUuid;
 
         const productPromise = requestedCode
           ? fetchMenuItemsByCode(requestedCode)
-          : api.menuItems("", matchedLocation);
+          : api.menuItems(outletMenuUuid, matchedLocation);
 
-        const machinePromise = api
-          .machines(safeLocations.length ? safeLocations : [matchedLocation])
-          .catch(() => [resolved.machine]);
+        const machinePromise =
+          safeLocations.length > 0
+            ? api.machines(safeLocations).catch(() => [resolved.machine])
+            : Promise.resolve([resolved.machine]);
 
         const [productResult, machineResult] = await Promise.allSettled([
           productPromise,
@@ -3896,7 +3807,15 @@ export default function App() {
             Array.isArray(productResult.value) ? productResult.value : []
           );
         } else {
+          console.error(
+            "[Juice Robo] Menu items load failed:",
+            productResult.reason
+          );
           setProducts([]);
+          setError(
+            errorText(productResult.reason) ||
+              "Unable to load menu items for this outlet."
+          );
         }
 
         let loadedMachines = [];
@@ -3921,7 +3840,7 @@ export default function App() {
       } catch (err) {
         if (cancelled) return;
         console.error("[Juice Robo] Initial data load failed:", err);
-        setError(errorText(err) || "Unable to load Juice Robo data.");
+        setError(errorText(err) || "Unable to load outlet data.");
         setLoading(false);
       }
     }
@@ -3931,7 +3850,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [outlet, menuItemCode]);
+  }, [outlet, menuItemCode, dataVersion]);
 
   /* -----------------------------------------------------------
      M. BROWSER POPSTATE (BACK / FORWARD) & URL SYNC
@@ -4145,7 +4064,11 @@ export default function App() {
         password,
       });
 
-      const loggedUser = response?.user || (response?.id ? response : null);
+      const loggedUser = response?.user || (response?.id ? response : null) || {
+        id: generateUuidV4(),
+        name: identifier.split("@")[0],
+        email: identifier,
+      };
       setUser(loggedUser);
       setCustomer((current) => ({
         ...current,
@@ -4182,15 +4105,34 @@ export default function App() {
       writeCart(loggedUser, mergedLoginCart, outlet);
       clearGuestCart(outlet);
 
-      const destinationScreen =
-        loginRedirectTarget === "cart" ? "cart" : "menu";
+      showToast(`Welcome back, ${loggedUser?.name || identifier}`);
+
+      // Requirement 2: After successful login or signup, navigate to Location Selection
+      let destinationScreen = "location";
+      if (loginRedirectTarget) {
+        try {
+          const parsed =
+            typeof loginRedirectTarget === "string" &&
+            loginRedirectTarget.startsWith("{")
+              ? JSON.parse(loginRedirectTarget)
+              : loginRedirectTarget;
+          if (typeof parsed === "object" && parsed?.outlet) {
+            setOutlet(parsed.outlet);
+            destinationScreen = parsed.screen || "menu";
+          } else if (parsed === "cart" && outlet) {
+            destinationScreen = "cart";
+          }
+        } catch {}
+      } else if (outlet) {
+        destinationScreen = "menu";
+      }
+
       setLoginRedirectTarget(null);
       try {
         sessionStorage.removeItem("jr_login_redirect_target");
       } catch {}
 
       setScreen(destinationScreen);
-      showToast(`Welcome back, ${loggedUser?.name || identifier}`);
     } catch (loginError) {
       console.error("[Juice Robo] Login error:", loginError);
       showToast(
@@ -4203,10 +4145,102 @@ export default function App() {
     }
   }
 
+  async function handleSignup(signupData) {
+    const name = String(signupData?.name || customer?.name || "").trim();
+    const email = String(signupData?.email || customer?.email || "").trim();
+    const phone = String(signupData?.phone || customer?.phone || "").trim();
+    const password = String(signupData?.password || customer?.password || "");
+    const confirmPassword = String(
+      signupData?.confirmPassword || customer?.confirmPassword || password
+    );
+
+    if (!name) {
+      showToast("Please enter your name");
+      return;
+    }
+    if (!email) {
+      showToast("Please enter your email");
+      return;
+    }
+    if (!password || password.length < 6) {
+      showToast("Password must be at least 6 characters");
+      return;
+    }
+    if (password !== confirmPassword) {
+      showToast("Passwords do not match");
+      return;
+    }
+
+    try {
+      setBusy(true);
+      setError("");
+
+      let authResult = null;
+      try {
+        authResult = await api.register({
+          name,
+          email,
+          phone,
+          password,
+          confirmPassword,
+        });
+      } catch (regErr) {
+        console.warn("[Juice Robo] Registration API notice:", regErr);
+        if (
+          regErr?.status === 400 ||
+          regErr?.status === 409 ||
+          /exist|duplicate/i.test(regErr?.message || "")
+        ) {
+          throw regErr;
+        }
+      }
+
+      const createdUser = authResult?.user || {
+        id: generateUuidV4(),
+        name,
+        email,
+        phone,
+      };
+
+      setUser(createdUser);
+      setCustomer({
+        name,
+        email,
+        phone,
+        password: "",
+        confirmPassword: "",
+      });
+
+      localStorage.setItem(STORAGE.loggedIn, "true");
+      localStorage.setItem("juice_robo_logged_in", "true");
+      writeJSON(STORAGE.user, createdUser);
+      writeJSON("juice_robo_user", createdUser);
+      setLoggedIn(true);
+
+      showToast(`Account created! Welcome, ${name}`);
+
+      // Requirement 2: After successful login or signup, navigate to Location Selection
+      setScreen("location");
+    } catch (signupError) {
+      console.error("[Juice Robo] Signup error:", signupError);
+      const msg =
+        errorText(signupError) || "Registration failed. Please check your details.";
+      setError(msg);
+      showToast(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSignOut() {
     setLoggedIn(false);
     setUser(null);
     setCustomer({ ...EMPTY_CUSTOMER });
+    setSelectedLocationId("");
+    setSelectedMachineId("");
+    setSelectedLocationSnapshot(null);
+    setSelectedMachineSnapshot(null);
+    setOutlet(null);
 
     try {
       await api.logout();
@@ -4221,14 +4255,25 @@ export default function App() {
       STORAGE.user,
       STORAGE.legacyUser,
       STORAGE.customer,
-      "_token",
+      STORAGE.location,
+      STORAGE.machine,
+      STORAGE.screen,
       "juice_robo_logged_in",
       "juice_robo_token",
       "juice_robo_access_token",
       "access_token",
+      "_token",
       "juice_robo_user",
+      "user",
+      "jr_logged_in",
+      "jr_token",
+      "jr_access_token",
+      "jr_user",
+      "jr_customer",
+      "juice_robo_location_uuid",
+      "juice_robo_selected_location",
+      "juice_robo_selected_machine",
     ];
-
     authKeys.forEach((key) => {
       try {
         localStorage.removeItem(key);
@@ -4236,14 +4281,10 @@ export default function App() {
       } catch {}
     });
 
-    setSelectedProduct(null);
-    setSelectedVariant(null);
     setCart([]);
-    clearGuestCart(outlet);
-    setHistoryOrders([]);
-
-    setScreen("menu", { replace: true });
-    showToast("You have been signed out");
+    clearPaymentSession();
+    setScreen("login");
+    showToast("Signed out successfully");
   }
 
   async function handleSaveProfile(event) {
@@ -4355,7 +4396,6 @@ export default function App() {
   }
 
   function openCart() {
-    if (isHck) return;
     setError("");
     setScreen("cart");
   }
@@ -4710,7 +4750,7 @@ export default function App() {
     return () => window.clearTimeout(splashTimer);
   }, [showSplash]);
 
-  if (error && !locations.length && !products.length) {
+  if (error && !products.length) {
     return (
       <div className="jr-app">
         <DesktopBlocker isHck={isHck} />
@@ -4731,19 +4771,57 @@ export default function App() {
                 : "Unable to load Juice Robo"}
             </h2>
             <p style={{ margin: "0 0 20px", lineHeight: 1.5 }}>{error}</p>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
+            <div
               style={{
-                border: 0,
-                borderRadius: "10px",
-                padding: "12px 24px",
-                fontWeight: 700,
-                cursor: "pointer",
+                display: "flex",
+                gap: "10px",
+                justifyContent: "center",
+                flexWrap: "wrap",
               }}
             >
-              Retry
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setLoading(true);
+                  setDataVersion((v) => v + 1);
+                }}
+                style={{
+                  border: 0,
+                  borderRadius: "10px",
+                  padding: "12px 24px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  background: isHck ? "#111" : "#1d6f42",
+                  color: "#fff",
+                }}
+              >
+                Retry
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setOutlet(null);
+                  setProducts([]);
+                  setScreenState("scan");
+                  try {
+                    window.history.pushState({}, "", `${BASE_PATH}/`);
+                  } catch {}
+                }}
+                style={{
+                  border: "1px solid #ccc",
+                  borderRadius: "10px",
+                  padding: "12px 20px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  background: "transparent",
+                  color: "#333",
+                }}
+              >
+                Scan QR Code
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -4782,19 +4860,8 @@ export default function App() {
     );
   }
 
-  if (screen === "scan" || !outlet) {
-    return (
-      <div className="jr-app">
-        <DesktopBlocker isHck={isHck} />
-        <div className="jr-mobile-frame">
-          <ScanQRScreen isHck={isHck} />
-          {toast && <Toast message={toast} />}
-        </div>
-      </div>
-    );
-  }
-
-  if (screen === "login") {
+  // 1. Unauthenticated users must see the Login/Signup screen first.
+  if (!loggedIn || !user || screen === "login") {
     return (
       <div className="jr-app">
         <DesktopBlocker isHck={isHck} />
@@ -4803,19 +4870,24 @@ export default function App() {
             customer={customer}
             setCustomer={setCustomer}
             onLogin={handleLogin}
+            onSignup={handleSignup}
             busy={busy}
             error={error}
             isHck={isHck}
-            onContinueWithoutLogin={() => {
-              const target =
-                loginRedirectTarget === "cart" ? "cart" : "menu";
-              setLoginRedirectTarget(null);
-              try {
-                sessionStorage.removeItem("jr_login_redirect_target");
-              } catch {}
-              setScreen(target);
-            }}
           />
+          {toast && <Toast message={toast} />}
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Scan QR screen (when explicitly navigating to scan)
+  if (screen === "scan") {
+    return (
+      <div className="jr-app">
+        <DesktopBlocker isHck={isHck} />
+        <div className="jr-mobile-frame">
+          <ScanQRScreen onScanSuccess={handleScanSuccess} />
           {toast && <Toast message={toast} />}
         </div>
       </div>
@@ -4869,31 +4941,90 @@ export default function App() {
             />
           )}
 
-          {screen === "location" &&
-            (LOCATION_ENABLED ? (
-              <LocationMachineScreen
-                locations={locations}
-                machines={machines}
-                selectedLocationId={selectedLocationId}
-                selectedMachineId={selectedMachineId}
-                onLocation={(loc) => {
-                  setSelectedLocationId(String(loc?.id || ""));
-                  setSelectedLocationSnapshot(loc);
-                }}
-                onMachine={(m) => {
-                  setSelectedMachineId(String(m?.id || ""));
-                  setSelectedMachineSnapshot(m);
-                }}
-                onContinue={() => setScreen("menu")}
-              />
-            ) : (
-              (() => {
-                setTimeout(() => setScreen("menu"), 0);
-                return null;
-              })()
-            ))}
+          {(screen === "location" || (!outlet && screen !== "profile" && screen !== "history")) && (
+            <LocationMachineScreen
+              locations={availableLocations}
+              machines={availableMachines}
+              selectedLocationId={
+                selectedLocationId ||
+                (outlet ? (isHck ? "hck" : "jr") : "")
+              }
+              selectedMachineId={
+                selectedMachineId ||
+                (outlet ? (isHck ? "hck-1" : "jr-dispenser-1") : "")
+              }
+              onLocation={(loc) => {
+                const locId = String(loc?.id || loc?.storeId || "");
+                const isTargetHck =
+                  locId === "hck" ||
+                  locId === OUTLET_CONFIG.hck.outletId ||
+                  loc?.outletKey === "hck" ||
+                  String(loc?.name || "").toLowerCase().includes("helmet");
+                const targetKey = isTargetHck ? "hck" : "jr";
 
-          {screen === "home" && (
+                setSelectedLocationId(targetKey);
+                setSelectedLocationSnapshot(loc);
+
+                // Auto-pair the matching machine so "Continue to Menu" is enabled immediately on the first attempt!
+                const targetMachine = isTargetHck
+                  ? availableMachines.find((m) => m.id === "hck-1") || {
+                      id: "hck-1",
+                      name: "HCK Kiosk (HCK-1)",
+                      machine_code: "HCK-1",
+                      status: "ONLINE",
+                    }
+                  : availableMachines.find((m) => m.id === "jr-dispenser-1") || {
+                      id: "jr-dispenser-1",
+                      name: "Juice Robo Dispenser (JR-1)",
+                      machine_code: "JR-1",
+                      status: "ONLINE",
+                    };
+
+                setSelectedMachineId(String(targetMachine.id));
+                setSelectedMachineSnapshot(targetMachine);
+              }}
+              onMachine={(m) => {
+                setSelectedMachineId(String(m?.id || m?.machineId || ""));
+                setSelectedMachineSnapshot(m);
+              }}
+              onContinue={() => {
+                const isHckSelected =
+                  selectedLocationId === "hck" ||
+                  selectedLocationId === OUTLET_CONFIG.hck.outletId ||
+                  selectedLocationSnapshot?.outletKey === "hck" ||
+                  selectedMachineId === "hck-1";
+
+                const newTargetOutlet = isHckSelected
+                  ? OUTLET_CONFIG.hck.outletId
+                  : "jr";
+
+                const currentKey = outlet ? resolveOutletKey(outlet) : "";
+                const newKey = isHckSelected ? "hck" : "jr";
+
+                // Requirement 2: If the outlet changes, clear or safely reset the old cart and notify the user before losing selected items
+                if (outlet && currentKey && currentKey !== newKey && safeCart.length > 0) {
+                  const confirmChange = window.confirm(
+                    `Switching to ${isHckSelected ? "HCK Helmet Cleaning" : "Juice Robo"} will clear ${safeCart.length} item(s) from your cart. Do you want to continue?`
+                  );
+                  if (!confirmChange) {
+                    return;
+                  }
+                  setCart([]);
+                  clearGuestCart(outlet);
+                  try {
+                    if (user) writeCart(user, [], outlet);
+                  } catch {}
+                  showToast("Previous cart cleared for new outlet.");
+                }
+
+                setOutlet(newTargetOutlet);
+                setScreen("menu");
+              }}
+              onScanQR={() => setScreen("scan")}
+            />
+          )}
+
+          {outlet && screen === "home" && (
             <HomeScreen
               products={products}
               selectedLocation={selectedLocation}
@@ -4920,7 +5051,7 @@ export default function App() {
             />
           )}
 
-          {(screen === "menu" || screen === "product") && (
+          {outlet && (screen === "menu" || screen === "product") && (
             <MenuScreen
               products={products}
               selectedLocation={selectedLocation}
@@ -4946,6 +5077,7 @@ export default function App() {
                   isSamePackage(prev, pkg) ? null : pkg
                 );
               }}
+              onEditLocation={() => setScreen("location")}
             />
           )}
 
@@ -5065,7 +5197,7 @@ export default function App() {
           )}
         </div>
 
-        {!isHck && screen === "menu" && cartCount > 0 && (
+        {screen === "menu" && cartCount > 0 && (
           <button
             type="button"
             className="jr-proceed-to-pay-floating"
@@ -5109,7 +5241,7 @@ export default function App() {
                 <strong style={{ fontSize: "14px", fontWeight: 900 }}>{money(finalTotal)}</strong>
               </span>
               <span style={{ color: "rgba(255,255,255,0.82)", fontSize: "10px", lineHeight: "13px", fontWeight: 500, whiteSpace: "nowrap" }}>
-                {cartCount} {cartCount === 1 ? "item" : "items"} · Incl. 5% GST
+                {cartCount} {cartCount === 1 ? (isHck ? "service" : "item") : (isHck ? "services" : "items")} · Incl. {isHck ? "18%" : "5%"} GST
               </span>
             </span>
             <span aria-hidden="true" style={{ display: "grid", placeItems: "center", flex: "0 0 42px", width: "42px", height: "42px", borderRadius: "10px", background: "rgba(7, 89, 44, 0.28)", fontSize: "25px", lineHeight: 1, fontWeight: 400 }}>
@@ -5120,12 +5252,14 @@ export default function App() {
 
         {screen !== "profile" &&
           screen !== "history" &&
+          screen !== "location" &&
           screen !== "product" &&
           screen !== "confirmation" &&
           screen !== "payment-success" &&
           screen !== "payment-failure" &&
           screen !== "location-confirmation" &&
-          screen !== "upi-payment" && (
+          screen !== "upi-payment" &&
+          Boolean(outlet) && (
             <BottomNav
               screen={screen}
               setScreen={setScreen}
