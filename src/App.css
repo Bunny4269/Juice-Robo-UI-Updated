@@ -3921,3 +3921,56 @@ textarea:focus-visible {
     max-height: 32px !important;
   }
 }
+
+
+/* =========================================================
+   CART ICON — OUTLINED BAG WITH BLACK ITEM BADGE
+   Matches the requested reference screenshot.
+   ========================================================= */
+
+.jr-nav-cart-icon,
+.jr-cart-icon-wrapper {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.jr-nav-cart-icon svg,
+.jr-cart-icon-wrapper svg {
+  display: block;
+  overflow: visible;
+}
+
+.jr-nav-cart-badge,
+.jr-cart-count {
+  position: absolute !important;
+  top: -5px !important;
+  right: -8px !important;
+  left: auto !important;
+  z-index: 10 !important;
+  min-width: 18px !important;
+  width: auto !important;
+  height: 18px !important;
+  max-width: none !important;
+  max-height: none !important;
+  padding: 0 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #111111 !important;
+  color: #ffffff !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+
+.jr-bottom-nav.jr-bottom-nav--cart-cta .jr-cart-count {
+  top: -5px !important;
+  right: -8px !important;
+}

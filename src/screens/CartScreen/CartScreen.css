@@ -178,3 +178,114 @@
 @media (max-width:390px) { .jr-cart-page{padding-left:10px !important;padding-right:10px !important;} .jr-cart-item{grid-template-columns:68px minmax(0,1fr) auto !important;gap:8px !important;} .jr-cart-item-image{width:68px !important;height:68px !important;} .jr-cart-quantity{width:72px;} }
 @media (max-width:360px) { .jr-cart-item{grid-template-columns:62px minmax(0,1fr) auto !important;} .jr-cart-item-image{width:62px !important;height:62px !important;} .jr-cart-item-info h2{font-size:13px !important;} .jr-cart-summary{padding:14px !important;} }
 @media (prefers-reduced-motion:reduce){.jr-cart-page *{transition:none !important;animation:none !important;}}
+
+/* =========================================================
+   COLLECT-FROM CARD — CHANGE BUTTON FIX
+   Keep the action compact and aligned on mobile, even when
+   global button styles are loaded after this screen stylesheet.
+   ========================================================= */
+.jr-cart-page .jr-cart-location-card {
+  grid-template-columns: 40px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  min-width: 0 !important;
+}
+
+.jr-cart-page .jr-cart-location-copy {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.jr-cart-page .jr-cart-location-copy small {
+  display: block !important;
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0.09em !important;
+}
+
+.jr-cart-page .jr-cart-location-copy strong {
+  display: block !important;
+  max-width: 100% !important;
+  font-size: 14px !important;
+  line-height: 1.25 !important;
+}
+
+.jr-cart-page .jr-cart-location-copy span {
+  display: block !important;
+  max-width: 100% !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+.jr-cart-page .jr-cart-change-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 66px !important;
+  max-width: 84px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  margin: 0 !important;
+  padding: 0 10px !important;
+  border: 1px solid rgba(223, 109, 22, 0.22) !important;
+  border-radius: 9px !important;
+  background: #fff7ef !important;
+  color: var(--jr-orange-dark) !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.035em !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease !important;
+}
+
+.jr-cart-page .jr-cart-change-button:hover {
+  border-color: rgba(223, 109, 22, 0.42) !important;
+  background: #fff0e1 !important;
+}
+
+.jr-cart-page .jr-cart-change-button:active {
+  transform: scale(0.97) !important;
+}
+
+.jr-cart-page .jr-cart-change-button:focus-visible {
+  outline: 2px solid var(--jr-orange) !important;
+  outline-offset: 2px !important;
+}
+
+@media (max-width: 380px) {
+  .jr-cart-page .jr-cart-location-card {
+    grid-template-columns: 36px minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+
+  .jr-cart-page .jr-cart-location-icon {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .jr-cart-page .jr-cart-location-copy strong {
+    font-size: 13px !important;
+  }
+
+  .jr-cart-page .jr-cart-location-copy span {
+    font-size: 11px !important;
+  }
+
+  .jr-cart-page .jr-cart-change-button {
+    min-width: 60px !important;
+    max-width: 68px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 7px !important;
+    font-size: 10px !important;
+  }
+}

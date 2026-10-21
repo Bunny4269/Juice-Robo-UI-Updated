@@ -2676,31 +2676,19 @@ function BottomNav({
               aria-hidden="true"
             >
               <path
-                d="M4.2 5.2H6.2L7.7 15.2H17.7L19.3 8H7"
+                d="M7 8.5V7a5 5 0 0 1 10 0v1.5M5.5 8.5h13l1 12h-15l1-12Z"
                 stroke={screen === "cart" ? activeColor : inactiveColor}
                 strokeWidth="1.7"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-
-              <circle
-                cx="9.1"
-                cy="19"
-                r="1.35"
-                fill={screen === "cart" ? activeColor : inactiveColor}
-              />
-
-              <circle
-                cx="16.5"
-                cy="19"
-                r="1.35"
-                fill={screen === "cart" ? activeColor : inactiveColor}
-              />
             </svg>
 
-            <span className="jr-cart-count">
-              {cartCount > 99 ? "99+" : cartCount}
-            </span>
+            {cartCount > 0 && (
+              <span className="jr-cart-count" aria-hidden="true">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
           </span>
 
           <span>Cart</span>
@@ -2778,27 +2766,17 @@ function BottomNav({
             aria-hidden="true"
           >
             <path
-              d="M4.2 5.2H6.2L7.7 15.2H17.7L19.3 8H7"
+              d="M7 8.5V7a5 5 0 0 1 10 0v1.5M5.5 8.5h13l1 12h-15l1-12Z"
               stroke={screen === "cart" ? activeColor : inactiveColor}
               strokeWidth="1.7"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <circle
-              cx="9.1"
-              cy="19"
-              r="1.35"
-              fill={screen === "cart" ? activeColor : inactiveColor}
-            />
-            <circle
-              cx="16.5"
-              cy="19"
-              r="1.35"
-              fill={screen === "cart" ? activeColor : inactiveColor}
-            />
           </svg>
           {cartCount > 0 && (
-            <b className="jr-nav-cart-badge">{cartCount}</b>
+            <b className="jr-nav-cart-badge">
+              {cartCount > 99 ? "99+" : cartCount}
+            </b>
           )}
         </span>
         <small style={labelStyle}>Cart</small>
