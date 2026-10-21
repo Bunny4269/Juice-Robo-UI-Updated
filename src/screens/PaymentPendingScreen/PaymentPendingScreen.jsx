@@ -91,6 +91,8 @@ export default function PaymentPendingScreen({
   onProceedWithUpi,
   onSelectApp,
   isMobile = false,
+  paymentAppLaunched = false,
+  showPaymentProgressSheet = false,
   paymentStatus = "pending",
   statusMessage = "",
   isVerifying = false,
@@ -292,6 +294,66 @@ export default function PaymentPendingScreen({
           )}
         </div>
       </section>
+
+      {/* Keep the sheet hidden during the browser/OS app-launch confirmation. */}
+      {showPaymentProgressSheet && (
+        <div className="jr-payment-progress-layer">
+          <div className="jr-payment-progress-backdrop" aria-hidden="true" />
+          <section
+            className="jr-payment-progress-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="jr-payment-progress-title"
+            aria-describedby="jr-payment-progress-description"
+          >
+            <div className="jr-payment-progress-handle" aria-hidden="true" />
+
+            <div className="jr-payment-progress-heading-row">
+              <div className="jr-payment-progress-heading-copy">
+                <h2 id="jr-payment-progress-title">Payment in Progress</h2>
+                <p>Do not close this popup</p>
+              </div>
+
+              <div
+                className={`jr-payment-progress-chevrons${activeVerifying ? " is-verifying" : ""}`}
+                aria-label={activeVerifying ? "Verifying payment" : "Waiting for UPI payment"}
+                role="img"
+              >
+                {Array.from({ length: 5 }, (_, index) => (
+                  <span
+                    key={index}
+                    className={index < (activeVerifying ? 4 : 3) ? "is-active" : ""}
+                    aria-hidden="true"
+                  >
+                    ›
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <p
+              id="jr-payment-progress-description"
+              className="jr-payment-progress-description"
+              aria-live="polite"
+            >
+              {activeVerifying
+                ? "Please wait while we verify the payment status with the bank."
+                : "Please complete the payment in your UPI app. We will verify the payment status with the bank when you return."}
+            </p>
+
+            <div className="jr-payment-progress-divider" />
+
+            <p className="jr-payment-progress-cancel-row">
+              Could not complete payment?{" "}
+              {typeof onCancel === "function" && (
+                <button type="button" onClick={onCancel}>
+                  Cancel
+                </button>
+              )}
+            </p>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

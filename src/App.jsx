@@ -3223,6 +3223,9 @@ export default function App() {
   // the generic upi://pay link that Safari may resolve to WhatsApp Pay.
   const [upiAppLaunchMessage, setUpiAppLaunchMessage] = useState("");
   const [paymentAppLaunched, setPaymentAppLaunched] = useState(false);
+  // Keep the website progress sheet hidden while iOS displays its native
+  // "Open in PhonePe?" confirmation. Show it only after returning from the UPI app.
+  const [showPaymentProgressSheet, setShowPaymentProgressSheet] = useState(false);
   const paymentAppBackgroundedRef = useRef(false);
 
   /* -----------------------------------------------------------
@@ -3648,6 +3651,7 @@ export default function App() {
     );
     stopPolling();
     setPaymentAppLaunched(false);
+    setShowPaymentProgressSheet(false);
     paymentAppBackgroundedRef.current = false;
     setUpiAppLaunchMessage("");
     // Do NOT clear the cart, do NOT create new order, keep same outlet UUID
@@ -3681,6 +3685,7 @@ export default function App() {
       if (isPollingActiveRef.current || paymentVerifyInFlight.current) return;
 
       paymentAppBackgroundedRef.current = false;
+      setShowPaymentProgressSheet(true);
       console.log(
         "[Juice Robo] Browser returned from UPI app. Starting payment verification."
       );
@@ -4446,6 +4451,7 @@ export default function App() {
         "Your order is ready. Tap Pay with UPI, choose your UPI app, complete the payment, and return to Juice Robo."
       );
       setPaymentAppLaunched(false);
+      setShowPaymentProgressSheet(false);
       setUpiAppLaunchMessage("");
       setScreen("upi-payment");
       return;
@@ -4577,6 +4583,7 @@ export default function App() {
       pollAttemptsRef.current = 0;
       isPollingActiveRef.current = false;
       setPaymentAppLaunched(false);
+      setShowPaymentProgressSheet(false);
       setUpiAppLaunchMessage("");
       setScreen("upi-payment");
     } catch (paymentError) {
@@ -4642,6 +4649,7 @@ export default function App() {
     // opened by the Pay with UPI action.
     setUpiAppLaunchMessage("");
     setPaymentAppLaunched(true);
+    setShowPaymentProgressSheet(true);
     setPaymentStatus("processing");
     setPaymentMessage("Checking your payment status with Juice Robo...");
     startPolling(true);
@@ -4680,6 +4688,7 @@ export default function App() {
     isPollingActiveRef.current = false;
     paymentAppBackgroundedRef.current = false;
     setPaymentAppLaunched(true);
+    setShowPaymentProgressSheet(false);
     setShowUpiAppChooser(false);
 
     const startedAt = Date.now();
@@ -5168,6 +5177,8 @@ export default function App() {
               onProceedWithUpi={handleSelectUpiApp}
               onOpenUpiApp={handleSelectUpiApp}
               isMobile={isMobileDevice}
+              paymentAppLaunched={paymentAppLaunched}
+              showPaymentProgressSheet={showPaymentProgressSheet}
             />
           )}
 
