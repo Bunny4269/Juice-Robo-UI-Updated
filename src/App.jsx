@@ -4901,7 +4901,7 @@ export default function App() {
         />
 
         <div className="jr-screen-container">
-          {screen === "profile" && user && (
+          {screen === "profile" && (
             <ProfileScreen
               user={user}
               customer={customer}
