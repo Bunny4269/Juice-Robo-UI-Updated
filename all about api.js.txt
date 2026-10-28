@@ -1,4 +1,4 @@
-eall about api.js
+All about api.js
 
 Lesson - 01: API.js Foundations
 An API (Application Programming Interface) allows two software systems to communicate and exchange data.

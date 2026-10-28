@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import paymentSuccessGifAsset from "../../assets/Payment-successful.gif";
 import "./PaymentSuccessScreen.css";
 
 const GST_RATE = 0.05;
@@ -111,6 +112,22 @@ function getOrderNumber(order = {}) {
         order?.rawOrderResponse?.data?.orderId
     ) || ""
   );
+}
+
+function formatOrderDisplayTag(rawId) {
+  const cleanId = clean(rawId);
+  if (!cleanId) return "";
+  // If it's a UUID (e.g. 07b881fe-b47a-4058-ba0b-a1bff6e002d5), show compact prefix...suffix
+  const uuidMatch = cleanId.match(
+    /^([0-9a-f]{8})-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-([0-9a-f]{12})$/i
+  );
+  if (uuidMatch) {
+    return `#${uuidMatch[1].slice(0, 6).toUpperCase()}...${uuidMatch[2].slice(-4).toUpperCase()}`;
+  }
+  if (cleanId.length > 14) {
+    return `#${cleanId.slice(0, 6).toUpperCase()}...${cleanId.slice(-4).toUpperCase()}`;
+  }
+  return cleanId.startsWith("#") ? cleanId : `#${cleanId}`;
 }
 
 function getLocationName(order = {}, location = {}) {
@@ -564,45 +581,110 @@ function HomeIcon() {
    ========================================================= */
 
 function PaymentSuccessGif() {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const gifSrc =
+    paymentSuccessGifAsset ||
+    `${import.meta.env.BASE_URL}assets/Payment-successful.gif`;
+
   return (
     <div className="jr-payment-success-animation" aria-hidden="true">
-      <svg
-        className="jr-payment-success-hero-art"
-        viewBox="0 0 320 230"
-        role="presentation"
-      >
-        <defs>
-          <linearGradient id="jr-success-circle" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#c9f0a8" />
-            <stop offset="100%" stopColor="#8edb76" />
-          </linearGradient>
-          <linearGradient id="jr-success-leaf" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#83c83e" />
-            <stop offset="100%" stopColor="#27864b" />
-          </linearGradient>
-          <linearGradient id="jr-success-splash" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#e5f6a2" />
-            <stop offset="100%" stopColor="#bfe77e" />
-          </linearGradient>
-        </defs>
-        <path
-          d="M35 166c31-10 43-31 63-25 22 6 25 34 54 35 33 1 42-28 65-24 17 3 24 19 45 15l23-7-12 39H49Z"
-          fill="url(#jr-success-splash)"
-          opacity=".8"
+      {!imageError ? (
+        <img
+          src={gifSrc}
+          alt="Payment successful celebration animation"
+          className={`jr-payment-success-gif ${
+            imageLoaded ? "jr-payment-success-gif-loaded" : ""
+          }`}
+          width="200"
+          height="200"
+          loading="eager"
+          decoding="async"
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setImageError(true)}
         />
-        <path d="M63 100C37 83 32 61 35 43c26 4 45 23 46 48-5 8-10 11-18 9Z" fill="url(#jr-success-leaf)" />
-        <path d="M255 111c14-30 36-40 57-37-7 25-26 43-50 43Z" fill="url(#jr-success-leaf)" />
-        <path d="M80 146c-19-12-24-28-19-42 18 7 28 20 27 37Z" fill="#b6df5e" opacity=".8" />
-        <path d="M234 153c13-19 28-24 43-19-7 17-21 25-38 24Z" fill="#b6df5e" opacity=".8" />
-        <g stroke="#2c9a55" strokeWidth="5" strokeLinecap="round">
-          <path d="M160 15v15" /><path d="m111 31 7 13" /><path d="m209 31-7 13" />
-          <path d="m78 62 12 8" /><path d="m242 62-12 8" /><path d="m62 113 14 3" /><path d="m258 113-14 3" />
-        </g>
-        <circle cx="160" cy="111" r="65" fill="#ffffff" opacity=".9" />
-        <circle cx="160" cy="105" r="53" fill="url(#jr-success-circle)" />
-        <path d="m132 105 18 18 39-42" fill="none" stroke="#16814a" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="99" cy="86" r="4" fill="#b8e76c" /><circle cx="224" cy="91" r="4" fill="#b8e76c" />
-      </svg>
+      ) : null}
+
+      {/* Microinteraction fallback: shown while image is loading or if asset fails to load */}
+      {(!imageLoaded || imageError) && (
+        <div
+          className={`jr-payment-success-fallback ${
+            imageLoaded ? "jr-payment-success-fallback-hidden" : ""
+          }`}
+          aria-hidden="true"
+        >
+          <svg
+            className="jr-payment-success-fallback-svg"
+            viewBox="0 0 200 200"
+            role="presentation"
+          >
+            <defs>
+              <linearGradient id="jr-success-grad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#30b96c" />
+                <stop offset="100%" stopColor="#237a4b" />
+              </linearGradient>
+              <filter id="jr-success-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="8" stdDeviation="10" floodColor="#17643d" floodOpacity="0.18" />
+              </filter>
+            </defs>
+
+            {/* Expanding pulse ripple */}
+            <circle
+              className="jr-fallback-ripple"
+              cx="100"
+              cy="100"
+              r="68"
+              fill="none"
+              stroke="#c9f0a8"
+              strokeWidth="2.5"
+            />
+
+            {/* Celebratory spark rays */}
+            <g className="jr-fallback-sparks">
+              <circle cx="100" cy="24" r="3.5" fill="#f5af28" />
+              <circle cx="152" cy="46" r="3" fill="#b6df5e" />
+              <circle cx="176" cy="100" r="3.5" fill="#30b96c" />
+              <circle cx="152" cy="154" r="3" fill="#f5af28" />
+              <circle cx="100" cy="176" r="3.5" fill="#b6df5e" />
+              <circle cx="48" cy="154" r="3" fill="#c9f0a8" />
+              <circle cx="24" cy="100" r="3.5" fill="#30b96c" />
+              <circle cx="48" cy="46" r="3" fill="#f5af28" />
+            </g>
+
+            {/* Main success circle with spring pop */}
+            <circle
+              className="jr-fallback-circle"
+              cx="100"
+              cy="100"
+              r="48"
+              fill="url(#jr-success-grad)"
+              filter="url(#jr-success-shadow)"
+            />
+
+            {/* Inner highlight rim */}
+            <circle
+              cx="100"
+              cy="100"
+              r="45"
+              fill="none"
+              stroke="rgba(255,255,255,0.25)"
+              strokeWidth="2"
+            />
+
+            {/* Animated white checkmark */}
+            <path
+              className="jr-fallback-check"
+              d="M80 100 l14 14 l26 -28"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+      )}
     </div>
   );
 }
@@ -683,6 +765,17 @@ export default function PaymentSuccessScreen({
     ) / 100;
   }, [totalPaid, taxableSubtotal]);
 
+  const handleBackToHome = () => {
+    if (typeof onHome === "function") {
+      onHome();
+      return;
+    }
+
+    if (typeof onBack === "function") {
+      onBack();
+    }
+  };
+
   const handleContinue = () => {
     if (typeof onBack === "function") {
       onBack();
@@ -703,25 +796,21 @@ export default function PaymentSuccessScreen({
         <PaymentSuccessGif />
 
         <span className="jr-payment-success-eyebrow">
-          PAYMENT CONFIRMED
+          ORDER & PAYMENT CONFIRMED
         </span>
 
         <h1 id="payment-success-title">
-          Payment
+          Thank You for
           <br />
-          <em>successful!</em>
+          <em>Choosing {isHck ? "HCK" : "Juice Robo"}!</em>
         </h1>
 
         <p className="jr-payment-success-message">
-          Your order has been verified and confirmed.
-          <br />
-          {isHck
-            ? "Enter your collection code at the kiosk to start your helmet cleaning service."
-            : "Enter your pickup code at the machine to collect your fresh juice."}
+          Your payment was successful and your order is confirmed.
         </p>
 
         {/* =================================================
-            COLLECTION CODE
+            COLLECTION PIN
            ================================================= */}
 
         <section
@@ -730,7 +819,7 @@ export default function PaymentSuccessScreen({
               ? "jr-payment-success-code-card"
               : "jr-payment-success-code-card jr-payment-success-code-card-empty"
           }
-          aria-label="Collection code"
+          aria-label="Collection PIN"
         >
           <div className="jr-payment-success-code-heading">
             <span className="jr-payment-success-lock">
@@ -738,7 +827,7 @@ export default function PaymentSuccessScreen({
             </span>
 
             <span className="jr-payment-success-code-label">
-              YOUR 4-DIGIT COLLECTION CODE
+              YOUR 4-DIGIT COLLECTION PIN
             </span>
           </div>
 
@@ -746,8 +835,8 @@ export default function PaymentSuccessScreen({
             className="jr-payment-success-code-digits"
             aria-label={
               collectionCode
-                ? `Your collection code is ${collectionCode}`
-                : "Collection code is being generated"
+                ? `Your collection PIN is ${collectionCode}`
+                : "Collection PIN is being generated"
             }
           >
             {digits.map((digit, index) => (
@@ -772,36 +861,39 @@ export default function PaymentSuccessScreen({
             <div>
               <p>
                 {collectionCode
-                  ? "Enter this code on your Juice Robo machine"
-                  : "Your collection code will appear here once ready"}
-                <br />
-                {collectionCode && "to collect your juice."}
+                  ? isHck
+                    ? "Use this PIN to collect your order from the kiosk."
+                    : "Use this PIN to collect your order from the machine."
+                  : "Your collection PIN will appear here once ready."}
               </p>
 
               {collectionCode && (
-                <strong>Keep this code safe until collection.</strong>
+                <strong>Keep this PIN safe until collection.</strong>
               )}
             </div>
           </div>
         </section>
 
         {/* =================================================
-            BOOKING SUMMARY
+            ORDER SUMMARY
            ================================================= */}
 
         <section
           className="jr-payment-success-summary-card"
-          aria-label="Booking Summary"
+          aria-label="Order Summary"
         >
           <div className="jr-payment-success-summary-header">
             <div className="jr-payment-success-summary-title">
               <ReceiptIcon />
-              <span>BOOKING SUMMARY</span>
+              <span>ORDER SUMMARY</span>
             </div>
 
             {orderNumber && (
-              <span className="jr-payment-success-order-tag">
-                #{orderNumber}
+              <span
+                className="jr-payment-success-order-tag"
+                title={`Order ID: ${orderNumber}`}
+              >
+                {formatOrderDisplayTag(orderNumber)}
               </span>
             )}
           </div>
@@ -858,23 +950,45 @@ export default function PaymentSuccessScreen({
                 <JuiceIcon />
               </span>
 
-              <div>
+              <div className="jr-payment-success-items-col">
                 <small>Items</small>
 
                 {items.length > 0 ? (
-                  <strong>
-                    {items.map((item, index) => (
-                      <span key={item?.id || item?.productId || index}>
-                        {getItemName(item)}
-                        {getItemQuantity(item) > 1
-                          ? ` × ${getItemQuantity(item)}`
-                          : ""}
-                        {index < items.length - 1 ? ", " : ""}
-                      </span>
-                    ))}
-                  </strong>
+                  <div className="jr-payment-success-items-list">
+                    {items.map((item, index) => {
+                      const qty = getItemQuantity(item);
+                      const name = getItemName(item);
+                      const subtotal = getItemSubtotal(item);
+                      return (
+                        <div
+                          key={item?.id || item?.productId || index}
+                          className="jr-payment-success-item-row"
+                        >
+                          <div className="jr-payment-success-item-meta">
+                            <span className="jr-payment-success-item-name">
+                              {name}
+                            </span>
+                            {qty > 1 && (
+                              <span className="jr-payment-success-item-qty">
+                                × {qty}
+                              </span>
+                            )}
+                          </div>
+                          {subtotal > 0 && (
+                            <strong className="jr-payment-success-item-price">
+                              {formatMoney(subtotal, money)}
+                            </strong>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 ) : (
-                  <strong>{isHck ? "Helmet Cleaning Service" : "Sugarcane Juice"}</strong>
+                  <div className="jr-payment-success-item-row">
+                    <span className="jr-payment-success-item-name">
+                      {isHck ? "Helmet Cleaning Service" : "Sugarcane Juice"}
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
@@ -907,18 +1021,24 @@ export default function PaymentSuccessScreen({
 
         {/* =================================================
             CONTINUATION ACTIONS
-            Kept below the reference viewport so the primary
-            success state remains visually identical to the
-            supplied design.
            ================================================= */}
 
         <div className="jr-payment-success-actions">
           <button
             type="button"
             className="jr-payment-success-primary-button"
+            onClick={handleBackToHome}
+          >
+            <HomeIcon />
+            <span>BACK TO HOME</span>
+          </button>
+
+          <button
+            type="button"
+            className="jr-payment-success-secondary-button"
             onClick={handleContinue}
           >
-            <span>BACK TO MENU / ORDER MORE</span>
+            <span>ORDER MORE / BACK TO MENU</span>
             <ArrowRightIcon />
           </button>
 
@@ -930,17 +1050,6 @@ export default function PaymentSuccessScreen({
             >
               <HistoryIcon />
               <span>VIEW ORDER HISTORY</span>
-            </button>
-          )}
-
-          {typeof onHome === "function" && (
-            <button
-              type="button"
-              className="jr-payment-success-secondary-button"
-              onClick={onHome}
-            >
-              <HomeIcon />
-              <span>GO TO HOME</span>
             </button>
           )}
         </div>

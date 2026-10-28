@@ -553,7 +553,9 @@ export function getCanonicalOutletUuid(outletOrKey = "") {
   const raw = String(outletOrKey || "").trim();
   if (!raw) return "";
   const lower = raw.toLowerCase();
-  if (lower === "jr") return "jr";
+  if (lower === "jr" || lower === "juicerobo" || lower === "juice-robo") {
+    return OUTLET_CONFIG.jr.menuLocationId;
+  }
   return raw;
 }
 

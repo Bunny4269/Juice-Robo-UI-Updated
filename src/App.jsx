@@ -1439,7 +1439,10 @@ function ScanQRScreen({ onScanSuccess }) {
         return false;
       }
     } else {
-      const targetPath = `${BASE_PATH}/${encodeURIComponent(outlet.outletId)}/menu/`;
+      const targetPath = `${BASE_PATH}/${encodeURIComponent(
+        outlet.outletId
+      )}/menu/`;
+
       window.location.assign(targetPath);
     }
 
@@ -2552,7 +2555,7 @@ function Header({ onProfile, onLogo, isHck = false }) {
 
     </header>
   );
-}
+} 
 
 function BottomNav({
   screen,
@@ -2835,8 +2838,12 @@ export default function App() {
     }
 
     const outletKey = resolved.key;
+    // Juice Robo routes must use the configured menu-location UUID.
+    // HCK keeps its dynamically resolved outlet ID.
     const canonicalOutlet =
-      resolved.outletId || getCanonicalOutletUuid(outletKey);
+      outletKey === "jr"
+        ? getCanonicalOutletUuid(outletKey)
+        : resolved.outletId || getCanonicalOutletUuid(outletKey);
 
     setLoading(true);
     setError("");
